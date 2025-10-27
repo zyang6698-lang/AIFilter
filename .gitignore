@@ -1,0 +1,24 @@
+﻿################################################################################
+# 此 .gitignore 文件已由 Microsoft(R) Visual Studio 自动创建。
+################################################################################
+
+/.vs/DeepSightAI
+/Bin
+/DeepSightAI/bin
+/DeepSightAI/obj
+/DeepSightAI/Resources
+/DeepSightCommunication/bin
+/DeepSightCommunication/obj
+/DeepSightDB/bin
+/DeepSightDB/obj
+/DeepSightDisplay/bin
+/DeepSightDisplay/obj
+/DeepSightEvent/bin
+/DeepSightEvent/obj
+/DeepSightModel/bin
+/DeepSightModel/obj
+/DeepSightTool/bin
+/DeepSightTool/obj
+/DeepSightWorkLib/bin
+/DeepSightWorkLib/obj
+/packages
