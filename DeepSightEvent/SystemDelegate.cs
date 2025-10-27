@@ -1,0 +1,49 @@
+﻿using DeepSightModel;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DeepSightEvent
+{
+    /// <summary>
+    /// 发送报警信息
+    /// </summary>
+    /// <param name="massage">报警信息param>
+    public delegate void SendAlarm(string massage);
+    /// <summary>
+    /// 发送异常信息
+    /// </summary>
+    /// <param name="massage"></param>
+    public delegate void SendException(string massage);
+    /// <summary>
+    /// 发送进度信息
+    /// </summary>
+    /// <param name="id">任务ID</param>
+    /// <param name="isOK">任务当前进度  0:</param>
+    public delegate void SendProcess(string id, int isOK);
+    /// <summary>
+    /// 发送任务信息
+    /// </summary>
+    /// <param name="task">具体任务</param>
+    public delegate void SendTask(object task,string msg="");
+    /// <summary>
+    /// 发送缺陷小图个数
+    /// </summary>
+    /// <param name="num"></param>
+    public delegate void SendDefectNum(int num);
+    /// <summary>
+    /// 发送缺陷信息
+    /// </summary>
+    /// <param name="sn">产品码</param>
+    /// <param name="info">产品缺陷信息</param>
+    public delegate void SendDefectPanelInfo(string sn, RootPanelInfoWithIP info);
+    /// <summary>
+    /// 发送缺陷结果
+    /// </summary>
+    /// <param name="sn">产品码</param>
+    /// <param name="info">产品缺陷信息</param>
+    public delegate void SendDefectResultInfo(string sn, List<string> msg, List<string> details, PcsResult pcsResult);
+
+}

@@ -1,0 +1,101 @@
+﻿using DeepSightModel;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DeepSightEvent
+{
+    //事件定义
+    public class SystemEvent
+    {
+        public static event SendAlarm EventSendAlarmToUI;
+        /// <summary>
+        /// 订阅报警
+        /// </summary>
+        /// <param name="msg"></param>
+        public static void SendAlarmMsg(string msg)
+        {
+            if (EventSendAlarmToUI != null)
+                EventSendAlarmToUI(msg);
+        }
+
+        public static event SendProcess EventSendProcessToUI;
+        /// <summary>
+        /// 订阅进度
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="isOk"></param>
+        public static void SendProcessMsg(string id, int isOk)
+        {
+            if (EventSendProcessToUI != null)
+                EventSendProcessToUI(id, isOk);
+        }
+
+        public static event SendTask EventSendTaskToUI;
+        /// <summary>
+        /// 订阅任务
+        /// </summary>
+        /// <param name="task"></param>
+        public static void SendTaskMsg(object task, string msg = "")
+        {
+            if (EventSendTaskToUI != null)
+                EventSendTaskToUI(task, msg);
+        }
+
+        public static event SendException EventSendExceptionToUI;
+        /// <summary>
+        /// 订阅异常
+        /// </summary>
+        /// <param name="msg"></param>
+        public static void SendException(string msg)
+        {
+            if (EventSendExceptionToUI != null)
+            {
+                EventSendExceptionToUI(msg);
+            }
+        }
+
+        public static event SendDefectNum EventSendDefectNumToUI;
+        /// <summary>
+        ///订阅缺陷数
+        /// </summary>
+        /// <param name="num"></param>
+        public static void SendDefectNum(int num)
+        {
+            if (EventSendDefectNumToUI != null)
+            {
+                EventSendDefectNumToUI(num);
+            }
+        }
+
+        public static event SendDefectPanelInfo EventSendDefectPanelInfoToUI;
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="num"></param>
+        public static void SendPanelInfo(string Sn, RootPanelInfoWithIP info)
+        {
+            if (EventSendDefectPanelInfoToUI != null)
+            {
+                EventSendDefectPanelInfoToUI(Sn, info);
+            }
+        }
+
+
+        public static event SendDefectResultInfo EventSendDefectResultInfoToUI;
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="num"></param>
+        public static void SendResultInfo(string Sn, List<string>msg, List<string> details, PcsResult pcsResult)
+        {
+            if (EventSendDefectResultInfoToUI != null)
+            {
+                EventSendDefectResultInfoToUI(Sn, msg, details, pcsResult);
+            }
+        }
+    }
+}

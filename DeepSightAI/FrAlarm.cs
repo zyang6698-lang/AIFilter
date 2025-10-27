@@ -1,0 +1,91 @@
+﻿
+using DeepSightEvent;
+using DeepSightTool;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace DeepSightAI
+{
+    public partial class FrAlarm : Form
+    {
+
+        private string logFilePath = null;
+        public FrAlarm()
+        {
+            InitializeComponent();
+            Control.CheckForIllegalCrossThreadCalls = false;
+            SetStyle(ControlStyles.UserPaint, true);
+            SetStyle(ControlStyles.AllPaintingInWmPaint, true); // 禁止擦除背景
+            SetStyle(ControlStyles.DoubleBuffer, true); // 双缓冲
+            this.dataGridViewData.AutoGenerateColumns = false;
+            SystemEvent.EventSendAlarmToUI += new SendAlarm(SystemEvent_EventSendAlarmToUI);
+        }
+
+        private void SystemEvent_EventSendAlarmToUI(string message)
+        {
+            try
+            {
+                this.dataGridViewData.Invoke(new MethodInvoker(() =>
+                {
+                    this.dataGridViewData.Rows.Add(new List<string> { DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), message }.ToArray());
+                }));
+                string ImageDir = string.Format("{0}\\{1}", Application.StartupPath + "\\ExceptionLog", DateTime.Now.ToString("yyyy-MM-dd"));
+                if (!Directory.Exists(ImageDir))
+                {
+                    Directory.CreateDirectory(ImageDir);
+                }
+                logFilePath = Path.Combine(ImageDir, "exception_log.csv");
+                var logEntry = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}";
+                using (StreamWriter Writer = new StreamWriter(logFilePath, true, Encoding.Default))
+                {
+                    //数据
+                    string str = $"{logEntry}," + message;
+                    Writer.WriteLine(str);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error(ex.ToString());
+            }
+            
+        }
+
+        /// <summary>
+        /// 窗体对象实例
+        /// </summary>
+        private static FrAlarm _instance;
+
+        public static FrAlarm Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = new FrAlarm();
+                }
+                return _instance;
+            }
+        }
+
+        private void FrAlarm_Load(object sender, EventArgs e)
+        {
+            BindDataGrid();
+        }
+
+        /// <summary>
+        /// 绑定列表信息
+        /// </summary>
+        private void BindDataGrid()
+        {
+
+        }
+    }
+}
