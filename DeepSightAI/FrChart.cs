@@ -114,7 +114,6 @@ namespace DeepSightAI
                 InitMethod();
                 cmb_byWhat.SelectedIndex = 0;
                 cmb_dataByWhat.SelectedIndex = 0;
-                cmb_Heat.SelectedIndex = 0;
                 //苹果视察 隐藏未实现的功能
                 tabControl1.TabPages.Remove(tabPage6);
                 //tabControl1.TabPages.Remove(tabPage7);
@@ -2308,7 +2307,8 @@ namespace DeepSightAI
             try
             {
                 dic_heatPints.Clear();
-                if (cmb_Heat.SelectedIndex == 0)
+                
+                //Lot查询
                 {
                     List<string> sn_list = GetSnListByLot(this.txt_heatCode.Text.ToString());
                     if (sn_list.Count > 0)
@@ -2387,9 +2387,8 @@ namespace DeepSightAI
                         }
                     }
                 }
-                else if (cmb_Heat.SelectedIndex == 1)
+                //TODO 料号+时间查询
                 {
-                    //料号查询
 
 
                 }
@@ -2460,6 +2459,14 @@ namespace DeepSightAI
 
         private async void comboBox2_SelectedIndexChanged(object sender, EventArgs e)
         {
+        }
+
+        private void comboBox2_SelectedValueChanged(object sender, EventArgs e)
+        {
+
+        }
+        private async void rbn_Front_CheckedChanged(object sender, EventArgs e)
+        {
             if (dic_heatPints.Count > 0)
             {
                 var points = new List<HeatPoint>();
@@ -2467,9 +2474,8 @@ namespace DeepSightAI
                 {
                     foreach (var itemavi in item.Value)
                     {
-                        if (comboBox2.SelectedItem.ToString().Contains("A") || comboBox2.SelectedItem.ToString().Contains("B"))
                         {
-                            if (comboBox2.SelectedItem.ToString().Contains("A"))
+                            if (rbn_Front.Checked)
                             {
                                 if (itemavi.Side == "A")
                                 {
@@ -2512,9 +2518,9 @@ namespace DeepSightAI
                                 }
                             }
                         }
-                        if (comboBox2.SelectedItem.ToString().Contains("缺陷形态"))
+                        if (false)
                         {
-                            if (comboBox2.SelectedItem.ToString().Contains("点状"))
+                            //点状
                             {
                                 if (itemavi?.pointsInfos != null)
                                 {
@@ -2536,7 +2542,7 @@ namespace DeepSightAI
                                 }
 
                             }
-                            else//线性划伤
+                            //线性划伤
                             {
                                 if (itemavi?.pointsInfos != null)
                                 {
@@ -2580,11 +2586,6 @@ namespace DeepSightAI
                 }
             }
         }
-
-        private void comboBox2_SelectedValueChanged(object sender, EventArgs e)
-        {
-
-        }
         // 数据模型
         public class Data
         {
@@ -2595,5 +2596,7 @@ namespace DeepSightAI
             public string OK_Count { get; set; }
             public string NG_Count { get; set; }
         }
+
+
     }
 }

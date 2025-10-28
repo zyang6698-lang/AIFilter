@@ -528,11 +528,20 @@ namespace DeepSightWorkLib
                                     dbInfo.operation = "put";
                                     dbInfo.op_mode = "ap";
                                     //lot
-                                    dbInfo.key = $"{ info.panelInfo.LotId}-{info.panelInfo.LotBatch}";
+                                    dbInfo.key = $"{info.panelInfo.LotId}-{info.panelInfo.LotBatch}";
                                     dbInfo.value = info.panelInfo.SerialNumber;
                                     string Result;
                                     http_DB.HttpPostMethod("http://127.0.0.1:9877", dbInfo, 1, out Result);
+                                    //机台
+                                    dbInfo.db_name = "machine_panel";
+                                    dbInfo.key = $"{info.panelInfo.MachineName}";
+                                    http_DB.HttpPostMethod("http://127.0.0.1:9877", dbInfo, 1, out Result);
+                                    //料号
+                                    dbInfo.db_name = "product_panel";
+                                    dbInfo.key = $"{info.panelInfo.ProductSerial}";
+                                    http_DB.HttpPostMethod("http://127.0.0.1:9877", dbInfo, 1, out Result);
 
+                                    //中台
                                     DsCenterInfo dsinfo;
                                     dic_DsCenterInfo.TryRemove($"{info.panelInfo.LotId}_{info.panelInfo.SerialNumber}", out dsinfo);
                                     string outInfo = null;
