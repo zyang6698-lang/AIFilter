@@ -406,6 +406,29 @@ namespace DeepSightWorkLib
             getInfo.range_end = endIndex;
             return http_DB.HttpPostMethod(url, getInfo, 0, out Result);
         }
+        /// <summary>
+        /// 同时日期范围读取料号对应的PN信息
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="productSerial"></param>
+        /// <param name="date"></param>
+        /// <param name="Result"></param>
+        /// <returns></returns>
+        public bool ReadPNSNByTime( DateTime date, out string Result)
+        {
+            string a = Guid.NewGuid().ToString();
+            RootDbInfo getInfo = new RootDbInfo();
+            getInfo.uniqueKey = Guid.NewGuid().ToString();
+            getInfo.db_name = "product_panel";
+            getInfo.operation = "get";
+            getInfo.is_select_range = "true";
+            getInfo.op_mode = "all";
+            getInfo.range_start = date.Date.ToString("yyyyMMddHHmmssfff");
+            getInfo.range_end = date.Date.AddDays(1).AddTicks(-1).ToString("yyyyMMddHHmmssfff");
+            return http_DB.HttpPostMethod(URL, getInfo, 0, out Result);
+         }
+
+
 
         /// <summary>
         /// 开始线程
@@ -484,6 +507,13 @@ namespace DeepSightWorkLib
                             List<string> details;
                             PcsResult pcsResult;
                             string vbJson = null;
+
+                            //test
+                            if (true)
+                            {
+                                UpdateProductPanel(info);
+                            }
+
                             if (DefectMethod(info.VbInfo, info.panelInfo, out msg, out details, out pcsResult, out vbJson))
                             {
                                 SystemEvent.SendResultInfo(info.SN, msg, details, pcsResult);
@@ -537,9 +567,7 @@ namespace DeepSightWorkLib
                                     dbInfo.key = $"{info.panelInfo.MachineName}";
                                     http_DB.HttpPostMethod("http://127.0.0.1:9877", dbInfo, 1, out Result);
                                     //料号
-                                    dbInfo.db_name = "product_panel";
-                                    dbInfo.key = $"{info.panelInfo.ProductSerial}";
-                                    http_DB.HttpPostMethod("http://127.0.0.1:9877", dbInfo, 1, out Result);
+                                    UpdateProductPanel(info);
 
                                     //中台
                                     DsCenterInfo dsinfo;
@@ -565,6 +593,20 @@ namespace DeepSightWorkLib
             }
         }
 
+
+        private void UpdateProductPanel(VBModel info)
+        {
+            RootDbInfo dbInfo = new RootDbInfo()
+            {
+                db_name = "product_panel",
+                operation = "put",
+                op_mode = "ap",
+
+                key = DateTime.Now.ToString("yyyyMMddHHmmssfff"),
+                value = JsonConvert.SerializeObject(new { ProductSerial = info.panelInfo.ProductSerial, SerialNumber = info.panelInfo.SerialNumber }),
+            };
+            http_DB.HttpPostMethod("http://127.0.0.1:9877", dbInfo, 1, out _);
+        }
         public void ReadJsonByPath(string key, string sn, string side, string path)
         {
             try
