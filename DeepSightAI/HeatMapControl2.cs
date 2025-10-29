@@ -148,7 +148,7 @@ namespace DeepSightAI
                     if (cmb_PartNumber.Items.Count == 0)
                     {
                         // 传入空字符串以获取当天的所有料号
-                        GetSnByPnTime( timePicker.Value); 
+                        GetSnByPnTime(timePicker.Value);
                         // 将获取到的料号填充到 ComboBox
                         cmb_PartNumber.Items.Clear();
                         foreach (var pn in dic_PN_SNList.Keys.Distinct())
@@ -158,9 +158,9 @@ namespace DeepSightAI
                         MessageBox.Show($"已加载当天料号列表，请选择或输入一个料号后再次查询。");
                         return; // 提示用户后返回，等待用户操作
                     }
-                    
+
                     // 如果 ComboBox 中有内容，并且用户已选择或输入，则执行查询
-                    if (!string.IsNullOrEmpty(cmb_PartNumber.Text)&& dic_PN_SNList.Count>0)
+                    if (!string.IsNullOrEmpty(cmb_PartNumber.Text) && dic_PN_SNList.Count > 0)
                     {
                         if (dic_PN_SNList.TryGetValue(this.cmb_PartNumber.Text, out List<string> sn_list))
                         {
@@ -197,11 +197,50 @@ namespace DeepSightAI
                 var tasks = sn_list.Select(sn => Task.Run(() => queryHeatDataBySn(sn))).ToList();
                 await Task.WhenAll(tasks);
 
+                // 更新缺陷名称复选框
+                UpdateDefectCheckboxes();
                 await UpdateHeatMapPointsAsync();
             }
         }
 
         #region Helper Methods
+
+        private void UpdateDefectCheckboxes()
+        {
+            // 从热力点数据中提取所有唯一的缺陷名称
+            var defectNames = dic_heatPints.Values
+                .SelectMany(list => list)
+                .SelectMany(points => points.pointsInfos)
+                .Select(info => info.DefectName)
+                .Distinct()
+                .ToList();
+
+            // 在UI线程上更新复选框
+            this.Invoke(new Action(() =>
+            {
+                flowLayoutPanel_Defects.Controls.Clear();
+                foreach (var name in defectNames)
+                {
+                    if (string.IsNullOrEmpty(name)) continue;
+
+                    var checkBox = new CheckBox
+                    {
+                        Text = name,
+                        AutoSize = true,
+                        // 默认可以设置为选中状态
+                        Checked = true
+                    };
+                    checkBox.CheckedChanged += DefectCheckbox_CheckedChanged;
+                    flowLayoutPanel_Defects.Controls.Add(checkBox);
+                }
+            }));
+        }
+
+        private async void DefectCheckbox_CheckedChanged(object sender, EventArgs e)
+        {
+            // 当任何复选框状态改变时，重新生成热力图
+            await UpdateHeatMapPointsAsync();
+        }
 
         private async Task UpdateHeatMapPointsAsync()
         {
@@ -214,13 +253,32 @@ namespace DeepSightAI
             _heatPoints.Clear();
             string sideFilter = rbn_Front.Checked ? "A" : "B";
 
+            // 获取当前选中的缺陷名称
+            var selectedDefectNames = new List<string>();
+            // 需要在UI线程上访问控件
+            this.Invoke(new Action(() =>
+            {
+                selectedDefectNames = flowLayoutPanel_Defects.Controls.OfType<CheckBox>()
+                    .Where(cb => cb.Checked)
+                    .Select(cb => cb.Text)
+                    .ToList();
+            }));
+
+
             foreach (var sn_dic in dic_heatPints)
             {
                 foreach (var avi_points in sn_dic.Value.Where(p => p.Side == sideFilter))
                 {
                     if (avi_points?.pointsInfos != null)
                     {
-                        foreach (var pointInfo in avi_points.pointsInfos)
+                        // 根据选中的缺陷名称进行过滤
+                        var filteredPoints = avi_points.pointsInfos;
+                        if (selectedDefectNames.Any())
+                        {
+                            filteredPoints = filteredPoints.Where(p => selectedDefectNames.Contains(p.DefectName)).ToList();
+                        }
+
+                        foreach (var pointInfo in filteredPoints)
                         {
                             var point = new HeatPoint(
                                 location: new PointF(
@@ -467,14 +525,14 @@ namespace DeepSightAI
             }
         }
         ConcurrentDictionary<string, List<string>> dic_PN_SNList = new ConcurrentDictionary<string, List<string>>();
-        private List<string> GetSnByPnTime( DateTime date)
+        private List<string> GetSnByPnTime(DateTime date)
         {
             try
             {
                 List<string> rtn_list = new List<string>();
                 dic_PN_SNList.Clear(); // 开始前先清空，以防旧数据干扰
 
-                Machine.master.workClass.ReadPNSNByTime( date, out string outInfo);
+                Machine.master.workClass.ReadPNSNByTime(date, out string outInfo);
 
                 if (!string.IsNullOrEmpty(outInfo))
                 {
@@ -567,12 +625,12 @@ namespace DeepSightAI
                 if (avi_HeatInfo != null)
                 {
 
-                        if (!dic_heatPints.ContainsKey(sn))
-                        {
-                            dic_heatPints[sn] = new List<AVI_HeatPoints>();
-                        }
-                        dic_heatPints[sn].Add(avi_HeatInfo);
-                    
+                    if (!dic_heatPints.ContainsKey(sn))
+                    {
+                        dic_heatPints[sn] = new List<AVI_HeatPoints>();
+                    }
+                    dic_heatPints[sn].Add(avi_HeatInfo);
+
                 }
             }
         }

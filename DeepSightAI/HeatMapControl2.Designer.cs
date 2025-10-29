@@ -31,6 +31,8 @@
             this.tableLayoutPanel6 = new System.Windows.Forms.TableLayoutPanel();
             this.table_HeatMap = new System.Windows.Forms.TableLayoutPanel();
             this.panel13 = new System.Windows.Forms.Panel();
+            this.label2 = new System.Windows.Forms.Label();
+            this.cmb_PartNumber = new System.Windows.Forms.ComboBox();
             this.rbn_Back = new System.Windows.Forms.RadioButton();
             this.rbn_Front = new System.Windows.Forms.RadioButton();
             this.label83 = new System.Windows.Forms.Label();
@@ -45,8 +47,8 @@
             this.txt_Row = new System.Windows.Forms.TextBox();
             this.btn_setPanel = new System.Windows.Forms.Button();
             this.btn_loadArryImage = new System.Windows.Forms.Button();
-            this.cmb_PartNumber = new System.Windows.Forms.ComboBox();
-            this.label2 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
+            this.flowLayoutPanel_Defects = new System.Windows.Forms.FlowLayoutPanel();
             this.tableLayoutPanel6.SuspendLayout();
             this.panel13.SuspendLayout();
             this.SuspendLayout();
@@ -63,7 +65,7 @@
             this.tableLayoutPanel6.Name = "tableLayoutPanel6";
             this.tableLayoutPanel6.RowCount = 1;
             this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel6.Size = new System.Drawing.Size(1477, 959);
+            this.tableLayoutPanel6.Size = new System.Drawing.Size(1772, 1150);
             this.tableLayoutPanel6.TabIndex = 1;
             // 
             // table_HeatMap
@@ -76,18 +78,20 @@
             this.table_HeatMap.Name = "table_HeatMap";
             this.table_HeatMap.RowCount = 1;
             this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 953F));
-            this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 953F));
-            this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 953F));
-            this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 953F));
-            this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 953F));
-            this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 953F));
-            this.table_HeatMap.Size = new System.Drawing.Size(1082, 953);
+            this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 952F));
+            this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 952F));
+            this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 952F));
+            this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 952F));
+            this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 952F));
+            this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 952F));
+            this.table_HeatMap.Size = new System.Drawing.Size(1377, 1144);
             this.table_HeatMap.TabIndex = 2;
             // 
             // panel13
             // 
             this.panel13.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.panel13.Controls.Add(this.flowLayoutPanel_Defects);
+            this.panel13.Controls.Add(this.label1);
             this.panel13.Controls.Add(this.label2);
             this.panel13.Controls.Add(this.cmb_PartNumber);
             this.panel13.Controls.Add(this.rbn_Back);
@@ -107,13 +111,31 @@
             this.panel13.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel13.Location = new System.Drawing.Point(3, 3);
             this.panel13.Name = "panel13";
-            this.panel13.Size = new System.Drawing.Size(383, 953);
+            this.panel13.Size = new System.Drawing.Size(383, 1144);
             this.panel13.TabIndex = 1;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.ForeColor = System.Drawing.Color.Snow;
+            this.label2.Location = new System.Drawing.Point(22, 241);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(303, 15);
+            this.label2.TabIndex = 138;
+            this.label2.Text = "-------------------------------------";
+            // 
+            // cmb_PartNumber
+            // 
+            this.cmb_PartNumber.FormattingEnabled = true;
+            this.cmb_PartNumber.Location = new System.Drawing.Point(86, 203);
+            this.cmb_PartNumber.Name = "cmb_PartNumber";
+            this.cmb_PartNumber.Size = new System.Drawing.Size(236, 23);
+            this.cmb_PartNumber.TabIndex = 0;
             // 
             // rbn_Back
             // 
             this.rbn_Back.AutoSize = true;
-            this.rbn_Back.Location = new System.Drawing.Point(198, 380);
+            this.rbn_Back.Location = new System.Drawing.Point(189, 318);
             this.rbn_Back.Name = "rbn_Back";
             this.rbn_Back.Size = new System.Drawing.Size(58, 19);
             this.rbn_Back.TabIndex = 137;
@@ -124,7 +146,7 @@
             // 
             this.rbn_Front.AutoSize = true;
             this.rbn_Front.Checked = true;
-            this.rbn_Front.Location = new System.Drawing.Point(106, 382);
+            this.rbn_Front.Location = new System.Drawing.Point(97, 320);
             this.rbn_Front.Name = "rbn_Front";
             this.rbn_Front.Size = new System.Drawing.Size(58, 19);
             this.rbn_Front.TabIndex = 136;
@@ -138,7 +160,7 @@
             // 
             this.label83.AutoSize = true;
             this.label83.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label83.Location = new System.Drawing.Point(31, 382);
+            this.label83.Location = new System.Drawing.Point(22, 320);
             this.label83.Name = "label83";
             this.label83.Size = new System.Drawing.Size(67, 15);
             this.label83.TabIndex = 135;
@@ -146,14 +168,14 @@
             // 
             // timePicker
             // 
-            this.timePicker.Location = new System.Drawing.Point(95, 217);
+            this.timePicker.Location = new System.Drawing.Point(86, 155);
             this.timePicker.Name = "timePicker";
             this.timePicker.Size = new System.Drawing.Size(236, 25);
             this.timePicker.TabIndex = 134;
             // 
             // txt_Lot
             // 
-            this.txt_Lot.Location = new System.Drawing.Point(95, 335);
+            this.txt_Lot.Location = new System.Drawing.Point(86, 273);
             this.txt_Lot.Name = "txt_Lot";
             this.txt_Lot.Size = new System.Drawing.Size(236, 25);
             this.txt_Lot.TabIndex = 133;
@@ -162,7 +184,7 @@
             // 
             this.label82.AutoSize = true;
             this.label82.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label82.Location = new System.Drawing.Point(31, 224);
+            this.label82.Location = new System.Drawing.Point(22, 162);
             this.label82.Name = "label82";
             this.label82.Size = new System.Drawing.Size(37, 15);
             this.label82.TabIndex = 132;
@@ -172,7 +194,7 @@
             // 
             this.label81.AutoSize = true;
             this.label81.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label81.Location = new System.Drawing.Point(31, 268);
+            this.label81.Location = new System.Drawing.Point(22, 206);
             this.label81.Name = "label81";
             this.label81.Size = new System.Drawing.Size(52, 15);
             this.label81.TabIndex = 131;
@@ -182,7 +204,7 @@
             // 
             this.label80.AutoSize = true;
             this.label80.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label80.Location = new System.Drawing.Point(31, 338);
+            this.label80.Location = new System.Drawing.Point(22, 276);
             this.label80.Name = "label80";
             this.label80.Size = new System.Drawing.Size(46, 15);
             this.label80.TabIndex = 130;
@@ -192,7 +214,7 @@
             // 
             this.label79.AutoSize = true;
             this.label79.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label79.Location = new System.Drawing.Point(31, 184);
+            this.label79.Location = new System.Drawing.Point(22, 122);
             this.label79.Name = "label79";
             this.label79.Size = new System.Drawing.Size(82, 15);
             this.label79.TabIndex = 129;
@@ -202,7 +224,7 @@
             // 
             this.btn_queryHeatPoint.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
             this.btn_queryHeatPoint.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.btn_queryHeatPoint.Location = new System.Drawing.Point(221, 405);
+            this.btn_queryHeatPoint.Location = new System.Drawing.Point(212, 343);
             this.btn_queryHeatPoint.Name = "btn_queryHeatPoint";
             this.btn_queryHeatPoint.Size = new System.Drawing.Size(110, 33);
             this.btn_queryHeatPoint.TabIndex = 126;
@@ -212,7 +234,7 @@
             // 
             // txt_Column
             // 
-            this.txt_Column.Location = new System.Drawing.Point(85, 72);
+            this.txt_Column.Location = new System.Drawing.Point(85, 23);
             this.txt_Column.Name = "txt_Column";
             this.txt_Column.Size = new System.Drawing.Size(54, 25);
             this.txt_Column.TabIndex = 123;
@@ -221,7 +243,7 @@
             // 
             // txt_Row
             // 
-            this.txt_Row.Location = new System.Drawing.Point(25, 72);
+            this.txt_Row.Location = new System.Drawing.Point(25, 23);
             this.txt_Row.Name = "txt_Row";
             this.txt_Row.Size = new System.Drawing.Size(54, 25);
             this.txt_Row.TabIndex = 122;
@@ -232,7 +254,7 @@
             // 
             this.btn_setPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
             this.btn_setPanel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.btn_setPanel.Location = new System.Drawing.Point(25, 124);
+            this.btn_setPanel.Location = new System.Drawing.Point(172, 63);
             this.btn_setPanel.Name = "btn_setPanel";
             this.btn_setPanel.Size = new System.Drawing.Size(110, 33);
             this.btn_setPanel.TabIndex = 121;
@@ -244,7 +266,7 @@
             // 
             this.btn_loadArryImage.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
             this.btn_loadArryImage.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.btn_loadArryImage.Location = new System.Drawing.Point(25, 20);
+            this.btn_loadArryImage.Location = new System.Drawing.Point(25, 63);
             this.btn_loadArryImage.Name = "btn_loadArryImage";
             this.btn_loadArryImage.Size = new System.Drawing.Size(110, 33);
             this.btn_loadArryImage.TabIndex = 120;
@@ -252,23 +274,23 @@
             this.btn_loadArryImage.UseVisualStyleBackColor = false;
             this.btn_loadArryImage.Click += new System.EventHandler(this.btn_loadArryImage_Click);
             // 
-            // cmb_PartNumber
+            // label1
             // 
-            this.cmb_PartNumber.FormattingEnabled = true;
-            this.cmb_PartNumber.Location = new System.Drawing.Point(95, 265);
-            this.cmb_PartNumber.Name = "cmb_PartNumber";
-            this.cmb_PartNumber.Size = new System.Drawing.Size(236, 23);
-            this.cmb_PartNumber.TabIndex = 0;
+            this.label1.AutoSize = true;
+            this.label1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.label1.Location = new System.Drawing.Point(22, 457);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(82, 13);
+            this.label1.TabIndex = 139;
+            this.label1.Text = "AI缺陷名称：";
             // 
-            // label2
+            // flowLayoutPanel_Defects
             // 
-            this.label2.AutoSize = true;
-            this.label2.ForeColor = System.Drawing.Color.Snow;
-            this.label2.Location = new System.Drawing.Point(31, 303);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(303, 15);
-            this.label2.TabIndex = 138;
-            this.label2.Text = "-------------------------------------";
+            this.flowLayoutPanel_Defects.AutoScroll = true;
+            this.flowLayoutPanel_Defects.Location = new System.Drawing.Point(25, 491);
+            this.flowLayoutPanel_Defects.Name = "flowLayoutPanel_Defects";
+            this.flowLayoutPanel_Defects.Size = new System.Drawing.Size(326, 450);
+            this.flowLayoutPanel_Defects.TabIndex = 140;
             // 
             // HeatMapControl2
             // 
@@ -276,7 +298,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.tableLayoutPanel6);
             this.Name = "HeatMapControl2";
-            this.Size = new System.Drawing.Size(1477, 959);
+            this.Size = new System.Drawing.Size(1772, 1150);
             this.tableLayoutPanel6.ResumeLayout(false);
             this.panel13.ResumeLayout(false);
             this.panel13.PerformLayout();
@@ -305,5 +327,7 @@
         private System.Windows.Forms.Button btn_loadArryImage;
         private System.Windows.Forms.ComboBox cmb_PartNumber;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel_Defects;
     }
 }
