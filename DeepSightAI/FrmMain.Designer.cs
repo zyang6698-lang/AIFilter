@@ -113,17 +113,18 @@ namespace DeepSightAI
             this.tableLayoutPanel1.Controls.Add(this.statusStrip, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this.panel10, 0, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 290);
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 144);
+            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 96.17564F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 3.824363F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(2391, 1004);
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 17F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 17F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 17F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 17F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 17F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(1417, 574);
             this.tableLayoutPanel1.TabIndex = 15;
             // 
             // statusStrip
@@ -137,11 +138,11 @@ namespace DeepSightAI
             this.lbl_username,
             this.lblPageInfo,
             this.solutionAndflow});
-            this.statusStrip.Location = new System.Drawing.Point(0, 969);
+            this.statusStrip.Location = new System.Drawing.Point(0, 552);
             this.statusStrip.Name = "statusStrip";
-            this.statusStrip.Padding = new System.Windows.Forms.Padding(16, 0, 2, 0);
+            this.statusStrip.Padding = new System.Windows.Forms.Padding(14, 0, 2, 0);
             this.statusStrip.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
-            this.statusStrip.Size = new System.Drawing.Size(2391, 35);
+            this.statusStrip.Size = new System.Drawing.Size(1417, 22);
             this.statusStrip.SizingGrip = false;
             this.statusStrip.TabIndex = 6;
             // 
@@ -151,7 +152,7 @@ namespace DeepSightAI
             this.lbl_curTime.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.lbl_curTime.Name = "lbl_curTime";
             this.lbl_curTime.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.lbl_curTime.Size = new System.Drawing.Size(197, 28);
+            this.lbl_curTime.Size = new System.Drawing.Size(163, 16);
             this.lbl_curTime.Text = "2022-03-30 13:20:13";
             // 
             // lbl_username
@@ -159,7 +160,7 @@ namespace DeepSightAI
             this.lbl_username.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Right;
             this.lbl_username.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.lbl_username.Name = "lbl_username";
-            this.lbl_username.Size = new System.Drawing.Size(158, 28);
+            this.lbl_username.Size = new System.Drawing.Size(133, 16);
             this.lbl_username.Text = "当前用户：未登录";
             // 
             // lblPageInfo
@@ -167,7 +168,7 @@ namespace DeepSightAI
             this.lblPageInfo.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Right;
             this.lblPageInfo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.lblPageInfo.Name = "lblPageInfo";
-            this.lblPageInfo.Size = new System.Drawing.Size(146, 28);
+            this.lblPageInfo.Size = new System.Drawing.Size(121, 16);
             this.lblPageInfo.Text = "第 1 页 / 共 1 页";
             // 
             // solutionAndflow
@@ -175,7 +176,7 @@ namespace DeepSightAI
             this.solutionAndflow.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Right;
             this.solutionAndflow.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.solutionAndflow.Name = "solutionAndflow";
-            this.solutionAndflow.Size = new System.Drawing.Size(339, 20);
+            this.solutionAndflow.Size = new System.Drawing.Size(288, 17);
             this.solutionAndflow.Text = "当前方案:1_当前流程:1_当前Switch:false";
             this.solutionAndflow.Visible = false;
             // 
@@ -189,72 +190,73 @@ namespace DeepSightAI
             this.panel10.Controls.Add(this.panel2);
             this.panel10.Controls.Add(this.panel1);
             this.panel10.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel10.Location = new System.Drawing.Point(3, 3);
+            this.panel10.Location = new System.Drawing.Point(3, 2);
+            this.panel10.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panel10.Name = "panel10";
-            this.panel10.Size = new System.Drawing.Size(2385, 959);
+            this.panel10.Size = new System.Drawing.Size(1411, 548);
             this.panel10.TabIndex = 0;
             // 
             // panel7
             // 
-            this.panel7.Location = new System.Drawing.Point(18, 270);
+            this.panel7.Location = new System.Drawing.Point(16, 225);
             this.panel7.Margin = new System.Windows.Forms.Padding(0);
             this.panel7.Name = "panel7";
-            this.panel7.Size = new System.Drawing.Size(546, 32);
+            this.panel7.Size = new System.Drawing.Size(485, 27);
             this.panel7.TabIndex = 28;
             this.panel7.Visible = false;
             // 
             // panel6
             // 
-            this.panel6.Location = new System.Drawing.Point(18, 231);
+            this.panel6.Location = new System.Drawing.Point(16, 192);
             this.panel6.Margin = new System.Windows.Forms.Padding(0);
             this.panel6.Name = "panel6";
-            this.panel6.Size = new System.Drawing.Size(546, 32);
+            this.panel6.Size = new System.Drawing.Size(485, 27);
             this.panel6.TabIndex = 27;
             this.panel6.Visible = false;
             // 
             // panel5
             // 
-            this.panel5.Location = new System.Drawing.Point(18, 192);
+            this.panel5.Location = new System.Drawing.Point(16, 160);
             this.panel5.Margin = new System.Windows.Forms.Padding(0);
             this.panel5.Name = "panel5";
-            this.panel5.Size = new System.Drawing.Size(546, 32);
+            this.panel5.Size = new System.Drawing.Size(485, 27);
             this.panel5.TabIndex = 26;
             this.panel5.Visible = false;
             // 
             // panel4
             // 
-            this.panel4.Location = new System.Drawing.Point(18, 154);
+            this.panel4.Location = new System.Drawing.Point(16, 128);
             this.panel4.Margin = new System.Windows.Forms.Padding(0);
             this.panel4.Name = "panel4";
-            this.panel4.Size = new System.Drawing.Size(546, 32);
+            this.panel4.Size = new System.Drawing.Size(485, 27);
             this.panel4.TabIndex = 25;
             this.panel4.Visible = false;
             // 
             // panel3
             // 
-            this.panel3.Location = new System.Drawing.Point(18, 114);
+            this.panel3.Location = new System.Drawing.Point(16, 95);
             this.panel3.Margin = new System.Windows.Forms.Padding(0);
             this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(546, 32);
+            this.panel3.Size = new System.Drawing.Size(485, 27);
             this.panel3.TabIndex = 24;
             this.panel3.Visible = false;
             // 
             // panel2
             // 
-            this.panel2.Location = new System.Drawing.Point(18, 75);
+            this.panel2.Location = new System.Drawing.Point(16, 62);
             this.panel2.Margin = new System.Windows.Forms.Padding(0);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(546, 32);
+            this.panel2.Size = new System.Drawing.Size(485, 27);
             this.panel2.TabIndex = 23;
             this.panel2.Visible = false;
             // 
             // panel1
             // 
             this.panel1.AutoScroll = true;
-            this.panel1.Location = new System.Drawing.Point(18, 36);
+            this.panel1.Location = new System.Drawing.Point(16, 30);
             this.panel1.Margin = new System.Windows.Forms.Padding(0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(546, 32);
+            this.panel1.Size = new System.Drawing.Size(485, 27);
             this.panel1.TabIndex = 22;
             this.panel1.Visible = false;
             // 
@@ -262,10 +264,10 @@ namespace DeepSightAI
             // 
             this.panel_login.Controls.Add(this.btnLogin);
             this.panel_login.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel_login.Location = new System.Drawing.Point(363, 3);
+            this.panel_login.Location = new System.Drawing.Point(321, 2);
             this.panel_login.Margin = new System.Windows.Forms.Padding(0);
             this.panel_login.Name = "panel_login";
-            this.panel_login.Size = new System.Drawing.Size(60, 72);
+            this.panel_login.Size = new System.Drawing.Size(53, 61);
             this.panel_login.TabIndex = 23;
             // 
             // btnLogin
@@ -274,9 +276,9 @@ namespace DeepSightAI
             this.btnLogin.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnLogin.Image = ((System.Drawing.Image)(resources.GetObject("btnLogin.Image")));
             this.btnLogin.Location = new System.Drawing.Point(0, 0);
-            this.btnLogin.Margin = new System.Windows.Forms.Padding(8);
+            this.btnLogin.Margin = new System.Windows.Forms.Padding(7, 7, 7, 7);
             this.btnLogin.Name = "btnLogin";
-            this.btnLogin.Size = new System.Drawing.Size(60, 72);
+            this.btnLogin.Size = new System.Drawing.Size(53, 61);
             this.btnLogin.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.btnLogin.TabIndex = 11;
             this.btnLogin.TabStop = false;
@@ -287,10 +289,10 @@ namespace DeepSightAI
             // 
             this.panel_start.Controls.Add(this.btnStart);
             this.panel_start.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel_start.Location = new System.Drawing.Point(243, 3);
+            this.panel_start.Location = new System.Drawing.Point(215, 2);
             this.panel_start.Margin = new System.Windows.Forms.Padding(0);
             this.panel_start.Name = "panel_start";
-            this.panel_start.Size = new System.Drawing.Size(60, 72);
+            this.panel_start.Size = new System.Drawing.Size(53, 61);
             this.panel_start.TabIndex = 19;
             // 
             // btnStart
@@ -299,9 +301,9 @@ namespace DeepSightAI
             this.btnStart.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnStart.Image = global::DeepSightAI.Properties.Resources.start2;
             this.btnStart.Location = new System.Drawing.Point(0, 0);
-            this.btnStart.Margin = new System.Windows.Forms.Padding(8);
+            this.btnStart.Margin = new System.Windows.Forms.Padding(7, 7, 7, 7);
             this.btnStart.Name = "btnStart";
-            this.btnStart.Size = new System.Drawing.Size(60, 72);
+            this.btnStart.Size = new System.Drawing.Size(53, 61);
             this.btnStart.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.btnStart.TabIndex = 7;
             this.btnStart.TabStop = false;
@@ -312,10 +314,10 @@ namespace DeepSightAI
             // 
             this.panel_chart.Controls.Add(this.btnChart);
             this.panel_chart.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel_chart.Location = new System.Drawing.Point(183, 3);
+            this.panel_chart.Location = new System.Drawing.Point(162, 2);
             this.panel_chart.Margin = new System.Windows.Forms.Padding(0);
             this.panel_chart.Name = "panel_chart";
-            this.panel_chart.Size = new System.Drawing.Size(60, 72);
+            this.panel_chart.Size = new System.Drawing.Size(53, 61);
             this.panel_chart.TabIndex = 16;
             // 
             // btnChart
@@ -324,9 +326,9 @@ namespace DeepSightAI
             this.btnChart.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnChart.Image = ((System.Drawing.Image)(resources.GetObject("btnChart.Image")));
             this.btnChart.Location = new System.Drawing.Point(0, 0);
-            this.btnChart.Margin = new System.Windows.Forms.Padding(8);
+            this.btnChart.Margin = new System.Windows.Forms.Padding(7, 7, 7, 7);
             this.btnChart.Name = "btnChart";
-            this.btnChart.Size = new System.Drawing.Size(60, 72);
+            this.btnChart.Size = new System.Drawing.Size(53, 61);
             this.btnChart.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.btnChart.TabIndex = 4;
             this.btnChart.TabStop = false;
@@ -336,10 +338,10 @@ namespace DeepSightAI
             // panel_alarm
             // 
             this.panel_alarm.Controls.Add(this.btnAlarm);
-            this.panel_alarm.Location = new System.Drawing.Point(123, 3);
+            this.panel_alarm.Location = new System.Drawing.Point(109, 2);
             this.panel_alarm.Margin = new System.Windows.Forms.Padding(0);
             this.panel_alarm.Name = "panel_alarm";
-            this.panel_alarm.Size = new System.Drawing.Size(60, 72);
+            this.panel_alarm.Size = new System.Drawing.Size(53, 60);
             this.panel_alarm.TabIndex = 15;
             // 
             // btnAlarm
@@ -348,9 +350,9 @@ namespace DeepSightAI
             this.btnAlarm.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnAlarm.Image = ((System.Drawing.Image)(resources.GetObject("btnAlarm.Image")));
             this.btnAlarm.Location = new System.Drawing.Point(0, 0);
-            this.btnAlarm.Margin = new System.Windows.Forms.Padding(8);
+            this.btnAlarm.Margin = new System.Windows.Forms.Padding(7, 7, 7, 7);
             this.btnAlarm.Name = "btnAlarm";
-            this.btnAlarm.Size = new System.Drawing.Size(60, 72);
+            this.btnAlarm.Size = new System.Drawing.Size(53, 60);
             this.btnAlarm.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.btnAlarm.TabIndex = 4;
             this.btnAlarm.TabStop = false;
@@ -361,10 +363,10 @@ namespace DeepSightAI
             // 
             this.panel_tool.Controls.Add(this.btnTool);
             this.panel_tool.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel_tool.Location = new System.Drawing.Point(63, 3);
+            this.panel_tool.Location = new System.Drawing.Point(56, 2);
             this.panel_tool.Margin = new System.Windows.Forms.Padding(0);
             this.panel_tool.Name = "panel_tool";
-            this.panel_tool.Size = new System.Drawing.Size(60, 72);
+            this.panel_tool.Size = new System.Drawing.Size(53, 61);
             this.panel_tool.TabIndex = 13;
             // 
             // btnTool
@@ -373,9 +375,9 @@ namespace DeepSightAI
             this.btnTool.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnTool.Image = ((System.Drawing.Image)(resources.GetObject("btnTool.Image")));
             this.btnTool.Location = new System.Drawing.Point(0, 0);
-            this.btnTool.Margin = new System.Windows.Forms.Padding(8);
+            this.btnTool.Margin = new System.Windows.Forms.Padding(7, 7, 7, 7);
             this.btnTool.Name = "btnTool";
-            this.btnTool.Size = new System.Drawing.Size(60, 72);
+            this.btnTool.Size = new System.Drawing.Size(53, 61);
             this.btnTool.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.btnTool.TabIndex = 1;
             this.btnTool.TabStop = false;
@@ -387,10 +389,10 @@ namespace DeepSightAI
             this.panel_home.BackColor = System.Drawing.Color.White;
             this.panel_home.Controls.Add(this.btnHome);
             this.panel_home.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel_home.Location = new System.Drawing.Point(3, 3);
+            this.panel_home.Location = new System.Drawing.Point(3, 2);
             this.panel_home.Margin = new System.Windows.Forms.Padding(0);
             this.panel_home.Name = "panel_home";
-            this.panel_home.Size = new System.Drawing.Size(60, 72);
+            this.panel_home.Size = new System.Drawing.Size(53, 61);
             this.panel_home.TabIndex = 12;
             // 
             // btnHome
@@ -400,9 +402,9 @@ namespace DeepSightAI
             this.btnHome.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnHome.Image = ((System.Drawing.Image)(resources.GetObject("btnHome.Image")));
             this.btnHome.Location = new System.Drawing.Point(0, 0);
-            this.btnHome.Margin = new System.Windows.Forms.Padding(8);
+            this.btnHome.Margin = new System.Windows.Forms.Padding(7, 7, 7, 7);
             this.btnHome.Name = "btnHome";
-            this.btnHome.Size = new System.Drawing.Size(60, 72);
+            this.btnHome.Size = new System.Drawing.Size(53, 61);
             this.btnHome.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.btnHome.TabIndex = 0;
             this.btnHome.TabStop = false;
@@ -412,14 +414,14 @@ namespace DeepSightAI
             // table_menu
             // 
             this.table_menu.ColumnCount = 9;
-            this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 60F));
-            this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 60F));
-            this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 60F));
-            this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 60F));
-            this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 60F));
-            this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 60F));
-            this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 60F));
-            this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 300F));
+            this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 53F));
+            this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 53F));
+            this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 53F));
+            this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 53F));
+            this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 53F));
+            this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 53F));
+            this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 53F));
+            this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 267F));
             this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.table_menu.Controls.Add(this.panel_home, 0, 0);
             this.table_menu.Controls.Add(this.panel_tool, 1, 0);
@@ -431,24 +433,24 @@ namespace DeepSightAI
             this.table_menu.Controls.Add(this.panel8, 8, 0);
             this.table_menu.Controls.Add(this.panel9, 7, 0);
             this.table_menu.Dock = System.Windows.Forms.DockStyle.Top;
-            this.table_menu.Location = new System.Drawing.Point(0, 173);
+            this.table_menu.Location = new System.Drawing.Point(0, 79);
             this.table_menu.Margin = new System.Windows.Forms.Padding(0);
             this.table_menu.Name = "table_menu";
-            this.table_menu.Padding = new System.Windows.Forms.Padding(3, 3, 0, 3);
+            this.table_menu.Padding = new System.Windows.Forms.Padding(3, 2, 0, 2);
             this.table_menu.RowCount = 1;
             this.table_menu.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.table_menu.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 72F));
-            this.table_menu.Size = new System.Drawing.Size(1594, 78);
+            this.table_menu.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 60F));
+            this.table_menu.Size = new System.Drawing.Size(1417, 65);
             this.table_menu.TabIndex = 12;
             // 
             // panel_pause
             // 
             this.panel_pause.Controls.Add(this.btnPause);
             this.panel_pause.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel_pause.Location = new System.Drawing.Point(303, 3);
+            this.panel_pause.Location = new System.Drawing.Point(268, 2);
             this.panel_pause.Margin = new System.Windows.Forms.Padding(0);
             this.panel_pause.Name = "panel_pause";
-            this.panel_pause.Size = new System.Drawing.Size(60, 72);
+            this.panel_pause.Size = new System.Drawing.Size(53, 61);
             this.panel_pause.TabIndex = 20;
             // 
             // btnPause
@@ -457,9 +459,9 @@ namespace DeepSightAI
             this.btnPause.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnPause.Image = global::DeepSightAI.Properties.Resources.search1;
             this.btnPause.Location = new System.Drawing.Point(0, 0);
-            this.btnPause.Margin = new System.Windows.Forms.Padding(8);
+            this.btnPause.Margin = new System.Windows.Forms.Padding(7, 7, 7, 7);
             this.btnPause.Name = "btnPause";
-            this.btnPause.Size = new System.Drawing.Size(60, 72);
+            this.btnPause.Size = new System.Drawing.Size(53, 61);
             this.btnPause.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.btnPause.TabIndex = 8;
             this.btnPause.TabStop = false;
@@ -472,9 +474,10 @@ namespace DeepSightAI
             this.panel8.Controls.Add(this.lbl_Count);
             this.panel8.Controls.Add(this.lbl_ToghRate);
             this.panel8.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel8.Location = new System.Drawing.Point(726, 6);
+            this.panel8.Location = new System.Drawing.Point(644, 4);
+            this.panel8.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panel8.Name = "panel8";
-            this.panel8.Size = new System.Drawing.Size(865, 66);
+            this.panel8.Size = new System.Drawing.Size(770, 57);
             this.panel8.TabIndex = 24;
             // 
             // lbl_ImageCount
@@ -483,9 +486,9 @@ namespace DeepSightAI
             this.lbl_ImageCount.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.lbl_ImageCount.Font = new System.Drawing.Font("幼圆", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.lbl_ImageCount.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(246)))), ((int)(((byte)(247)))), ((int)(((byte)(231)))));
-            this.lbl_ImageCount.Location = new System.Drawing.Point(314, 18);
+            this.lbl_ImageCount.Location = new System.Drawing.Point(279, 15);
             this.lbl_ImageCount.Name = "lbl_ImageCount";
-            this.lbl_ImageCount.Size = new System.Drawing.Size(262, 29);
+            this.lbl_ImageCount.Size = new System.Drawing.Size(211, 24);
             this.lbl_ImageCount.TabIndex = 9;
             this.lbl_ImageCount.Text = "当前推理图片数:0";
             this.lbl_ImageCount.Visible = false;
@@ -496,9 +499,9 @@ namespace DeepSightAI
             this.lbl_Count.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.lbl_Count.Font = new System.Drawing.Font("幼圆", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.lbl_Count.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(246)))), ((int)(((byte)(247)))), ((int)(((byte)(231)))));
-            this.lbl_Count.Location = new System.Drawing.Point(45, 18);
+            this.lbl_Count.Location = new System.Drawing.Point(40, 15);
             this.lbl_Count.Name = "lbl_Count";
-            this.lbl_Count.Size = new System.Drawing.Size(231, 29);
+            this.lbl_Count.Size = new System.Drawing.Size(186, 24);
             this.lbl_Count.TabIndex = 8;
             this.lbl_Count.Text = "当前总作业数:0";
             this.lbl_Count.Visible = false;
@@ -510,9 +513,9 @@ namespace DeepSightAI
             this.lbl_ToghRate.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.lbl_ToghRate.Font = new System.Drawing.Font("幼圆", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.lbl_ToghRate.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(246)))), ((int)(((byte)(247)))), ((int)(((byte)(231)))));
-            this.lbl_ToghRate.Location = new System.Drawing.Point(604, 18);
+            this.lbl_ToghRate.Location = new System.Drawing.Point(537, 15);
             this.lbl_ToghRate.Name = "lbl_ToghRate";
-            this.lbl_ToghRate.Size = new System.Drawing.Size(248, 29);
+            this.lbl_ToghRate.Size = new System.Drawing.Size(200, 24);
             this.lbl_ToghRate.TabIndex = 6;
             this.lbl_ToghRate.Text = "当前过滤率:0.0%";
             this.lbl_ToghRate.Visible = false;
@@ -521,10 +524,10 @@ namespace DeepSightAI
             // 
             this.panel9.Controls.Add(this.btnModel);
             this.panel9.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel9.Location = new System.Drawing.Point(427, 7);
-            this.panel9.Margin = new System.Windows.Forms.Padding(4);
+            this.panel9.Location = new System.Drawing.Point(378, 5);
+            this.panel9.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.panel9.Name = "panel9";
-            this.panel9.Size = new System.Drawing.Size(292, 64);
+            this.panel9.Size = new System.Drawing.Size(259, 55);
             this.panel9.TabIndex = 25;
             // 
             // btnModel
@@ -539,9 +542,9 @@ namespace DeepSightAI
             this.btnModel.Font = new System.Drawing.Font("幼圆", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.btnModel.ForeColor = System.Drawing.Color.White;
             this.btnModel.Location = new System.Drawing.Point(0, 0);
-            this.btnModel.Margin = new System.Windows.Forms.Padding(8);
+            this.btnModel.Margin = new System.Windows.Forms.Padding(7, 7, 7, 7);
             this.btnModel.Name = "btnModel";
-            this.btnModel.Size = new System.Drawing.Size(292, 64);
+            this.btnModel.Size = new System.Drawing.Size(259, 55);
             this.btnModel.TabIndex = 109;
             this.btnModel.Text = "生产模式";
             this.btnModel.UseVisualStyleBackColor = false;
@@ -554,7 +557,7 @@ namespace DeepSightAI
             this.btnTest.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.btnTest.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnTest.Name = "btnTest";
-            this.btnTest.Size = new System.Drawing.Size(64, 52);
+            this.btnTest.Size = new System.Drawing.Size(53, 28);
             this.btnTest.Text = "调试";
             this.btnTest.Click += new System.EventHandler(this.btnTest_Click);
             // 
@@ -564,7 +567,7 @@ namespace DeepSightAI
             this.btn_showBox.CheckOnClick = true;
             this.btn_showBox.CheckState = System.Windows.Forms.CheckState.Checked;
             this.btn_showBox.Name = "btn_showBox";
-            this.btn_showBox.Size = new System.Drawing.Size(236, 34);
+            this.btn_showBox.Size = new System.Drawing.Size(197, 26);
             this.btn_showBox.Text = "是否显示缺陷框";
             this.btn_showBox.Click += new System.EventHandler(this.toolStripMenuItem2_Click);
             // 
@@ -576,14 +579,14 @@ namespace DeepSightAI
             this.toolStripDropDownButton1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.toolStripDropDownButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripDropDownButton1.Name = "toolStripDropDownButton1";
-            this.toolStripDropDownButton1.Size = new System.Drawing.Size(100, 52);
+            this.toolStripDropDownButton1.Size = new System.Drawing.Size(83, 28);
             this.toolStripDropDownButton1.Text = "图片切换";
             // 
             // btnModelB
             // 
             this.btnModelB.CheckOnClick = true;
             this.btnModelB.Name = "btnModelB";
-            this.btnModelB.Size = new System.Drawing.Size(187, 34);
+            this.btnModelB.Size = new System.Drawing.Size(158, 26);
             this.btnModelB.Text = "Gerber图";
             this.btnModelB.Click += new System.EventHandler(this.btnModelB_Click);
             // 
@@ -593,14 +596,14 @@ namespace DeepSightAI
             this.btnModelC.CheckOnClick = true;
             this.btnModelC.CheckState = System.Windows.Forms.CheckState.Checked;
             this.btnModelC.Name = "btnModelC";
-            this.btnModelC.Size = new System.Drawing.Size(187, 34);
+            this.btnModelC.Size = new System.Drawing.Size(158, 26);
             this.btnModelC.Text = "Temp图";
             this.btnModelC.Click += new System.EventHandler(this.btnModelC_Click);
             // 
             // toolStripButton1
             // 
             this.toolStripButton1.Name = "toolStripButton1";
-            this.toolStripButton1.Size = new System.Drawing.Size(34, 52);
+            this.toolStripButton1.Size = new System.Drawing.Size(29, 28);
             // 
             // toolStrip
             // 
@@ -615,11 +618,11 @@ namespace DeepSightAI
             this.btnRunVB,
             this.btnClear,
             this.toolStripButton1});
-            this.toolStrip.Location = new System.Drawing.Point(0, 58);
+            this.toolStrip.Location = new System.Drawing.Point(0, 48);
             this.toolStrip.Name = "toolStrip";
             this.toolStrip.Padding = new System.Windows.Forms.Padding(0, 0, 3, 0);
             this.toolStrip.ShowItemToolTips = false;
-            this.toolStrip.Size = new System.Drawing.Size(2391, 57);
+            this.toolStrip.Size = new System.Drawing.Size(1417, 31);
             this.toolStrip.TabIndex = 14;
             // 
             // toolStripButton2
@@ -629,7 +632,7 @@ namespace DeepSightAI
             this.toolStripButton2.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton2.Image")));
             this.toolStripButton2.ImageTransparentColor = System.Drawing.Color.Maroon;
             this.toolStripButton2.Name = "toolStripButton2";
-            this.toolStripButton2.Size = new System.Drawing.Size(86, 52);
+            this.toolStripButton2.Size = new System.Drawing.Size(73, 28);
             this.toolStripButton2.Text = "批量测试";
             this.toolStripButton2.ToolTipText = "循环测试";
             this.toolStripButton2.Click += new System.EventHandler(this.toolStripButton2_Click);
@@ -641,7 +644,7 @@ namespace DeepSightAI
             this.btnRunVB.Image = ((System.Drawing.Image)(resources.GetObject("btnRunVB.Image")));
             this.btnRunVB.ImageTransparentColor = System.Drawing.Color.Maroon;
             this.btnRunVB.Name = "btnRunVB";
-            this.btnRunVB.Size = new System.Drawing.Size(73, 52);
+            this.btnRunVB.Size = new System.Drawing.Size(62, 28);
             this.btnRunVB.Text = "启动VB";
             this.btnRunVB.Click += new System.EventHandler(this.btnRunVB_Click);
             // 
@@ -652,7 +655,7 @@ namespace DeepSightAI
             this.btnClear.Image = ((System.Drawing.Image)(resources.GetObject("btnClear.Image")));
             this.btnClear.ImageTransparentColor = System.Drawing.Color.Maroon;
             this.btnClear.Name = "btnClear";
-            this.btnClear.Size = new System.Drawing.Size(86, 52);
+            this.btnClear.Size = new System.Drawing.Size(73, 28);
             this.btnClear.Text = "重置软件";
             this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
             // 
@@ -667,7 +670,7 @@ namespace DeepSightAI
             this.lbl_title.Location = new System.Drawing.Point(0, 2);
             this.lbl_title.Margin = new System.Windows.Forms.Padding(0);
             this.lbl_title.Name = "lbl_title";
-            this.lbl_title.Size = new System.Drawing.Size(554, 54);
+            this.lbl_title.Size = new System.Drawing.Size(492, 45);
             this.lbl_title.TabIndex = 27;
             this.lbl_title.Text = "DeepSightAI";
             this.lbl_title.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -678,10 +681,10 @@ namespace DeepSightAI
             this.panel_r.Controls.Add(this.btnClose);
             this.panel_r.Controls.Add(this.btnMin);
             this.panel_r.Controls.Add(this.btnMax);
-            this.panel_r.Location = new System.Drawing.Point(1350, 0);
+            this.panel_r.Location = new System.Drawing.Point(1200, 0);
             this.panel_r.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.panel_r.Name = "panel_r";
-            this.panel_r.Size = new System.Drawing.Size(242, 56);
+            this.panel_r.Size = new System.Drawing.Size(215, 47);
             this.panel_r.TabIndex = 30;
             // 
             // btnClose
@@ -693,10 +696,10 @@ namespace DeepSightAI
             this.btnClose.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnClose.Font = new System.Drawing.Font("新宋体", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.btnClose.ForeColor = System.Drawing.Color.White;
-            this.btnClose.Location = new System.Drawing.Point(198, 3);
-            this.btnClose.Margin = new System.Windows.Forms.Padding(4);
+            this.btnClose.Location = new System.Drawing.Point(176, 2);
+            this.btnClose.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.btnClose.Name = "btnClose";
-            this.btnClose.Size = new System.Drawing.Size(44, 51);
+            this.btnClose.Size = new System.Drawing.Size(39, 42);
             this.btnClose.TabIndex = 13;
             this.btnClose.TabStop = false;
             this.btnClose.Text = "×";
@@ -712,10 +715,10 @@ namespace DeepSightAI
             this.btnMin.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnMin.Font = new System.Drawing.Font("新宋体", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.btnMin.ForeColor = System.Drawing.Color.WhiteSmoke;
-            this.btnMin.Location = new System.Drawing.Point(87, 2);
-            this.btnMin.Margin = new System.Windows.Forms.Padding(4);
+            this.btnMin.Location = new System.Drawing.Point(77, 2);
+            this.btnMin.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.btnMin.Name = "btnMin";
-            this.btnMin.Size = new System.Drawing.Size(44, 51);
+            this.btnMin.Size = new System.Drawing.Size(39, 42);
             this.btnMin.TabIndex = 12;
             this.btnMin.TabStop = false;
             this.btnMin.Text = "-";
@@ -733,10 +736,10 @@ namespace DeepSightAI
             this.btnMax.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnMax.Font = new System.Drawing.Font("新宋体", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.btnMax.ForeColor = System.Drawing.Color.White;
-            this.btnMax.Location = new System.Drawing.Point(140, 2);
-            this.btnMax.Margin = new System.Windows.Forms.Padding(4);
+            this.btnMax.Location = new System.Drawing.Point(124, 2);
+            this.btnMax.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.btnMax.Name = "btnMax";
-            this.btnMax.Size = new System.Drawing.Size(44, 51);
+            this.btnMax.Size = new System.Drawing.Size(39, 42);
             this.btnMax.TabIndex = 14;
             this.btnMax.TabStop = false;
             this.btnMax.UseVisualStyleBackColor = false;
@@ -751,7 +754,7 @@ namespace DeepSightAI
             this.panelTile.Location = new System.Drawing.Point(0, 0);
             this.panelTile.Margin = new System.Windows.Forms.Padding(0);
             this.panelTile.Name = "panelTile";
-            this.panelTile.Size = new System.Drawing.Size(1594, 58);
+            this.panelTile.Size = new System.Drawing.Size(1417, 48);
             this.panelTile.TabIndex = 13;
             this.panelTile.DoubleClick += new System.EventHandler(this.panelTile_DoubleClick);
             this.panelTile.MouseDown += new System.Windows.Forms.MouseEventHandler(this.setForm_MouseDown);
@@ -761,10 +764,10 @@ namespace DeepSightAI
             // 
             // FrmMain
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 18F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.ClientSize = new System.Drawing.Size(1594, 862);
+            this.ClientSize = new System.Drawing.Size(1417, 718);
             this.ControlBox = false;
             this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.table_menu);
@@ -772,6 +775,7 @@ namespace DeepSightAI
             this.Controls.Add(this.panelTile);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "FrmMain";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "DeepSightAI";
