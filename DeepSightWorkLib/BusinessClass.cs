@@ -287,7 +287,7 @@ namespace DeepSightWorkLib
                         var valueObj = JObject.Parse(valueStr);
                         //string serialNumber = $"{valueObj["serial_number"].ToString()}_{++count_Index}";
                         string serialNumber = $"{valueObj["serial_number"].ToString()}";
-                       
+
                         LogTextHelper.Info($"获取到{serialNumber}的数据");
                         // 遍历 result_infos
                         if (valueObj["results_info"] == null) continue;
@@ -296,7 +296,7 @@ namespace DeepSightWorkLib
                             string side = info1["side"].ToString();
                             string minio_ip = info1["minio_ip"].ToString();
                             string minio_port = info1["minio_port"].ToString();
-                            
+
                             if (string.IsNullOrEmpty(minio_ip) || string.IsNullOrEmpty(minio_port) || minio_port == "0")
                             {
                                 Thread.Sleep(500);
@@ -414,7 +414,7 @@ namespace DeepSightWorkLib
         /// <param name="date"></param>
         /// <param name="Result"></param>
         /// <returns></returns>
-        public bool ReadPNSNByTime( DateTime date, out string Result)
+        public bool ReadPNSNByTime(DateTime date, out string Result)
         {
             string a = Guid.NewGuid().ToString();
             RootDbInfo getInfo = new RootDbInfo();
@@ -426,7 +426,7 @@ namespace DeepSightWorkLib
             getInfo.range_start = date.Date.ToString("yyyyMMddHHmmssfff");
             getInfo.range_end = date.Date.AddDays(1).AddTicks(-1).ToString("yyyyMMddHHmmssfff");
             return http_DB.HttpPostMethod(URL, getInfo, 0, out Result);
-         }
+        }
 
 
 
@@ -704,7 +704,7 @@ namespace DeepSightWorkLib
         {
             try
             {
-                LogTextHelper.Info("ProcuctSerial:"+info.ProductSerial);
+                LogTextHelper.Info("ProcuctSerial:" + info.ProductSerial);
                 //20250811 奥特斯项目将料号与solution/flow绑定，实时根据配置档传进的进行匹配
                 List<SolutionAndFlow> listSolutionFlow = solconfig.solus.FindAll(o => o.ProductSerial == info.ProductSerial).ToList();
                 if (listSolutionFlow.Count > 0)
@@ -841,9 +841,9 @@ namespace DeepSightWorkLib
                             group.GroupUuid = Guid.NewGuid().ToString();
                             group.GroupInfos = new List<GroupInfo>();
                             group.DefectCode = "";
-                            group.TempImgPath = $"D:\\ATS_AI_INSTALL\\TemplateImages\\{info.ProductSerial}\\{info.ProductSerial}[{info.SideIndex}].jpg" ;
+                            group.TempImgPath = $"D:\\ATS_AI_INSTALL\\TemplateImages\\{info.ProductSerial}\\{info.ProductSerial}[{info.SideIndex}].jpg";
                             //group.TempImgPath = $"D:\\ATS_AI_INSTALL\\TemplateImages\\NYA1548\\NYA1548[{info.SideIndex}].jpg" ;
-                            group.ImgROI=new List<int>();
+                            group.ImgROI = new List<int>();
                             group.ImgROI.Add(pcsInfo.DefectInfo[j].DefectRoi.X);
                             group.ImgROI.Add(pcsInfo.DefectInfo[j].DefectRoi.Y);
                             group.ImgROI.Add(pcsInfo.DefectInfo[j].DefectRoi.Width);
@@ -994,6 +994,7 @@ namespace DeepSightWorkLib
                     avi_HeatInfo.SN = panelInfo.SerialNumber;
                     avi_HeatInfo.Side = panelInfo.SideIndex;
 
+
                     //这个有几个  就是几个报点图各自的结果，
                     for (int i = 0; i < obj.Data.InferWholeData.InferResults.Count; i++)
                     {
@@ -1001,29 +1002,35 @@ namespace DeepSightWorkLib
                         vBRcv.bbox = new List<List<double>>();
                         dsCenterInfo.Data[0].Content["1"].DefectsCount++;
 
-                        //更新中台数据
-                        if (panelInfo.SideIndex == "A")
+                        try
                         {
-                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].AiResult = obj.Data.InferWholeData.InferResults[i].Infer_Result.ToLower(); ;
-                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].ManualResult = obj.Data.InferWholeData.InferResults[i].Infer_Result.ToLower();
-                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].ManualDefectCode = obj.Data.InferWholeData.InferResults[i].Defect_name;
-                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].DefectCode = obj.Data.InferWholeData.InferResults[i].Defect_name;
+                            //更新中台数据
+                            if (panelInfo.SideIndex == "A")
+                            {
+                                dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].AiResult = obj.Data.InferWholeData.InferResults[i].Infer_Result.ToLower(); ;
+                                dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].ManualResult = obj.Data.InferWholeData.InferResults[i].Infer_Result.ToLower();
+                                dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].ManualDefectCode = obj.Data.InferWholeData.InferResults[i].Defect_name;
+                                dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].DefectCode = obj.Data.InferWholeData.InferResults[i].Defect_name;
+                            }
+                            else
+                            {
+                                dsCenterInfo.Data[0].Content["1"].EndTime = time;
+                                panelInfo.EndTime = time;
+                                //因为上传中台数据A/B面的一个pcs信息在一个包，但A/B面处理是分开的；
+                                //如果是B的话，先计算A面的报点数
+                                int Bcount = panelInfo.PcsInfo["1"].DefectInfo.Count;
+                                int ALLcount = dsCenterInfo.Data[0].Content["1"].DefectsInfo.Count;
+                                int index = ALLcount - Bcount;
+                                dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].AiResult = obj.Data.InferWholeData.InferResults[i].Infer_Result.ToLower();
+                                dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].ManualResult = obj.Data.InferWholeData.InferResults[i].Infer_Result.ToLower();
+                                dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].ManualDefectCode = obj.Data.InferWholeData.InferResults[i].Defect_name;
+                                dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].DefectCode = obj.Data.InferWholeData.InferResults[i].Defect_name;
+                            }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            dsCenterInfo.Data[0].Content["1"].EndTime = time;
-                            panelInfo.EndTime = time;
-                            //因为上传中台数据A/B面的一个pcs信息在一个包，但A/B面处理是分开的；
-                            //如果是B的话，先计算A面的报点数
-                            int Bcount = panelInfo.PcsInfo["1"].DefectInfo.Count;
-                            int ALLcount = dsCenterInfo.Data[0].Content["1"].DefectsInfo.Count;
-                            int index = ALLcount - Bcount;
-                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].AiResult = obj.Data.InferWholeData.InferResults[i].Infer_Result.ToLower();
-                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].ManualResult = obj.Data.InferWholeData.InferResults[i].Infer_Result.ToLower();
-                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].ManualDefectCode = obj.Data.InferWholeData.InferResults[i].Defect_name;
-                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].DefectCode = obj.Data.InferWholeData.InferResults[i].Defect_name;
+                            LogTextHelper.Error("更新中台数据异常" + ex.ToString());
                         }
-
 
                         for (int j = 0; j < obj.Data.InferWholeData.InferResults[i].inferDetails.Location.Count; j++)
                         {

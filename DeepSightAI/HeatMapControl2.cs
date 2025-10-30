@@ -36,7 +36,7 @@ namespace DeepSightAI
         private Bitmap _heatMapOverlay = null;
 
         public CvDisplay[] DispWinHeatMap = null;
-
+        private Mat SourceImage = null;
 
         public HeatMapControl2()
         {
@@ -70,30 +70,48 @@ namespace DeepSightAI
 
         }
 
-        private void btn_loadArryImage_Click(object sender, EventArgs e)
+        private async void btn_loadArryImage_Click(object sender, EventArgs e)
         {
             string path = SelectImageFile();
             if (!string.IsNullOrEmpty(path))
             {
-                Rect rect = new Rect();
-                GetProductROI(path, ref rect);
-                offsetX = rect.X;
-                offsetY = rect.Y;
-                Mat mt = Cv2.ImRead(path);
-                //缩放0.1倍
-                Cv2.Resize(mt, mt, new OpenCvSharp.Size(mt.Width * 0.1, mt.Height * 0.1));
-                mt = new Mat(mt, rect);
-                DispWinHeatMap[0].Image = mt; // 设置背景图
-                _heatMapOverlay = null; // 清除旧的热力图
-                DispWinHeatMap[0].Invalidate(); // 触发重绘
+                // 显示加载指示
+                this.Enabled = false;
+                try
+                {
+                    Mat mt = await Task.Run(() =>
+                    {
+                        Rect rect = new Rect();
+                        GetProductROI(path, ref rect);
+                        offsetX = rect.X;
+                        offsetY = rect.Y;
+                        Mat originalMat = Cv2.ImRead(path);
+                        //缩放0.1倍
+                        Cv2.Resize(originalMat, originalMat, new OpenCvSharp.Size(originalMat.Width * 0.1, originalMat.Height * 0.1));
+                        return new Mat(originalMat, rect);
+                    });
+                    SourceImage = mt;
+                    DispWinHeatMap[0].Image = mt; // 设置背景图
+                    _heatMapOverlay = null; // 清除旧的热力图
+                    DispWinHeatMap[0].Invalidate(); // 触发重绘
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error($"加载Array图像失败: {ex.Message}");
+                    MessageBox.Show("加载图像失败，请检查日志。");
+                }
+                finally
+                {
+                    this.Enabled = true;
+                }
             }
         }
 
-        private void btn_setPanel_Click(object sender, EventArgs e)
+        private async void btn_setPanel_Click(object sender, EventArgs e)
         {
             try
             {
-                if (DispWinHeatMap[0].Image == null)
+                if (SourceImage == null)
                 {
                     MessageBox.Show("请先加载Array图像");
                     return;
@@ -102,29 +120,46 @@ namespace DeepSightAI
                 int row = Convert.ToInt32(this.txt_Row.Text);
                 int column = Convert.ToInt32(this.txt_Column.Text);
 
-                Mat sourceMat = DispWinHeatMap[0].Image.Clone();
-                if (sourceMat.Empty())
+                if (SourceImage.Empty())
                 {
                     LogTextHelper.Error("无法读取源图像");
                     return;
                 }
 
-                Mat[,] matGrid = new Mat[row, column];
-                for (int i = 0; i < row; i++)
+                this.Enabled = false;
+                try
                 {
-                    for (int j = 0; j < column; j++)
+                    Mat resultImage = await Task.Run(() =>
                     {
-                        matGrid[i, j] = sourceMat.Clone();
-                    }
+                        Mat[,] matGrid = new Mat[row, column];
+                        for (int i = 0; i < row; i++)
+                        {
+                            for (int j = 0; j < column; j++)
+                            {
+                                matGrid[i, j] = SourceImage.Clone();
+                            }
+                        }
+                        return StitchImages(matGrid, row, column);
+                    });
+
+                    DispWinHeatMap[0].Image = resultImage;
+                    _heatMapOverlay = null; // 清除热力图
+                    DispWinHeatMap[0].Invalidate(); // 触发重绘
                 }
-                Mat resultImage = StitchImages(matGrid, row, column);
-                DispWinHeatMap[0].Image = resultImage;
-                _heatMapOverlay = null; // 清除热力图
-                DispWinHeatMap[0].Invalidate(); // 触发重绘
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error($"制作Array图像失败: {ex.Message}");
+                    throw; // 重新抛出异常以便上层捕获
+                }
+                finally
+                {
+                    this.Enabled = true;
+                }
             }
             catch (Exception ex)
             {
                 LogTextHelper.Error($"制作Array图像失败: {ex.Message}");
+                MessageBox.Show("制作Array图像失败，请检查日志。");
             }
         }
 
@@ -265,34 +300,31 @@ namespace DeepSightAI
             }));
 
 
-            foreach (var sn_dic in dic_heatPints)
-            {
-                foreach (var avi_points in sn_dic.Value.Where(p => p.Side == sideFilter))
+            var heatPoints = dic_heatPints.Values
+                .AsParallel() // 使用 PLINQ
+                .SelectMany(sn_list => sn_list.Where(p => p.Side == sideFilter))
+                .Where(avi_points => avi_points?.pointsInfos != null)
+                .SelectMany(avi_points =>
                 {
-                    if (avi_points?.pointsInfos != null)
+                    var filteredPoints = avi_points.pointsInfos;
+                    if (selectedDefectNames.Any())
                     {
-                        // 根据选中的缺陷名称进行过滤
-                        var filteredPoints = avi_points.pointsInfos;
-                        if (selectedDefectNames.Any())
-                        {
-                            filteredPoints = filteredPoints.Where(p => selectedDefectNames.Contains(p.DefectName)).ToList();
-                        }
-
-                        foreach (var pointInfo in filteredPoints)
-                        {
-                            var point = new HeatPoint(
-                                location: new PointF(
-                                    pointInfo.X * 0.1f - offsetX,
-                                    pointInfo.Y * 0.1f - offsetY
-                                ),
-                                intensity: 0.25f,
-                                radius: 100
-                            );
-                            _heatPoints.Add(point);
-                        }
+                        filteredPoints = filteredPoints.Where(p => selectedDefectNames.Contains(p.DefectName)).ToList();
                     }
-                }
-            }
+                    return filteredPoints;
+                })
+                .Select(pointInfo => new HeatPoint(
+                    location: new PointF(
+                        pointInfo.X * 0.1f - offsetX,
+                        pointInfo.Y * 0.1f - offsetY
+                    ),
+                    intensity: 0.25f,
+                    radius: 100
+                ))
+                .ToList();
+
+            _heatPoints.AddRange(heatPoints);
+
 
             LogTextHelper.Info($"热力点位数：{_heatPoints.Count}");
 

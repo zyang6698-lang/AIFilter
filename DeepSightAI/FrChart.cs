@@ -33,7 +33,6 @@ namespace DeepSightAI
 
         //0626增加图片查询显示功能
         public CvDisplay[] DispWin1 = null;
-        public CvDisplay[] DispWinHeatMap = null;
 
         //是否启用对比标志位 false:不对比，true:对比
         private bool isContrast = false;
@@ -69,11 +68,7 @@ namespace DeepSightAI
         //缺陷显示集合
         public Dictionary<string, PcsResult> dic_PcsResult = new Dictionary<string, PcsResult>();
         public Dictionary<string, List<string>> dic_Results = new Dictionary<string, List<string>>();
-        //热力图
-        private HeatMapControl heatMapControl;
-        private Random random = new Random();
 
-        private Dictionary<string, List<AVI_HeatPoints>> dic_heatPints = new Dictionary<string, List<AVI_HeatPoints>>();
         public FrChart()
         {
             InitializeComponent();
@@ -136,7 +131,6 @@ namespace DeepSightAI
             try
             {
                 DispWin1 = new CvDisplay[30];
-                DispWinHeatMap = new CvDisplay[1];
                 //布局
                 table_Small.Controls.Clear();
                 table_Small.RowStyles.Clear();
