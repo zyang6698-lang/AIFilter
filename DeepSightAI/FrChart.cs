@@ -1954,8 +1954,6 @@ namespace DeepSightAI
         public int offsetY;
 
 
-
-
         // 数据模型
         public class Data
         {
@@ -1967,6 +1965,25 @@ namespace DeepSightAI
             public string NG_Count { get; set; }
         }
 
-
+        private void btnShowAnalytics_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string analyticsAppPath = Path.Combine(Application.StartupPath, "Analytics", "Deepsight.Analytics.UI.exe");
+                if (File.Exists(analyticsAppPath))
+                {
+                    Process.Start(analyticsAppPath);
+                }
+                else
+                {
+                    MessageBox.Show("分析工具不存在！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error("启动分析工具失败", ex);
+                MessageBox.Show($"启动分析工具失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
     }
 }

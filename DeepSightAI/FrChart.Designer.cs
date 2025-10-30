@@ -47,6 +47,7 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle17 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle18 = new System.Windows.Forms.DataGridViewCellStyle();
             this.tabPage7 = new System.Windows.Forms.TabPage();
+            this.heatMapControl21 = new DeepSightAI.HeatMapControl2();
             this.tabPage6 = new System.Windows.Forms.TabPage();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tableLayoutPanel5 = new System.Windows.Forms.TableLayoutPanel();
@@ -206,7 +207,7 @@
             this.panel17 = new System.Windows.Forms.Panel();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.label78 = new System.Windows.Forms.Label();
-            this.heatMapControl21 = new DeepSightAI.HeatMapControl2();
+            this.btnShowAnalytics = new System.Windows.Forms.Button();
             this.tabPage7.SuspendLayout();
             this.tabPage6.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -262,6 +263,15 @@
             this.tabPage7.Size = new System.Drawing.Size(1177, 784);
             this.tabPage7.TabIndex = 3;
             this.tabPage7.Text = "热力图";
+            // 
+            // heatMapControl21
+            // 
+            this.heatMapControl21.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.heatMapControl21.Location = new System.Drawing.Point(3, 3);
+            this.heatMapControl21.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.heatMapControl21.Name = "heatMapControl21";
+            this.heatMapControl21.Size = new System.Drawing.Size(1171, 778);
+            this.heatMapControl21.TabIndex = 0;
             // 
             // tabPage6
             // 
@@ -2049,6 +2059,7 @@
             // 
             // panel4
             // 
+            this.panel4.Controls.Add(this.btnShowAnalytics);
             this.panel4.Controls.Add(this.lblPageInfo);
             this.panel4.Controls.Add(this.btnNext);
             this.panel4.Controls.Add(this.btnPrevious);
@@ -2438,14 +2449,17 @@
             this.label78.TabIndex = 4;
             this.label78.Text = "缺陷选择:";
             // 
-            // heatMapControl21
+            // btnShowAnalytics
             // 
-            this.heatMapControl21.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.heatMapControl21.Location = new System.Drawing.Point(3, 3);
-            this.heatMapControl21.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.heatMapControl21.Name = "heatMapControl21";
-            this.heatMapControl21.Size = new System.Drawing.Size(976, 648);
-            this.heatMapControl21.TabIndex = 0;
+            this.btnShowAnalytics.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
+            this.btnShowAnalytics.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.btnShowAnalytics.Location = new System.Drawing.Point(17, 12);
+            this.btnShowAnalytics.Name = "btnShowAnalytics";
+            this.btnShowAnalytics.Size = new System.Drawing.Size(110, 33);
+            this.btnShowAnalytics.TabIndex = 118;
+            this.btnShowAnalytics.Text = "图表展示";
+            this.btnShowAnalytics.UseVisualStyleBackColor = false;
+            this.btnShowAnalytics.Click += new System.EventHandler(this.btnShowAnalytics_Click);
             // 
             // FrChart
             // 
@@ -2680,5 +2694,6 @@
         private System.Windows.Forms.ComboBox comboBox1;
         private System.Windows.Forms.Label label78;
         private HeatMapControl2 heatMapControl21;
+        private System.Windows.Forms.Button btnShowAnalytics;
     }
 }
