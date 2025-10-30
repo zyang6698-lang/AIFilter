@@ -51,6 +51,8 @@ namespace DeepSightModel
         [JsonProperty("defect_code")]
         public string Defect_code { get; set; }
 
+        [JsonProperty("img_roi")]
+        public List<int> ImgRoi { get; set; }
     }
 
     public class InferDetails

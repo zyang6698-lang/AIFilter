@@ -1,4 +1,4 @@
-﻿#define TEST_ENV
+﻿//#define TEST_ENV
 using DeepSightDB;
 using DeepSightDisplay;
 using DeepSightModel;
@@ -8,18 +8,15 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OpenCvSharp;
 using OpenCvSharp.Extensions;
-using OpenCvSharp.Flann;
 using Sunny.UI;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -308,6 +305,7 @@ namespace DeepSightAI
             var tasks = sn_list.Select(sn => Task.Run(() => queryHeatDataBySn(sn))).ToList();
             await Task.WhenAll(tasks);
 #endif
+
 
             int maxRow = 0;
             int maxCol = 0;
@@ -612,6 +610,8 @@ namespace DeepSightAI
         {
             row = 0;
             col = 0;
+            if (rbn_Array.Checked) return true;
+            
             if (string.IsNullOrEmpty(sn) || sn.Length < 2)
             {
                 return false;
