@@ -64,7 +64,7 @@ namespace DeepSightAI
             if (Width == 0 || Height == 0) return;
 
             _heatMapOverlay?.Dispose();
-            _heatMapOverlay = _renderer.GenerateHeatMapOverlay(_heatPoints, this.Size);
+            _heatMapOverlay = _renderer.GenerateHeatMapOverlay(_heatPoints,BackgroundImage.Size);
            
             Invalidate();
         }

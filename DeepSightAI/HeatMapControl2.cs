@@ -1,4 +1,5 @@
-﻿using DeepSightDB;
+﻿#define TEST_ENV
+using DeepSightDB;
 using DeepSightDisplay;
 using DeepSightModel;
 using DeepSightTool;
@@ -7,6 +8,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OpenCvSharp;
 using OpenCvSharp.Extensions;
+using OpenCvSharp.Flann;
 using Sunny.UI;
 using System;
 using System.Collections.Concurrent;
@@ -31,9 +33,9 @@ namespace DeepSightAI
         /// </summary>
         public int offsetX;
         public int offsetY;
+        HeatMapControl heatMapControl;
         private HeatMapRenderer _heatMapRenderer;
         private List<HeatPoint> _heatPoints = new List<HeatPoint>();
-        private Bitmap _heatMapOverlay = null;
 
         public CvDisplay[] DispWinHeatMap = null;
         private Mat SourceImage = null;
@@ -42,6 +44,21 @@ namespace DeepSightAI
         {
             InitializeComponent();
             InitializeLayout();
+            this.VisibleChanged += HeatMapControl2_VisibleChanged;
+        }
+
+        private void HeatMapControl2_VisibleChanged(object sender, EventArgs e)
+        {
+            // 确保只在控件变为可见时加载，并且只加载一次
+            if (this.Visible)
+            {
+                LoadInitialImage();
+                InitializeHeatMap();
+
+
+                // 取消订阅，避免重复加载
+                this.VisibleChanged -= HeatMapControl2_VisibleChanged;
+            }
         }
 
         private void InitializeLayout()
@@ -66,8 +83,62 @@ namespace DeepSightAI
                 AutoDisplay = CvDisplay.AutoDisplayMode.Fit,
                 stationIndex = 1
             };
+            DispWinHeatMap[0].OnCallBackFullShowPro -= FrHome_OnCallBackFullShowPro;
+            DispWinHeatMap[0].OnCallBackFullShowPro += FrHome_OnCallBackFullShowPro;
             table_HeatMap.Controls.Add(DispWinHeatMap[0], 0, 0);
 
+        }
+        private void FrHome_OnCallBackFullShowPro(string station, int index, string m_station, string status, string ocr, Mat mat)
+        {
+            try
+            {
+                FrFullImage.Instance.cvDisplay1.stationName = "A";
+                FrFullImage.Instance.cvDisplay1.stationIndex = 1;
+                FrFullImage.Instance.LoadShow(mat.Clone());
+                FrFullImage.Instance.cvDisplay1.DrawStation(m_station);
+                FrFullImage.Instance.cvDisplay1.DrawStatus(status);
+                FrFullImage.Instance.cvDisplay1.DrawOCR(ocr);
+                FrFullImage.Instance.Show();
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+
+        }
+
+        private void LoadInitialImage()
+        {
+            string dirPath = Path.Combine(Application.StartupPath, "HotImage");
+            string filePath = Path.Combine(dirPath, "background.png");
+
+            if (File.Exists(filePath))
+            {
+                try
+                {
+                    Mat mt = Cv2.ImRead(filePath);
+                    if (!mt.Empty())
+                    {
+                        SourceImage = mt;
+                        DispWinHeatMap[0].Image = mt;
+                        DispWinHeatMap[0].Invalidate();
+                    }
+                    else
+                    {
+                        MessageBox.Show("热力图自动加载背景图失败，图片为空，请手动加载。");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error($"热力图自动加载背景图失败: {ex.Message}");
+                    MessageBox.Show("热力图自动加载背景图失败，请手动加载。");
+                }
+            }
+            else
+            {
+                MessageBox.Show("未找到可自动加载的背景图，请手动加载。");
+            }
         }
 
         private async void btn_loadArryImage_Click(object sender, EventArgs e)
@@ -92,8 +163,19 @@ namespace DeepSightAI
                     });
                     SourceImage = mt;
                     DispWinHeatMap[0].Image = mt; // 设置背景图
-                    _heatMapOverlay = null; // 清除旧的热力图
+                    //模拟热力点 
+                    // GenerateRandomHeatPoints();
+                    if (heatMapControl._heatMapOverlay != null)
+                    {
+                        DispWinHeatMap[0].Image = BitmapConverter.ToMat(ImageHelper.CombineHeatMapWithBackground(SourceImage.ToBitmap(), heatMapControl._heatMapOverlay));
+                    }
                     DispWinHeatMap[0].Invalidate(); // 触发重绘
+
+                    // 保存图片到本地
+                    string dirPath = Path.Combine(Application.StartupPath, "HotImage");
+                    Directory.CreateDirectory(dirPath);
+                    string filePath = Path.Combine(dirPath, "background.png");
+                    Cv2.ImWrite(filePath, mt);
                 }
                 catch (Exception ex)
                 {
@@ -120,46 +202,56 @@ namespace DeepSightAI
                 int row = Convert.ToInt32(this.txt_Row.Text);
                 int column = Convert.ToInt32(this.txt_Column.Text);
 
-                if (SourceImage.Empty())
-                {
-                    LogTextHelper.Error("无法读取源图像");
-                    return;
-                }
-
-                this.Enabled = false;
-                try
-                {
-                    Mat resultImage = await Task.Run(() =>
-                    {
-                        Mat[,] matGrid = new Mat[row, column];
-                        for (int i = 0; i < row; i++)
-                        {
-                            for (int j = 0; j < column; j++)
-                            {
-                                matGrid[i, j] = SourceImage.Clone();
-                            }
-                        }
-                        return StitchImages(matGrid, row, column);
-                    });
-
-                    DispWinHeatMap[0].Image = resultImage;
-                    _heatMapOverlay = null; // 清除热力图
-                    DispWinHeatMap[0].Invalidate(); // 触发重绘
-                }
-                catch (Exception ex)
-                {
-                    LogTextHelper.Error($"制作Array图像失败: {ex.Message}");
-                    throw; // 重新抛出异常以便上层捕获
-                }
-                finally
-                {
-                    this.Enabled = true;
-                }
+                await UpdatePanelGrid(row, column);
             }
             catch (Exception ex)
             {
                 LogTextHelper.Error($"制作Array图像失败: {ex.Message}");
                 MessageBox.Show("制作Array图像失败，请检查日志。");
+            }
+        }
+
+        private async Task UpdatePanelGrid(int rows, int columns)
+        {
+            if (SourceImage.Empty())
+            {
+                LogTextHelper.Error("无法读取源图像");
+                return;
+            }
+
+            this.Enabled = false;
+            try
+            {
+                Mat resultImage = await Task.Run(() =>
+                {
+                    Mat[,] matGrid = new Mat[rows, columns];
+                    for (int i = 0; i < rows; i++)
+                    {
+                        for (int j = 0; j < columns; j++)
+                        {
+                            matGrid[i, j] = SourceImage.Clone();
+                        }
+                    }
+                    return StitchImages(matGrid, rows, columns);
+                });
+
+                DispWinHeatMap[0].Image = resultImage;
+                if (heatMapControl != null)
+                {
+                    heatMapControl.BackgroundImage = resultImage.ToBitmap();
+                }
+                await UpdateHeatMapPointsAsync();
+
+                DispWinHeatMap[0].Invalidate(); // 触发重绘
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"制作Array图像失败: {ex.Message}");
+                throw; // 重新抛出异常以便上层捕获
+            }
+            finally
+            {
+                this.Enabled = true;
             }
         }
 
@@ -172,6 +264,9 @@ namespace DeepSightAI
         {
             try
             {
+#if TEST_ENV
+                await ProcessSnListAndUpdateHeatMapAsync(new List<string> { "test_sn11", "test_sn22", "test_sn03" });
+#else
                 if (!txt_Lot.Text.IsNullOrEmpty())
                 {
                     List<string> sn_list = GetSnListByLot(this.txt_Lot.Text.ToString());
@@ -215,6 +310,7 @@ namespace DeepSightAI
                 {
                     MessageBox.Show("请输入Lot号，或勾选日期并选择一个料号。");
                 }
+#endif
             }
             catch (Exception ex)
             {
@@ -228,13 +324,33 @@ namespace DeepSightAI
             {
                 dic_heatPints.Clear();
                 _heatPoints.Clear();
+#if TEST_ENV
+                // In test environment, we can generate mock data directly
+                sn_list.ForEach(sn => GenerateMockHeatPoints(sn));
+#else
                 // 并行查询以提高效率
                 var tasks = sn_list.Select(sn => Task.Run(() => queryHeatDataBySn(sn))).ToList();
                 await Task.WhenAll(tasks);
+#endif
+                // 根据SN号更新panel
+                int maxRow = 0;
+                int maxCol = 0;
+                foreach (var sn in sn_list)
+                {
+                    if (TryParseSnPosition(sn, out int row, out int col))
+                    {
+                        if (row > maxRow) maxRow = row;
+                        if (col > maxCol) maxCol = col;
+                    }
+                }
+                this.txt_Row.Text = (maxRow + 1).ToString();
+                this.txt_Column.Text = (maxCol + 1).ToString();
+                await UpdatePanelGrid(maxRow + 1, maxCol + 1);
 
                 // 更新缺陷名称复选框
                 UpdateDefectCheckboxes();
                 await UpdateHeatMapPointsAsync();
+                //await TestUpdateHeatMapPointsAsync();
             }
         }
 
@@ -262,6 +378,7 @@ namespace DeepSightAI
                     {
                         Text = name,
                         AutoSize = true,
+                        ForeColor =  Color.FromArgb (216, 219, 188),
                         // 默认可以设置为选中状态
                         Checked = true
                     };
@@ -299,28 +416,33 @@ namespace DeepSightAI
                     .ToList();
             }));
 
-
-            var heatPoints = dic_heatPints.Values
+            var heatPoints = dic_heatPints
                 .AsParallel() // 使用 PLINQ
-                .SelectMany(sn_list => sn_list.Where(p => p.Side == sideFilter))
-                .Where(avi_points => avi_points?.pointsInfos != null)
-                .SelectMany(avi_points =>
+                .SelectMany(kvp =>
                 {
-                    var filteredPoints = avi_points.pointsInfos;
-                    if (selectedDefectNames.Any())
+                    var sn = kvp.Key;
+                    if (!TryParseSnPosition(sn, out int row, out int col))
                     {
-                        filteredPoints = filteredPoints.Where(p => selectedDefectNames.Contains(p.DefectName)).ToList();
+                        return Enumerable.Empty<HeatPoint>(); // 如果SN格式不正确，则跳过
                     }
-                    return filteredPoints;
+
+                    float productWidth = SourceImage?.Width ?? 0;
+                    float productHeight = SourceImage?.Height ?? 0;
+                    float colOffset = col * productWidth;
+                    float rowOffset = row * productHeight;
+
+                    return kvp.Value
+                        .Where(p => p.Side == sideFilter && p?.pointsInfos != null)
+                        .SelectMany(avi_points => avi_points.pointsInfos.Where(p => selectedDefectNames.Contains(p.DefectName)))
+                        .Select(pointInfo => new HeatPoint(
+                            location: new PointF(
+                                (pointInfo.X * 0.1f - offsetX) + colOffset,
+                                (pointInfo.Y * 0.1f - offsetY) + rowOffset
+                            ),
+                            intensity: 0.25f,
+                            radius: 100
+                        ));
                 })
-                .Select(pointInfo => new HeatPoint(
-                    location: new PointF(
-                        pointInfo.X * 0.1f - offsetX,
-                        pointInfo.Y * 0.1f - offsetY
-                    ),
-                    intensity: 0.25f,
-                    radius: 100
-                ))
                 .ToList();
 
             _heatPoints.AddRange(heatPoints);
@@ -333,8 +455,11 @@ namespace DeepSightAI
                 Stopwatch sw = new Stopwatch();
                 sw.Start();
                 // 使用渲染器生成热力图
-                _heatMapRenderer = new HeatMapRenderer(null, 0.7f);
-                _heatMapOverlay = _heatMapRenderer.GenerateHeatMapOverlay(_heatPoints, new System.Drawing.Size(DispWinHeatMap[0].Image.Size().Width, DispWinHeatMap[0].Image.Size().Height));
+                heatMapControl.SetHeatPoints(_heatPoints);
+                if (heatMapControl._heatMapOverlay != null)
+                {
+                    DispWinHeatMap[0].Image = BitmapConverter.ToMat(ImageHelper.CombineHeatMapWithBackground(heatMapControl.BackgroundImage, heatMapControl._heatMapOverlay));
+                }
                 sw.Stop();
                 LogTextHelper.Info($"COST :{sw.ElapsedMilliseconds} ms");
             });
@@ -343,31 +468,54 @@ namespace DeepSightAI
             DispWinHeatMap[0].Invalidate();
         }
 
-        private RectangleF ConvertRectangleToImage(CvDisplay control, System.Drawing.Rectangle screenRect)
+        private async Task TestUpdateHeatMapPointsAsync()
         {
-            if (control.Image == null || control.GraphicsMat == null)
+            _heatPoints.Clear();
+            // 模拟热力点位
+            var random = new Random();
+            var point1 = new HeatPoint(
+                                   location: new PointF(
+                                   random.Next(100, 500) * 0.1f,
+                                   random.Next(200, 600) * 0.1f
+                                   ),
+                                   intensity: 0.25f,//(float)random.NextDouble(),
+                                   radius: 20//30 + random.Next(40)
+                               );
+            var point2 = new HeatPoint(
+                                location: new PointF(
+                                random.Next(500, 1000) * 0.1f,
+                                random.Next(500, 1000) * 0.1f
+                                ),
+                                intensity: 0.25f,//(float)random.NextDouble(),
+                                radius: 20//30 + random.Next(40)
+                            );
+            _heatPoints.Add(point1);
+            _heatPoints.Add(point2);
+
+
+            LogTextHelper.Info($"热力点位数：{_heatPoints.Count}");
+
+            await Task.Run(() =>
             {
-                return RectangleF.Empty;
-            }
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
+                // 使用渲染器生成热力图
+                heatMapControl.SetHeatPoints(_heatPoints);
+                //LogTextHelper.Info($"COST :{sw.ElapsedMilliseconds / 1000}S");
+                if (heatMapControl._heatMapOverlay != null)
+                {
+                    DispWinHeatMap[0].Image = BitmapConverter.ToMat(ImageHelper.CombineHeatMapWithBackground(heatMapControl.BackgroundImage, heatMapControl._heatMapOverlay));
+                }
+                //_heatMapRenderer = new HeatMapRenderer(null, 0.7f);
+                //_heatMapOverlay = _heatMapRenderer.GenerateHeatMapOverlay(_heatPoints, new System.Drawing.Size(DispWinHeatMap[0].Image.Size().Width, DispWinHeatMap[0].Image.Size().Height));
+                sw.Stop();
+                LogTextHelper.Info($"COST :{sw.ElapsedMilliseconds} ms");
+            });
 
-            Rect2d dispRect = control.GraphicsMat.DispRect;
-            if (dispRect.Width <= 0 || dispRect.Height <= 0)
-            {
-                return RectangleF.Empty;
-            }
-
-            // 计算从控件坐标到图像显示区域（DispRect）的缩放比例
-            float scaleX = (float)(dispRect.Width / control.ClientSize.Width);
-            float scaleY = (float)(dispRect.Height / control.ClientSize.Height);
-
-            // 将屏幕矩形坐标转换为图像坐标
-            float imageX = (float)dispRect.X + (screenRect.X * scaleX);
-            float imageY = (float)dispRect.Y + (screenRect.Y * scaleY);
-            float imageWidth = screenRect.Width * scaleX;
-            float imageHeight = screenRect.Height * scaleY;
-
-            return new RectangleF(imageX, imageY, imageWidth, imageHeight);
+            // 触发重绘以显示新的热力图
+            DispWinHeatMap[0].Invalidate();
         }
+
 
         private string SelectImageFile()
         {
@@ -619,6 +767,63 @@ namespace DeepSightAI
             }
         }
 
+#if TEST_ENV
+        private bool TryParseSnPosition(string sn, out int row, out int col)
+        {
+            row = 0;
+            col = 0;
+            if (string.IsNullOrEmpty(sn) || sn.Length < 2)
+            {
+                return false;
+            }
+
+            // 暂定规则：倒数第二位为行，倒数第一位为列
+            char rowChar = sn[sn.Length - 2];
+            char colChar = sn[sn.Length - 1];
+
+            if (int.TryParse(rowChar.ToString(), out row) && int.TryParse(colChar.ToString(), out col))
+            {
+                return true;
+            }
+            return false;
+        }
+        private void GenerateMockHeatPoints(string sn)
+        {
+            var random = new Random(sn.GetHashCode()); // 使用SN的哈希码作为种子，确保同一SN生成相同的随机数
+            var defectTypes = new[] { "Scratch", "Dent", "Spot", "Contamination" };
+            var pointsInfos = new List<PointsInfo>();
+
+            if (!TryParseSnPosition(sn, out int row, out int col))
+            {
+                return; // SN不符合规则，不生成点
+            }
+
+            for (int i = 0; i < random.Next(5, 20); i++)
+            {
+                pointsInfos.Add(new PointsInfo
+                {
+                    // 确保点位在单个产品图内部
+                    X = (int)(random.Next(0, SourceImage?.Width ?? 1000) / 0.1f),
+                    Y = (int)(random.Next(0, SourceImage?.Height ?? 1000) / 0.1f),
+                    DefectName = defectTypes[random.Next(defectTypes.Length)]
+                });
+            }
+
+            var aviHeatPoints = new AVI_HeatPoints
+            {
+                SN = sn,
+                Side = rbn_Front.Checked ? "A" : "B",
+                pointsInfos = pointsInfos
+            };
+
+            if (!dic_heatPints.ContainsKey(sn))
+            {
+                dic_heatPints.TryAdd(sn, new List<AVI_HeatPoints>());
+            }
+            dic_heatPints[sn].Add(aviHeatPoints);
+        }
+#endif
+
         private bool queryHeatDataBySn(string sn)
         {
             try
@@ -651,7 +856,9 @@ namespace DeepSightAI
 
             var jsonStr = JObject.Parse(Result);
             string str = jsonStr["value"].ToString();
-            if (!string.IsNullOrWhiteSpace(str) && !str.Contains("err_key_found"))
+            //if (!string.IsNullOrWhiteSpace(str) || !str.Contains("AVI_HeatPoints"))
+
+             if (!string.IsNullOrWhiteSpace(str) && !str.Contains("err_key_found"))
             {
                 AVI_HeatPoints avi_HeatInfo = JsonConvert.DeserializeObject<AVI_HeatPoints>(str);
                 if (avi_HeatInfo != null)
@@ -666,7 +873,69 @@ namespace DeepSightAI
                 }
             }
         }
+        private void InitializeHeatMap()
+        {
+            heatMapControl = new HeatMapControl
+            {
+                Dock = DockStyle.Fill,
+                BackgroundImage = SourceImage.ToBitmap(),
+                HeatMapOpacity = 1f
+            };
+            heatMapControl.Width = heatMapControl.BackgroundImage.Width;
+            heatMapControl.Height = heatMapControl.BackgroundImage.Height;
+            //this.table_HeatMap. Controls.Add(heatMapControl);
+            //AddControlPanel();
+        }
+        /// <summary>
+        /// 随机点位  
+        /// 后续将此方法改为获取实际的热力图点位
+        /// </summary>
+        private void GenerateRandomHeatPoints()
+        {
+            var points = new List<HeatPoint>();
+            Random random = new Random();
+            for (int i = 0; i < 100; i++)
+            {
+                var point = new HeatPoint(
+                    location: new PointF(
+                    random.Next(heatMapControl.Width),
+                    random.Next(heatMapControl.Height)
+                    ),
+                    intensity: (float)random.NextDouble(),
+                    radius: 120//30 + random.Next(40)
+                );
+                points.Add(point);
+            }
 
+            heatMapControl.SetHeatPoints(points);
+        }
+        private void AddControlPanel()
+        {
+            var panel = new Panel
+            {
+                Dock = DockStyle.Right,
+                Width = 150,
+                BackColor = Color.LightGray
+            };
+
+            // 透明度滑块
+            var lblOpacity = new Label { Text = "热力图透明度:", Location = new System.Drawing.Point(10, 10) };
+            var trackOpacity = new TrackBar
+            {
+                Location = new System.Drawing.Point(10, 30),
+                Width = 130,
+                Minimum = 0,
+                Maximum = 100,
+                Value = (int)(heatMapControl.HeatMapOpacity * 100)
+            };
+            trackOpacity.ValueChanged += (s, e) =>
+            {
+                heatMapControl.HeatMapOpacity = trackOpacity.Value / 100f;
+            };
+
+            panel.Controls.AddRange(new Control[] { lblOpacity, trackOpacity });
+            this.Controls.Add(panel);
+        }
         #endregion
     }
 }

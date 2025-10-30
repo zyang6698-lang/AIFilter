@@ -804,7 +804,7 @@ namespace DeepSightAI
             }
 
         }
-        private void FrHome_OnCallBackFullShowPro(string station, int index, string m_station, string status, string ocr, global::OpenCvSharp.Mat mat)
+        public void FrHome_OnCallBackFullShowPro(string station, int index, string m_station, string status, string ocr, global::OpenCvSharp.Mat mat)
         {
             try
             {
