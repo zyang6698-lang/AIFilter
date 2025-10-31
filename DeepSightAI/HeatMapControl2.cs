@@ -38,7 +38,7 @@ namespace DeepSightAI
         public int offsetX;
         public int offsetY;
 
-        public CvDisplay[] DispWinHeatMap = null;
+        public CvDisplay DispWinHeatMap = null;
 
         #endregion
 
@@ -66,7 +66,7 @@ namespace DeepSightAI
 
         private void InitializeLayout()
         {
-            DispWinHeatMap = new CvDisplay[1];
+            DispWinHeatMap = new CvDisplay();
             table_HeatMap.Controls.Clear();
             table_HeatMap.RowStyles.Clear();
             table_HeatMap.ColumnStyles.Clear();
@@ -77,7 +77,7 @@ namespace DeepSightAI
             table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             table_HeatMap.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
 
-            DispWinHeatMap[0] = new CvDisplay
+            DispWinHeatMap = new CvDisplay
             {
                 Margin = new System.Windows.Forms.Padding(1),
                 BackColor = ColorTranslator.FromHtml("#374c50"),
@@ -86,10 +86,12 @@ namespace DeepSightAI
                 AutoDisplay = CvDisplay.AutoDisplayMode.Fit,
                 stationIndex = 1
             };
-            DispWinHeatMap[0].OnCallBackFullShowPro -= FrHome_OnCallBackFullShowPro;
-            DispWinHeatMap[0].OnCallBackFullShowPro += FrHome_OnCallBackFullShowPro;
-            table_HeatMap.Controls.Add(DispWinHeatMap[0], 0, 0);
+            DispWinHeatMap.OnSelectionFinished += CvDisplay1_OnSelectionFinished;
+            DispWinHeatMap.OnCallBackFullShowPro -= FrHome_OnCallBackFullShowPro;
+            DispWinHeatMap.OnCallBackFullShowPro += FrHome_OnCallBackFullShowPro;
+            table_HeatMap.Controls.Add(DispWinHeatMap, 0, 0);
         }
+
 
         private void InitializeHeatMap()
         {
@@ -119,8 +121,8 @@ namespace DeepSightAI
                     if (!mt.Empty())
                     {
                         SourceImage = mt;
-                        DispWinHeatMap[0].Image = mt;
-                        DispWinHeatMap[0].Invalidate();
+                        DispWinHeatMap.Image = mt;
+                        DispWinHeatMap.Invalidate();
                     }
                     else
                     {
@@ -216,12 +218,12 @@ namespace DeepSightAI
                         return new Mat(originalMat, rect);
                     });
                     SourceImage = mt;
-                    DispWinHeatMap[0].Image = mt;
+                    DispWinHeatMap.Image = mt;
                     if (heatMapControl._heatMapOverlay != null)
                     {
-                        DispWinHeatMap[0].Image = BitmapConverter.ToMat(ImageHelper.CombineHeatMapWithBackground(SourceImage.ToBitmap(), heatMapControl._heatMapOverlay));
+                        DispWinHeatMap.Image = BitmapConverter.ToMat(ImageHelper.CombineHeatMapWithBackground(SourceImage.ToBitmap(), heatMapControl._heatMapOverlay));
                     }
-                    DispWinHeatMap[0].Invalidate();
+                    DispWinHeatMap.Invalidate();
 
                     string dirPath = Path.Combine(Application.StartupPath, "HotImage");
                     Directory.CreateDirectory(dirPath);
@@ -269,7 +271,10 @@ namespace DeepSightAI
         {
             await UpdateHeatMapPointsAsync();
         }
-
+        private void CvDisplay1_OnSelectionFinished(Rect selectionRect)
+        {
+            MessageBox.Show($"选定区域: X={selectionRect.X}, Y={selectionRect.Y}, Width={selectionRect.Width}, Height={selectionRect.Height}");
+        }
         private void FrHome_OnCallBackFullShowPro(string station, int index, string m_station, string status, string ocr, Mat mat)
         {
             try
@@ -349,13 +354,13 @@ namespace DeepSightAI
                     return StitchImages(matGrid, rows, columns);
                 });
 
-                DispWinHeatMap[0].Image = resultImage;
+                DispWinHeatMap.Image = resultImage;
                 if (heatMapControl != null)
                 {
                     heatMapControl.BackgroundImage = resultImage.ToBitmap();
                 }
                 await UpdateHeatMapPointsAsync();
-                DispWinHeatMap[0].Invalidate();
+                DispWinHeatMap.Invalidate();
             }
             catch (Exception ex)
             {
@@ -370,7 +375,7 @@ namespace DeepSightAI
 
         private async Task UpdateHeatMapPointsAsync()
         {
-            if (DispWinHeatMap[0].Image == null)
+            if (DispWinHeatMap.Image == null)
             {
                 MessageBox.Show("请先加载Array图像");
                 return;
@@ -427,13 +432,13 @@ namespace DeepSightAI
                 heatMapControl.SetHeatPoints(_heatPoints);
                 if (heatMapControl._heatMapOverlay != null)
                 {
-                    DispWinHeatMap[0].Image = BitmapConverter.ToMat(ImageHelper.CombineHeatMapWithBackground(heatMapControl.BackgroundImage, heatMapControl._heatMapOverlay));
+                    DispWinHeatMap.Image = BitmapConverter.ToMat(ImageHelper.CombineHeatMapWithBackground(heatMapControl.BackgroundImage, heatMapControl._heatMapOverlay));
                 }
                 sw.Stop();
                 LogTextHelper.Info($"COST :{sw.ElapsedMilliseconds} ms");
             });
 
-            DispWinHeatMap[0].Invalidate();
+            DispWinHeatMap.Invalidate();
         }
 
         private void UpdateDefectCheckboxes()
@@ -852,13 +857,13 @@ namespace DeepSightAI
                 heatMapControl.SetHeatPoints(_heatPoints);
                 if (heatMapControl._heatMapOverlay != null)
                 {
-                    DispWinHeatMap[0].Image = BitmapConverter.ToMat(ImageHelper.CombineHeatMapWithBackground(heatMapControl.BackgroundImage, heatMapControl._heatMapOverlay));
+                    DispWinHeatMap.Image = BitmapConverter.ToMat(ImageHelper.CombineHeatMapWithBackground(heatMapControl.BackgroundImage, heatMapControl._heatMapOverlay));
                 }
                 sw.Stop();
                 LogTextHelper.Info($"COST :{sw.ElapsedMilliseconds} ms");
             });
 
-            DispWinHeatMap[0].Invalidate();
+            DispWinHeatMap.Invalidate();
         }
 
         private void GenerateRandomHeatPoints()
@@ -909,5 +914,11 @@ namespace DeepSightAI
         }
 #endif
         #endregion
+
+        private void btn_Select_Click(object sender, EventArgs e)
+        {
+            DispWinHeatMap.IsSelectionMode = true;
+
+        }
     }
 }

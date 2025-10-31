@@ -34,6 +34,9 @@ namespace DeepSightDisplay
         public delegate void CallBackClickOpreation(int index, bool opreation);
         public event CallBackClickOpreation OnCallBackClickOpreation;
 
+        public delegate void SelectionFinishedHandler(Rect selectionRect);
+        public event SelectionFinishedHandler OnSelectionFinished;
+
         public DisPlayInfo info = null;
         public string OCR { get; set; }
         public string ProductId { get; set; }
@@ -69,8 +72,32 @@ namespace DeepSightDisplay
 
         protected Point _mousePixcelLocation; //鼠标放置位置的像素实际坐标
 
+        private bool _isSelecting = false;
+        private System.Drawing.Point _selectionStartPoint;
+        private System.Drawing.Point _selectionEndPoint;
+
         #endregion 内部操作数据
         private bool drawModel = false;   //绘制模式下,不允许缩放和鼠标右键菜单
+
+        private bool _isSelectionMode = false;
+        public bool IsSelectionMode
+        {
+            get => _isSelectionMode;
+            set
+            {
+                _isSelectionMode = value;
+                // 进入或退出选择模式时，相应地设置绘制模式
+                DrawModel = value;
+                if (value)
+                {
+                    Cursor = Cursors.Cross;
+                }
+                else
+                {
+                    Cursor = Cursors.Default;
+                }
+            }
+        }
 
         /// <summary>
         /// 绘制模式下,不允许缩放和鼠标右键菜单
@@ -321,6 +348,16 @@ namespace DeepSightDisplay
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
+            if (IsSelectionMode)
+            {
+                if (e.Button == MouseButtons.Left)
+                {
+                    _isSelecting = true;
+                    _selectionStartPoint = e.Location;
+                    _selectionEndPoint = e.Location;
+                }
+                return;
+            }
             if (drawModel)
             {
                 return;
@@ -378,6 +415,30 @@ namespace DeepSightDisplay
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
+            if (IsSelectionMode)
+            {
+                if (e.Button == MouseButtons.Left && _isSelecting)
+                {
+                    _isSelecting = false;
+                    IsSelectionMode = false; // 退出选择模式
+                    Refresh();
+
+                    // 转换坐标并触发事件
+                    Point start = _cdgMat.TransformPixelPostion(_selectionStartPoint);
+                    Point end = _cdgMat.TransformPixelPostion(_selectionEndPoint);
+
+                    int x = Math.Min(start.X, end.X);
+                    int y = Math.Min(start.Y, end.Y);
+                    int width = Math.Abs(start.X - end.X);
+                    int height = Math.Abs(start.Y - end.Y);
+
+                    if (width > 0 && height > 0)
+                    {
+                        OnSelectionFinished?.Invoke(new Rect(x, y, width, height));
+                    }
+                }
+                return;
+            }
             if (drawModel)
             {
                 return;
@@ -411,6 +472,15 @@ namespace DeepSightDisplay
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
+            if (IsSelectionMode)
+            {
+                if (_isSelecting)
+                {
+                    _selectionEndPoint = e.Location;
+                    Refresh(); // 重绘以显示选择框
+                }
+                return;
+            }
             //if (drawModel)
             //{
             //    return;
@@ -535,6 +605,18 @@ namespace DeepSightDisplay
                     //    OnCallBackClickOpreation(stationIndex,true);
                     //}
                     gh.DrawString(lable, bigFont, Brushes.Blue, 1, Font.GetHeight() * 3 + 3);
+                }
+            }
+            if (_isSelecting)
+            {
+                using (Pen selectionPen = new Pen(Color.Blue, 1))
+                {
+                    selectionPen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+                    int x = Math.Min(_selectionStartPoint.X, _selectionEndPoint.X);
+                    int y = Math.Min(_selectionStartPoint.Y, _selectionEndPoint.Y);
+                    int width = Math.Abs(_selectionStartPoint.X - _selectionEndPoint.X);
+                    int height = Math.Abs(_selectionStartPoint.Y - _selectionEndPoint.Y);
+                    gh.DrawRectangle(selectionPen, x, y, width, height);
                 }
             }
 

@@ -30,6 +30,7 @@
         {
             this.tableLayoutPanel6 = new System.Windows.Forms.TableLayoutPanel();
             this.table_HeatMap = new System.Windows.Forms.TableLayoutPanel();
+            this.btn_Select = new System.Windows.Forms.Button();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.panel13 = new System.Windows.Forms.Panel();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
@@ -52,25 +53,30 @@
             this.label79 = new System.Windows.Forms.Label();
             this.btn_queryHeatPoint = new System.Windows.Forms.Button();
             this.flowLayoutPanel_Defects = new System.Windows.Forms.FlowLayoutPanel();
+            this.panel_Details = new System.Windows.Forms.Panel();
             this.tableLayoutPanel6.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.panel13.SuspendLayout();
             this.groupBox1.SuspendLayout();
+            this.panel_Details.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanel6
             // 
-            this.tableLayoutPanel6.ColumnCount = 2;
+            this.tableLayoutPanel6.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.tableLayoutPanel6.ColumnCount = 3;
             this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 371F));
-            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 742F));
+            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 1113F));
+            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 322F));
             this.tableLayoutPanel6.Controls.Add(this.table_HeatMap, 1, 0);
             this.tableLayoutPanel6.Controls.Add(this.tableLayoutPanel1, 0, 0);
+            this.tableLayoutPanel6.Controls.Add(this.panel_Details, 2, 0);
             this.tableLayoutPanel6.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel6.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel6.Name = "tableLayoutPanel6";
             this.tableLayoutPanel6.RowCount = 1;
             this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel6.Size = new System.Drawing.Size(2126, 1380);
+            this.tableLayoutPanel6.Size = new System.Drawing.Size(1746, 905);
             this.tableLayoutPanel6.TabIndex = 1;
             // 
             // table_HeatMap
@@ -89,8 +95,21 @@
             this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 1374F));
             this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 1374F));
             this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 1374F));
-            this.table_HeatMap.Size = new System.Drawing.Size(1749, 1374);
+            this.table_HeatMap.Size = new System.Drawing.Size(1107, 899);
             this.table_HeatMap.TabIndex = 2;
+            // 
+            // btn_Select
+            // 
+            this.btn_Select.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.btn_Select.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
+            this.btn_Select.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.btn_Select.Location = new System.Drawing.Point(29, 849);
+            this.btn_Select.Name = "btn_Select";
+            this.btn_Select.Size = new System.Drawing.Size(142, 33);
+            this.btn_Select.TabIndex = 139;
+            this.btn_Select.Text = "选择";
+            this.btn_Select.UseVisualStyleBackColor = false;
+            this.btn_Select.Click += new System.EventHandler(this.btn_Select_Click);
             // 
             // tableLayoutPanel1
             // 
@@ -103,7 +122,7 @@
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 519F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(365, 1144);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(365, 899);
             this.tableLayoutPanel1.TabIndex = 3;
             // 
             // panel13
@@ -344,19 +363,29 @@
             this.flowLayoutPanel_Defects.Size = new System.Drawing.Size(359, 619);
             this.flowLayoutPanel_Defects.TabIndex = 140;
             // 
+            // panel_Details
+            // 
+            this.panel_Details.Controls.Add(this.btn_Select);
+            this.panel_Details.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel_Details.Location = new System.Drawing.Point(1487, 3);
+            this.panel_Details.Name = "panel_Details";
+            this.panel_Details.Size = new System.Drawing.Size(316, 899);
+            this.panel_Details.TabIndex = 4;
+            // 
             // HeatMapControl2
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.tableLayoutPanel6);
             this.Name = "HeatMapControl2";
-            this.Size = new System.Drawing.Size(2126, 1380);
+            this.Size = new System.Drawing.Size(1746, 905);
             this.tableLayoutPanel6.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.panel13.ResumeLayout(false);
             this.panel13.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            this.panel_Details.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -387,5 +416,7 @@
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.RadioButton rbn_Panel;
         private System.Windows.Forms.RadioButton rbn_Array;
+        private System.Windows.Forms.Button btn_Select;
+        private System.Windows.Forms.Panel panel_Details;
     }
 }
