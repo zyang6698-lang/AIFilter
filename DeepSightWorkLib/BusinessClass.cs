@@ -1080,6 +1080,18 @@ namespace DeepSightWorkLib
                                 heatInfo.DefectName = sub_defectName;
                                 heatInfo.X = CenterPointX;
                                 heatInfo.Y = CenterPointY;
+                                int index = panelInfo.LocalDescribeDir.IndexOf("deepiresults", StringComparison.OrdinalIgnoreCase);
+                                if (index == -1)
+                                {
+                                    Console.WriteLine("第一个路径中未找到 'deepiresults'");
+                                }
+                                // 截取到 "deepiresults" 所在目录的完整路径（包含自身）
+                                string basePath = panelInfo.LocalDescribeDir.Substring(0, index + "deepiresults".Length);
+                                // 将第二个路径的斜杠统一转换为Windows的反斜杠
+                                string relativePath = obj.Data.InferWholeData.InferResults[i].GroupInfos[0].ImagePath.Replace('/', '\\');
+                                // 合并路径
+                                string mergedPath = Path.Combine(basePath, relativePath);
+                                heatInfo.ImagePath = mergedPath;
                                 avi_HeatInfo.pointsInfos.Add(heatInfo);
                                 //这里在生产时根据缺陷名称将缺陷形态赋值,（点状与线状）
                                 if (sub_defectName == "AU10" || sub_defectName == "CU10" || sub_defectName == "CU41"

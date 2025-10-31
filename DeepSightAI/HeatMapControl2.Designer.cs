@@ -65,9 +65,9 @@
             // 
             this.tableLayoutPanel6.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.tableLayoutPanel6.ColumnCount = 3;
-            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 316F));
+            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 253F));
             this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 206F));
+            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 269F));
             this.tableLayoutPanel6.Controls.Add(this.flowLayoutPanel_Details, 2, 0);
             this.tableLayoutPanel6.Controls.Add(this.table_HeatMap, 1, 0);
             this.tableLayoutPanel6.Controls.Add(this.tableLayoutPanel1, 0, 0);
@@ -86,11 +86,11 @@
             this.flowLayoutPanel_Details.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.flowLayoutPanel_Details.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel_Details.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
-            this.flowLayoutPanel_Details.Location = new System.Drawing.Point(1152, 2);
+            this.flowLayoutPanel_Details.Location = new System.Drawing.Point(1089, 2);
             this.flowLayoutPanel_Details.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.flowLayoutPanel_Details.Name = "flowLayoutPanel_Details";
             this.flowLayoutPanel_Details.Padding = new System.Windows.Forms.Padding(15, 0, 0, 0);
-            this.flowLayoutPanel_Details.Size = new System.Drawing.Size(202, 720);
+            this.flowLayoutPanel_Details.Size = new System.Drawing.Size(265, 720);
             this.flowLayoutPanel_Details.TabIndex = 141;
             this.flowLayoutPanel_Details.WrapContents = false;
             // 
@@ -100,7 +100,7 @@
             this.table_HeatMap.ColumnCount = 1;
             this.table_HeatMap.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.table_HeatMap.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.table_HeatMap.Location = new System.Drawing.Point(318, 2);
+            this.table_HeatMap.Location = new System.Drawing.Point(255, 2);
             this.table_HeatMap.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.table_HeatMap.Name = "table_HeatMap";
             this.table_HeatMap.RowCount = 1;
@@ -126,7 +126,7 @@
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(274, 719);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(249, 719);
             this.tableLayoutPanel1.TabIndex = 3;
             // 
             // panel13
@@ -149,7 +149,7 @@
             this.panel13.Location = new System.Drawing.Point(2, 2);
             this.panel13.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.panel13.Name = "panel13";
-            this.panel13.Size = new System.Drawing.Size(270, 410);
+            this.panel13.Size = new System.Drawing.Size(245, 410);
             this.panel13.TabIndex = 1;
             // 
             // groupBox1
@@ -416,7 +416,7 @@
             this.flowLayoutPanel_Defects.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.flowLayoutPanel_Defects.Name = "flowLayoutPanel_Defects";
             this.flowLayoutPanel_Defects.Padding = new System.Windows.Forms.Padding(15, 0, 0, 0);
-            this.flowLayoutPanel_Defects.Size = new System.Drawing.Size(270, 301);
+            this.flowLayoutPanel_Defects.Size = new System.Drawing.Size(245, 301);
             this.flowLayoutPanel_Defects.TabIndex = 140;
             this.flowLayoutPanel_Defects.WrapContents = false;
             // 

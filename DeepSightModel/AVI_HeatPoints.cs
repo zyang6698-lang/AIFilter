@@ -39,5 +39,7 @@ namespace DeepSightModel
         /// 目前暂时分为点状（dot）/线状（line）
         /// </summary>
         public string DefectShape { get; set; }
+
+        public string ImagePath { get; set; }
     }
 }
