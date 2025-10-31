@@ -1,4 +1,4 @@
-﻿//#define TEST_ENV
+﻿#define TEST_ENV
 using DeepSightDB;
 using DeepSightDisplay;
 using DeepSightModel;
@@ -39,6 +39,7 @@ namespace DeepSightAI
         public int offsetY;
 
         public CvDisplay DispWinHeatMap = null;
+
 
         #endregion
 
@@ -224,11 +225,7 @@ namespace DeepSightAI
                         DispWinHeatMap.Image = BitmapConverter.ToMat(ImageHelper.CombineHeatMapWithBackground(SourceImage.ToBitmap(), heatMapControl._heatMapOverlay));
                     }
                     DispWinHeatMap.Invalidate();
-
-                    string dirPath = Path.Combine(Application.StartupPath, "HotImage");
-                    Directory.CreateDirectory(dirPath);
-                    string filePath = Path.Combine(dirPath, "background.png");
-                    Cv2.ImWrite(filePath, mt);
+                    SaveBackgroundImage(mt); 
                 }
                 catch (Exception ex)
                 {
@@ -273,7 +270,19 @@ namespace DeepSightAI
         }
         private void CvDisplay1_OnSelectionFinished(Rect selectionRect)
         {
-            MessageBox.Show($"选定区域: X={selectionRect.X}, Y={selectionRect.Y}, Width={selectionRect.Width}, Height={selectionRect.Height}");
+            switch (_currentSelectionMode)
+            {
+                case SelectionMode.Select:
+                    DisplayHeatPointDetailsInSelection(selectionRect);
+                    //MessageBox.Show($"选定区域: X={selectionRect.X}, Y={selectionRect.Y}, Width={selectionRect.Width}, Height={selectionRect.Height}");
+                    break;
+                case SelectionMode.Clip:
+                    CropImage(selectionRect);
+                    break;
+            }
+            // 操作完成后重置模式
+            _currentSelectionMode = SelectionMode.None;
+            DispWinHeatMap.IsSelectionMode = false;
         }
         private void FrHome_OnCallBackFullShowPro(string station, int index, string m_station, string status, string ocr, Mat mat)
         {
@@ -652,7 +661,13 @@ namespace DeepSightAI
             foreach (var rowMat in rowMats) rowMat?.Dispose();
             return result;
         }
-
+        private void SaveBackgroundImage(Mat mt)
+        {
+            string dirPath = Path.Combine(Application.StartupPath, "HotImage");
+            Directory.CreateDirectory(dirPath);
+            string filePath = Path.Combine(dirPath, "background.png");
+            Cv2.ImWrite(filePath, mt);
+        }
         private string SelectImageFile()
         {
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
@@ -914,11 +929,123 @@ namespace DeepSightAI
         }
 #endif
         #endregion
-
+        #region 框选功能
+        private enum SelectionMode
+        {
+            None,
+            Select,
+            Clip
+        }
+        private SelectionMode _currentSelectionMode = SelectionMode.None;
         private void btn_Select_Click(object sender, EventArgs e)
         {
+            _currentSelectionMode = SelectionMode.Select;
             DispWinHeatMap.IsSelectionMode = true;
 
         }
+
+        private void btnClip_Click(object sender, EventArgs e)
+        {
+            _currentSelectionMode = SelectionMode.Clip;
+            DispWinHeatMap.IsSelectionMode = true;
+        }
+
+
+        private void CropImage(Rect selectionRect)
+        {
+            if (DispWinHeatMap.Image == null || DispWinHeatMap.Image.Empty())
+            {
+                MessageBox.Show("没有可供裁剪的图像。");
+                return;
+            }
+
+            try
+            {
+                // 裁剪图像
+                Mat croppedImage = new Mat(DispWinHeatMap.Image, selectionRect);
+
+                // 更新显示
+                DispWinHeatMap.Image = croppedImage;
+                SourceImage = croppedImage;
+                DispWinHeatMap.Invalidate();
+                SaveBackgroundImage(croppedImage);
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"裁剪图像时出错: {ex.Message}");
+                MessageBox.Show("裁剪图像时出错，请检查日志。");
+            }
+        }
+        private void DisplayHeatPointDetailsInSelection(Rect selectionRect)
+        {
+            this.Invoke(new Action(() =>
+            {
+                flowLayoutPanel_Details.Controls.Clear();
+            }));
+
+            string sideFilter = rbn_Front.Checked ? "A" : "B";
+            var selectedDefectNames = flowLayoutPanel_Defects.Controls.OfType<CheckBox>()
+                                        .Where(cb => cb.Checked)
+                                        .Select(cb => cb.Text)
+                                        .ToList();
+
+            var pointsInSelection = dic_heatPints
+                .AsParallel()
+                .SelectMany(kvp =>
+                {
+                    var sn = kvp.Key;
+                    if (!TryParseSnPosition(sn, out int row, out int col))
+                    {
+                        return Enumerable.Empty<dynamic>();
+                    }
+
+                    float productWidth = SourceImage?.Width ?? 0;
+                    float productHeight = SourceImage?.Height ?? 0;
+                    float colOffset = col * productWidth;
+                    float rowOffset = row * productHeight;
+
+                    return kvp.Value
+                        .Where(p => p.Side == sideFilter && p?.pointsInfos != null)
+                        .SelectMany(avi_points => avi_points.pointsInfos
+                            .Where(p => selectedDefectNames.Contains(p.DefectName))
+                            .Select(pointInfo => new
+                            {
+                                SN = sn,
+                                PointInfo = pointInfo,
+                                DisplayLocation = new PointF(
+                                    (pointInfo.X * 0.1f - offsetX) + colOffset,
+                                    (pointInfo.Y * 0.1f - offsetY) + rowOffset
+                                )
+                            }));
+                })
+                .Where(p => selectionRect.Contains((int)p.DisplayLocation.X, (int)p.DisplayLocation.Y))
+                .ToList();
+
+            if (pointsInSelection.Count == 0)
+            {
+                MessageBox.Show("选定区域内没有找到符合条件的热力点。");
+                return;
+            }
+
+            this.Invoke(new Action(() =>
+            {
+                foreach (var p in pointsInSelection)
+                {
+                    var label = new Label
+                    {
+                        Text = $"SN: {p.SN}, 缺陷: {p.PointInfo.DefectName}, 坐标: ({p.PointInfo.X}, {p.PointInfo.Y})",
+                        AutoSize = true,
+                        ForeColor = Color.White,
+                        Margin = new Padding(3),
+                    };
+                    flowLayoutPanel_Details.Controls.Add(label);
+                }
+            }));
+        }
+
+        #endregion
+
+        #region Test Environment
+        #endregion
     }
 }
