@@ -419,7 +419,7 @@ namespace DeepSightDisplay
                     int y = Math.Min(_selectionStartPoint.Y, _selectionEndPoint.Y);
                     int width = Math.Abs(_selectionStartPoint.X - _selectionEndPoint.X);
                     int height = Math.Abs(_selectionStartPoint.Y - _selectionEndPoint.Y);
-                    _persistentSelectionRect = new Rectangle(x, y, width, height);
+                   // _persistentSelectionRect = new Rectangle(x, y, width, height);
 
                     Refresh();
 

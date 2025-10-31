@@ -558,7 +558,7 @@ namespace DeepSightWorkLib
                                     dbInfo.operation = "put";
                                     dbInfo.op_mode = "ap";
                                     //lot
-                                    dbInfo.key = $"{info.panelInfo.LotId}-{info.panelInfo.LotBatch}";
+                                    dbInfo.key = $"{info.panelInfo.LotId}";
                                     dbInfo.value = info.panelInfo.SerialNumber;
                                     string Result;
                                     http_DB.HttpPostMethod("http://127.0.0.1:9877", dbInfo, 1, out Result);

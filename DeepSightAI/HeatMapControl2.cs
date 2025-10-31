@@ -1,4 +1,4 @@
-﻿#define TEST_ENV
+﻿//#define TEST_ENV
 using DeepSightDB;
 using DeepSightDisplay;
 using DeepSightModel;
@@ -426,7 +426,7 @@ namespace DeepSightAI
                                 (pointInfo.Y * 0.1f - offsetY) + rowOffset
                             ),
                             intensity: 0.25f,
-                            radius: 100
+                            radius: 25/(float)(col+ 1)/(float)(row+ 1)
                         ));
                 })
                 .ToList();
@@ -462,6 +462,22 @@ namespace DeepSightAI
             this.Invoke(new Action(() =>
             {
                 flowLayoutPanel_Defects.Controls.Clear();
+
+                if (defectNames.Any())
+                {
+                    // 添加“全选”复选框
+                    var selectAllCheckBox = new CheckBox
+                    {
+                        Text = "全选",
+                        Name = "chkSelectAll",
+                        AutoSize = true,
+                        ForeColor = Color.FromArgb(255, 255, 0), // 使用醒目的颜色
+                        Checked = true
+                    };
+                    selectAllCheckBox.CheckedChanged += SelectAllCheckbox_CheckedChanged;
+                    flowLayoutPanel_Defects.Controls.Add(selectAllCheckBox);
+                }
+
                 foreach (var name in defectNames)
                 {
                     if (string.IsNullOrEmpty(name)) continue;
@@ -477,6 +493,34 @@ namespace DeepSightAI
                     flowLayoutPanel_Defects.Controls.Add(checkBox);
                 }
             }));
+        }
+
+        private async void SelectAllCheckbox_CheckedChanged(object sender, EventArgs e)
+        {
+            var selectAllCheckBox = sender as CheckBox;
+            if (selectAllCheckBox == null) return;
+
+            // 避免在更新子项时重复触发事件
+            flowLayoutPanel_Defects.Controls.OfType<CheckBox>()
+                                 .Where(cb => cb != selectAllCheckBox)
+                                 .ToList()
+                                 .ForEach(cb => cb.CheckedChanged -= DefectCheckbox_CheckedChanged);
+
+            foreach (var checkBox in flowLayoutPanel_Defects.Controls.OfType<CheckBox>())
+            {
+                if (checkBox != selectAllCheckBox)
+                {
+                    checkBox.Checked = selectAllCheckBox.Checked;
+                }
+            }
+
+            // 重新订阅事件
+            flowLayoutPanel_Defects.Controls.OfType<CheckBox>()
+                                 .Where(cb => cb != selectAllCheckBox)
+                                 .ToList()
+                                 .ForEach(cb => cb.CheckedChanged += DefectCheckbox_CheckedChanged);
+
+            await UpdateHeatMapPointsAsync();
         }
 
         #endregion
@@ -808,7 +852,7 @@ namespace DeepSightAI
         private void GenerateMockHeatPoints(string sn)
         {
             var random = new Random(sn.GetHashCode());
-            var defectTypes = new[] { "Scratch", "Dent", "Spot", "Contamination" };
+            var defectTypes = new[] { "Scratch", "Dent", "Spot", "Contamination","1","2","3","4","5","7","6","8","9" };
             var pointsInfos = new List<PointsInfo>();
 
             if (!TryParseSnPosition(sn, out int row, out int col))
@@ -816,7 +860,7 @@ namespace DeepSightAI
                 return;
             }
 
-            for (int i = 0; i < random.Next(5, 20); i++)
+            for (int i = 0; i < random.Next(50, 100); i++)
             {
                 pointsInfos.Add(new PointsInfo
                 {
@@ -963,7 +1007,8 @@ namespace DeepSightAI
             {
                 // 裁剪图像
                 Mat croppedImage = new Mat(DispWinHeatMap.Image, selectionRect);
-
+                offsetX = selectionRect.X;
+                offsetY = selectionRect.Y;
                 // 更新显示
                 DispWinHeatMap.Image = croppedImage;
                 SourceImage = croppedImage;
