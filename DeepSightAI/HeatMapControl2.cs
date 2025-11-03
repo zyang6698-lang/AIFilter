@@ -1,4 +1,4 @@
-﻿//#define TEST_ENV
+﻿#define TEST_ENV
 using DeepSightDB;
 using DeepSightDisplay;
 using DeepSightModel;
@@ -1076,18 +1076,63 @@ namespace DeepSightAI
             {
                 foreach (var p in pointsInSelection)
                 {
+                    var panel = new TableLayoutPanel
+                    {
+                        ColumnCount = 2,
+                        RowCount = 1,
+                        AutoSize = true,
+                        Margin = new Padding(3),
+                        //CellBorderStyle = TableLayoutPanelCellBorderStyle.Single // 可选：用于调试布局
+                    };
+                    panel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100F)); // 固定图片宽度
+                    panel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+
+                    var pictureBox = new PictureBox
+                    {
+                        Size = new System.Drawing.Size(100, 100),
+                        SizeMode = PictureBoxSizeMode.Zoom,
+                        Margin = new Padding(3),
+                        BackColor = Color.FromArgb(45, 45, 48) // 暗色背景以更好地显示图片
+                    };
+
+                    if (!string.IsNullOrEmpty(p.PointInfo.ImagePath) && File.Exists(p.PointInfo.ImagePath))
+                    {
+                        try
+                        {
+                            // 使用Image.FromFile确保在不再需要时可以释放文件句柄
+                            using (var img = Image.FromFile(p.PointInfo.ImagePath))
+                            {
+                                pictureBox.Image = new Bitmap(img);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            LogTextHelper.Error($"加载图片失败 {p.PointInfo.ImagePath}: {ex.Message}");
+                            pictureBox.Image = pictureBox.ErrorImage;
+                        }
+                    }
+                    else
+                    {
+                        // 如果路径为空或文件不存在，可以显示一个占位符或错误图标
+                        pictureBox.Image = pictureBox.ErrorImage;
+                    }
+                    panel.Controls.Add(pictureBox, 0, 0);
+
                     var label = new Label
                     {
-                        Text = $"SN: {p.SN}, 缺陷: {p.PointInfo.DefectName}, 坐标: ({p.PointInfo.X}, {p.PointInfo.Y})",
+                        Text = $"SN: {p.SN}\n缺陷: {p.PointInfo.DefectName}\n坐标: ({p.PointInfo.X}, {p.PointInfo.Y})",
                         AutoSize = true,
                         ForeColor = Color.White,
-                        Margin = new Padding(3),
+                        Margin = new Padding(5), // 增加左边距以与图片分开
+                        Dock = DockStyle.Fill,
+                        TextAlign = ContentAlignment.MiddleLeft
                     };
-                    flowLayoutPanel_Details.Controls.Add(label);
+                    panel.Controls.Add(label, 1, 0);
+
+                    flowLayoutPanel_Details.Controls.Add(panel);
                 }
             }));
         }
-
         #endregion
 
         #region Test Environment

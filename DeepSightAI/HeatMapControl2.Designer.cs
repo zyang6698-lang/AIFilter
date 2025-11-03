@@ -65,15 +65,15 @@
             // 
             this.tableLayoutPanel6.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.tableLayoutPanel6.ColumnCount = 3;
-            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 253F));
+            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 280F));
             this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 269F));
+            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 242F));
             this.tableLayoutPanel6.Controls.Add(this.flowLayoutPanel_Details, 2, 0);
             this.tableLayoutPanel6.Controls.Add(this.table_HeatMap, 1, 0);
             this.tableLayoutPanel6.Controls.Add(this.tableLayoutPanel1, 0, 0);
             this.tableLayoutPanel6.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel6.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel6.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tableLayoutPanel6.Margin = new System.Windows.Forms.Padding(2);
             this.tableLayoutPanel6.Name = "tableLayoutPanel6";
             this.tableLayoutPanel6.RowCount = 1;
             this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
@@ -86,11 +86,11 @@
             this.flowLayoutPanel_Details.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.flowLayoutPanel_Details.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel_Details.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
-            this.flowLayoutPanel_Details.Location = new System.Drawing.Point(1089, 2);
-            this.flowLayoutPanel_Details.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.flowLayoutPanel_Details.Location = new System.Drawing.Point(1116, 2);
+            this.flowLayoutPanel_Details.Margin = new System.Windows.Forms.Padding(2);
             this.flowLayoutPanel_Details.Name = "flowLayoutPanel_Details";
             this.flowLayoutPanel_Details.Padding = new System.Windows.Forms.Padding(15, 0, 0, 0);
-            this.flowLayoutPanel_Details.Size = new System.Drawing.Size(265, 720);
+            this.flowLayoutPanel_Details.Size = new System.Drawing.Size(238, 720);
             this.flowLayoutPanel_Details.TabIndex = 141;
             this.flowLayoutPanel_Details.WrapContents = false;
             // 
@@ -100,17 +100,17 @@
             this.table_HeatMap.ColumnCount = 1;
             this.table_HeatMap.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.table_HeatMap.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.table_HeatMap.Location = new System.Drawing.Point(255, 2);
-            this.table_HeatMap.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.table_HeatMap.Location = new System.Drawing.Point(282, 2);
+            this.table_HeatMap.Margin = new System.Windows.Forms.Padding(2);
             this.table_HeatMap.Name = "table_HeatMap";
             this.table_HeatMap.RowCount = 1;
             this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 719F));
-            this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 719F));
-            this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 719F));
-            this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 719F));
-            this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 719F));
-            this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 719F));
+            this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 720F));
+            this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 720F));
+            this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 720F));
+            this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 720F));
+            this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 720F));
+            this.table_HeatMap.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 720F));
             this.table_HeatMap.Size = new System.Drawing.Size(830, 720);
             this.table_HeatMap.TabIndex = 2;
             // 
@@ -120,13 +120,14 @@
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.Controls.Add(this.panel13, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel_Defects, 1, 0);
+            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(2, 2);
-            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(2);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(249, 719);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(276, 720);
             this.tableLayoutPanel1.TabIndex = 3;
             // 
             // panel13
@@ -147,9 +148,9 @@
             this.panel13.Controls.Add(this.btn_queryHeatPoint);
             this.panel13.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel13.Location = new System.Drawing.Point(2, 2);
-            this.panel13.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.panel13.Margin = new System.Windows.Forms.Padding(2);
             this.panel13.Name = "panel13";
-            this.panel13.Size = new System.Drawing.Size(245, 410);
+            this.panel13.Size = new System.Drawing.Size(272, 410);
             this.panel13.TabIndex = 1;
             // 
             // groupBox1
@@ -164,9 +165,9 @@
             this.groupBox1.Controls.Add(this.btn_loadArryImage);
             this.groupBox1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.groupBox1.Location = new System.Drawing.Point(14, 19);
-            this.groupBox1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.groupBox1.Margin = new System.Windows.Forms.Padding(2);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.groupBox1.Padding = new System.Windows.Forms.Padding(2);
             this.groupBox1.Size = new System.Drawing.Size(245, 158);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
@@ -178,7 +179,7 @@
             this.btn_Select.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
             this.btn_Select.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.btn_Select.Location = new System.Drawing.Point(128, 114);
-            this.btn_Select.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btn_Select.Margin = new System.Windows.Forms.Padding(2);
             this.btn_Select.Name = "btn_Select";
             this.btn_Select.Size = new System.Drawing.Size(106, 26);
             this.btn_Select.TabIndex = 139;
@@ -192,7 +193,7 @@
             this.btnClip.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
             this.btnClip.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.btnClip.Location = new System.Drawing.Point(12, 114);
-            this.btnClip.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btnClip.Margin = new System.Windows.Forms.Padding(2);
             this.btnClip.Name = "btnClip";
             this.btnClip.Size = new System.Drawing.Size(106, 26);
             this.btnClip.TabIndex = 140;
@@ -205,7 +206,7 @@
             this.rbn_Panel.AutoSize = true;
             this.rbn_Panel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.rbn_Panel.Location = new System.Drawing.Point(73, 33);
-            this.rbn_Panel.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.rbn_Panel.Margin = new System.Windows.Forms.Padding(2);
             this.rbn_Panel.Name = "rbn_Panel";
             this.rbn_Panel.Size = new System.Drawing.Size(53, 16);
             this.rbn_Panel.TabIndex = 141;
@@ -219,7 +220,7 @@
             this.rbn_Array.Checked = true;
             this.rbn_Array.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.rbn_Array.Location = new System.Drawing.Point(17, 33);
-            this.rbn_Array.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.rbn_Array.Margin = new System.Windows.Forms.Padding(2);
             this.rbn_Array.Name = "rbn_Array";
             this.rbn_Array.Size = new System.Drawing.Size(53, 16);
             this.rbn_Array.TabIndex = 140;
@@ -231,7 +232,7 @@
             // txt_Row
             // 
             this.txt_Row.Location = new System.Drawing.Point(149, 33);
-            this.txt_Row.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.txt_Row.Margin = new System.Windows.Forms.Padding(2);
             this.txt_Row.Name = "txt_Row";
             this.txt_Row.Size = new System.Drawing.Size(42, 21);
             this.txt_Row.TabIndex = 122;
@@ -241,7 +242,7 @@
             // txt_Column
             // 
             this.txt_Column.Location = new System.Drawing.Point(194, 33);
-            this.txt_Column.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.txt_Column.Margin = new System.Windows.Forms.Padding(2);
             this.txt_Column.Name = "txt_Column";
             this.txt_Column.Size = new System.Drawing.Size(42, 21);
             this.txt_Column.TabIndex = 123;
@@ -253,7 +254,7 @@
             this.btn_setPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
             this.btn_setPanel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.btn_setPanel.Location = new System.Drawing.Point(128, 73);
-            this.btn_setPanel.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btn_setPanel.Margin = new System.Windows.Forms.Padding(2);
             this.btn_setPanel.Name = "btn_setPanel";
             this.btn_setPanel.Size = new System.Drawing.Size(106, 26);
             this.btn_setPanel.TabIndex = 121;
@@ -266,7 +267,7 @@
             this.btn_loadArryImage.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
             this.btn_loadArryImage.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.btn_loadArryImage.Location = new System.Drawing.Point(12, 73);
-            this.btn_loadArryImage.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btn_loadArryImage.Margin = new System.Windows.Forms.Padding(2);
             this.btn_loadArryImage.Name = "btn_loadArryImage";
             this.btn_loadArryImage.Size = new System.Drawing.Size(106, 26);
             this.btn_loadArryImage.TabIndex = 120;
@@ -289,7 +290,7 @@
             // 
             this.cmb_PartNumber.FormattingEnabled = true;
             this.cmb_PartNumber.Location = new System.Drawing.Point(59, 261);
-            this.cmb_PartNumber.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.cmb_PartNumber.Margin = new System.Windows.Forms.Padding(2);
             this.cmb_PartNumber.Name = "cmb_PartNumber";
             this.cmb_PartNumber.Size = new System.Drawing.Size(190, 20);
             this.cmb_PartNumber.TabIndex = 0;
@@ -299,7 +300,7 @@
             this.rbn_Back.AutoSize = true;
             this.rbn_Back.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.rbn_Back.Location = new System.Drawing.Point(134, 354);
-            this.rbn_Back.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.rbn_Back.Margin = new System.Windows.Forms.Padding(2);
             this.rbn_Back.Name = "rbn_Back";
             this.rbn_Back.Size = new System.Drawing.Size(47, 16);
             this.rbn_Back.TabIndex = 137;
@@ -312,7 +313,7 @@
             this.rbn_Front.Checked = true;
             this.rbn_Front.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.rbn_Front.Location = new System.Drawing.Point(68, 354);
-            this.rbn_Front.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.rbn_Front.Margin = new System.Windows.Forms.Padding(2);
             this.rbn_Front.Name = "rbn_Front";
             this.rbn_Front.Size = new System.Drawing.Size(47, 16);
             this.rbn_Front.TabIndex = 136;
@@ -336,7 +337,7 @@
             // timePicker
             // 
             this.timePicker.Location = new System.Drawing.Point(59, 222);
-            this.timePicker.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.timePicker.Margin = new System.Windows.Forms.Padding(2);
             this.timePicker.Name = "timePicker";
             this.timePicker.Size = new System.Drawing.Size(190, 21);
             this.timePicker.TabIndex = 134;
@@ -344,7 +345,7 @@
             // txt_Lot
             // 
             this.txt_Lot.Location = new System.Drawing.Point(59, 317);
-            this.txt_Lot.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.txt_Lot.Margin = new System.Windows.Forms.Padding(2);
             this.txt_Lot.Name = "txt_Lot";
             this.txt_Lot.Size = new System.Drawing.Size(190, 21);
             this.txt_Lot.TabIndex = 133;
@@ -398,7 +399,7 @@
             this.btn_queryHeatPoint.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
             this.btn_queryHeatPoint.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.btn_queryHeatPoint.Location = new System.Drawing.Point(142, 382);
-            this.btn_queryHeatPoint.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btn_queryHeatPoint.Margin = new System.Windows.Forms.Padding(2);
             this.btn_queryHeatPoint.Name = "btn_queryHeatPoint";
             this.btn_queryHeatPoint.Size = new System.Drawing.Size(106, 26);
             this.btn_queryHeatPoint.TabIndex = 126;
@@ -413,10 +414,10 @@
             this.flowLayoutPanel_Defects.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel_Defects.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
             this.flowLayoutPanel_Defects.Location = new System.Drawing.Point(2, 416);
-            this.flowLayoutPanel_Defects.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.flowLayoutPanel_Defects.Margin = new System.Windows.Forms.Padding(2);
             this.flowLayoutPanel_Defects.Name = "flowLayoutPanel_Defects";
             this.flowLayoutPanel_Defects.Padding = new System.Windows.Forms.Padding(15, 0, 0, 0);
-            this.flowLayoutPanel_Defects.Size = new System.Drawing.Size(245, 301);
+            this.flowLayoutPanel_Defects.Size = new System.Drawing.Size(272, 302);
             this.flowLayoutPanel_Defects.TabIndex = 140;
             this.flowLayoutPanel_Defects.WrapContents = false;
             // 
@@ -425,7 +426,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.tableLayoutPanel6);
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "HeatMapControl2";
             this.Size = new System.Drawing.Size(1310, 724);
             this.tableLayoutPanel6.ResumeLayout(false);
