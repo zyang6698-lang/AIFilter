@@ -319,6 +319,7 @@
     <Compile Include="HeatMapControl2.Designer.cs">
       <DependentUpon>HeatMapControl2.cs</DependentUpon>
     </Compile>
+    <Compile Include="HeatMapManager.cs" />
     <Compile Include="HeatMapRenderer.cs" />
     <Compile Include="Machine.cs" />
     <Compile Include="MachinePanel.cs">

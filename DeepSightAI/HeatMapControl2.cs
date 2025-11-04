@@ -28,16 +28,23 @@ namespace DeepSightAI
         #region Fields and Properties
 
         private readonly ConcurrentDictionary<string, List<AVI_HeatPoints>> dic_heatPints = new ConcurrentDictionary<string, List<AVI_HeatPoints>>();
-        private readonly List<HeatPoint> _heatPoints = new List<HeatPoint>();
-        private HeatMapControl heatMapControl;
+        private readonly HeatMapManager _heatMapManager = new HeatMapManager();
         private Mat SourceImage = null;
         private ConcurrentDictionary<string, List<string>> dic_PN_SNList = new ConcurrentDictionary<string, List<string>>();
 
         /// <summary>
         /// 产品图原点坐标距离大图原点坐标的偏移,渲染热力图坐标时需要减去此坐标
         /// </summary>
-        public int offsetX;
-        public int offsetY;
+        public int offsetX
+        {
+            get => _heatMapManager.OffsetX;
+            set => _heatMapManager.OffsetX = value;
+        }
+        public int offsetY
+        {
+            get => _heatMapManager.OffsetY;
+            set => _heatMapManager.OffsetY = value;
+        }
 
         public CvDisplay DispWinHeatMap = null;
         private List<dynamic> _pointsInSelection = new List<dynamic>();
@@ -101,17 +108,7 @@ namespace DeepSightAI
 
         private void InitializeHeatMap()
         {
-            heatMapControl = new HeatMapControl
-            {
-                Dock = DockStyle.Fill,
-                BackgroundImage = SourceImage?.ToBitmap(),
-                HeatMapOpacity = 1f
-            };
-            if (SourceImage != null)
-            {
-                heatMapControl.Width = heatMapControl.BackgroundImage.Width;
-                heatMapControl.Height = heatMapControl.BackgroundImage.Height;
-            }
+            _heatMapManager.InitializeHeatMap(SourceImage);
         }
 
         private void LoadInitialImage()
@@ -219,7 +216,7 @@ namespace DeepSightAI
                 {
                     // 清空旧数据
                     dic_heatPints.Clear();
-                    _heatPoints.Clear();
+                    _heatMapManager.ClearHeatPoints();
                     this.Invoke(new Action(() =>
                     {
                         flowLayoutPanel_Defects.Controls.Clear();
@@ -241,10 +238,10 @@ namespace DeepSightAI
                     SourceImage = mt;
 
                     // 更新 heatMapControl 的背景并清空热点
-                    if (heatMapControl != null)
+                    if (_heatMapManager.HeatMapControl != null)
                     {
-                        heatMapControl.BackgroundImage = SourceImage.ToBitmap();
-                        heatMapControl.ClearHeatPoints(); // 这会清除旧的热力图覆盖层
+                        _heatMapManager.SetBackgroundImage(SourceImage.ToBitmap());
+                        _heatMapManager.ClearHeatPoints(); // 这会清除旧的热力图覆盖层
                     }
 
                     // 直接在显示控件中显示新的背景图
@@ -337,7 +334,7 @@ namespace DeepSightAI
             if (sn_list.Count == 0) return;
 
             dic_heatPints.Clear();
-            _heatPoints.Clear();
+            _heatMapManager.ClearHeatPoints();
 
 #if TEST_ENV
             sn_list.ForEach(sn => GenerateMockHeatPoints(sn));
@@ -438,9 +435,9 @@ namespace DeepSightAI
                 });
 
                 DispWinHeatMap.Image = resultImage;
-                if (heatMapControl != null)
+                if (_heatMapManager.HeatMapControl != null)
                 {
-                    heatMapControl.BackgroundImage = resultImage.ToBitmap();
+                    _heatMapManager.SetBackgroundImage(resultImage.ToBitmap());
                 }
                 await UpdateHeatMapPointsAsync();
                 DispWinHeatMap.Invalidate();
@@ -464,7 +461,6 @@ namespace DeepSightAI
                 return;
             }
 
-            _heatPoints.Clear();
             string sideFilter = rbn_Front.Checked ? "A" : "B";
 
             var selectedDefectNames = new List<string>();
@@ -476,50 +472,13 @@ namespace DeepSightAI
                     .ToList();
             }));
 
-            var heatPoints = dic_heatPints
-                .AsParallel()
-                .SelectMany(kvp =>
-                {
-                    var sn = kvp.Key;
-                    if (!TryParseSnPosition(sn, out int row, out int col))
-                    {
-                        return Enumerable.Empty<HeatPoint>();
-                    }
-
-                    float productWidth = SourceImage?.Width ?? 0;
-                    float productHeight = SourceImage?.Height ?? 0;
-                    float colOffset = col * productWidth;
-                    float rowOffset = row * productHeight;
-
-                    return kvp.Value
-                        .Where(p => p.Side == sideFilter && p?.pointsInfos != null)
-                        .SelectMany(avi_points => avi_points.pointsInfos.Where(p => selectedDefectNames.Contains(p.DefectName)))
-                        .Select(pointInfo => new HeatPoint(
-                            location: new PointF(
-                                (pointInfo.X * 0.1f - offsetX) + colOffset,
-                                (pointInfo.Y * 0.1f - offsetY) + rowOffset
-                            ),
-                            intensity: 0.25f,
-                            radius: 25
-                        ));
-                })
-                .ToList();
-
-            _heatPoints.AddRange(heatPoints);
-            LogTextHelper.Info($"热力点位数：{_heatPoints.Count}");
-
-            await Task.Run(() =>
-            {
-                Stopwatch sw = new Stopwatch();
-                sw.Start();
-                heatMapControl.SetHeatPoints(_heatPoints);
-                if (heatMapControl._heatMapOverlay != null)
-                {
-                    DispWinHeatMap.Image = BitmapConverter.ToMat(ImageHelper.CombineHeatMapWithBackground(heatMapControl.BackgroundImage, heatMapControl._heatMapOverlay));
-                }
-                sw.Stop();
-                LogTextHelper.Info($"COST :{sw.ElapsedMilliseconds} ms");
-            });
+            await _heatMapManager.UpdateHeatMapPointsAsync(
+                dic_heatPints,
+                sideFilter,
+                selectedDefectNames,
+                (sn, row, col) => TryParseSnPosition(sn, out row, out col),
+                SourceImage,
+                (mat) => DispWinHeatMap.Image = mat);
 
             DispWinHeatMap.Invalidate();
         }
@@ -1022,40 +981,34 @@ namespace DeepSightAI
 
         private async Task TestUpdateHeatMapPointsAsync()
         {
-            _heatPoints.Clear();
             var random = new Random();
-            var point1 = new HeatPoint(
-                                   location: new PointF(
-                                   random.Next(100, 500) * 0.1f,
-                                   random.Next(200, 600) * 0.1f
-                                   ),
-                                   intensity: 0.25f,
-                                   radius: 20
-                               );
-            var point2 = new HeatPoint(
-                                location: new PointF(
-                                random.Next(500, 1000) * 0.1f,
-                                random.Next(500, 1000) * 0.1f
-                                ),
-                                intensity: 0.25f,
-                                radius: 20
-                            );
-            _heatPoints.Add(point1);
-            _heatPoints.Add(point2);
+            var points = new List<HeatPoint>
+            {
+                new HeatPoint(
+                    location: new PointF(random.Next(100, 500) * 0.1f, random.Next(200, 600) * 0.1f),
+                    intensity: 0.25f,
+                    radius: 20),
+                new HeatPoint(
+                    location: new PointF(random.Next(500, 1000) * 0.1f, random.Next(500, 1000) * 0.1f),
+                    intensity: 0.25f,
+                    radius: 20)
+            };
 
-            LogTextHelper.Info($"热力点位数：{_heatPoints.Count}");
+            LogTextHelper.Info($"热力点位数：{points.Count}");
 
             await Task.Run(() =>
             {
-                Stopwatch sw = new Stopwatch();
+                var sw = new Stopwatch();
                 sw.Start();
-                heatMapControl.SetHeatPoints(_heatPoints);
-                if (heatMapControl._heatMapOverlay != null)
+                _heatMapManager.HeatMapControl.SetHeatPoints(points);
+                if (_heatMapManager.HeatMapControl._heatMapOverlay != null)
                 {
-                    DispWinHeatMap.Image = BitmapConverter.ToMat(ImageHelper.CombineHeatMapWithBackground(heatMapControl.BackgroundImage, heatMapControl._heatMapOverlay));
+                    DispWinHeatMap.Image = BitmapConverter.ToMat(ImageHelper.CombineHeatMapWithBackground(
+                        _heatMapManager.HeatMapControl.BackgroundImage,
+                        _heatMapManager.HeatMapControl._heatMapOverlay));
                 }
                 sw.Stop();
-                LogTextHelper.Info($"COST :{sw.ElapsedMilliseconds} ms");
+                LogTextHelper.Info($"COST: {sw.ElapsedMilliseconds} ms");
             });
 
             DispWinHeatMap.Invalidate();
@@ -1069,8 +1022,8 @@ namespace DeepSightAI
             {
                 var point = new HeatPoint(
                     location: new PointF(
-                    random.Next(heatMapControl.Width),
-                    random.Next(heatMapControl.Height)
+                    random.Next(_heatMapManager.HeatMapControl.Width),
+                    random.Next(_heatMapManager.HeatMapControl.Height)
                     ),
                     intensity: (float)random.NextDouble(),
                     radius: 120
@@ -1078,7 +1031,7 @@ namespace DeepSightAI
                 points.Add(point);
             }
 
-            heatMapControl.SetHeatPoints(points);
+            _heatMapManager.HeatMapControl.SetHeatPoints(points);
         }
 
         private void AddControlPanel()
@@ -1097,11 +1050,11 @@ namespace DeepSightAI
                 Width = 130,
                 Minimum = 0,
                 Maximum = 100,
-                Value = (int)(heatMapControl.HeatMapOpacity * 100)
+                Value = (int)(_heatMapManager.HeatMapControl.HeatMapOpacity * 100)
             };
             trackOpacity.ValueChanged += (s, e) =>
             {
-                heatMapControl.HeatMapOpacity = trackOpacity.Value / 100f;
+                _heatMapManager.HeatMapControl.HeatMapOpacity = trackOpacity.Value / 100f;
             };
 
             panel.Controls.AddRange(new Control[] { lblOpacity, trackOpacity });
@@ -1241,7 +1194,7 @@ namespace DeepSightAI
 
         private async void LoadMoreDetails()
         {
-            this.Enabled = false;
+            //this.Enabled = false;
 
             if (_loadMoreButton != null && flowLayoutPanel_Details.Controls.Contains(_loadMoreButton))
             {
@@ -1251,7 +1204,7 @@ namespace DeepSightAI
             int pointsToLoad = Math.Min(PageSize, _pointsInSelection.Count - _loadedDetailsCount);
             if (pointsToLoad <= 0)
             {
-                this.Enabled = true;
+               // this.Enabled = true;
                 return;
             }
 
@@ -1358,7 +1311,7 @@ namespace DeepSightAI
                 flowLayoutPanel_Details.ScrollControlIntoView(panels.Last());
             }
 
-            this.Enabled = true;
+           // this.Enabled = true;
         }
         #endregion
 
