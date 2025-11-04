@@ -60,6 +60,7 @@
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>true</Prefer32Bit>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <OutputPath>bin\x64\Release\</OutputPath>
@@ -94,6 +95,18 @@
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>www.ico.la_b32d394ce3176c07a91f06c5c3ecf19b_48X48.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugRemote|AnyCPU'">
+    <OutputPath>bin\DebugRemote\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugRemote|x64'">
+    <OutputPath>bin\x64\DebugRemote\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugRemote|x86'">
+    <OutputPath>bin\x86\DebugRemote\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RunPostBuildEvent>Always</RunPostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Aspose.Cells, Version=7.7.2.0, Culture=neutral, PublicKeyToken=00725b1ceb58d0a9, processorArchitecture=MSIL">
@@ -522,4 +535,17 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\OpenCvSharp4.runtime.win.4.11.0.20250507\build\netstandard\OpenCvSharp4.runtime.win.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\OpenCvSharp4.runtime.win.4.11.0.20250507\build\netstandard\OpenCvSharp4.runtime.win.props'))" />
   </Target>
+  <PropertyGroup>
+    <PostBuildEvent>if "$(ConfigurationName)" == "DebugRemote" (
+    set "REMOTE_DIR=\\169.254.242.105\D$\ATS_AI_INSTALL\Bin_0916_35869\Bin"
+
+    echo "Configuration: $(ConfigurationName). Copying files to remote directory..."
+    xcopy "$(TargetDir)*.dll" "%25REMOTE_DIR%25\" /D /Y /I
+    xcopy "$(TargetDir)*.exe" "%25REMOTE_DIR%25\" /D /Y /I
+    xcopy "$(TargetDir)*.config" "%25REMOTE_DIR%25\" /D /Y /I
+    echo "File copy complete."
+) else (
+    echo "Configuration: $(ConfigurationName). Skipping remote file copy."
+)</PostBuildEvent>
+  </PropertyGroup>
 </Project>

@@ -30,6 +30,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugRemote|AnyCPU'">
+    <OutputPath>bin\DebugRemote\</OutputPath>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="CommunityToolkit.HighPerformance, Version=8.3.0.0, Culture=neutral, PublicKeyToken=4aff67a105548ee2, processorArchitecture=MSIL">
       <HintPath>..\packages\CommunityToolkit.HighPerformance.8.3.0\lib\netstandard2.0\CommunityToolkit.HighPerformance.dll</HintPath>

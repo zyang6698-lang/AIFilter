@@ -32,6 +32,9 @@
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugRemote|AnyCPU'">
+    <OutputPath>bin\DebugRemote\</OutputPath>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="OpenCvSharp">
       <HintPath>..\Bin\OpenCvSharp.dll</HintPath>

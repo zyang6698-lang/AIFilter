@@ -17,6 +17,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -39,6 +40,10 @@ namespace DeepSightAI
         public int offsetY;
 
         public CvDisplay DispWinHeatMap = null;
+        private List<dynamic> _pointsInSelection = new List<dynamic>();
+        private int _loadedDetailsCount = 0;
+        private const int PageSize = 50;
+        private Button _loadMoreButton = null;
 
 
         #endregion
@@ -168,6 +173,10 @@ namespace DeepSightAI
                         {
                             cmb_PartNumber.Items.Add(pn);
                         }
+                        if (cmb_PartNumber.Items.Count > 0)
+                        {
+                            cmb_PartNumber.SelectedIndex = 0;
+                        }
                         MessageBox.Show($"已加载当天料号列表，请选择或输入一个料号后再次查询。");
                         return;
                     }
@@ -208,24 +217,41 @@ namespace DeepSightAI
                 this.Enabled = false;
                 try
                 {
+                    // 清空旧数据
+                    dic_heatPints.Clear();
+                    _heatPoints.Clear();
+                    this.Invoke(new Action(() =>
+                    {
+                        flowLayoutPanel_Defects.Controls.Clear();
+                        flowLayoutPanel_Details.Controls.Clear();
+                    }));
+
                     Mat mt = await Task.Run(() =>
                     {
                         Rect rect = new Rect();
-                        GetProductROI(path, ref rect);
+                        // GetProductROI(path, ref rect);
                         offsetX = rect.X;
                         offsetY = rect.Y;
                         Mat originalMat = Cv2.ImRead(path);
                         Cv2.Resize(originalMat, originalMat, new OpenCvSharp.Size(originalMat.Width * 0.1, originalMat.Height * 0.1));
-                        return new Mat(originalMat, rect);
+                        //return new Mat(originalMat, rect);
+                        return originalMat;
                     });
+
                     SourceImage = mt;
-                    DispWinHeatMap.Image = mt;
-                    if (heatMapControl._heatMapOverlay != null)
+
+                    // 更新 heatMapControl 的背景并清空热点
+                    if (heatMapControl != null)
                     {
-                        DispWinHeatMap.Image = BitmapConverter.ToMat(ImageHelper.CombineHeatMapWithBackground(SourceImage.ToBitmap(), heatMapControl._heatMapOverlay));
+                        heatMapControl.BackgroundImage = SourceImage.ToBitmap();
+                        heatMapControl.ClearHeatPoints(); // 这会清除旧的热力图覆盖层
                     }
+
+                    // 直接在显示控件中显示新的背景图
+                    DispWinHeatMap.Image = mt;
                     DispWinHeatMap.Invalidate();
-                    SaveBackgroundImage(mt); 
+
+                    SaveBackgroundImage(mt);
                 }
                 catch (Exception ex)
                 {
@@ -316,8 +342,57 @@ namespace DeepSightAI
 #if TEST_ENV
             sn_list.ForEach(sn => GenerateMockHeatPoints(sn));
 #else
-            var tasks = sn_list.Select(sn => Task.Run(() => queryHeatDataBySn(sn))).ToList();
-            await Task.WhenAll(tasks);
+            var stopwatch = Stopwatch.StartNew();
+
+            // 1. 设置合理的并发限制，例如 64。这个值可以根据目标服务器的承受能力进行调整。
+            int degreeOfParallelism = 20;
+            var results = new ConcurrentBag<AVI_HeatPoints>();
+
+            using (var semaphore = new SemaphoreSlim(degreeOfParallelism))
+            {
+                var tasks = new List<Task>();
+                foreach (var sn in sn_list)
+                {
+                    await semaphore.WaitAsync(); // 等待一个可用的并发槽位
+
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        try
+                        {
+                            // 2. 并行查询 A/B 面，并将结果添加到线程安全的集合中
+                            var taskA = queryHeatDataBySnSideAsync(sn, "A");
+                            var taskB = queryHeatDataBySnSideAsync(sn, "B");
+                            var heatPoints = await Task.WhenAll(taskA, taskB);
+
+                            foreach (var point in heatPoints)
+                            {
+                                if (point != null)
+                                {
+                                    results.Add(point);
+                                }
+                            }
+                        }
+                        finally
+                        {
+                            semaphore.Release(); // 释放槽位
+                        }
+                    }));
+                }
+                await Task.WhenAll(tasks);
+            }
+
+            // 3. 将收集到的结果统一整理到字典中
+            foreach (var result in results)
+            {
+                if (!dic_heatPints.ContainsKey(result.SN))
+                {
+                    dic_heatPints[result.SN] = new List<AVI_HeatPoints>();
+                }
+                dic_heatPints[result.SN].Add(result);
+            }
+
+            stopwatch.Stop();
+            LogTextHelper.Info($"查询所有SN的热力点数据总耗时: {stopwatch.ElapsedMilliseconds} ms，并发度: {degreeOfParallelism}");
 #endif
 
 
@@ -338,7 +413,6 @@ namespace DeepSightAI
             UpdateDefectCheckboxes();
             await UpdateHeatMapPointsAsync();
         }
-
         private async Task UpdatePanelGrid(int rows, int columns)
         {
             if (SourceImage.Empty())
@@ -426,7 +500,7 @@ namespace DeepSightAI
                                 (pointInfo.Y * 0.1f - offsetY) + rowOffset
                             ),
                             intensity: 0.25f,
-                            radius: 25/(float)(col+ 1)/(float)(row+ 1)
+                            radius: 25
                         ));
                 })
                 .ToList();
@@ -529,6 +603,7 @@ namespace DeepSightAI
 
         private List<string> GetSnListByLot(string Lot)
         {
+            var stopwatch = Stopwatch.StartNew();
             try
             {
                 List<string> rtn_list = new List<string>();
@@ -559,10 +634,16 @@ namespace DeepSightAI
                 LogTextHelper.Error("GetSnListByLot 异常: " + ex.ToString());
                 return new List<string>();
             }
+            finally
+            {
+                stopwatch.Stop();
+                LogTextHelper.Info($"GetSnListByLot(Lot: {Lot}) 耗时: {stopwatch.ElapsedMilliseconds} ms");
+            }
         }
 
         private List<string> GetSnByPnTime(DateTime date)
         {
+            var stopwatch = Stopwatch.StartNew();
             try
             {
                 List<string> rtn_list = new List<string>();
@@ -613,14 +694,22 @@ namespace DeepSightAI
                 LogTextHelper.Error("GetSnByPnTime 异常: " + ex.ToString());
                 return new List<string>();
             }
+            finally
+            {
+                stopwatch.Stop();
+                LogTextHelper.Info($"GetSnByPnTime(Date: {date:yyyy-MM-dd}) 耗时: {stopwatch.ElapsedMilliseconds} ms");
+            }
         }
 
         private bool queryHeatDataBySn(string sn)
         {
             try
             {
-                QueryAndStoreHeatPoints(sn, "A");
-                QueryAndStoreHeatPoints(sn, "B");
+                // 为了与新的并行模型兼容，此方法可以保持原样或标记为过时
+                // 实际的查询逻辑已移至 queryHeatDataBySnSideAsync
+                var taskA = Task.Run(() => QueryAndStoreHeatPoints(sn, "A"));
+                var taskB = Task.Run(() => QueryAndStoreHeatPoints(sn, "B"));
+                Task.WhenAll(taskA, taskB).Wait();
                 return true;
             }
             catch (Exception ex)
@@ -630,36 +719,83 @@ namespace DeepSightAI
             }
         }
 
-        private void QueryAndStoreHeatPoints(string sn, string side)
+        private async Task<AVI_HeatPoints> queryHeatDataBySnSideAsync(string sn, string side)
         {
-            RootDbInfo Info = new RootDbInfo
+            var stopwatch = Stopwatch.StartNew();
+            try
             {
-                db_name = "AVI_HeatPoints",
-                operation = "get",
-                op_mode = "last",
-                key = $"{sn}_{side}"
-            };
-            string Result;
-            Machine.master.workClass.http_DB.HttpPostMethod(Machine.master.workClass.URL, Info, 1, out Result);
-            if (string.IsNullOrEmpty(Result)) return;
-
-            var jsonStr = JObject.Parse(Result);
-            string str = jsonStr["value"].ToString();
-
-            if (!string.IsNullOrWhiteSpace(str) && !str.Contains("err_key_found"))
-            {
-                AVI_HeatPoints avi_HeatInfo = JsonConvert.DeserializeObject<AVI_HeatPoints>(str);
-                if (avi_HeatInfo != null)
+                RootDbInfo Info = new RootDbInfo
                 {
-                    if (!dic_heatPints.ContainsKey(sn))
-                    {
-                        dic_heatPints[sn] = new List<AVI_HeatPoints>();
-                    }
-                    dic_heatPints[sn].Add(avi_HeatInfo);
+                    db_name = "AVI_HeatPoints",
+                    operation = "get",
+                    op_mode = "last",
+                    key = $"{sn}_{side}"
+                };
+                string Result=null;
+                // 假设 HttpPostMethod 是同步的，我们在 Task.Run 中运行它
+                await Task.Run(() => Machine.master.workClass.http_DB.HttpPostMethod(Machine.master.workClass.URL, Info, 1, out Result));
+
+                if (string.IsNullOrEmpty(Result)) return null;
+
+                var jsonStr = JObject.Parse(Result);
+                string str = jsonStr["value"].ToString();
+
+                if (!string.IsNullOrWhiteSpace(str) && !str.Contains("err_key_found"))
+                {
+                    return JsonConvert.DeserializeObject<AVI_HeatPoints>(str);
                 }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"queryHeatDataBySnSideAsync for {sn}_{side} 异常: {ex.Message}");
+                return null;
+            }
+            finally
+            {
+                stopwatch.Stop();
+                LogTextHelper.Info($"QueryAndStoreHeatPoints(SN: {sn}, Side: {side}) 耗时: {stopwatch.ElapsedMilliseconds} ms");
             }
         }
 
+        private void QueryAndStoreHeatPoints(string sn, string side)
+        {
+            var stopwatch = Stopwatch.StartNew();
+            try
+            {
+                RootDbInfo Info = new RootDbInfo
+                {
+                    db_name = "AVI_HeatPoints",
+                    operation = "get",
+                    op_mode = "last",
+                    key = $"{sn}_{side}"
+                };
+                string Result;
+                Machine.master.workClass.http_DB.HttpPostMethod(Machine.master.workClass.URL, Info, 1, out Result);
+                if (string.IsNullOrEmpty(Result)) return;
+
+                var jsonStr = JObject.Parse(Result);
+                string str = jsonStr["value"].ToString();
+
+                if (!string.IsNullOrWhiteSpace(str) && !str.Contains("err_key_found"))
+                {
+                    AVI_HeatPoints avi_HeatInfo = JsonConvert.DeserializeObject<AVI_HeatPoints>(str);
+                    if (avi_HeatInfo != null)
+                    {
+                        if (!dic_heatPints.ContainsKey(sn))
+                        {
+                            dic_heatPints[sn] = new List<AVI_HeatPoints>();
+                        }
+                        dic_heatPints[sn].Add(avi_HeatInfo);
+                    }
+                }
+            }
+            finally
+            {
+                stopwatch.Stop();
+                LogTextHelper.Info($"QueryAndStoreHeatPoints(SN: {sn}, Side: {side}) 耗时: {stopwatch.ElapsedMilliseconds} ms");
+            }
+        }
         #endregion
 
         #region Image Processing & Utilities
@@ -860,7 +996,7 @@ namespace DeepSightAI
                 return;
             }
 
-            for (int i = 0; i < random.Next(50, 100); i++)
+            for (int i = 0; i < random.Next(5000, 6000); i++)
             {
                 pointsInfos.Add(new PointsInfo
                 {
@@ -1021,117 +1157,208 @@ namespace DeepSightAI
                 MessageBox.Show("裁剪图像时出错，请检查日志。");
             }
         }
-        private void DisplayHeatPointDetailsInSelection(Rect selectionRect)
+        private async void DisplayHeatPointDetailsInSelection(Rect selectionRect)
         {
-            this.Invoke(new Action(() =>
+            this.Enabled = false;
+            flowLayoutPanel_Details.Controls.Clear();
+            _pointsInSelection.Clear();
+            _loadedDetailsCount = 0;
+
+            var loadingLabel = new Label { Text = "正在加载详细信息...", AutoSize = true, ForeColor = Color.White, Margin = new Padding(10) };
+            flowLayoutPanel_Details.Controls.Add(loadingLabel);
+
+            try
             {
-                flowLayoutPanel_Details.Controls.Clear();
-            }));
-
-            string sideFilter = rbn_Front.Checked ? "A" : "B";
-            var selectedDefectNames = flowLayoutPanel_Defects.Controls.OfType<CheckBox>()
-                                        .Where(cb => cb.Checked)
-                                        .Select(cb => cb.Text)
-                                        .ToList();
-
-            var pointsInSelection = dic_heatPints
-                .AsParallel()
-                .SelectMany(kvp =>
+                // 异步查询所有符合条件的点
+                _pointsInSelection = await Task.Run(() =>
                 {
-                    var sn = kvp.Key;
-                    if (!TryParseSnPosition(sn, out int row, out int col))
-                    {
-                        return Enumerable.Empty<dynamic>();
-                    }
+                    string sideFilter = rbn_Front.Checked ? "A" : "B";
+                    var selectedDefectNames = new HashSet<string>(
+                        flowLayoutPanel_Defects.Controls.OfType<CheckBox>()
+                                                .Where(cb => cb.Checked)
+                                                .Select(cb => cb.Text)
+                    );
 
-                    float productWidth = SourceImage?.Width ?? 0;
-                    float productHeight = SourceImage?.Height ?? 0;
-                    float colOffset = col * productWidth;
-                    float rowOffset = row * productHeight;
+                    return dic_heatPints
+                        .AsParallel()
+                        .SelectMany(kvp =>
+                        {
+                            var sn = kvp.Key;
+                            if (!TryParseSnPosition(sn, out int row, out int col)) return Enumerable.Empty<dynamic>();
 
-                    return kvp.Value
-                        .Where(p => p.Side == sideFilter && p?.pointsInfos != null)
-                        .SelectMany(avi_points => avi_points.pointsInfos
-                            .Where(p => selectedDefectNames.Contains(p.DefectName))
-                            .Select(pointInfo => new
-                            {
-                                SN = sn,
-                                PointInfo = pointInfo,
-                                DisplayLocation = new PointF(
-                                    (pointInfo.X * 0.1f - offsetX) + colOffset,
-                                    (pointInfo.Y * 0.1f - offsetY) + rowOffset
-                                )
-                            }));
-                })
-                .Where(p => selectionRect.Contains((int)p.DisplayLocation.X, (int)p.DisplayLocation.Y))
-                .ToList();
+                            float productWidth = SourceImage?.Width ?? 0;
+                            float productHeight = SourceImage?.Height ?? 0;
+                            float colOffset = col * productWidth;
+                            float rowOffset = row * productHeight;
 
-            if (pointsInSelection.Count == 0)
+                            return kvp.Value
+                                .Where(p => p.Side == sideFilter && p?.pointsInfos != null)
+                                .SelectMany(avi_points => avi_points.pointsInfos
+                                    .Where(p => selectedDefectNames.Contains(p.DefectName))
+                                    .Select(pointInfo => new
+                                    {
+                                        SN = sn,
+                                        PointInfo = pointInfo,
+                                        DisplayLocation = new PointF(
+                                            (pointInfo.X * 0.1f - offsetX) + colOffset,
+                                            (pointInfo.Y * 0.1f - offsetY) + rowOffset
+                                        )
+                                    }));
+                        })
+                        .Where(p => selectionRect.Contains((int)p.DisplayLocation.X, (int)p.DisplayLocation.Y))
+                        .ToList<dynamic>();
+                });
+
+                flowLayoutPanel_Details.Controls.Remove(loadingLabel);
+
+                if (_pointsInSelection.Count == 0)
+                {
+                    MessageBox.Show("选定区域内没有找到符合条件的热力点。");
+                    return;
+                }
+
+                // 加载第一页
+                LoadMoreDetails();
+            }
+            catch (Exception ex)
             {
-                MessageBox.Show("选定区域内没有找到符合条件的热力点。");
+                LogTextHelper.Error($"显示热力点详情时出错: {ex.Message}");
+                MessageBox.Show("加载详情时出错，请检查日志。");
+            }
+            finally
+            {
+                this.Enabled = true;
+            }
+        }
+
+        private async void LoadMoreDetails_Click(object sender, EventArgs e)
+        {
+            if (_loadMoreButton != null) _loadMoreButton.Enabled = false;
+            await Task.Delay(100); // 短暂延迟以允许UI更新
+            LoadMoreDetails();
+            if (_loadMoreButton != null) _loadMoreButton.Enabled = true;
+        }
+
+        private async void LoadMoreDetails()
+        {
+            this.Enabled = false;
+
+            if (_loadMoreButton != null && flowLayoutPanel_Details.Controls.Contains(_loadMoreButton))
+            {
+                flowLayoutPanel_Details.Controls.Remove(_loadMoreButton);
+            }
+
+            int pointsToLoad = Math.Min(PageSize, _pointsInSelection.Count - _loadedDetailsCount);
+            if (pointsToLoad <= 0)
+            {
+                this.Enabled = true;
                 return;
             }
 
-            this.Invoke(new Action(() =>
+            var itemsToLoad = _pointsInSelection.GetRange(_loadedDetailsCount, pointsToLoad);
+
+            // Load image data in the background
+            var imageData = await Task.Run(() =>
             {
-                foreach (var p in pointsInSelection)
+                var data = new List<Tuple<dynamic, byte[]>>();
+                foreach (var p in itemsToLoad)
                 {
-                    var panel = new TableLayoutPanel
-                    {
-                        ColumnCount = 2,
-                        RowCount = 1,
-                        AutoSize = true,
-                        Margin = new Padding(3),
-                        //CellBorderStyle = TableLayoutPanelCellBorderStyle.Single // 可选：用于调试布局
-                    };
-                    panel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100F)); // 固定图片宽度
-                    panel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-
-                    var pictureBox = new PictureBox
-                    {
-                        Size = new System.Drawing.Size(100, 100),
-                        SizeMode = PictureBoxSizeMode.Zoom,
-                        Margin = new Padding(3),
-                        BackColor = Color.FromArgb(45, 45, 48) // 暗色背景以更好地显示图片
-                    };
-
+                    byte[] imageBytes = null;
                     if (!string.IsNullOrEmpty(p.PointInfo.ImagePath) && File.Exists(p.PointInfo.ImagePath))
                     {
                         try
                         {
-                            // 使用Image.FromFile确保在不再需要时可以释放文件句柄
-                            using (var img = Image.FromFile(p.PointInfo.ImagePath))
-                            {
-                                pictureBox.Image = new Bitmap(img);
-                            }
+                            imageBytes = File.ReadAllBytes(p.PointInfo.ImagePath);
                         }
                         catch (Exception ex)
                         {
                             LogTextHelper.Error($"加载图片失败 {p.PointInfo.ImagePath}: {ex.Message}");
-                            pictureBox.Image = pictureBox.ErrorImage;
                         }
                     }
-                    else
-                    {
-                        // 如果路径为空或文件不存在，可以显示一个占位符或错误图标
-                        pictureBox.Image = pictureBox.ErrorImage;
-                    }
-                    panel.Controls.Add(pictureBox, 0, 0);
-
-                    var label = new Label
-                    {
-                        Text = $"SN: {p.SN}\n缺陷: {p.PointInfo.DefectName}\n坐标: ({p.PointInfo.X}, {p.PointInfo.Y})",
-                        AutoSize = true,
-                        ForeColor = Color.White,
-                        Margin = new Padding(5), // 增加左边距以与图片分开
-                        Dock = DockStyle.Fill,
-                        TextAlign = ContentAlignment.MiddleLeft
-                    };
-                    panel.Controls.Add(label, 1, 0);
-
-                    flowLayoutPanel_Details.Controls.Add(panel);
+                    data.Add(Tuple.Create((object)p, imageBytes));
                 }
-            }));
+                return data;
+            });
+
+            // Create UI controls on the UI thread
+            var panels = new List<Control>();
+            foreach (var item in imageData)
+            {
+                var p = item.Item1;
+                var imageBytes = item.Item2;
+
+                var panel = new TableLayoutPanel
+                {
+                    ColumnCount = 2,
+                    RowCount = 1,
+                    AutoSize = true,
+                    AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                    Dock = DockStyle.Top,
+                    Margin = new Padding(3),
+                    Width = flowLayoutPanel_Details.ClientSize.Width - 25
+                };
+                panel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 400F));
+                panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+
+                var pictureBox = new PictureBox
+                {
+                    Size = new System.Drawing.Size(400, 400),
+                    SizeMode = PictureBoxSizeMode.Zoom,
+                    Margin = new Padding(3),
+                    BackColor = Color.FromArgb(45, 45, 48),
+                    Dock = DockStyle.Fill
+                };
+
+                if (imageBytes != null)
+                {
+                    using (var ms = new System.IO.MemoryStream(imageBytes))
+                    {
+                        pictureBox.Image = new Bitmap(ms);
+                    }
+                }
+                else
+                {
+                    pictureBox.Image = pictureBox.ErrorImage;
+                }
+                panel.Controls.Add(pictureBox, 0, 0);
+
+                var label = new Label
+                {
+                    Text = $"SN: {p.SN}\n缺陷: {p.PointInfo.DefectName}\n坐标: ({p.PointInfo.X}, {p.PointInfo.Y})",
+                    AutoSize = true,
+                    ForeColor = Color.White,
+                    Margin = new Padding(10, 5, 5, 5),
+                    Dock = DockStyle.Fill,
+                    TextAlign = ContentAlignment.MiddleLeft
+                };
+                panel.Controls.Add(label, 1, 0);
+                panels.Add(panel);
+            }
+
+            flowLayoutPanel_Details.Controls.AddRange(panels.ToArray());
+            _loadedDetailsCount += pointsToLoad;
+
+            // Update "Load More" button
+            int remaining = _pointsInSelection.Count - _loadedDetailsCount;
+            if (remaining > 0)
+            {
+                _loadMoreButton = new Button
+                {
+                    Text = $"加载更多 ({remaining} 个剩余)",
+                    AutoSize = true,
+                    Margin = new Padding(10),
+                    FlatStyle = FlatStyle.System
+                };
+                _loadMoreButton.Click += LoadMoreDetails_Click;
+                flowLayoutPanel_Details.Controls.Add(_loadMoreButton);
+                flowLayoutPanel_Details.ScrollControlIntoView(_loadMoreButton);
+            }
+            else if (panels.Any())
+            {
+                flowLayoutPanel_Details.ScrollControlIntoView(panels.Last());
+            }
+
+            this.Enabled = true;
         }
         #endregion
 
