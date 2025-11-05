@@ -25,3 +25,9 @@
 /.vs/CopilotSnapshots/A5B296874CCF0348B5FE56F08A045DB7
 /.vs/CopilotSnapshots/72D9717FBAB6374E8EAC9DC5D605F2E4
 /.vs/CopilotSnapshots
+/DeepSightHeatMap/bin/Debug
+/DeepSightHeatMap/obj/Debug
+/DeepSightHeatMap/.vs
+/DeepsightSqlite/bin/Debug
+/DeepsightSqlite/obj/Debug
+/DeepsightSqlite/obj/Debug/.NETFramework,Version=v4.7.2.AssemblyAttributes.cs
