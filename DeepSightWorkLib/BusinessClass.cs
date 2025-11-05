@@ -23,6 +23,7 @@ using Minio.DataModel.Args;
 using System.Text.RegularExpressions;
 using System.Drawing;
 using System.Drawing.Imaging;
+using DeepsightSqlite;
 
 namespace DeepSightWorkLib
 {
@@ -35,6 +36,8 @@ namespace DeepSightWorkLib
         public HttpClass http_DB = null;
         //Minio服务
         public MinioClass minio = null;
+
+        private DatabaseHelper databaseHelper = null;
         //图片路径
         public string ImagePath { get; set; }
         //处理索引
@@ -85,6 +88,7 @@ namespace DeepSightWorkLib
             defect = new DefectClass();
             http_DB = new HttpClass();
             minio = new MinioClass();
+            databaseHelper = new DatabaseHelper("databaseHelper.db");
         }
         /// <summary>
         /// 
@@ -560,14 +564,16 @@ namespace DeepSightWorkLib
                                     //lot
                                     dbInfo.key = $"{info.panelInfo.LotId}";
                                     dbInfo.value = info.panelInfo.SerialNumber;
-                                    string Result;
-                                    http_DB.HttpPostMethod("http://127.0.0.1:9877", dbInfo, 1, out Result);
+                                    http_DB.HttpPostMethod("http://127.0.0.1:9877", dbInfo, 1, out _);
                                     //机台
                                     dbInfo.db_name = "machine_panel";
                                     dbInfo.key = $"{info.panelInfo.MachineName}";
-                                    http_DB.HttpPostMethod("http://127.0.0.1:9877", dbInfo, 1, out Result);
+                                    http_DB.HttpPostMethod("http://127.0.0.1:9877", dbInfo, 1, out _);
                                     //料号
                                     UpdateProductPanel(info);
+
+                                    
+                                    //databaseHelper.UpdateDailyStats(info.panelInfo.MachineName,info.panelInfo.StartTime,true);
 
                                     //中台
                                     DsCenterInfo dsinfo;
@@ -994,7 +1000,6 @@ namespace DeepSightWorkLib
                     avi_HeatInfo.SN = panelInfo.SerialNumber;
                     avi_HeatInfo.Side = panelInfo.SideIndex;
 
-
                     //这个有几个  就是几个报点图各自的结果，
                     for (int i = 0; i < obj.Data.InferWholeData.InferResults.Count; i++)
                     {
@@ -1155,6 +1160,28 @@ namespace DeepSightWorkLib
                         http_DB.HttpPostMethod(URL, Info, 1, out Result);
                         LogTextHelper.Info($"HeatPoints:{avi_HeatInfo.pointsInfos.Count},SN:{avi_HeatInfo.SN},KEY:{Info.key}");
                     }
+
+                    databaseHelper.AddOrUpdatePanelSide(new PanelSideRecord()
+                    {
+                        Data = new SideData()
+                        {
+                            RemainingDefectInfoList = avi_HeatInfo.pointsInfos.Select(o => new DefectDetail()
+                            {
+                                DefectName = o.DefectName,
+                                RoiX = o.X,
+                                RoiY = o.Y,
+                                DefectType=o.DefectName,
+                                ImagePath=o.ImagePath
+                            }).ToList(),
+                            TotalDefectsCount = obj.Data.InferWholeData.InferResults.Count
+                        },
+                        DetectionDate = DateTime.Now,
+                        LotNumber = panelInfo.LotId,
+                        SerialNumber = panelInfo.SerialNumber,
+                        MachineId = panelInfo.MachineName,
+                        Side = panelInfo.SideIndex
+                    });
+
                     //B面做完判断总结果
                     if (panelInfo.SideIndex == "B")
                     {

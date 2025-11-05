@@ -52,5 +52,11 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DeepSightModel\DeepSightModel.csproj">
+      <Project>{C3032123-71AF-4B9F-AAF1-5FDBB73274B0}</Project>
+      <Name>DeepSightModel</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
