@@ -59,7 +59,7 @@
             this.splitContainer1.Panel1.Controls.Add(this.btnReadEmployeeData);
             this.splitContainer1.Panel1.Controls.Add(this.btnShowAnalytics);
             this.splitContainer1.Size = new System.Drawing.Size(726, 493);
-            this.splitContainer1.SplitterDistance = 242;
+            this.splitContainer1.SplitterDistance = 202;
             this.splitContainer1.TabIndex = 120;
             // 
             // btnReadEmployeeData

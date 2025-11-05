@@ -52,7 +52,7 @@ namespace DeepSightAI
         private int _loadedDetailsCount = 0;
         private const int PageSize = 50;
         private Button _loadMoreButton = null;
-
+        private const int mockPointsCount = 30;
 
         #endregion
 
@@ -948,7 +948,7 @@ namespace DeepSightAI
         private void GenerateMockHeatPoints(string sn)
         {
             var random = new Random(sn.GetHashCode());
-            var defectTypes = new[] { "Scratch", "Dent", "Spot", "Contamination","1","2","3","4","5","7","6","8","9" };
+            var defectTypes = new[] { "Scratch", "Dent", "Spot", "Contamination" };
             var pointsInfos = new List<PointsInfo>();
 
             if (!TryParseSnPosition(sn, out int row, out int col))
@@ -956,7 +956,7 @@ namespace DeepSightAI
                 return;
             }
 
-            for (int i = 0; i < random.Next(5000, 6000); i++)
+            for (int i = 0; i < mockPointsCount; i++)
             {
                 pointsInfos.Add(new PointsInfo
                 {
