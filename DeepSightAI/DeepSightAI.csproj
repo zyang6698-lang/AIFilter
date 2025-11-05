@@ -310,17 +310,12 @@
     <Compile Include="FrWelcome.Designer.cs">
       <DependentUpon>FrWelcome.cs</DependentUpon>
     </Compile>
-    <Compile Include="HeatMapControl.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="HeatMapControl2.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="HeatMapControl2.Designer.cs">
       <DependentUpon>HeatMapControl2.cs</DependentUpon>
     </Compile>
-    <Compile Include="HeatMapManager.cs" />
-    <Compile Include="HeatMapRenderer.cs" />
     <Compile Include="Machine.cs" />
     <Compile Include="MachinePanel.cs">
       <SubType>Component</SubType>
@@ -458,6 +453,10 @@
     <ProjectReference Include="..\DeepSightEvent\DeepSightEvent.csproj">
       <Project>{A9B6C0CB-ADC2-4F0B-B786-AF1A8B752040}</Project>
       <Name>DeepSightEvent</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DeepSightHeatMap\DeepSightHeatMap.csproj">
+      <Project>{443cbe76-7a7f-4ad2-a5e1-56290c42bf85}</Project>
+      <Name>DeepSightHeatMap</Name>
     </ProjectReference>
     <ProjectReference Include="..\DeepSightModel\DeepSightModel.csproj">
       <Project>{c3032123-71af-4b9f-aaf1-5fdbb73274b0}</Project>

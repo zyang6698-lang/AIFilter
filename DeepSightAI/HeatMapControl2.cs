@@ -1,6 +1,7 @@
 ﻿#define TEST_ENV
 using DeepSightDB;
 using DeepSightDisplay;
+using DeepSightHeatMap;
 using DeepSightModel;
 using DeepSightTool;
 using HalconDotNet;

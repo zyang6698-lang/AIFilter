@@ -43,7 +43,7 @@ namespace DeepSightDisplay
 
         public string lable { get; set; } = "";
 
-        public List<string> list_Pahts;
+        public List<string> list_Paths;
         /// <summary>
         /// 是否选中模式
         /// </summary>
