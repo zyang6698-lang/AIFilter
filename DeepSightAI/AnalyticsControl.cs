@@ -91,7 +91,8 @@ namespace DeepSightAI
 
         private void btnTestDB_Click(object sender, EventArgs e)
         {
-            Machine.master.workClass.TestDatabaseReadWrite();
+            //Machine.master.workClass.TestDatabaseReadWrite();
+            Machine.master.workClass.TestDatabaseWrite();
         }
     }
 }

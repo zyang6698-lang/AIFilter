@@ -32,6 +32,7 @@ namespace DeepSightAI
 
         private DataFlowAnimation flowAnimation;
         private Dictionary<string, MachinePanel> machinePanels = new Dictionary<string, MachinePanel>();
+        private List<AviCtr> aviCtrs = new List<AviCtr>();
 
         private List<RootPanelInfoWithIP> info = null;
         private List<DisPlayInfo> disInfosList = new List<DisPlayInfo>();
@@ -77,6 +78,7 @@ namespace DeepSightAI
             FormClosing += FrHome_FormClosing;
 
             uph_timer.Interval = 1000 * 60;
+            uph_timer.Enabled = true;
             uph_timer.Elapsed += Uph_timer_Elapsed;
         }
 
@@ -126,31 +128,14 @@ namespace DeepSightAI
             {
                 AddParam(i);
             }
-            for (int i = 0; i < Machine.aviconfig.WatchPaths.Count; i++)
+            for (int i = 0; i < aviCtrs.Count; i++)
             {
                 Point startPoint = new Point(bt.Location.X + bt.Width / 2, 60); // 中央面板底部
-                int offsetX = 0;
-                int offsetY = 0;
-                if (i / 7 > 0 && i / 7 < 2)
-                {
-                    offsetX = 90 + 25 * (i % 7);
-                    offsetY = 90;
-                }
-                else if (i / 7 > 1)
-                {
-                    offsetX = 90 + 25 * (i % 7);
-                    offsetY = 120;
-                }
-                else
-                {
-                    offsetX = 90 + 25 * i;
-                    offsetY = 60;
-                }
-                if (!Machine.aviconfig.WatchPaths[i].IsEnable)
+                if (!aviCtrs[i].ctrConfig.IsEnable)
                 {
                     continue;
                 }
-                Point endPoint = new Point(positions[i].X + offsetX, positions[i].Y + offsetY); // 机台顶部
+                Point endPoint = aviCtrs[i].GetCenterPoint(); // 机台顶部
                 flowAnimation.AddFlowPath(startPoint, endPoint);//, $"数据流{i + 1}");
             }
         }
@@ -159,12 +144,13 @@ namespace DeepSightAI
         {
             try
             {
-                AviCtr ctr = new AviCtr(Machine.aviconfig.WatchPaths[i]);
+                var watchPath = Machine.aviconfig.WatchPaths[i];
+                AviCtr ctr = new AviCtr(watchPath);
                 //ctr.Location = new Point(point.X, point.Y);
-                ctr.Size = new Size(150, 120); // 根据需求调整
+                ctr.Size = new Size(240, 180); // 根据需求调整
 
                 // 计算位置 - 根据索引排列
-                int cols = 7; // 每行显示4个
+                int cols = 4; // 每行显示4个
                 int spacing = 0; // 间距
 
                 int x = (i % cols) * (ctr.Width + spacing) + spacing;
@@ -172,6 +158,7 @@ namespace DeepSightAI
                 
                 ctr.Location = new Point(x, y + 50);
                 positions[i] = ctr.Location;
+                aviCtrs.Add(ctr);
                 this.flowAnimation.Controls.Add(ctr);
             }
             catch (Exception ex)
@@ -374,7 +361,23 @@ namespace DeepSightAI
         {
             try
             {
+                var today = DateTime.Today;
+                var stats = Machine.master.workClass.GetDefectCountsPerMachine(today, today.AddDays(1).AddTicks(-1));
 
+                foreach (var machineStat in stats)
+                {
+                    string machineName = machineStat.Key;
+                    int totalDefects = (int)machineStat.Value.TotalDefects;
+                    int aiOkDefects = (int)machineStat.Value.AIOkDefects;
+
+                    if (this.IsHandleCreated)
+                    {
+                        this.BeginInvoke(new Action(() =>
+                        {
+                            UpdateAviCtrStats(machineName, totalDefects, aiOkDefects);
+                        }));
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -1100,6 +1103,32 @@ namespace DeepSightAI
             catch (Exception ex)
             {
                 LogTextHelper.Info("更新上下页异常" + ex.ToString());
+            }
+        }
+        public void UpdateAviCtrInfo(string aviName, string productSerial, string lotId, double utilization)
+        {
+            foreach (Control control in flowAnimation.Controls)
+            {
+                if (control is AviCtr ctr &&   ctr.ctrConfig.AviName == aviName)
+                {
+                    ctr.ProductSerial = productSerial;
+                    ctr.LotId = lotId;
+                    ctr.Utilization = utilization;
+                    break;
+                }
+            }
+        }
+
+        public void UpdateAviCtrStats(string aviName, int totalImages, int aiOkImages)
+        {
+            foreach (Control control in flowAnimation.Controls)
+            {
+                if (control is AviCtr ctr && ctr.ctrConfig.AviName == aviName)
+                {
+                    ctr.TotalImages = totalImages;
+                    ctr.AiOkImages = aiOkImages;
+                    break;
+                }
             }
         }
     }

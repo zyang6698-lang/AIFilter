@@ -1,5 +1,4 @@
-﻿
-namespace DeepSightAI.SettingPages
+﻿namespace DeepSightAI.SettingPages
 {
     partial class AviCtr
     {
@@ -38,8 +37,9 @@ namespace DeepSightAI.SettingPages
             // 
             // tableLayoutPanel1
             // 
-            this.tableLayoutPanel1.ColumnCount = 1;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel1.ColumnCount = 2;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 132F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.Controls.Add(this.lblName, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.pic_AVI, 0, 1);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -48,17 +48,18 @@ namespace DeepSightAI.SettingPages
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 87F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(132, 109);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(282, 109);
             this.tableLayoutPanel1.TabIndex = 1;
             // 
             // lblName
             // 
+            this.tableLayoutPanel1.SetColumnSpan(this.lblName, 2);
             this.lblName.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblName.Font = new System.Drawing.Font("微软雅黑", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.lblName.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(192)))));
             this.lblName.Location = new System.Drawing.Point(3, 0);
             this.lblName.Name = "lblName";
-            this.lblName.Size = new System.Drawing.Size(126, 22);
+            this.lblName.Size = new System.Drawing.Size(276, 22);
             this.lblName.TabIndex = 237;
             this.lblName.Text = "工站名称";
             this.lblName.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -82,7 +83,7 @@ namespace DeepSightAI.SettingPages
             this.Controls.Add(this.tableLayoutPanel1);
             this.Margin = new System.Windows.Forms.Padding(10);
             this.Name = "AviCtr";
-            this.Size = new System.Drawing.Size(132, 109);
+            this.Size = new System.Drawing.Size(282, 109);
             this.tableLayoutPanel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pic_AVI)).EndInit();
             this.ResumeLayout(false);

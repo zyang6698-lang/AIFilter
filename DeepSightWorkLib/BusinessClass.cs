@@ -1286,7 +1286,7 @@ namespace DeepSightWorkLib
             }
             catch (Exception ex)
             {
-                LogTextHelper.Error("异常(可能未找到Minio路径图像),Index为" + index.ToString());
+                LogTextHelper.Error("异常(可能未找到Minio路径图像),Index为" + index.ToString()+"\n"+ex.ToString());
             }
         }
 
@@ -1424,7 +1424,7 @@ namespace DeepSightWorkLib
                 }
                 Cv2.HConcat(mts_list.ToArray(), mt);
                 DisplaysList2[index].Image = mt;
-                LogTextHelper.Error("异常(可能未找到Minio路径图像),Index为" + index.ToString());
+                LogTextHelper.Error("异常(可能未找到Minio路径图像),Index为" + index.ToString() + "\n" + ex.ToString());
             }
         }
         public void PutTextAll(ref Mat mat, string[] content, System.Drawing.Point[] location,
@@ -1593,6 +1593,13 @@ namespace DeepSightWorkLib
                 LogTextHelper.Error("数据库测试时发生异常", ex);
             }
         }
+        public void TestDatabaseWrite()
+        {
+            DatabaseHelper.GenerateTestData();
+        }
+        public Dictionary<string, (long TotalDefects, long AIOkDefects)> GetDefectCountsPerMachine(DateTime start,DateTime end)=>
+            databaseHelper.GetDefectCountsPerMachine(start,end);
+
         #endregion
         /// <summary>
         /// 开始线程

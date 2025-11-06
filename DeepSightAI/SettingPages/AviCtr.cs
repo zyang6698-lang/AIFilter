@@ -175,6 +175,86 @@ namespace DeepSightAI.SettingPages
         private bool isBreathing = false;
         private int alpha = 100;
         private int breathDirection = -10; // 透明度变化方向
+
+        private Label lblProductSerial;
+        private Label lblLotId;
+        private Label lblUtilization;
+        private Label lblTotalImages;
+        private Label lblAiOkImages;
+        private Label lblAiOkRatio;
+
+        private int _totalImages;
+        public int TotalImages
+        {
+            get => _totalImages;
+            set
+            {
+                if (_totalImages != value)
+                {
+                    _totalImages = value;
+                    UpdateDisplay();
+                }
+            }
+        }
+
+        private int _aiOkImages;
+        public int AiOkImages
+        {
+            get => _aiOkImages;
+            set
+            {
+                if (_aiOkImages != value)
+                {
+                    _aiOkImages = value;
+                    UpdateDisplay();
+                }
+            }
+        }
+
+        private string _productSerial;
+
+        public string MachineName;
+        public string ProductSerial
+        {
+            get => _productSerial;
+            set
+            {
+                if (_productSerial != value)
+                {
+                    _productSerial = value;
+                    UpdateDisplay();
+                }
+            }
+        }
+
+        private string _lotId;
+        public string LotId
+        {
+            get => _lotId;
+            set
+            {
+                if (_lotId != value)
+                {
+                    _lotId = value;
+                    UpdateDisplay();
+                }
+            }
+        }
+
+        private double _utilization;
+        public double Utilization
+        {
+            get => _utilization;
+            set
+            {
+                if (_utilization != value)
+                {
+                    _utilization = value;
+                    UpdateDisplay();
+                }
+            }
+        }
+
         public WatchPathConfig ctrConfig
         {
             get => _ctrConfig;
@@ -192,6 +272,31 @@ namespace DeepSightAI.SettingPages
         {
             InitializeComponent();
             InitializeBreathTimer();
+            InitializeCustomLabels();
+        }
+        private void InitializeCustomLabels()
+        {
+            lblProductSerial = new Label { ForeColor = Color.White, Location = new Point(pic_AVI.Right + 5, 80), AutoSize = true, BackColor = Color.Transparent };
+            lblLotId = new Label { ForeColor = Color.White, Location = new Point(pic_AVI.Right + 5, 95), AutoSize = true, BackColor = Color.Transparent };
+            lblUtilization = new Label { ForeColor = Color.White, Location = new Point(pic_AVI.Right + 5, 110), AutoSize = true, BackColor = Color.Transparent };
+            lblTotalImages = new Label { ForeColor = Color.White, Location = new Point(pic_AVI.Right + 5, 125), AutoSize = true, BackColor = Color.Transparent };
+            lblAiOkImages = new Label { ForeColor = Color.White, Location = new Point(pic_AVI.Right + 5, 140), AutoSize = true, BackColor = Color.Transparent };
+            lblAiOkRatio = new Label { ForeColor = Color.White, Location = new Point(pic_AVI.Right + 5, 155), AutoSize = true, BackColor = Color.Transparent };
+
+
+            this.Controls.Add(lblProductSerial);
+            this.Controls.Add(lblLotId);
+            this.Controls.Add(lblUtilization);
+            this.Controls.Add(lblTotalImages);
+            this.Controls.Add(lblAiOkImages);
+            this.Controls.Add(lblAiOkRatio);
+
+            lblProductSerial.BringToFront();
+            lblLotId.BringToFront();
+            lblUtilization.BringToFront();
+            lblTotalImages.BringToFront();
+            lblAiOkImages.BringToFront();
+            lblAiOkRatio.BringToFront();
         }
         private void InitializeBreathTimer()
         {
@@ -249,7 +354,10 @@ namespace DeepSightAI.SettingPages
         public AviCtr(WatchPathConfig _config)
         {
             InitializeComponent();
+            InitializeCustomLabels();
+            
             ctrConfig = _config;
+            MachineName = _config.AviName;
             this.BackColor = Color.Transparent;
             if (pic_AVI != null)
             {
@@ -260,6 +368,27 @@ namespace DeepSightAI.SettingPages
         {
             if (lblName != null)
                 lblName.Text = ctrConfig.AviName;
+
+            if (lblProductSerial != null)
+                lblProductSerial.Text = $"料号: {ProductSerial}";
+
+            if (lblLotId != null)
+                lblLotId.Text = $"Lot: {LotId}";
+
+            if (lblUtilization != null)
+                lblUtilization.Text = $"稼动率: {Utilization:P2}";
+
+            if (lblTotalImages != null)
+                lblTotalImages.Text = $"总图片数: {TotalImages}";
+
+            if (lblAiOkImages != null)
+                lblAiOkImages.Text = $"AI OK数: {AiOkImages}";
+
+            if (lblAiOkRatio != null)
+            {
+                double ratio = TotalImages > 0 ? (double)AiOkImages / TotalImages : 0;
+                lblAiOkRatio.Text = $"AI OK比例: {ratio:P2}";
+            }
 
             if (pic_AVI != null)//&& labelStatus != null)
             {

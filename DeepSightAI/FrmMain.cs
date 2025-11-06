@@ -47,7 +47,7 @@ namespace DeepSightAI
 
         public bool IsAllow = false;
 
-        private DateTime _lastResetDate= DateTime.Now.Date;
+        private DateTime _lastResetDate = DateTime.Now.Date;
         /// <summary>
         /// 窗体对象实例
         /// </summary>
@@ -281,6 +281,7 @@ namespace DeepSightAI
                         {
                             FrHome.Instance.dataGridViewData.Rows.Insert(0, new List<string> { task.ToString(), "0", "0", "排队中" }.ToArray());
                             FrHome.Instance.dataGridViewData.Rows[0].DefaultCellStyle.ForeColor = Color.Yellow;
+
                         }));
                         //this.lbl_Count.Invoke(new MethodInvoker(() =>
                         //{
@@ -296,7 +297,7 @@ namespace DeepSightAI
                         {
                             //if (total == 0)
                             //    total = 1;
-                            
+
                             double percentage = ((double)Machine.sysConfig.AIPassImageCount / Machine.sysConfig.AVIImageCount) * 100;
                             //if (total_count == 0)
                             //    total_count = 1;
@@ -307,10 +308,10 @@ namespace DeepSightAI
                         {
                             FrHome.Instance.lbl_AIPASS.Text = $"AI_PASS_PCS数:{Machine.sysConfig.AIPassPCS} PCS";
                         }));
-                         FrHome.Instance.lbl_OKimageCount.Invoke(new MethodInvoker(() =>
-                        {
-                            FrHome.Instance.lbl_OKimageCount.Text = $"AI_PASS_图片数:{Machine.sysConfig.AIPassImageCount}";
-                        }));
+                        FrHome.Instance.lbl_OKimageCount.Invoke(new MethodInvoker(() =>
+                       {
+                           FrHome.Instance.lbl_OKimageCount.Text = $"AI_PASS_图片数:{Machine.sysConfig.AIPassImageCount}";
+                       }));
                     }
                     else
                     {

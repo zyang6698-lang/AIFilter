@@ -254,5 +254,134 @@ namespace DeepsightSqlite
             }
             return (0, 0);
         }
+
+
+        /// <summary>
+        /// 获取数据库中所有唯一的 MachineId
+        /// </summary>
+        public List<string> GetAllMachineIds()
+        {
+            var machineIds = new List<string>();
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+                var cmd = new SQLiteCommand("SELECT DISTINCT MachineId FROM Panels", connection);
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        machineIds.Add(reader.GetString(0));
+                    }
+                }
+            }
+            return machineIds;
+        }
+
+        /// <summary>
+        /// 获取每个机台在时间段内的板数统计
+        /// </summary>
+        public Dictionary<string, (int TotalBoards, int AIOkBoards)> GetBoardCountsPerMachine(DateTime start, DateTime end)
+        {
+            var results = new Dictionary<string, (int TotalBoards, int AIOkBoards)>();
+            var machineIds = GetAllMachineIds();
+
+            foreach (var machineId in machineIds)
+            {
+                var counts = GetBoardCounts(start, end, machineId);
+                if (counts.TotalBoards > 0) // 只添加有数据的机台
+                {
+                    results[machineId] = counts;
+                }
+            }
+            return results;
+        }
+
+        /// <summary>
+        /// 获取每个机台在时间段内的报点数统计
+        /// </summary>
+        public Dictionary<string, (long TotalDefects, long AIOkDefects)> GetDefectCountsPerMachine(DateTime start, DateTime end)
+        {
+            var results = new Dictionary<string, (long TotalDefects, long AIOkDefects)>();
+            var machineIds = GetAllMachineIds();
+
+            foreach (var machineId in machineIds)
+            {
+                var counts = GetDefectCounts(start, end, machineId);
+                if (counts.TotalDefects > 0) // 只添加有数据的机台
+                {
+                    results[machineId] = counts;
+                }
+            }
+            return results;
+        }
+
+        /// <summary>
+        /// 生成测试数据
+        /// </summary>
+        public static void GenerateTestData()
+        {
+            var dbHelper = new DatabaseHelper();
+            var random = new Random();
+            var startDate = DateTime.Now.AddMonths(-3);
+            var endDate = DateTime.Now;
+
+            for (var date = startDate.Date; date <= endDate.Date; date = date.AddDays(1))
+            {
+                int numberOfEntries = random.Next(50, 101);
+                for (int i = 0; i < numberOfEntries; i++)
+                {
+                    string machineId = $"Machine-{random.Next(1, 4)}";
+                    string lotNumber = $"Lot-{date:yyyyMMdd}";
+                    string serialNumber = $"{lotNumber}-SN{i:D3}";
+                    DateTime detectionDate = date.AddHours(random.Next(0, 24)).AddMinutes(random.Next(0, 60));
+
+                    // Side A
+                    var sideAData = new SideData
+                    {
+                        TotalDefectsCount = random.Next(0, 10),
+                        HeatPoints = new List<HeatPoint>()
+                    };
+                    sideAData.RemainingDefectsCount = random.Next(0, sideAData.TotalDefectsCount + 1);
+                    for (int j = 0; j < sideAData.TotalDefectsCount; j++)
+                    {
+                        sideAData.HeatPoints.Add(new HeatPoint());
+                    }
+
+                    var recordA = new PanelSideRecord
+                    {
+                        MachineId = machineId,
+                        DetectionDate = detectionDate,
+                        SerialNumber = serialNumber,
+                        LotNumber = lotNumber,
+                        Side = "A",
+                        Data = sideAData
+                    };
+                    dbHelper.SavePanelSide(recordA);
+
+                    // Side B
+                    var sideBData = new SideData
+                    {
+                        TotalDefectsCount = random.Next(0, 10),
+                        HeatPoints = new List<HeatPoint>()
+                    };
+                    sideBData.RemainingDefectsCount = random.Next(0, sideBData.TotalDefectsCount + 1);
+                    for (int j = 0; j < sideBData.TotalDefectsCount; j++)
+                    {
+                        sideBData.HeatPoints.Add(new HeatPoint());
+                    }
+
+                    var recordB = new PanelSideRecord
+                    {
+                        MachineId = machineId,
+                        DetectionDate = detectionDate,
+                        SerialNumber = serialNumber,
+                        LotNumber = lotNumber,
+                        Side = "B",
+                        Data = sideBData
+                    };
+                    dbHelper.SavePanelSide(recordB);
+                }
+            }
+        }
     }
 }
