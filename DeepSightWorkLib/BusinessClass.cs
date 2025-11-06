@@ -520,7 +520,7 @@ namespace DeepSightWorkLib
                                 UpdateProductPanel(info);
                             }
 
-                            if (DefectMethod(info.VbInfo, info.panelInfo, out msg, out details, out pcsResult, out vbJson))
+                            if (DefectMethod(info, out msg, out details, out pcsResult, out vbJson))
                             {
                                 SystemEvent.SendResultInfo(info.SN, msg, details, pcsResult);
                                 if (TestFlag)
@@ -693,6 +693,10 @@ namespace DeepSightWorkLib
                 model.VbInfo = vbInfo;
                 model.minioPath = head;
                 model.panelInfo = obj;
+                if (!File.Exists($"D:\\ATS_AI_INSTALL\\TemplateImages\\{obj.ProductSerial}\\{obj.ProductSerial}[{obj.SideIndex}].jpg"))
+                {
+                    model.isByPass = true;
+                }
                 que_AVI.Enqueue(model);
                 RootPanelInfoWithIP rootobj = new RootPanelInfoWithIP()
                 {
@@ -947,10 +951,11 @@ namespace DeepSightWorkLib
                 throw;
             }
         }
-        public bool DefectMethod(RootVBInfo info, RootPanelInfo panelInfo, out List<string> resList, out List<string> detailsList, out PcsResult pcsResult, out string vbJson)
+        public bool DefectMethod(VBModel vBModel, out List<string> resList, out List<string> detailsList, out PcsResult pcsResult, out string vbJson)
         {
             bool result = false;
-
+            RootVBInfo info = vBModel.VbInfo;
+            RootPanelInfo panelInfo = vBModel.panelInfo;
             try
             {
                 resList = new List<string>();
@@ -1141,8 +1146,15 @@ namespace DeepSightWorkLib
                                 dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].SubDefectsInfo.Add(subDefectInfo);
                             }
                         }
-
-                        resList.Add(obj.Data.InferWholeData.InferResults[i].Infer_Result == "NG" ? "1" : "0");
+                        // 0为OK 1为NG 2为bypass
+                        if (vBModel.isByPass)
+                        {
+                            resList.Add("2");
+                        }
+                        else
+                        {
+                            resList.Add(obj.Data.InferWholeData.InferResults[i].Infer_Result == "NG" ? "1" : "0");
+                        }
                         pcsResult.vb_List.Add(vBRcv);
                     }
 
@@ -1162,7 +1174,7 @@ namespace DeepSightWorkLib
                         http_DB.HttpPostMethod(URL, Info, 1, out Result);
                         LogTextHelper.Info($"HeatPoints:{avi_HeatInfo.pointsInfos.Count},SN:{avi_HeatInfo.SN},KEY:{Info.key}");
                     }
-
+                    //存数据到db TODO 加一个bypass数量
                     databaseHelper.SavePanelSide(new PanelSideRecord()
                     {
                         Data = new SideData()
@@ -1177,14 +1189,14 @@ namespace DeepSightWorkLib
 
                             }).ToList(),
                             RemainingDefectsCount = resList.Where(t => t == "1").Count(),
-                            TotalDefectsCount = resList.Count()
+                            TotalDefectsCount = resList.Where(t => t == "1"||t=="2").Count()
                         },
-                        DetectionDate = DateTime.Now,
+                        DetectionDate =DateTime.Parse( panelInfo.AviCreateTime),
                         LotNumber = panelInfo.LotId,
                         SerialNumber = panelInfo.SerialNumber,
                         MachineId = panelInfo.MachineName,
                         Side = panelInfo.SideIndex,
-                        
+
                     });
 
                     //B面做完判断总结果

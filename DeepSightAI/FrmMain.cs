@@ -98,18 +98,23 @@ namespace DeepSightAI
                 {
                     for (int i = 0; i < msg.Count; i++)
                     {
-                        if (msg[i] == "1")
+                        switch (msg[i])
                         {
-                            ng_count++;
+                            case "0":
+                                Machine.sysConfig.AIPassImageCount++;
+                                break;
+                            case "1":
+                                ng_count++;
+                                break;
+                            case "2":
+                                
+                                break;
                         }
-                        else
-                        {
-                            //ok_count++;
-                            Machine.sysConfig.AIPassImageCount++;
-                        }
+
                     }
                 }
-                Machine.sysConfig.AVIImageCount = Machine.sysConfig.AVIImageCount + msg.Count;
+                Machine.sysConfig.AVIImageCount += msg.Count;
+                Machine.sysConfig.ByPassCount += msg.Where(t => t == "2").Count();
                 //结果
                 //sn = sn.Split('_').ToArray()[0].ToString();
                 if (!FrHome.Instance.dic_Results.ContainsKey(sn))
@@ -159,7 +164,7 @@ namespace DeepSightAI
                 }));
                 FrHome.Instance.lbl_ImageCount.Invoke(new Action(() =>
                 {
-                    FrHome.Instance.lbl_ImageCount.Text = $"今日推理图片数:{Machine.sysConfig.AVIImageCount}";
+                    FrHome.Instance.lbl_ImageCount.Text = $"今日推理图片数:{Machine.sysConfig.AVIImageCount-Machine.sysConfig.ByPassCount}";
                 }));
                 ////推理图片数
                 //this.lbl_ImageCount.Invoke(new MethodInvoker(() =>
@@ -298,7 +303,7 @@ namespace DeepSightAI
                             //if (total == 0)
                             //    total = 1;
 
-                            double percentage = ((double)Machine.sysConfig.AIPassImageCount / Machine.sysConfig.AVIImageCount) * 100;
+                            double percentage = ((double)Machine.sysConfig.AIPassImageCount / (Machine.sysConfig.AVIImageCount-Machine.sysConfig.ByPassCount)) * 100;
                             //if (total_count == 0)
                             //    total_count = 1;
                             //double percentage = ((double)AI_PassCount / total_count) * 100;

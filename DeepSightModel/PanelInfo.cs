@@ -87,6 +87,8 @@ namespace DeepSightModel
 
         [JsonProperty("station_name")]
         public string StationName { get; set; }
+        [JsonProperty("result_ini_create_time")]
+        public string AviCreateTime { get; set; }
     }
 
     public class PanelSourceImage

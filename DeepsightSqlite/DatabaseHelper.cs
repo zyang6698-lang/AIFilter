@@ -316,6 +316,29 @@ namespace DeepsightSqlite
         }
 
         /// <summary>
+        /// 获取一个时间段内所有的 DetectionDate
+        /// </summary>
+        public List<DateTime> GetDetectionDates(DateTime start, DateTime end)
+        {
+            var detectionDates = new List<DateTime>();
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+                var cmd = new SQLiteCommand("SELECT DISTINCT DetectionDate FROM Panels WHERE DetectionDate BETWEEN @Start AND @End", connection);
+                cmd.Parameters.AddWithValue("@Start", start);
+                cmd.Parameters.AddWithValue("@End", end);
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        detectionDates.Add(reader.GetDateTime(0));
+                    }
+                }
+            }
+            return detectionDates;
+        }
+
+        /// <summary>
         /// 生成测试数据
         /// </summary>
         public static void GenerateTestData()

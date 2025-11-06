@@ -636,7 +636,7 @@ namespace DeepSightAI
                 string vbJson;
                 result = await Task.Factory.StartNew(() =>
                 {
-                    Machine.master.workClass.DefectMethod(vBInfo, panelinfo, out result, out details, out pcsResult, out vbJson);
+                    Machine.master.workClass.DefectMethod(new VBModel() { VbInfo = vBInfo, panelInfo = panelinfo }, out result, out details, out pcsResult, out vbJson);
                     return result;
                 });
                 if (result.Count() > 0)

@@ -100,6 +100,7 @@ namespace DeepSightModel
         public int AVIImageCount { get; set; }
         public int AIPassPCS { get; set; }
         public int AIPassImageCount { get; set; }
+        public int ByPassCount { get; set; }
 
         public ConfigurationClass()
         {
@@ -124,6 +125,7 @@ namespace DeepSightModel
             this.AVIImageCount = config.AVIImageCount;
             this.AIPassPCS = config.AIPassPCS;
             this.AIPassImageCount = config.AIPassImageCount;
+            this.ByPassCount = config.ByPassCount;
         }
     }
 
@@ -166,6 +168,7 @@ namespace DeepSightModel
                     AVIImageCount = 0,
                     AIPassPCS = 0,
                     AIPassImageCount=0,
+                    ByPassCount=0,
                 };
                 return Save(config);
             }

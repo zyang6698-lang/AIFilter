@@ -18,5 +18,7 @@ namespace DeepSightModel
         //2025/08/21/增加minio路径信息
         public string  minioPath;
         public RootPanelInfo panelInfo { get; set; }
+        //用于判断ai是否部署该料号，若未部署则为true
+        public bool isByPass { get; set; } = false;
     }
 }
