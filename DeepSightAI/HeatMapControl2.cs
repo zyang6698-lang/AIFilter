@@ -983,13 +983,13 @@ namespace DeepSightAI
         private async Task TestUpdateHeatMapPointsAsync()
         {
             var random = new Random();
-            var points = new List<HeatPoint>
+            var points = new List<DeepSightHeatMap.HeatPoint>
             {
-                new HeatPoint(
+                new DeepSightHeatMap.HeatPoint(
                     location: new PointF(random.Next(100, 500) * 0.1f, random.Next(200, 600) * 0.1f),
                     intensity: 0.25f,
                     radius: 20),
-                new HeatPoint(
+                new DeepSightHeatMap.HeatPoint(
                     location: new PointF(random.Next(500, 1000) * 0.1f, random.Next(500, 1000) * 0.1f),
                     intensity: 0.25f,
                     radius: 20)
@@ -1017,11 +1017,11 @@ namespace DeepSightAI
 
         private void GenerateRandomHeatPoints()
         {
-            var points = new List<HeatPoint>();
+            var points = new List<DeepSightHeatMap.HeatPoint>();
             Random random = new Random();
             for (int i = 0; i < 100; i++)
             {
-                var point = new HeatPoint(
+                var point = new DeepSightHeatMap.HeatPoint(
                     location: new PointF(
                     random.Next(_heatMapManager.HeatMapControl.Width),
                     random.Next(_heatMapManager.HeatMapControl.Height)

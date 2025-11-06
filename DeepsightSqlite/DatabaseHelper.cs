@@ -1,310 +1,258 @@
+using DeepSightModel;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
-using DeepSightModel;
+using System.Linq;
 
 namespace DeepsightSqlite
 {
     public class DatabaseHelper
     {
-        private readonly string connectionString;
+        private static readonly string dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "deepsight.db");
+        private static readonly string connectionString = $"Data Source={dbPath};Version=3;";
 
-        public DatabaseHelper(string databaseFileName)
+        public static void InitializeDatabase()
         {
-            string dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, databaseFileName);
-            connectionString = $"Data Source={dbPath};Version=3;";
-            InitializeDatabase();
-        }
+            if (!File.Exists(dbPath))
+            {
+                SQLiteConnection.CreateFile(dbPath);
+            }
 
-        public void InitializeDatabase()
-        {
             using (var connection = new SQLiteConnection(connectionString))
             {
                 connection.Open();
 
-                // 创建面板摘要表
-                string createPanelSummariesTableSql = @"
-                CREATE TABLE IF NOT EXISTS PanelSummaries (
+                string createPanelsTable = @"
+                CREATE TABLE IF NOT EXISTS Panels (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
                     MachineId TEXT NOT NULL,
-                    DetectionDate TEXT NOT NULL,
-                    SerialNumber TEXT NOT NULL,
-                    LotNumber TEXT,
-                    SideADefectCount INTEGER,
-                    SideBDefectCount INTEGER,
-                    SideARemainingDefects INTEGER,
-                    SideBRemainingDefects INTEGER,
-                    IsAIOk INTEGER,
-                    UNIQUE(SerialNumber, LotNumber)
+                    SerialNumber TEXT NOT NULL UNIQUE,
+                    LotNumber TEXT NOT NULL,
+                    DetectionDate DATETIME NOT NULL,
+                    IsAIOk BOOLEAN NOT NULL
                 );";
-                ExecuteNonQuery(createPanelSummariesTableSql);
 
-                // 创建缺陷详情表
-                string createDefectDetailsTableSql = @"
-                CREATE TABLE IF NOT EXISTS DefectDetails (
+                string createPanelSidesTable = @"
+                CREATE TABLE IF NOT EXISTS PanelSides (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    PanelSummaryId INTEGER NOT NULL,
-                    Side TEXT NOT NULL,
-                    DefectName TEXT,
-                    DefectType TEXT,
-                    RoiX INTEGER,
-                    RoiY INTEGER,
-                    ImagePath TEXT,
-                    FOREIGN KEY(PanelSummaryId) REFERENCES PanelSummaries(Id)
+                    PanelId INTEGER NOT NULL,
+                    Side TEXT NOT NULL, -- 'A' 或 'B'
+                    TotalDefectsCount INTEGER NOT NULL,
+                    RemainingDefectsCount INTEGER NOT NULL,
+                    HeatPoints TEXT, -- 存储 HeatPoint 列表的 JSON 字符串
+                    FOREIGN KEY (PanelId) REFERENCES Panels(Id) ON DELETE CASCADE
                 );";
-                ExecuteNonQuery(createDefectDetailsTableSql);
+
+                using (var command = new SQLiteCommand(connection))
+                {
+                    command.CommandText = createPanelsTable;
+                    command.ExecuteNonQuery();
+                    command.CommandText = createPanelSidesTable;
+                    command.ExecuteNonQuery();
+                }
             }
         }
 
         /// <summary>
-        /// 写入或更新一条面板单面数据
+        /// 存储单面数据。如果另一面数据已存在，则更新IsAIOk状态。
         /// </summary>
-        public void AddOrUpdatePanelSide(PanelSideRecord record)
+        public void SavePanelSide(PanelSideRecord record)
         {
             using (var connection = new SQLiteConnection(connectionString))
             {
                 connection.Open();
                 using (var transaction = connection.BeginTransaction())
                 {
-                    // 1. 查找或创建摘要记录
-                    long panelSummaryId;
-                    string findSql = "SELECT Id FROM PanelSummaries WHERE SerialNumber = @SerialNumber AND LotNumber = @LotNumber;";
-                    var findParams = new[]
-                    {
-                        new SQLiteParameter("@SerialNumber", record.SerialNumber),
-                        new SQLiteParameter("@LotNumber", record.LotNumber)
-                    };
+                    long panelId;
 
-                    object existingId = ExecuteScalar(findSql, findParams);
-
-                    if (existingId != null)
+                    // 1. 查找或创建 Panel 记录
+                    using (var cmd = new SQLiteCommand("SELECT Id FROM Panels WHERE SerialNumber = @SN", connection))
                     {
-                        panelSummaryId = Convert.ToInt64(existingId);
-                    }
-                    else
-                    {
-                        string insertSummarySql = @"
-                        INSERT INTO PanelSummaries (MachineId, DetectionDate, SerialNumber, LotNumber)
-                        VALUES (@MachineId, @DetectionDate, @SerialNumber, @LotNumber);";
-                        var insertParams = new[]
+                        cmd.Parameters.AddWithValue("@SN", record.SerialNumber);
+                        var result = cmd.ExecuteScalar();
+                        if (result != null)
                         {
-                            new SQLiteParameter("@MachineId", record.MachineId),
-                            new SQLiteParameter("@DetectionDate", record.DetectionDate.ToString("yyyy-MM-dd HH:mm:ss.fff")),
-                            new SQLiteParameter("@SerialNumber", record.SerialNumber),
-                            new SQLiteParameter("@LotNumber", record.LotNumber)
-                        };
-                        ExecuteNonQuery(insertSummarySql, insertParams);
-                        panelSummaryId = connection.LastInsertRowId;
+                            panelId = (long)result;
+                        }
+                        else
+                        {
+                            var insertPanelCmd = new SQLiteCommand(
+                                "INSERT INTO Panels (MachineId, SerialNumber, LotNumber, DetectionDate, IsAIOk) VALUES (@MachineId, @SN, @Lot, @Date, @IsAIOk); SELECT last_insert_rowid();",
+                                connection);
+                            insertPanelCmd.Parameters.AddWithValue("@MachineId", record.MachineId);
+                            insertPanelCmd.Parameters.AddWithValue("@SN", record.SerialNumber);
+                            insertPanelCmd.Parameters.AddWithValue("@Lot", record.LotNumber);
+                            insertPanelCmd.Parameters.AddWithValue("@Date", record.DetectionDate);
+                            insertPanelCmd.Parameters.AddWithValue("@IsAIOk", false); // 初始默认为 false
+                            panelId = (long)insertPanelCmd.ExecuteScalar();
+                        }
                     }
 
-                    // 2. 更新摘要表中的侧面信息
-                    string sideColumnPrefix = record.Side.ToUpper() == "A" ? "SideA" : "SideB";
-                    string updateSummarySql = $@"
-                    UPDATE PanelSummaries SET
-                        {sideColumnPrefix}RemainingDefectCount = @RemainingDefectCount,
-                        {sideColumnPrefix}TotalDefectsCount = @TotalDefectsCount
-                    WHERE Id = @Id;";
+                    // 2. 插入 SideData
+                    var insertSideCmd = new SQLiteCommand(
+                        "INSERT INTO PanelSides (PanelId, Side, TotalDefectsCount, RemainingDefectsCount, HeatPoints) VALUES (@PanelId, @Side, @Total, @Remaining, @HeatPoints)",
+                        connection);
+                    insertSideCmd.Parameters.AddWithValue("@PanelId", panelId);
+                    insertSideCmd.Parameters.AddWithValue("@Side", record.Side);
+                    insertSideCmd.Parameters.AddWithValue("@Total", record.Data.TotalDefectsCount);
+                    insertSideCmd.Parameters.AddWithValue("@Remaining", record.Data.RemainingDefectsCount);
+                    insertSideCmd.Parameters.AddWithValue("@HeatPoints", JsonConvert.SerializeObject(record.Data.HeatPoints));
+                    insertSideCmd.ExecuteNonQuery();
 
-                    var updateParams = new[]
+                    // 3. 检查是否双面数据都已存在，并更新 IsAIOk
+                    var checkSidesCmd = new SQLiteCommand("SELECT Side, TotalDefectsCount, RemainingDefectsCount FROM PanelSides WHERE PanelId = @PanelId", connection);
+                    checkSidesCmd.Parameters.AddWithValue("@PanelId", panelId);
+                    var sides = new List<(string Side, int Total, int Remaining)>();
+                    using (var reader = checkSidesCmd.ExecuteReader())
                     {
-                        new SQLiteParameter("@RemainingDefectCount", record.Data.RemainingDefectInfoList.Count),
-                        new SQLiteParameter("@TotalDefectsCount", record.Data.TotalDefectsCount),
-                        new SQLiteParameter("@Id", panelSummaryId)
-                    };
-                    ExecuteNonQuery(updateSummarySql, updateParams);
+                        while (reader.Read())
+                        {
+                            sides.Add((reader.GetString(0), reader.GetInt32(1), reader.GetInt32(2)));
+                        }
+                    }
 
-                    // 3. 清除旧的缺陷详情并插入新的
-                    ExecuteNonQuery("DELETE FROM DefectDetails WHERE PanelSummaryId = @PanelSummaryId AND Side = @Side;", new[] { new SQLiteParameter("@PanelSummaryId", panelSummaryId), new SQLiteParameter("@Side", record.Side) });
-                    InsertDefectDetails(panelSummaryId, record.Side, record.Data.RemainingDefectInfoList);
+                    if (sides.Count == 2)
+                    {
+                        bool isSideAOk = sides.Any(s => s.Side == "A" && s.Total > 0 && s.Remaining == 0);
+                        bool isSideBOk = sides.Any(s => s.Side == "B" && s.Total > 0 && s.Remaining == 0);
+                        bool isPanelAIOk = isSideAOk && isSideBOk;
 
-                    // 4. 更新 IsAIOk 状态
-                    UpdateIsAIOk(panelSummaryId);
+                        var updatePanelCmd = new SQLiteCommand("UPDATE Panels SET IsAIOk = @IsAIOk WHERE Id = @PanelId", connection);
+                        updatePanelCmd.Parameters.AddWithValue("@IsAIOk", isPanelAIOk);
+                        updatePanelCmd.Parameters.AddWithValue("@PanelId", panelId);
+                        updatePanelCmd.ExecuteNonQuery();
+                    }
 
                     transaction.Commit();
                 }
             }
         }
 
-        private void UpdateIsAIOk(long panelSummaryId)
+        // 查询逻辑 1: 根据 lot 号获取所有 sn
+        public List<string> GetSerialNumbersByLot(string lotNumber)
         {
-            string querySql = "SELECT SideADefectCount, SideBDefectCount, SideARemainingDefects, SideBRemainingDefects FROM PanelSummaries WHERE Id = @Id;";
+            var serialNumbers = new List<string>();
             using (var connection = new SQLiteConnection(connectionString))
             {
                 connection.Open();
-                using (var command = new SQLiteCommand(querySql, connection))
+                var cmd = new SQLiteCommand("SELECT SerialNumber FROM Panels WHERE LotNumber = @Lot", connection);
+                cmd.Parameters.AddWithValue("@Lot", lotNumber);
+                using (var reader = cmd.ExecuteReader())
                 {
-                    command.Parameters.AddWithValue("@Id", panelSummaryId);
-                    using (var reader = command.ExecuteReader())
+                    while (reader.Read())
                     {
-                        if (reader.Read())
-                        {
-                            // 使用 nullable int 来处理可能尚未记录的侧面数据
-                            int? sideADefects = reader["SideADefectCount"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["SideADefectCount"]);
-                            int? sideBDefects = reader["SideBDefectCount"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["SideBDefectCount"]);
-                            int? sideARemaining = reader["SideARemainingDefects"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["SideARemainingDefects"]);
-                            int? sideBRemaining = reader["SideBRemainingDefects"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["SideBRemainingDefects"]);
+                        serialNumbers.Add(reader.GetString(0));
+                    }
+                }
+            }
+            return serialNumbers;
+        }
 
-                            // 只有当两面的数据都存在时才计算最终结果
-                            if (sideADefects.HasValue && sideBDefects.HasValue)
+        // 查询逻辑 2: 根据时间和 sn 获取所有 heatpoint 信息
+        public List<HeatPoint> GetHeatPoints(string serialNumber, DateTime detectionDate)
+        {
+            var heatPoints = new List<HeatPoint>();
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+                var cmd = new SQLiteCommand(
+                    "SELECT ps.HeatPoints FROM PanelSides ps JOIN Panels p ON ps.PanelId = p.Id WHERE p.SerialNumber = @SN AND date(p.DetectionDate) = date(@Date)",
+                    connection);
+                cmd.Parameters.AddWithValue("@SN", serialNumber);
+                cmd.Parameters.AddWithValue("@Date", detectionDate.Date);
+
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        if (!reader.IsDBNull(0))
+                        {
+                            var heatPointsJson = reader.GetString(0);
+                            var points = JsonConvert.DeserializeObject<List<HeatPoint>>(heatPointsJson);
+                            if (points != null)
                             {
-                                bool isOk = (sideADefects.Value + sideBDefects.Value > 0) && (sideARemaining.Value + sideBRemaining.Value == 0);
-                                string updateSql = "UPDATE PanelSummaries SET IsAIOk = @IsAIOk WHERE Id = @Id;";
-                                ExecuteNonQuery(updateSql, new[] { new SQLiteParameter("@IsAIOk", isOk ? 1 : 0), new SQLiteParameter("@Id", panelSummaryId) });
+                                heatPoints.AddRange(points);
                             }
                         }
                     }
                 }
             }
+            return heatPoints;
         }
 
-        private void InsertDefectDetails(long panelSummaryId, string side, List<DefectDetail> defects)
-        {
-            if (defects == null || defects.Count == 0) return;
-
-            string insertDetailSql = @"
-            INSERT INTO DefectDetails (PanelSummaryId, Side, DefectName, DefectType, RoiX, RoiY, ImagePath)
-            VALUES (@PanelSummaryId, @Side, @DefectName, @DefectType, @RoiX, @RoiY, @ImagePath);";
-
-            foreach (var defect in defects)
-            {
-                var detailParams = new[]
-                {
-                    new SQLiteParameter("@PanelSummaryId", panelSummaryId),
-                    new SQLiteParameter("@Side", side),
-                    new SQLiteParameter("@DefectName", defect.DefectName),
-                    new SQLiteParameter("@DefectType", defect.DefectType),
-                    new SQLiteParameter("@RoiX", defect.RoiX),
-                    new SQLiteParameter("@RoiY", defect.RoiY),
-                    new SQLiteParameter("@ImagePath", defect.ImagePath)
-                };
-                ExecuteNonQuery(insertDetailSql, detailParams);
-            }
-        }
-
-        /// <summary>
-        /// 按天读取指定时间段内所有机台的板子数量和AI判定OK的板子数量
-        /// </summary>
-        public List<DailyStat> GetDailyStatsForAllMachines(DateTime startDate, DateTime endDate)
-        {
-            var stats = new List<DailyStat>();
-            string query = @"
-            SELECT
-                date(DetectionDate) as StatDate,
-                MachineId,
-                COUNT(*) as TotalBoards,
-                SUM(CASE WHEN IsAIOk = 1 THEN 1 ELSE 0 END) as AIOkBoards
-            FROM PanelSummaries
-            WHERE date(DetectionDate) BETWEEN date(@StartDate) AND date(@EndDate)
-            GROUP BY StatDate, MachineId
-            ORDER BY StatDate, MachineId;";
-
-            using (var connection = new SQLiteConnection(connectionString))
-            {
-                connection.Open();
-                using (var command = new SQLiteCommand(query, connection))
-                {
-                    command.Parameters.AddWithValue("@StartDate", startDate.ToString("yyyy-MM-dd"));
-                    command.Parameters.AddWithValue("@EndDate", endDate.ToString("yyyy-MM-dd"));
-
-                    using (var reader = command.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            stats.Add(new DailyStat
-                            {
-                                Date = DateTime.Parse(reader["StatDate"].ToString()),
-                                MachineId = reader["MachineId"].ToString(),
-                                TotalBoards = Convert.ToInt32(reader["TotalBoards"]),
-                                AIOkBoards = Convert.ToInt32(reader["AIOkBoards"])
-                            });
-                        }
-                    }
-                }
-            }
-            return stats;
-        }
-
-        /// <summary>
-        /// 按天读取指定时间段内单个机台的板子数量和AI判定OK的板子数量
-        /// </summary>
-        public List<DailyStat> GetDailyStatsForMachine(string machineId, DateTime startDate, DateTime endDate)
-        {
-            var stats = new List<DailyStat>();
-            string query = @"
-            SELECT
-                date(DetectionDate) as StatDate,
-                COUNT(*) as TotalBoards,
-                SUM(CASE WHEN IsAIOk = 1 THEN 1 ELSE 0 END) as AIOkBoards
-            FROM PanelSummaries
-            WHERE MachineId = @MachineId AND date(DetectionDate) BETWEEN date(@StartDate) AND date(@EndDate)
-            GROUP BY StatDate
-            ORDER BY StatDate;";
-
-            using (var connection = new SQLiteConnection(connectionString))
-            {
-                connection.Open();
-                using (var command = new SQLiteCommand(query, connection))
-                {
-                    command.Parameters.AddWithValue("@MachineId", machineId);
-                    command.Parameters.AddWithValue("@StartDate", startDate.ToString("yyyy-MM-dd"));
-                    command.Parameters.AddWithValue("@EndDate", endDate.ToString("yyyy-MM-dd"));
-
-                    using (var reader = command.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            stats.Add(new DailyStat
-                            {
-                                Date = DateTime.Parse(reader["StatDate"].ToString()),
-                                MachineId = machineId,
-                                TotalBoards = Convert.ToInt32(reader["TotalBoards"]),
-                                AIOkBoards = Convert.ToInt32(reader["AIOkBoards"])
-                            });
-                        }
-                    }
-                }
-            }
-            return stats;
-        }
-
-        private void ExecuteNonQuery(string sql, params SQLiteParameter[] parameters)
+        // 查询逻辑 3 & 5 的组合: 获取机台在时间段内的板数统计
+        public (int TotalBoards, int AIOkBoards) GetBoardCounts(DateTime start, DateTime end, string machineId = null)
         {
             using (var connection = new SQLiteConnection(connectionString))
             {
                 connection.Open();
-                using (var command = new SQLiteCommand(sql, connection))
+                var sql = "SELECT COUNT(*), SUM(CASE WHEN IsAIOk = 1 THEN 1 ELSE 0 END) FROM Panels WHERE DetectionDate BETWEEN @Start AND @End";
+                if (!string.IsNullOrEmpty(machineId))
                 {
-                    if (parameters != null)
+                    sql += " AND MachineId = @MachineId";
+                }
+
+                var cmd = new SQLiteCommand(sql, connection);
+                cmd.Parameters.AddWithValue("@Start", start);
+                cmd.Parameters.AddWithValue("@End", end);
+                if (!string.IsNullOrEmpty(machineId))
+                {
+                    cmd.Parameters.AddWithValue("@MachineId", machineId);
+                }
+
+                using (var reader = cmd.ExecuteReader())
+                {
+                    if (reader.Read())
                     {
-                        command.Parameters.AddRange(parameters);
+                        int totalBoards = reader.GetInt32(0);
+                        int aiOkBoards = reader.IsDBNull(1) ? 0 : reader.GetInt32(1);
+                        return (totalBoards, aiOkBoards);
                     }
-                    command.ExecuteNonQuery();
                 }
             }
+            return (0, 0);
         }
-        
-        private object ExecuteScalar(string sql, params SQLiteParameter[] parameters)
+
+        // 查询逻辑 4 & 6 的组合: 获取机台在时间段内的报点数统计
+        public (long TotalDefects, long AIOkDefects) GetDefectCounts(DateTime start, DateTime end, string machineId = null)
         {
             using (var connection = new SQLiteConnection(connectionString))
             {
                 connection.Open();
-                using (var command = new SQLiteCommand(sql, connection))
+                var sql = @"
+                SELECT 
+                    SUM(ps.TotalDefectsCount),
+                    SUM(CASE WHEN p.IsAIOk = 1 THEN ps.TotalDefectsCount ELSE 0 END)
+                FROM PanelSides ps
+                JOIN Panels p ON ps.PanelId = p.Id
+                WHERE p.DetectionDate BETWEEN @Start AND @End";
+
+                if (!string.IsNullOrEmpty(machineId))
                 {
-                    if (parameters != null)
+                    sql += " AND p.MachineId = @MachineId";
+                }
+
+                var cmd = new SQLiteCommand(sql, connection);
+                cmd.Parameters.AddWithValue("@Start", start);
+                cmd.Parameters.AddWithValue("@End", end);
+                if (!string.IsNullOrEmpty(machineId))
+                {
+                    cmd.Parameters.AddWithValue("@MachineId", machineId);
+                }
+
+                using (var reader = cmd.ExecuteReader())
+                {
+                    if (reader.Read())
                     {
-                        command.Parameters.AddRange(parameters);
+                        long totalDefects = reader.IsDBNull(0) ? 0 : Convert.ToInt64(reader.GetValue(0));
+                        long aiOkDefects = reader.IsDBNull(1) ? 0 : Convert.ToInt64(reader.GetValue(1));
+                        return (totalDefects, aiOkDefects);
                     }
-                    return command.ExecuteScalar();
                 }
             }
+            return (0, 0);
         }
-        // ... 保留您现有的其他方法 ...
-        public void AddRecord(ProcessingRecord record){}
-        public List<ProcessingRecord> GetRecords(){ return null; }
-        public void UpdateDailyStats(string machineId,DateTime dateTime, bool isOk){}
-        public PassThroughtAviData GetStatsByDayAndMachine(string machineId, DateTime date){ return null; }
-        public List<PassThroughtAviData> GetStatsForMachine(string machineId, DateTime startDate, DateTime endDate){ return null; }
-        public List<PassThroughtAviData> GetStatsByDate(DateTime date){ return null; }
     }
 }

@@ -6,10 +6,11 @@ namespace DeepSightModel
     /// <summary>
     /// 单个缺陷的详细信息
     /// </summary>
-    public class DefectDetail
+    public class HeatPoint
     {
         public string DefectName { get; set; }
         public string DefectType { get; set; }
+        public string DefectShape { get; set; }
         public int RoiX { get; set; }
         public int RoiY { get; set; }
         public string ImagePath { get; set; }
@@ -20,10 +21,13 @@ namespace DeepSightModel
     /// </summary>
     public class SideData
     {
-        //过滤后报点信息
-        public List<DefectDetail> RemainingDefectInfoList { get; set; } = new List<DefectDetail>();
+        public List<HeatPoint> HeatPoints { get; set; } = new List<HeatPoint>();
         //总报点数量
         public int TotalDefectsCount { get; set; }
+        //过滤后报点信息
+        public int RemainingDefectsCount { get; set; }
+        public string SerialNumber { get; set; }
+        public string Side { get; set; }
     }
 
     /// <summary>
@@ -50,8 +54,6 @@ namespace DeepSightModel
         public DateTime DetectionDate { get; set; }
         public string SerialNumber { get; set; }
         public string LotNumber { get; set; }
-        public SideData SideA { get; set; } = new SideData();
-        public SideData SideB { get; set; } = new SideData();
         public bool IsAIOk { get; set; }
     }
 
