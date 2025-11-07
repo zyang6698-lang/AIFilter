@@ -45,11 +45,25 @@ namespace DeepsightSqlite
                     FOREIGN KEY (PanelId) REFERENCES Panels(Id) ON DELETE CASCADE
                 );";
 
+
+                string createEmployeeReportsTable = @"
+                CREATE TABLE IF NOT EXISTS EmployeeReports (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    EmployeeID TEXT NOT NULL,
+                    SN TEXT NOT NULL,
+                    AllNGNumber INTEGER NOT NULL,
+                    StartTime DATETIME NOT NULL,
+                    EndTime DATETIME NOT NULL,
+                    VRSOKNumber INTEGER NOT NULL
+                );";
+
                 using (var command = new SQLiteCommand(connection))
                 {
                     command.CommandText = createPanelsTable;
                     command.ExecuteNonQuery();
                     command.CommandText = createPanelSidesTable;
+                    command.ExecuteNonQuery();
+                    command.CommandText = createEmployeeReportsTable;
                     command.ExecuteNonQuery();
                 }
             }
@@ -256,6 +270,56 @@ namespace DeepsightSqlite
         }
 
 
+        public void SaveEmployeeReport(EmployeeReport report)
+        {
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+                var sql = "INSERT INTO EmployeeReports (EmployeeID, SN, AllNGNumber, StartTime, EndTime, VRSOKNumber) VALUES (@ID, @SN, @AllNGNumber, @StartTime, @EndTime, @VRSOKNumber)";
+                using (var cmd = new SQLiteCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@ID", report.ID);
+                    cmd.Parameters.AddWithValue("@SN", report.SN);
+                    cmd.Parameters.AddWithValue("@AllNGNumber", report.AllNGNumber);
+                    cmd.Parameters.AddWithValue("@StartTime", report.StartTime);
+                    cmd.Parameters.AddWithValue("@EndTime", report.EndTime);
+                    cmd.Parameters.AddWithValue("@VRSOKNumber", report.VRSOKNumber);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public List<EmployeeReport> GetEmployeeReports(DateTime start, DateTime end)
+        {
+            var reports = new List<EmployeeReport>();
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+                var sql = "SELECT EmployeeID, SN, AllNGNumber, StartTime, EndTime, VRSOKNumber FROM EmployeeReports WHERE StartTime >= @Start AND EndTime <= @End";
+                using (var cmd = new SQLiteCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@Start", start);
+                    cmd.Parameters.AddWithValue("@End", end);
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            reports.Add(new EmployeeReport
+                            {
+                                ID = reader.GetString(0),
+                                SN = reader.GetString(1),
+                                AllNGNumber = reader.GetInt32(2),
+                                StartTime = reader.GetDateTime(3),
+                                EndTime = reader.GetDateTime(4),
+                                VRSOKNumber = reader.GetInt32(5)
+                            });
+                        }
+                    }
+                }
+            }
+            return reports;
+        }
+
         /// <summary>
         /// 获取数据库中所有唯一的 MachineId
         /// </summary>
@@ -404,6 +468,33 @@ namespace DeepsightSqlite
                     };
                     dbHelper.SavePanelSide(recordB);
                 }
+            }
+        }
+
+
+        /// <summary>
+        /// 生成 EmployeeReport 测试数据
+        /// </summary>
+        /// <param name="recordCount">要生成的记录数</param>
+        public static void GenerateEmployeeReportTestData(int recordCount)
+        {
+            var dbHelper = new DatabaseHelper();
+            var random = new Random();
+            var startDate = DateTime.Now.AddMonths(-3);
+            int totalDays = (DateTime.Now - startDate).Days;
+
+            for (int i = 0; i < recordCount; i++)
+            {
+                var report = new EmployeeReport
+                {
+                    ID = $"Employee-{random.Next(1, 11)}",
+                    SN = $"SN-{Guid.NewGuid().ToString().Substring(0, 8)}",
+                    AllNGNumber = random.Next(1, 20),
+                    StartTime = startDate.AddDays(random.Next(totalDays)).AddHours(random.Next(0, 24)),
+                    VRSOKNumber = random.Next(0, 5)
+                };
+                report.EndTime = report.StartTime.AddMinutes(random.Next(5, 60));
+                dbHelper.SaveEmployeeReport(report);
             }
         }
     }

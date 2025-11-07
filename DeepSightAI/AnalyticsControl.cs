@@ -1,4 +1,5 @@
-﻿using DeepSightTool;
+﻿using DeepSightModel;
+using DeepSightTool;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -11,7 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using static DeepSightAI.AnalyticsHelper;
+using static DeepSightModel.AnalyticsHelper;
 
 namespace DeepSightAI
 {
@@ -92,7 +93,8 @@ namespace DeepSightAI
         private void btnTestDB_Click(object sender, EventArgs e)
         {
             //Machine.master.workClass.TestDatabaseReadWrite();
-            Machine.master.workClass.TestDatabaseWrite();
+            //Machine.master.workClass.TestDatabaseWrite();
+            Machine.master.workClass.GenerateVRSTestData();
         }
     }
 }

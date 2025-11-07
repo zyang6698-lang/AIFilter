@@ -269,7 +269,6 @@
     <Compile Include="AnalyticsControl.Designer.cs">
       <DependentUpon>AnalyticsControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="AnalyticsHelper.cs" />
     <Compile Include="DataFlowAnimation.cs">
       <SubType>Component</SubType>
     </Compile>

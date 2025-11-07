@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace DeepSightAI
+namespace DeepSightModel
 {
     public static class AnalyticsHelper
     {
@@ -92,6 +92,7 @@ namespace DeepSightAI
         public int AllNGNumber { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
+        public int VRSOKNumber { get; set; }
     }
 
 

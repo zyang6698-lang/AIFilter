@@ -1611,7 +1611,8 @@ namespace DeepSightWorkLib
         }
         public Dictionary<string, (long TotalDefects, long AIOkDefects)> GetDefectCountsPerMachine(DateTime start,DateTime end)=>
             databaseHelper.GetDefectCountsPerMachine(start,end);
-
+        public void GenerateVRSTestData()=>DatabaseHelper.GenerateEmployeeReportTestData(5000);
+        
         #endregion
         /// <summary>
         /// 开始线程
