@@ -1149,7 +1149,6 @@ namespace DeepSightAI
                                 ctr.LotId = tmp.LotNumber;
                                 ctr.ProductSerial = tmp.SerialNumber;
                             }
-
                         }
                     }
                 }));

@@ -39,7 +39,8 @@ namespace DeepSightModel
         public DateTime DetectionDate { get; set; }
         public string SerialNumber { get; set; }
         public string LotNumber { get; set; }
-        public string Side { get; set; } // "A" »ò "B"
+        public string ProductSerial { get; set; }
+        public string Side { get; set; } // "A"  "B"
         public SideData Data { get; set; } = new SideData();
     }
 
@@ -54,6 +55,7 @@ namespace DeepSightModel
         public DateTime DetectionDate { get; set; }
         public string SerialNumber { get; set; }
         public string LotNumber { get; set; }
+        public string ProductSerial { get; set; }
         public bool IsAIOk { get; set; }
     }
 
