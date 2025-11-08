@@ -147,10 +147,10 @@ namespace DeepSightAI
                 var watchPath = Machine.aviconfig.WatchPaths[i];
                 AviCtr ctr = new AviCtr(watchPath);
                 //ctr.Location = new Point(point.X, point.Y);
-                ctr.Size = new Size(240, 180); // 根据需求调整
+                ctr.Size = new Size(150, 150); // 根据需求调整
 
                 // 计算位置 - 根据索引排列
-                int cols = 4; // 每行显示4个
+                int cols = 7; // 每行显示4个
                 int spacing = 0; // 间距
 
                 int x = (i % cols) * (ctr.Width + spacing) + spacing;

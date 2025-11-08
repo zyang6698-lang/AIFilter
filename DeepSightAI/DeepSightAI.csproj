@@ -272,6 +272,12 @@
     <Compile Include="DataFlowAnimation.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="DataFlowAnimation2.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="DataFlowAnimation2.Designer.cs">
+      <DependentUpon>DataFlowAnimation2.cs</DependentUpon>
+    </Compile>
     <Compile Include="FrAlarm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -377,6 +383,9 @@
     </Compile>
     <EmbeddedResource Include="AnalyticsControl.resx">
       <DependentUpon>AnalyticsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataFlowAnimation2.resx">
+      <DependentUpon>DataFlowAnimation2.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FrAlarm.resx">
       <DependentUpon>FrAlarm.cs</DependentUpon>
@@ -495,6 +504,8 @@
     <Content Include="Resources\deepsight.ico" />
     <None Include="Resources\在线.png" />
     <None Include="Resources\离线.png" />
+    <Content Include="Resources\machine_red.png" />
+    <Content Include="Resources\machine_green.png" />
     <Content Include="www.ico.la_b32d394ce3176c07a91f06c5c3ecf19b_48X48.ico" />
     <None Include="Resources\deepsight.png" />
     <Content Include="Resources\Error.png" />

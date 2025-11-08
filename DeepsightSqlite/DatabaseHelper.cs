@@ -1,4 +1,5 @@
 using DeepSightModel;
+using DeepSightTool;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -411,21 +412,29 @@ namespace DeepsightSqlite
         /// <returns>最新的 SN 和 Lot</returns>
         public (string SerialNumber, string LotNumber, string ProductSerial) GetLatestPanelInfoByMachineId(string machineId)
         {
-            using (var connection = new SQLiteConnection(connectionString))
+            try
             {
-                connection.Open();
-                var cmd = new SQLiteCommand("SELECT SerialNumber, LotNumber, ProductSerial FROM Panels WHERE MachineId = @MachineId ORDER BY DetectionDate DESC LIMIT 1", connection);
-                cmd.Parameters.AddWithValue("@MachineId", machineId);
-                using (var reader = cmd.ExecuteReader())
+                using (var connection = new SQLiteConnection(connectionString))
                 {
-                    if (reader.Read())
+                    connection.Open();
+                    var cmd = new SQLiteCommand("SELECT SerialNumber, LotNumber, ProductSerial FROM Panels WHERE MachineId = @MachineId ORDER BY DetectionDate DESC LIMIT 1", connection);
+                    cmd.Parameters.AddWithValue("@MachineId", machineId);
+                    using (var reader = cmd.ExecuteReader())
                     {
-                        string serialNumber = reader.GetString(0);
-                        string lotNumber = reader.GetString(1);
-                        string ProductSerial = reader.IsDBNull(2) ? null : reader.GetString(2);
-                        return (serialNumber, lotNumber, ProductSerial);
+                        if (reader.Read())
+                        {
+                            string serialNumber = reader.GetString(0);
+                            string lotNumber = reader.GetString(1);
+                            string ProductSerial = reader.IsDBNull(2) ? null : reader.GetString(2);
+                            return (serialNumber, lotNumber, ProductSerial);
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                LogTextHelper.Warn($"Error in GetLatestPanelInfoByMachineId: {ex.Message}");
             }
             return (null, null, null);
         }
