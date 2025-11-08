@@ -276,7 +276,7 @@ namespace DeepSightAI
             this.btnLogin.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnLogin.Image = ((System.Drawing.Image)(resources.GetObject("btnLogin.Image")));
             this.btnLogin.Location = new System.Drawing.Point(0, 0);
-            this.btnLogin.Margin = new System.Windows.Forms.Padding(7, 7, 7, 7);
+            this.btnLogin.Margin = new System.Windows.Forms.Padding(7);
             this.btnLogin.Name = "btnLogin";
             this.btnLogin.Size = new System.Drawing.Size(53, 61);
             this.btnLogin.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
@@ -301,7 +301,7 @@ namespace DeepSightAI
             this.btnStart.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnStart.Image = global::DeepSightAI.Properties.Resources.start2;
             this.btnStart.Location = new System.Drawing.Point(0, 0);
-            this.btnStart.Margin = new System.Windows.Forms.Padding(7, 7, 7, 7);
+            this.btnStart.Margin = new System.Windows.Forms.Padding(7);
             this.btnStart.Name = "btnStart";
             this.btnStart.Size = new System.Drawing.Size(53, 61);
             this.btnStart.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
@@ -326,7 +326,7 @@ namespace DeepSightAI
             this.btnChart.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnChart.Image = ((System.Drawing.Image)(resources.GetObject("btnChart.Image")));
             this.btnChart.Location = new System.Drawing.Point(0, 0);
-            this.btnChart.Margin = new System.Windows.Forms.Padding(7, 7, 7, 7);
+            this.btnChart.Margin = new System.Windows.Forms.Padding(7);
             this.btnChart.Name = "btnChart";
             this.btnChart.Size = new System.Drawing.Size(53, 61);
             this.btnChart.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
@@ -350,7 +350,7 @@ namespace DeepSightAI
             this.btnAlarm.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnAlarm.Image = ((System.Drawing.Image)(resources.GetObject("btnAlarm.Image")));
             this.btnAlarm.Location = new System.Drawing.Point(0, 0);
-            this.btnAlarm.Margin = new System.Windows.Forms.Padding(7, 7, 7, 7);
+            this.btnAlarm.Margin = new System.Windows.Forms.Padding(7);
             this.btnAlarm.Name = "btnAlarm";
             this.btnAlarm.Size = new System.Drawing.Size(53, 60);
             this.btnAlarm.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
@@ -375,7 +375,7 @@ namespace DeepSightAI
             this.btnTool.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnTool.Image = ((System.Drawing.Image)(resources.GetObject("btnTool.Image")));
             this.btnTool.Location = new System.Drawing.Point(0, 0);
-            this.btnTool.Margin = new System.Windows.Forms.Padding(7, 7, 7, 7);
+            this.btnTool.Margin = new System.Windows.Forms.Padding(7);
             this.btnTool.Name = "btnTool";
             this.btnTool.Size = new System.Drawing.Size(53, 61);
             this.btnTool.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
@@ -402,7 +402,7 @@ namespace DeepSightAI
             this.btnHome.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnHome.Image = ((System.Drawing.Image)(resources.GetObject("btnHome.Image")));
             this.btnHome.Location = new System.Drawing.Point(0, 0);
-            this.btnHome.Margin = new System.Windows.Forms.Padding(7, 7, 7, 7);
+            this.btnHome.Margin = new System.Windows.Forms.Padding(7);
             this.btnHome.Name = "btnHome";
             this.btnHome.Size = new System.Drawing.Size(53, 61);
             this.btnHome.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
@@ -439,7 +439,7 @@ namespace DeepSightAI
             this.table_menu.Padding = new System.Windows.Forms.Padding(3, 2, 0, 2);
             this.table_menu.RowCount = 1;
             this.table_menu.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.table_menu.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 60F));
+            this.table_menu.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 61F));
             this.table_menu.Size = new System.Drawing.Size(1417, 65);
             this.table_menu.TabIndex = 12;
             // 
@@ -459,7 +459,7 @@ namespace DeepSightAI
             this.btnPause.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnPause.Image = global::DeepSightAI.Properties.Resources.search1;
             this.btnPause.Location = new System.Drawing.Point(0, 0);
-            this.btnPause.Margin = new System.Windows.Forms.Padding(7, 7, 7, 7);
+            this.btnPause.Margin = new System.Windows.Forms.Padding(7);
             this.btnPause.Name = "btnPause";
             this.btnPause.Size = new System.Drawing.Size(53, 61);
             this.btnPause.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
@@ -542,7 +542,7 @@ namespace DeepSightAI
             this.btnModel.Font = new System.Drawing.Font("幼圆", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.btnModel.ForeColor = System.Drawing.Color.White;
             this.btnModel.Location = new System.Drawing.Point(0, 0);
-            this.btnModel.Margin = new System.Windows.Forms.Padding(7, 7, 7, 7);
+            this.btnModel.Margin = new System.Windows.Forms.Padding(7);
             this.btnModel.Name = "btnModel";
             this.btnModel.Size = new System.Drawing.Size(259, 55);
             this.btnModel.TabIndex = 109;

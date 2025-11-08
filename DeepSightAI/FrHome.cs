@@ -77,7 +77,7 @@ namespace DeepSightAI
             Load += FrHome_Load;
             FormClosing += FrHome_FormClosing;
 
-            uph_timer.Interval = 1000 * 60;
+            uph_timer.Interval = 1000 * 10;
             uph_timer.Enabled = true;
             uph_timer.Elapsed += Uph_timer_Elapsed;
         }
@@ -378,6 +378,8 @@ namespace DeepSightAI
                         }));
                     }
                 }
+
+                UpdateLotSn();
             }
             catch (Exception ex)
             {
@@ -1131,6 +1133,29 @@ namespace DeepSightAI
                 }
             }
         }
+        private void UpdateLotSn()
+        {
+            if (this.IsHandleCreated)
+            {
+                this.BeginInvoke(new Action(() =>
+                {
+                    foreach (Control control in flowAnimation.Controls)
+                    {
+                        if (control is AviCtr ctr && ctr.ctrConfig.IsEnable )
+                        {
+                            var tmp= Machine.master.workClass.GetLatestPanelInfoByMachineId(ctr.ctrConfig.AviName);
+                            if (tmp.LotNumber  !=null&&tmp.SerialNumber!=null)
+                            {
+                                ctr.LotId = tmp.LotNumber;
+                                ctr.ProductSerial = tmp.SerialNumber;
+                            }
+
+                        }
+                    }
+                }));
+            }
+        }
+        
     }
 }
 

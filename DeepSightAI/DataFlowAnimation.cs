@@ -8,11 +8,12 @@ using System.Threading;
 
 namespace DeepSightAI
 {
-    public class DataFlowAnimation : Control
+    public class DataFlowAnimation : ScrollableControl
     {
         private System.Windows.Forms.Timer animationTimer;
         private List<FlowPath> flowPaths = new List<FlowPath>();
         private Random random = new Random();
+        private VScrollBar vScrollBar;
 
         // 动画配置
         private int flowSpeed = 5;
@@ -24,8 +25,9 @@ namespace DeepSightAI
             InitializeComponent();
             SetStyle(ControlStyles.OptimizedDoubleBuffer |
                      ControlStyles.AllPaintingInWmPaint |
-                     ControlStyles.UserPaint|ControlStyles.ResizeRedraw, true);
+                     ControlStyles.UserPaint | ControlStyles.ResizeRedraw, true);
             this.DoubleBuffered = true;
+            this.AutoScroll = true;
         }
 
         private void InitializeComponent()
@@ -33,6 +35,39 @@ namespace DeepSightAI
             animationTimer = new System.Windows.Forms.Timer();
             animationTimer.Interval = 100;
             animationTimer.Tick += AnimationTimer_Tick;
+
+            vScrollBar = new VScrollBar();
+            vScrollBar.Dock = DockStyle.Right;
+            vScrollBar.Scroll += (sender, e) => {
+                this.AutoScrollPosition = new Point(0, vScrollBar.Value);
+                this.Invalidate();
+            };
+            this.Controls.Add(vScrollBar);
+        }
+
+        private void UpdateScrollRange()
+        {
+            int maxY = 0;
+            foreach (var path in flowPaths)
+            {
+                maxY = Math.Max(maxY, path.StartPoint.Y);
+                maxY = Math.Max(maxY, path.EndPoint.Y);
+            }
+
+            int scrollableHeight = maxY + 20; // Add some padding
+            this.AutoScrollMinSize = new Size(0, scrollableHeight);
+
+            if (scrollableHeight > this.ClientSize.Height)
+            {
+                vScrollBar.Visible = true;
+                vScrollBar.Maximum = scrollableHeight;
+                vScrollBar.LargeChange = this.ClientSize.Height;
+                vScrollBar.SmallChange = 50;
+            }
+            else
+            {
+                vScrollBar.Visible = false;
+            }
         }
 
         // 添加数据流动路径
@@ -59,6 +94,7 @@ namespace DeepSightAI
             }
 
             flowPaths.Add(path);
+            UpdateScrollRange();
         }
 
         private void AnimationTimer_Tick(object sender, EventArgs e)
@@ -102,6 +138,9 @@ namespace DeepSightAI
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
 
+            // Apply scrolling transformation
+            g.TranslateTransform(this.AutoScrollPosition.X, this.AutoScrollPosition.Y);
+
             foreach (var path in flowPaths)
             {
                 if (!path.IsActive) continue;
@@ -139,6 +178,12 @@ namespace DeepSightAI
                     }
                 }
             }
+        }
+
+        protected override void OnSizeChanged(EventArgs e)
+        {
+            base.OnSizeChanged(e);
+            UpdateScrollRange();
         }
 
         public void StartAnimation()

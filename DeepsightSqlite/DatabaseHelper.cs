@@ -403,6 +403,31 @@ namespace DeepsightSqlite
         }
 
         /// <summary>
+        /// 根据 machineID 获取最新的 SN 和 Lot
+        /// </summary>
+        /// <param name="machineId">机器ID</param>
+        /// <returns>最新的 SN 和 Lot</returns>
+        public (string SerialNumber, string LotNumber) GetLatestPanelInfoByMachineId(string machineId)
+        {
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+                var cmd = new SQLiteCommand("SELECT SerialNumber, LotNumber FROM Panels WHERE MachineId = @MachineId ORDER BY DetectionDate DESC LIMIT 1", connection);
+                cmd.Parameters.AddWithValue("@MachineId", machineId);
+                using (var reader = cmd.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        string serialNumber = reader.GetString(0);
+                        string lotNumber = reader.GetString(1);
+                        return (serialNumber, lotNumber);
+                    }
+                }
+            }
+            return (null, null);
+        }
+
+        /// <summary>
         /// 生成测试数据
         /// </summary>
         public static void GenerateTestData()

@@ -1174,6 +1174,14 @@ namespace DeepSightWorkLib
                         http_DB.HttpPostMethod(URL, Info, 1, out Result);
                         LogTextHelper.Info($"HeatPoints:{avi_HeatInfo.pointsInfos.Count},SN:{avi_HeatInfo.SN},KEY:{Info.key}");
                     }
+                    DateTime detectionDate;
+                    if (!DateTime.TryParse(panelInfo.AviCreateTime, out detectionDate))
+                    {
+                        detectionDate = DateTime.Now;
+                        LogTextHelper.Info($"无法解析 AviCreateTime '{panelInfo.AviCreateTime}'。将使用当前时间 '{detectionDate}' 作为备用。");
+                    }
+
+                    panelInfo.
                     //存数据到db TODO 加一个bypass数量
                     databaseHelper.SavePanelSide(new PanelSideRecord()
                     {
@@ -1191,10 +1199,11 @@ namespace DeepSightWorkLib
                             RemainingDefectsCount = resList.Where(t => t == "1").Count(),
                             TotalDefectsCount = resList.Where(t => t == "1"||t=="2").Count()
                         },
-                        DetectionDate =DateTime.Parse( panelInfo.AviCreateTime),
+                        
+                        DetectionDate = detectionDate,
                         LotNumber = panelInfo.LotId,
                         SerialNumber = panelInfo.SerialNumber,
-                        MachineId = panelInfo.MachineName,
+                        MachineId = panelInfo.StationName,
                         Side = panelInfo.SideIndex,
 
                     });
@@ -1517,7 +1526,7 @@ namespace DeepSightWorkLib
             }
         }
 
-        #region test
+        #region 数据库操作
 
         /// <summary>
         /// 用于测试数据库读写功能的方法
@@ -1612,7 +1621,12 @@ namespace DeepSightWorkLib
         public Dictionary<string, (long TotalDefects, long AIOkDefects)> GetDefectCountsPerMachine(DateTime start,DateTime end)=>
             databaseHelper.GetDefectCountsPerMachine(start,end);
         public void GenerateVRSTestData()=>DatabaseHelper.GenerateEmployeeReportTestData(5000);
-        
+
+        public (string SerialNumber, string LotNumber) GetLatestPanelInfoByMachineId(string machineId)=>
+            databaseHelper.GetLatestPanelInfoByMachineId(machineId);
+
+        public void SaveEmployeeReport(EmployeeReport report)=>
+            databaseHelper.SaveEmployeeReport(report);
         #endregion
         /// <summary>
         /// 开始线程

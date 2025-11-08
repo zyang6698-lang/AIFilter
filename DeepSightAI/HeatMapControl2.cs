@@ -1,4 +1,4 @@
-﻿#define TEST_ENV
+﻿//#define TEST_ENV
 using DeepSightDB;
 using DeepSightDisplay;
 using DeepSightHeatMap;

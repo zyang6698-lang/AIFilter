@@ -77,6 +77,7 @@ namespace DeepSightAI
                     foreach (var record in AllEmployeeReports)
                     {
                         dataQueues.Enqueue(record); // Enqueue() 将元素添加到队尾
+                        Machine.master.workClass.SaveEmployeeReport(record);
                         LogTextHelper.Info($"员工报点数据已解析,员工工号：{record.ID}，SN：{record.SN}，总NG数：{record.AllNGNumber}，起始时间：{record.StartTime}，结束时间：{record.StartTime}");
                     }
 
