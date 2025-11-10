@@ -247,7 +247,8 @@ namespace DeepSightAI.SettingPages
 
                 for (int i = 0; i < Machine.aviconfig.WatchPaths.Count; i++)
                 {
-                    AddParam(i);
+                    AddAviControl(Machine.aviconfig.WatchPaths[i], i);
+                   // AddParam(i);
                 }
             }
             catch (Exception ex)
@@ -255,11 +256,41 @@ namespace DeepSightAI.SettingPages
                 LogTextHelper.Error("Error", ex);
             }
         }
+
+
+        private void AddAviControl(WatchPathConfig watchPath, int index)
+        {
+            try
+            {
+                AviCtr ctr = new AviCtr(watchPath);
+                ctr.Size = new Size(150, 150); // 根据需求调整
+
+                // 计算位置 - 根据索引排列
+                int cols = 7; // 每行显示4个
+                int spacing = 0; // 间距
+
+                int x = (index % cols) * (ctr.Width + spacing) + spacing;
+                int y = (index / cols) * (ctr.Height + spacing) + spacing;
+
+                ctr.Location = new Point(x, y + 50);
+                this.avi_panel.Controls.Add(ctr);
+            }
+            catch (Exception ex)
+            {
+                // Consider logging the exception
+            }
+        }
+
+
         private bool AddParam(int i)
         {
             try
             {
                 AviCtr ctr = new AviCtr(Machine.aviconfig.WatchPaths[i]);
+
+                ctr.Size = new Size(150, 150);
+
+
                 this.avi_panel.Controls.Add(ctr);
 
                 //TabPage tabPage = FrHWConfig.Instance.tabControl.Controls[i] as TabPage;

@@ -1205,6 +1205,7 @@ namespace DeepSightWorkLib
                         SerialNumber = panelInfo.SerialNumber,
                         MachineId = panelInfo.StationName,
                         Side = panelInfo.SideIndex,
+                        PathIndex=panelInfo.PathIndex
 
                     });
 
@@ -1622,7 +1623,7 @@ namespace DeepSightWorkLib
             databaseHelper.GetDefectCountsPerMachine(start,end);
         public void GenerateVRSTestData()=>DatabaseHelper.GenerateEmployeeReportTestData(5000);
 
-        public (string SerialNumber, string LotNumber,string ProductSerial) GetLatestPanelInfoByMachineId(string machineId)=>
+        public (string SerialNumber, string LotNumber,string ProductSerial,string PathIndex) GetLatestPanelInfoByMachineId(string machineId)=>
             databaseHelper.GetLatestPanelInfoByMachineId(machineId);
 
         public void SaveEmployeeReport(EmployeeReport report)=>

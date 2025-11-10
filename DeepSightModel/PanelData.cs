@@ -42,6 +42,7 @@ namespace DeepSightModel
         public string ProductSerial { get; set; }
         public string Side { get; set; } // "A"  "B"
         public SideData Data { get; set; } = new SideData();
+        public string PathIndex { get; set; }
     }
 
 

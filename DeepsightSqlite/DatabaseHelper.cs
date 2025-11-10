@@ -33,7 +33,8 @@ namespace DeepsightSqlite
                     LotNumber TEXT NOT NULL,
                     ProductSerial TEXT,
                     DetectionDate DATETIME NOT NULL,
-                    IsAIOk BOOLEAN NOT NULL
+                    IsAIOk BOOLEAN NOT NULL,
+                    PathIndex TEXT
                 );";
 
                 string createPanelSidesTable = @"
@@ -95,7 +96,7 @@ namespace DeepsightSqlite
                         else
                         {
                             var insertPanelCmd = new SQLiteCommand(
-                                "INSERT INTO Panels (MachineId, SerialNumber, LotNumber, DetectionDate, IsAIOk, ProductSerial) VALUES (@MachineId, @SN, @Lot, @Date, @IsAIOk, @ProductSerial); SELECT last_insert_rowid();",
+                                "INSERT INTO Panels (MachineId, SerialNumber, LotNumber, DetectionDate, IsAIOk, ProductSerial, PathIndex) VALUES (@MachineId, @SN, @Lot, @Date, @IsAIOk, @ProductSerial, @PathIndex); SELECT last_insert_rowid();",
                                 connection);
                             insertPanelCmd.Parameters.AddWithValue("@MachineId", record.MachineId);
                             insertPanelCmd.Parameters.AddWithValue("@SN", record.SerialNumber);
@@ -103,6 +104,7 @@ namespace DeepsightSqlite
                             insertPanelCmd.Parameters.AddWithValue("@Date", record.DetectionDate);
                             insertPanelCmd.Parameters.AddWithValue("@IsAIOk", false); // 初始默认为 false
                             insertPanelCmd.Parameters.AddWithValue("@ProductSerial", record.ProductSerial);
+                            insertPanelCmd.Parameters.AddWithValue("@PathIndex", record.PathIndex);
                             panelId = (long)insertPanelCmd.ExecuteScalar();
                         }
                     }
@@ -410,14 +412,14 @@ namespace DeepsightSqlite
         /// </summary>
         /// <param name="machineId">机器ID</param>
         /// <returns>最新的 SN 和 Lot</returns>
-        public (string SerialNumber, string LotNumber, string ProductSerial) GetLatestPanelInfoByMachineId(string machineId)
+        public (string SerialNumber, string LotNumber, string ProductSerial,string PathIndex) GetLatestPanelInfoByMachineId(string machineId)
         {
             try
             {
                 using (var connection = new SQLiteConnection(connectionString))
                 {
                     connection.Open();
-                    var cmd = new SQLiteCommand("SELECT SerialNumber, LotNumber, ProductSerial FROM Panels WHERE MachineId = @MachineId ORDER BY DetectionDate DESC LIMIT 1", connection);
+                    var cmd = new SQLiteCommand("SELECT SerialNumber, LotNumber, ProductSerial, PathIndex FROM Panels WHERE MachineId = @MachineId ORDER BY DetectionDate DESC LIMIT 1", connection);
                     cmd.Parameters.AddWithValue("@MachineId", machineId);
                     using (var reader = cmd.ExecuteReader())
                     {
@@ -426,7 +428,8 @@ namespace DeepsightSqlite
                             string serialNumber = reader.GetString(0);
                             string lotNumber = reader.GetString(1);
                             string ProductSerial = reader.IsDBNull(2) ? null : reader.GetString(2);
-                            return (serialNumber, lotNumber, ProductSerial);
+                            string pathIndex = reader.IsDBNull(3) ? null : reader.GetString(3);
+                            return (serialNumber, lotNumber, ProductSerial, pathIndex);
                         }
                     }
                 }
@@ -436,7 +439,7 @@ namespace DeepsightSqlite
                 // Log the exception
                 LogTextHelper.Warn($"Error in GetLatestPanelInfoByMachineId: {ex.Message}");
             }
-            return (null, null, null);
+            return (null, null, null, null);
         }
 
         /// <summary>
@@ -458,6 +461,7 @@ namespace DeepsightSqlite
                     string lotNumber = $"Lot-{date:yyyyMMdd}";
                     string serialNumber = $"{lotNumber}-SN{i:D3}";
                     string ProductSerial = $"ProductSerial-{random.Next(1, 5)}";
+                    string pathIndex = $"Path/Index/{Guid.NewGuid().ToString().Substring(0, 8)}";
                     DateTime detectionDate = date.AddHours(random.Next(0, 24)).AddMinutes(random.Next(0, 60));
 
                     // Side A
@@ -479,6 +483,7 @@ namespace DeepsightSqlite
                         SerialNumber = serialNumber,
                         LotNumber = lotNumber,
                         ProductSerial = ProductSerial,
+                        PathIndex = pathIndex,
                         Side = "A",
                         Data = sideAData
                     };
@@ -503,6 +508,7 @@ namespace DeepsightSqlite
                         SerialNumber = serialNumber,
                         LotNumber = lotNumber,
                         ProductSerial = ProductSerial,
+                        PathIndex = pathIndex,
                         Side = "B",
                         Data = sideBData
                     };

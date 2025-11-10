@@ -110,7 +110,7 @@ namespace DeepSightAI.SettingPages
             this.tableLayoutPanel2.ColumnCount = 2;
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 52.14286F));
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 47.85714F));
-            this.tableLayoutPanel2.Controls.Add(this.uiGroupBox1, 0, 0);
+            this.tableLayoutPanel2.Controls.Add(this.uiGroupBox1, 1, 0);
             this.tableLayoutPanel2.Controls.Add(this.grpAxisOfSelection, 0, 0);
             this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel2.Location = new System.Drawing.Point(0, 0);

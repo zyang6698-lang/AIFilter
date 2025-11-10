@@ -78,6 +78,20 @@ namespace DeepSightAI.SettingPages
             }
         }
 
+        private string _pathIndex;
+        public string PathIndex
+        {
+            get => _pathIndex;
+            set
+            {
+                if (_pathIndex != value)
+                {
+                    _pathIndex = value;
+                    UpdateDisplay();
+                }
+            }
+        }
+
         private string _lotId;
         public string LotId
         {
@@ -185,6 +199,8 @@ namespace DeepSightAI.SettingPages
         public AviCtr(WatchPathConfig _config)
         {
             InitializeComponent();
+            SetStyle(ControlStyles.SupportsTransparentBackColor, true);
+
             InitializeToolTip();
             InitializeBreathTimer();
 
@@ -205,8 +221,6 @@ namespace DeepSightAI.SettingPages
             info.AppendLine($"料号: {ProductSerial}");
             info.AppendLine($"Lot: {LotId}");
             info.AppendLine($"稼动率: {Utilization:P2}");
-            info.AppendLine($"总图片数: {TotalImages}");
-            info.AppendLine($"AI OK数: {AiOkImages}");
             double ratio = TotalImages > 0 ? (double)AiOkImages / TotalImages : 0;
             info.AppendLine($"AI OK比例: {ratio:P2}");
 

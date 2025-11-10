@@ -30,7 +30,6 @@ namespace DeepSightAI
         public Dictionary<string, PcsResult> dic_PcsResult = new Dictionary<string, PcsResult>();
         public Dictionary<string, List<string>> dic_Paths = new Dictionary<string, List<string>>();
 
-        private DataFlowAnimation flowAnimation;
 
         private List<RootPanelInfoWithIP> info = null;
         private List<DisPlayInfo> disInfosList = new List<DisPlayInfo>();
@@ -98,23 +97,10 @@ namespace DeepSightAI
 
         private void InitializeUI()
         {
-            // 创建动画控件
-            flowAnimation = new DataFlowAnimation();
-            flowAnimation.Dock = DockStyle.Fill;
-            flowAnimation.BackColor = Color.FromArgb(29, 48, 60);
-            this.avi_panel.Controls.Add(flowAnimation);
-
             flowAnimation.CreateMachinePanels(Machine.aviconfig.WatchPaths);
             flowAnimation.StartAnimation();
         }
-        private void CreateMachinePanels()
-        {
-        }
-        
-        private bool AddParam(int i)
-        {
-            return true;
-        }
+
         private string logstr = string.Empty;//主要用于判断回调多次 
         private void Log_single_OnCallBackLogProc(string msg, Color color)
         {

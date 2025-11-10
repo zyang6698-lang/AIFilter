@@ -18,7 +18,7 @@ namespace DeepSightAI
         // 动画配置
         private int flowSpeed = 5;
         private int dataPointCount = 1;
-        private Color flowColor = Color.FromArgb(0, 120, 215); // 蓝色数据流
+        private readonly Color flowColor = Color.FromArgb(0, 120, 215); // 蓝色数据流
 
         private List<AviCtr> aviCtrs = new List<AviCtr>();
 
@@ -246,7 +246,7 @@ namespace DeepSightAI
             }
         }
 
-        public void UpdateAllAviCtrLotSn(Func<string, (string LotNumber, string SerialNumber,string ProductSerial)> getLatestPanelInfo)
+        public void UpdateAllAviCtrLotSn(Func<string, (string LotNumber, string SerialNumber,string ProductSerial,string PathIndex)> getLatestPanelInfo)
         {
             if (this.IsHandleCreated)
             {
@@ -261,6 +261,7 @@ namespace DeepSightAI
                             {
                                 ctr.LotId = tmp.LotNumber;
                                 ctr.ProductSerial = tmp.SerialNumber;
+                                ctr.PathIndex = tmp.PathIndex;
                             }
                         }
                     }

@@ -89,6 +89,8 @@ namespace DeepSightModel
         public string StationName { get; set; }
         [JsonProperty("result_ini_create_time")]
         public string AviCreateTime { get; set; }
+        [JsonProperty("path_index")]
+        public string PathIndex { get; set; }
     }
 
     public class PanelSourceImage
