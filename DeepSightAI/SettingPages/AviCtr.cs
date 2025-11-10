@@ -230,7 +230,7 @@ namespace DeepSightAI.SettingPages
                 }
                 else
                 {
-                    pic_AVI.Image = Resources.machine_red;
+                    pic_AVI.Image = Resources.machine_grey;
                 }
             }
         }
@@ -263,9 +263,16 @@ namespace DeepSightAI.SettingPages
         public Point GetCenterPoint()
         {
             // 获取控件在屏幕上的中心位置
-            var centerX = this.Location.X + this.Width / 2;
-            var centerY = this.Location.Y + this.Height / 2;
-            return new Point(centerX, centerY);
+            if (this.Parent == null)
+                return this.Location;
+
+            // this is AviCtr, parent is TableLayoutPanel, parent.parent is DataFlowAnimation2
+            Control animationControl = this.Parent?.Parent;
+            if (animationControl == null)
+                return this.Location;
+
+            Point locationOnScreen = this.PointToScreen(new Point(this.Width / 2, this.Height / 2));
+            return animationControl.PointToClient(locationOnScreen);
         }
 
         // 添加获取顶部中心位置的方法（用于连接线）

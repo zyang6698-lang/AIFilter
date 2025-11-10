@@ -67,7 +67,7 @@
             // pic_AVI
             // 
             this.pic_AVI.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pic_AVI.Image = global::DeepSightAI.Properties.Resources.machine_red1;
+            this.pic_AVI.Image = global::DeepSightAI.Properties.Resources.machine_grey;
             this.pic_AVI.Location = new System.Drawing.Point(4, 47);
             this.pic_AVI.Margin = new System.Windows.Forms.Padding(4);
             this.pic_AVI.Name = "pic_AVI";

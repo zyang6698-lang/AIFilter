@@ -4,21 +4,23 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using System.Threading;
-
+using DeepSightAI.SettingPages;
+using DeepSightModel;
+using System.Linq;
 
 namespace DeepSightAI
 {
-    public class DataFlowAnimation : ScrollableControl
+    public class DataFlowAnimation : UserControl
     {
         private System.Windows.Forms.Timer animationTimer;
         private List<FlowPath> flowPaths = new List<FlowPath>();
-        private Random random = new Random();
-        private VScrollBar vScrollBar;
 
         // 动画配置
         private int flowSpeed = 5;
         private int dataPointCount = 1;
         private Color flowColor = Color.FromArgb(0, 120, 215); // 蓝色数据流
+
+        private List<AviCtr> aviCtrs = new List<AviCtr>();
 
         public DataFlowAnimation()
         {
@@ -35,40 +37,63 @@ namespace DeepSightAI
             animationTimer = new System.Windows.Forms.Timer();
             animationTimer.Interval = 100;
             animationTimer.Tick += AnimationTimer_Tick;
-
-            vScrollBar = new VScrollBar();
-            vScrollBar.Dock = DockStyle.Right;
-            vScrollBar.Scroll += (sender, e) => {
-                this.AutoScrollPosition = new Point(0, vScrollBar.Value);
-                this.Invalidate();
-            };
-            this.Controls.Add(vScrollBar);
         }
 
-        private void UpdateScrollRange()
+        public void CreateMachinePanels(List<WatchPathConfig> watchPaths)
         {
-            int maxY = 0;
-            foreach (var path in flowPaths)
+            var bt = new Button
             {
-                maxY = Math.Max(maxY, path.StartPoint.Y);
-                maxY = Math.Max(maxY, path.EndPoint.Y);
+                Text = "ATS_AI系统",
+                Font = new Font("微软雅黑", 16, FontStyle.Bold),
+                ForeColor = Color.White,
+                TextAlign = ContentAlignment.MiddleCenter,
+                Size = new Size(200, 50),
+                Location = new Point(515, 10),
+                FlatStyle = FlatStyle.Flat,
+            };
+            this.Controls.Add(bt);
+
+            for (int i = 0; i < watchPaths.Count; i++)
+            {
+                AddAviControl(watchPaths[i], i);
             }
 
-            int scrollableHeight = maxY + 20; // Add some padding
-            this.AutoScrollMinSize = new Size(0, scrollableHeight);
-
-            if (scrollableHeight > this.ClientSize.Height)
+            for (int i = 0; i < aviCtrs.Count; i++)
             {
-                vScrollBar.Visible = true;
-                vScrollBar.Maximum = scrollableHeight;
-                vScrollBar.LargeChange = this.ClientSize.Height;
-                vScrollBar.SmallChange = 50;
-            }
-            else
-            {
-                vScrollBar.Visible = false;
+                Point startPoint = new Point(bt.Location.X + bt.Width / 2, 60); // 中央面板底部
+                if (!aviCtrs[i].ctrConfig.IsEnable)
+                {
+                    continue;
+                }
+                Point endPoint = aviCtrs[i].GetCenterPoint(); // 机台顶部
+                AddFlowPath(startPoint, endPoint);
             }
         }
+
+        private void AddAviControl(WatchPathConfig watchPath, int index)
+        {
+            try
+            {
+                AviCtr ctr = new AviCtr(watchPath);
+                ctr.Size = new Size(150, 150); // 根据需求调整
+
+                // 计算位置 - 根据索引排列
+                int cols = 7; // 每行显示4个
+                int spacing = 0; // 间距
+
+                int x = (index % cols) * (ctr.Width + spacing) + spacing;
+                int y = (index / cols) * (ctr.Height + spacing) + spacing;
+
+                ctr.Location = new Point(x, y + 50);
+                aviCtrs.Add(ctr);
+                this.Controls.Add(ctr);
+            }
+            catch (Exception ex)
+            {
+                // Consider logging the exception
+            }
+        }
+
 
         // 添加数据流动路径
         public void AddFlowPath(Point startPoint, Point endPoint, string dataContent = "")
@@ -94,7 +119,6 @@ namespace DeepSightAI
             }
 
             flowPaths.Add(path);
-            UpdateScrollRange();
         }
 
         private void AnimationTimer_Tick(object sender, EventArgs e)
@@ -183,7 +207,6 @@ namespace DeepSightAI
         protected override void OnSizeChanged(EventArgs e)
         {
             base.OnSizeChanged(e);
-            UpdateScrollRange();
         }
 
         public void StartAnimation()
@@ -194,6 +217,55 @@ namespace DeepSightAI
         public void StopAnimation()
         {
             animationTimer.Stop();
+        }
+
+        public void UpdateAviCtrInfo(string aviName, string productSerial, string lotId, double utilization)
+        {
+            foreach (var ctr in aviCtrs)
+            {
+                if (ctr.ctrConfig.AviName == aviName)
+                {
+                    ctr.ProductSerial = productSerial;
+                    ctr.LotId = lotId;
+                    ctr.Utilization = utilization;
+                    break;
+                }
+            }
+        }
+
+        public void UpdateAviCtrStats(string aviName, int totalImages, int aiOkImages)
+        {
+            foreach (var ctr in aviCtrs)
+            {
+                if (ctr.ctrConfig.AviName == aviName)
+                {
+                    ctr.TotalImages = totalImages;
+                    ctr.AiOkImages = aiOkImages;
+                    break;
+                }
+            }
+        }
+
+        public void UpdateAllAviCtrLotSn(Func<string, (string LotNumber, string SerialNumber,string ProductSerial)> getLatestPanelInfo)
+        {
+            if (this.IsHandleCreated)
+            {
+                this.BeginInvoke(new Action(() =>
+                {
+                    foreach (var ctr in aviCtrs)
+                    {
+                        if (ctr.ctrConfig.IsEnable)
+                        {
+                            var tmp = getLatestPanelInfo(ctr.ctrConfig.AviName);
+                            if (tmp.LotNumber != null && tmp.SerialNumber != null)
+                            {
+                                ctr.LotId = tmp.LotNumber;
+                                ctr.ProductSerial = tmp.SerialNumber;
+                            }
+                        }
+                    }
+                }));
+            }
         }
 
         protected override void Dispose(bool disposing)

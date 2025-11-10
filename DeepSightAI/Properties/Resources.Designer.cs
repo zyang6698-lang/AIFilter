@@ -213,6 +213,16 @@ namespace DeepSightAI.Properties {
         /// <summary>
         ///   查找 System.Drawing.Bitmap 类型的本地化资源。
         /// </summary>
+        internal static System.Drawing.Bitmap machine_grey {
+            get {
+                object obj = ResourceManager.GetObject("machine_grey", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查找 System.Drawing.Bitmap 类型的本地化资源。
+        /// </summary>
         internal static System.Drawing.Bitmap machine_red {
             get {
                 object obj = ResourceManager.GetObject("machine_red", resourceCulture);

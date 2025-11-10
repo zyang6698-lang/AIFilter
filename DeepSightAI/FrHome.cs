@@ -31,8 +31,6 @@ namespace DeepSightAI
         public Dictionary<string, List<string>> dic_Paths = new Dictionary<string, List<string>>();
 
         private DataFlowAnimation flowAnimation;
-        private Dictionary<string, MachinePanel> machinePanels = new Dictionary<string, MachinePanel>();
-        private List<AviCtr> aviCtrs = new List<AviCtr>();
 
         private List<RootPanelInfoWithIP> info = null;
         private List<DisPlayInfo> disInfosList = new List<DisPlayInfo>();
@@ -106,65 +104,15 @@ namespace DeepSightAI
             flowAnimation.BackColor = Color.FromArgb(29, 48, 60);
             this.avi_panel.Controls.Add(flowAnimation);
 
-            CreateMachinePanels();
+            flowAnimation.CreateMachinePanels(Machine.aviconfig.WatchPaths);
             flowAnimation.StartAnimation();
-            this.avi_panel.Controls.Add(flowAnimation);
         }
         private void CreateMachinePanels()
         {
-            var bt = new Button
-            {
-                Text = "ATS_AI系统",
-                Font = new Font("微软雅黑", 16, FontStyle.Bold),
-                ForeColor = Color.White,
-                TextAlign = ContentAlignment.MiddleCenter,
-                Size = new Size(200, 50),
-                Location = new Point(515, 10),
-                FlatStyle = FlatStyle.Flat,
-            };
-            flowAnimation.Controls.Add(bt);
-
-            for (int i = 0; i < Machine.aviconfig.WatchPaths.Count; i++)
-            {
-                AddParam(i);
-            }
-            for (int i = 0; i < aviCtrs.Count; i++)
-            {
-                Point startPoint = new Point(bt.Location.X + bt.Width / 2, 60); // 中央面板底部
-                if (!aviCtrs[i].ctrConfig.IsEnable)
-                {
-                    continue;
-                }
-                Point endPoint = aviCtrs[i].GetCenterPoint(); // 机台顶部
-                flowAnimation.AddFlowPath(startPoint, endPoint);//, $"数据流{i + 1}");
-            }
         }
-        Point[] positions = new Point[40];
+        
         private bool AddParam(int i)
         {
-            try
-            {
-                var watchPath = Machine.aviconfig.WatchPaths[i];
-                AviCtr ctr = new AviCtr(watchPath);
-                //ctr.Location = new Point(point.X, point.Y);
-                ctr.Size = new Size(150, 150); // 根据需求调整
-
-                // 计算位置 - 根据索引排列
-                int cols = 7; // 每行显示4个
-                int spacing = 0; // 间距
-
-                int x = (i % cols) * (ctr.Width + spacing) + spacing;
-                int y = (i / cols) * (ctr.Height + spacing) + spacing;
-                
-                ctr.Location = new Point(x, y + 50);
-                positions[i] = ctr.Location;
-                aviCtrs.Add(ctr);
-                this.flowAnimation.Controls.Add(ctr);
-            }
-            catch (Exception ex)
-            {
-                return false;
-            }
             return true;
         }
         private string logstr = string.Empty;//主要用于判断回调多次 
@@ -374,7 +322,7 @@ namespace DeepSightAI
                     {
                         this.BeginInvoke(new Action(() =>
                         {
-                            UpdateAviCtrStats(machineName, totalDefects, aiOkDefects);
+                            flowAnimation.UpdateAviCtrStats(machineName, totalDefects, aiOkDefects);
                         }));
                     }
                 }
@@ -1109,50 +1057,16 @@ namespace DeepSightAI
         }
         public void UpdateAviCtrInfo(string aviName, string productSerial, string lotId, double utilization)
         {
-            foreach (Control control in flowAnimation.Controls)
-            {
-                if (control is AviCtr ctr &&   ctr.ctrConfig.AviName == aviName)
-                {
-                    ctr.ProductSerial = productSerial;
-                    ctr.LotId = lotId;
-                    ctr.Utilization = utilization;
-                    break;
-                }
-            }
+            flowAnimation.UpdateAviCtrInfo(aviName, productSerial, lotId, utilization);
         }
 
         public void UpdateAviCtrStats(string aviName, int totalImages, int aiOkImages)
         {
-            foreach (Control control in flowAnimation.Controls)
-            {
-                if (control is AviCtr ctr && ctr.ctrConfig.AviName == aviName)
-                {
-                    ctr.TotalImages = totalImages;
-                    ctr.AiOkImages = aiOkImages;
-                    break;
-                }
-            }
+            flowAnimation.UpdateAviCtrStats(aviName, totalImages, aiOkImages);
         }
         private void UpdateLotSn()
         {
-            if (this.IsHandleCreated)
-            {
-                this.BeginInvoke(new Action(() =>
-                {
-                    foreach (Control control in flowAnimation.Controls)
-                    {
-                        if (control is AviCtr ctr && ctr.ctrConfig.IsEnable )
-                        {
-                            var tmp= Machine.master.workClass.GetLatestPanelInfoByMachineId(ctr.ctrConfig.AviName);
-                            if (tmp.LotNumber  !=null&&tmp.SerialNumber!=null)
-                            {
-                                ctr.LotId = tmp.LotNumber;
-                                ctr.ProductSerial = tmp.SerialNumber;
-                            }
-                        }
-                    }
-                }));
-            }
+            flowAnimation.UpdateAllAviCtrLotSn(Machine.master.workClass.GetLatestPanelInfoByMachineId);
         }
         
     }
