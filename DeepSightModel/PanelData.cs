@@ -28,6 +28,11 @@ namespace DeepSightModel
         public int RemainingDefectsCount { get; set; }
         public string SerialNumber { get; set; }
         public string Side { get; set; }
+        // 0: AVI OK
+        // 1: AVI NG 但过滤后OK
+        // 2: AVI NG 过滤后仍NG
+        // 3: AVI NG 未过滤
+        public int State { get; set; }
     }
 
     /// <summary>

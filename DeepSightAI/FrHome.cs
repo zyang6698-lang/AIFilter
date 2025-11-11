@@ -97,8 +97,7 @@ namespace DeepSightAI
 
         private void InitializeUI()
         {
-            flowAnimation.CreateMachinePanels(Machine.aviconfig.WatchPaths);
-            flowAnimation.StartAnimation();
+            aviCtr2Container.CreateMachinePanels(Machine.aviconfig.WatchPaths);
         }
 
         private string logstr = string.Empty;//主要用于判断回调多次 
@@ -308,7 +307,7 @@ namespace DeepSightAI
                     {
                         this.BeginInvoke(new Action(() =>
                         {
-                            flowAnimation.UpdateAviCtrStats(machineName, totalDefects, aiOkDefects);
+                            aviCtr2Container.UpdateAviCtrStats(machineName, totalDefects, aiOkDefects);
                         }));
                     }
                 }
@@ -1043,16 +1042,16 @@ namespace DeepSightAI
         }
         public void UpdateAviCtrInfo(string aviName, string productSerial, string lotId, double utilization)
         {
-            flowAnimation.UpdateAviCtrInfo(aviName, productSerial, lotId, utilization);
+            aviCtr2Container.UpdateAviCtrInfo(aviName, productSerial, lotId, utilization);
         }
 
         public void UpdateAviCtrStats(string aviName, int totalImages, int aiOkImages)
         {
-            flowAnimation.UpdateAviCtrStats(aviName, totalImages, aiOkImages);
+            aviCtr2Container.UpdateAviCtrStats(aviName, totalImages, aiOkImages);
         }
         private void UpdateLotSn()
         {
-            flowAnimation.UpdateAllAviCtrLotSn(Machine.master.workClass.GetLatestPanelInfoByMachineId);
+            aviCtr2Container.UpdateAllAviCtrLotSn(Machine.master.workClass.GetLatestPanelInfoByMachineId);
         }
         
     }

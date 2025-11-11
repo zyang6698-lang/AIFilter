@@ -339,6 +339,18 @@
     <Compile Include="SettingPages\AviCtr.Designer.cs">
       <DependentUpon>AviCtr.cs</DependentUpon>
     </Compile>
+    <Compile Include="SettingPages\AviCtr2.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SettingPages\AviCtr2.Designer.cs">
+      <DependentUpon>AviCtr2.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingPages\AviCtr2Container.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SettingPages\AviCtr2Container.Designer.cs">
+      <DependentUpon>AviCtr2Container.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingPages\FrAIConfig.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -417,6 +429,9 @@
     </Compile>
     <EmbeddedResource Include="SettingPages\AviCtr.resx">
       <DependentUpon>AviCtr.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingPages\AviCtr2.resx">
+      <DependentUpon>AviCtr2.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingPages\FrAIConfig.resx">
       <DependentUpon>FrAIConfig.cs</DependentUpon>

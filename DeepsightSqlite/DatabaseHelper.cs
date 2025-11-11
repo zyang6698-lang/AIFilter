@@ -45,6 +45,7 @@ namespace DeepsightSqlite
                     TotalDefectsCount INTEGER NOT NULL,
                     RemainingDefectsCount INTEGER NOT NULL,
                     HeatPoints TEXT, -- 存储 HeatPoint 列表的 JSON 字符串
+                    State INTEGER,
                     FOREIGN KEY (PanelId) REFERENCES Panels(Id) ON DELETE CASCADE
                 );";
 
@@ -68,6 +69,8 @@ namespace DeepsightSqlite
                     command.ExecuteNonQuery();
                     command.CommandText = createEmployeeReportsTable;
                     command.ExecuteNonQuery();
+
+                    
                 }
             }
         }
@@ -111,13 +114,14 @@ namespace DeepsightSqlite
 
                     // 2. 插入 SideData
                     var insertSideCmd = new SQLiteCommand(
-                        "INSERT INTO PanelSides (PanelId, Side, TotalDefectsCount, RemainingDefectsCount, HeatPoints) VALUES (@PanelId, @Side, @Total, @Remaining, @HeatPoints)",
+                        "INSERT INTO PanelSides (PanelId, Side, TotalDefectsCount, RemainingDefectsCount, HeatPoints, State) VALUES (@PanelId, @Side, @Total, @Remaining, @HeatPoints, @State)",
                         connection);
                     insertSideCmd.Parameters.AddWithValue("@PanelId", panelId);
                     insertSideCmd.Parameters.AddWithValue("@Side", record.Side);
                     insertSideCmd.Parameters.AddWithValue("@Total", record.Data.TotalDefectsCount);
                     insertSideCmd.Parameters.AddWithValue("@Remaining", record.Data.RemainingDefectsCount);
                     insertSideCmd.Parameters.AddWithValue("@HeatPoints", JsonConvert.SerializeObject(record.Data.HeatPoints));
+                    insertSideCmd.Parameters.AddWithValue("@State", record.Data.State);
                     insertSideCmd.ExecuteNonQuery();
 
                     // 3. 检查是否双面数据都已存在，并更新 IsAIOk
@@ -515,6 +519,77 @@ namespace DeepsightSqlite
                     dbHelper.SavePanelSide(recordB);
                 }
             }
+        }
+        /// <summary>
+        /// 1.	如果有一个state为3，则添加到未检测结果数
+        /// 2.	如果有一个state为2，则添加到过滤后仍NG结果数
+        /// 3.	如果有两个state为0，则添加到AVI OK的结果数
+        /// 4.	剩余情况，添加到过滤后OK的数 所以总共获取5个数字
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <returns></returns>
+        public (int totalSnCount, int uninspectedCount, int stillNgCount, int aviOkCount, int filteredOkCount) GetSnStateCounts(DateTime start, DateTime end)
+        {
+            var snStates = new Dictionary<string, List<int?>>();
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+                var sql = @"
+                    SELECT p.SerialNumber, ps.State
+                    FROM Panels p
+                    JOIN PanelSides ps ON p.Id = ps.PanelId
+                    WHERE p.DetectionDate BETWEEN @Start AND @End";
+
+                using (var cmd = new SQLiteCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@Start", start);
+                    cmd.Parameters.AddWithValue("@End", end);
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            string sn = reader.GetString(0);
+                            int? state = reader.IsDBNull(1) ? (int?)null : reader.GetInt32(1);
+
+                            if (!snStates.ContainsKey(sn))
+                            {
+                                snStates[sn] = new List<int?>();
+                            }
+                            snStates[sn].Add(state);
+                        }
+                    }
+                }
+            }
+
+            int totalSnCount = snStates.Count;
+            int uninspectedCount = 0;
+            int stillNgCount = 0;
+            int aviOkCount = 0;
+
+            foreach (var states in snStates.Values)
+            {
+                // 1. 如果有一个state为3，则添加到未检测结果数
+                if (states.Any(s => s == 3))
+                {
+                    uninspectedCount++;
+                }
+                // 2. 如果有一个state为2，则添加到过滤后仍NG结果数
+                else if (states.Any(s => s == 2))
+                {
+                    stillNgCount++;
+                }
+                // 3. 如果有两个state为0，则添加到AVI OK的结果数
+                else if (states.Count(s => s == 0) == 2)
+                {
+                    aviOkCount++;
+                }
+            }
+
+            // 4. 剩余情况，添加到过滤后OK的数
+            int filteredOkCount = totalSnCount - uninspectedCount - stillNgCount - aviOkCount;
+
+            return (totalSnCount, uninspectedCount, stillNgCount, aviOkCount, filteredOkCount);
         }
 
 

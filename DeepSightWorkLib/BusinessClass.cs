@@ -1181,7 +1181,8 @@ namespace DeepSightWorkLib
                         LogTextHelper.Info($"无法解析 AviCreateTime '{panelInfo.AviCreateTime}'。将使用当前时间 '{detectionDate}' 作为备用。");
                     }
 
-                   
+
+
                     //存数据到db TODO 加一个bypass数量
                     databaseHelper.SavePanelSide(new PanelSideRecord()
                     {
@@ -1196,8 +1197,9 @@ namespace DeepSightWorkLib
                                 ImagePath = o.ImagePath,
 
                             }).ToList(),
+                            State  = resList.Count == 0 ? 0 : resList.Contains("2") ? 3 : resList.Contains( "1") ? 2 : 1,
                             RemainingDefectsCount = resList.Where(t => t == "1").Count(),
-                            TotalDefectsCount = resList.Where(t => t == "1"||t=="2").Count()
+                            TotalDefectsCount = resList.Where(t => t == "1" || t == "2").Count()
                         },
                         ProductSerial = panelInfo.ProductSerial,
                         DetectionDate = detectionDate,
@@ -1205,7 +1207,7 @@ namespace DeepSightWorkLib
                         SerialNumber = panelInfo.SerialNumber,
                         MachineId = panelInfo.StationName,
                         Side = panelInfo.SideIndex,
-                        PathIndex=panelInfo.PathIndex
+                        PathIndex = panelInfo.PathIndex
 
                     });
 
