@@ -1680,6 +1680,21 @@ namespace DeepSightWorkLib
 
         public void SaveEmployeeReport(EmployeeReport report)=>
             databaseHelper.SaveEmployeeReport(report);
+
+        public (int totalSnCount, int uninspectedCount, int stillNgCount, int aviOkCount, int filteredOkCount) GetSnStateCountsByLot(string lotNumber) =>
+            databaseHelper.GetSnStateCountsByLot(lotNumber);
+
+        public (int totalSnCount, int uninspectedCount, int stillNgCount, int aviOkCount, int filteredOkCount) GetSnStateCountsByTime(DateTime start, DateTime end)=>
+                        databaseHelper.GetSnStateCountsByTime(start, end);
+        public List<PanelDataRecord> GetPanelsData(DateTime start, DateTime end)=>
+            databaseHelper.GetPanelsData(start, end);
+
+        public (string LotNumber, string ProductSerial) GetLatestLotAndProductSerial(string machineId)=>
+             databaseHelper.GetLatestLotAndProductSerial(machineId);
+
+        public List<PanelDataRecord> GetPanelsDataByMachineAndLot(string machineId, string lotNumber)=>
+            databaseHelper.GetPanelsDataByMachineAndLot(machineId, lotNumber);
+
         #endregion
         /// <summary>
         /// 开始线程

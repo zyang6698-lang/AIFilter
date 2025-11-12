@@ -48,15 +48,30 @@ namespace DeepSightAI.SettingPages
             // CopyOrCutMode="copy",
         };
 
-        private int _totalImages;
-        public int TotalImages
+        private double aviPassRate;
+
+        public double AviPassRate
         {
-            get => _totalImages;
+            get { return aviPassRate; }
+            set {
+                if (aviPassRate!=value)
+                {
+                    aviPassRate = value;
+                    UpdateDisplay();
+                }
+            }
+        }
+
+
+        private int _aiFilterCount;
+        public int AiFilterCount
+        {
+            get => _aiFilterCount;
             set
             {
-                if (_totalImages != value)
+                if (_aiFilterCount != value)
                 {
-                    _totalImages = value;
+                    _aiFilterCount = value;
                     UpdateDisplay();
                 }
             }
@@ -166,10 +181,13 @@ namespace DeepSightAI.SettingPages
             var info = new StringBuilder();
             info.AppendLine($"PathIndex: {PathIndex}");
             info.AppendLine($"AI OK图片数: {AiOkImages}");
-            info.AppendLine($"图片总数: {TotalImages}");
-            double ratio = TotalImages > 0 ? (double)AiOkImages / TotalImages : 0;
-            SetAiPassRate($"{ratio:P2}");
+            info.AppendLine($"图片总数: {AiFilterCount}");
+            double ratio = AiFilterCount > 0 ? (double)AiOkImages / AiFilterCount : 0;
+            //SetAiPassRate($"{ratio:P2}");
             SetOperatingRate($"{Utilization:P2}");
+
+            lblAiPassRate.Text= $"AI:{ratio:P2}";
+            lblAviPassRate.Text= $"AVI:{AviPassRate:P2}";
 
             labelCurrentPartNumberValue.Text= ProductSerial;
             labelLotValue.Text = LotId;

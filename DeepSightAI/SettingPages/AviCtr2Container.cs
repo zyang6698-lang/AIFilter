@@ -73,7 +73,7 @@ namespace DeepSightAI.SettingPages
             var ctr = aviCtr2Controls.FirstOrDefault(c => c.ctrConfig.AviName == aviName);
             if (ctr != null)
             {
-                ctr.TotalImages = totalImages;
+                ctr.AiFilterCount = totalImages;
                 ctr.AiOkImages = aiOkImages;
             }
         }
@@ -118,7 +118,7 @@ namespace DeepSightAI.SettingPages
         }
 
 
-        public void UpdateAllAviCtrLotSn(Func<string, (string LotNumber, string SerialNumber, string ProductSerial, string PathIndex)> getLatestPanelInfo)
+        public void UpdateAllAviCtrLotSn(Func<string, (string SerialNumber, string LotNumber, string ProductSerial, string PathIndex)> getLatestPanelInfo)
         {
             if (this.IsHandleCreated)
             {
@@ -135,6 +135,34 @@ namespace DeepSightAI.SettingPages
                                 ctr.ProductSerial = tmp.ProductSerial;
                                 ctr.PathIndex = tmp.PathIndex;
                             }
+                        }
+                    }
+                }));
+            }
+        }
+
+        public void UpdateAll(Func<string,(string,string)> GetLatestLotAndProductSerial,Func<string,string, List<PanelDataRecord>> getLatestPanelData)
+        {
+            //根据机器名获取最新lot的列表
+            if (this.IsHandleCreated)
+            {
+                this.BeginInvoke(new Action(() =>
+                {
+                    foreach (var ctr in aviCtr2Controls)
+                    {
+                        if (ctr.ctrConfig.IsEnable)
+                        {
+                            (string LotNumber, string ProductSerial) = GetLatestLotAndProductSerial(ctr.ctrConfig.AviName);
+                            var data= getLatestPanelData(ctr.ctrConfig.AviName, LotNumber);
+
+                            ctr.LotId = LotNumber;
+                            ctr.ProductSerial = ProductSerial;
+                            var boardStat=PanelDataRecord.GetBoardStat(data);
+
+                            ctr.AiOkImages= boardStat.aiFilterOKCount;
+                            ctr.AiFilterCount= boardStat.aiFilterCount;
+                            ctr.AviPassRate= boardStat.aviCount == 0 ? 0 : (double)boardStat.aviOKCount / boardStat.aviCount * 100;
+
                         }
                     }
                 }));

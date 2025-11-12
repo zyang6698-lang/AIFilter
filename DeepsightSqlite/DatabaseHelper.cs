@@ -594,6 +594,306 @@ namespace DeepsightSqlite
 
 
         /// <summary>
+        /// 根据 LotNumber 获取 SN 状态统计
+        /// 1.	如果有一个state为3，则添加到未检测结果数
+        /// 2.	如果有一个state为2，则添加到过滤后仍NG结果数
+        /// 3.	如果有两个state为0，则添加到AVI OK的结果数
+        /// 4.	剩余情况，添加到过滤后OK的数 所以总共获取5个数字
+        /// </summary>
+        /// <param name="lotNumber"></param>
+        /// <returns></returns>
+        public (int totalSnCount, int uninspectedCount, int stillNgCount, int aviOkCount, int filteredOkCount) GetSnStateCountsByLot(string lotNumber)
+        {
+            var snStates = new Dictionary<string, List<int?>>();
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+                var sql = @"
+                    SELECT p.SerialNumber, ps.State
+                    FROM Panels p
+                    JOIN PanelSides ps ON p.Id = ps.PanelId
+                    WHERE p.LotNumber = @LotNumber";
+
+                using (var cmd = new SQLiteCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@LotNumber", lotNumber);
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            string sn = reader.GetString(0);
+                            int? state = reader.IsDBNull(1) ? (int?)null : reader.GetInt32(1);
+
+                            if (!snStates.ContainsKey(sn))
+                            {
+                                snStates[sn] = new List<int?>();
+                            }
+                            snStates[sn].Add(state);
+                        }
+                    }
+                }
+            }
+
+            int totalSnCount = snStates.Count;
+            int uninspectedCount = 0;
+            int stillNgCount = 0;
+            int aviOkCount = 0;
+
+            foreach (var states in snStates.Values)
+            {
+                // 1. 如果有一个state为3，则添加到未检测结果数
+                if (states.Any(s => s == 3))
+                {
+                    uninspectedCount++;
+                }
+                // 2. 如果有一个state为2，则添加到过滤后仍NG结果数
+                else if (states.Any(s => s == 2))
+                {
+                    stillNgCount++;
+                }
+                // 3. 如果有两个state为0，则添加到AVI OK的结果数
+                else if (states.Count(s => s == 0) == 2)
+                {
+                    aviOkCount++;
+                }
+            }
+
+            // 4. 剩余情况，添加到过滤后OK的数
+            int filteredOkCount = totalSnCount - uninspectedCount - stillNgCount - aviOkCount;
+
+            return (totalSnCount, uninspectedCount, stillNgCount, aviOkCount, filteredOkCount);
+        }
+
+        public (int totalSnCount, int uninspectedCount, int stillNgCount, int aviOkCount, int filteredOkCount) GetSnStateCountsByTime(DateTime start, DateTime end)
+        {
+            var snStates = new Dictionary<string, List<int?>>();
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+                var sql = @"
+            SELECT p.SerialNumber, ps.State
+            FROM Panels p
+            JOIN PanelSides ps ON p.Id = ps.PanelId
+            WHERE p.DetectionDate BETWEEN @Start AND @End";
+
+                using (var cmd = new SQLiteCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@Start", start);
+                    cmd.Parameters.AddWithValue("@End", end);
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            string sn = reader.GetString(0);
+                            int? state = reader.IsDBNull(1) ? (int?)null : reader.GetInt32(1);
+
+                            if (!snStates.ContainsKey(sn))
+                            {
+                                snStates[sn] = new List<int?>();
+                            }
+                            snStates[sn].Add(state);
+                        }
+                    }
+                }
+            }
+
+            int totalSnCount = snStates.Count;
+            int uninspectedCount = 0;
+            int stillNgCount = 0;
+            int aviOkCount = 0;
+
+            foreach (var states in snStates.Values)
+            {
+                // 1. 如果有一个state为3，则添加到未检测结果数
+                if (states.Any(s => s == 3))
+                {
+                    uninspectedCount++;
+                }
+                // 2. 如果有一个state为2，则添加到过滤后仍NG结果数
+                else if (states.Any(s => s == 2))
+                {
+                    stillNgCount++;
+                }
+                // 3. 如果有两个state为0，则添加到AVI OK的结果数
+                else if (states.Count(s => s == 0) == 2)
+                {
+                    aviOkCount++;
+                }
+            }
+
+            // 4. 剩余情况，添加到过滤后OK的数
+            int filteredOkCount = totalSnCount - uninspectedCount - stillNgCount - aviOkCount;
+
+            return (totalSnCount, uninspectedCount, stillNgCount, aviOkCount, filteredOkCount);
+        }
+
+        public (string LotNumber, string ProductSerial) GetLatestLotAndProductSerial(string machineId)
+        {
+            try
+            {
+                using (var connection = new SQLiteConnection(connectionString))
+                {
+                    connection.Open();
+                    var cmd = new SQLiteCommand("SELECT LotNumber, ProductSerial FROM Panels WHERE MachineId = @MachineId ORDER BY DetectionDate DESC LIMIT 1", connection);
+                    cmd.Parameters.AddWithValue("@MachineId", machineId);
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            string lotNumber = reader.GetString(0);
+                            string productSerial = reader.IsDBNull(1) ? null : reader.GetString(1);
+                            return (lotNumber, productSerial);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                LogTextHelper.Warn($"Error in GetLatestLotAndProductSerial: {ex.Message}");
+            }
+            return (null, null);
+        }
+
+        public List<PanelDataRecord> GetPanelsDataByMachineAndLot(string machineId, string lotNumber)
+        {
+            var panelRecords = new List<PanelDataRecord>();
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+                var sql = "SELECT Id, MachineId, SerialNumber, LotNumber, ProductSerial, DetectionDate, IsAIOk, PathIndex FROM Panels WHERE MachineId = @MachineId AND LotNumber = @LotNumber";
+                using (var cmd = new SQLiteCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@MachineId", machineId);
+                    cmd.Parameters.AddWithValue("@LotNumber", lotNumber);
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            panelRecords.Add(new PanelDataRecord
+                            {
+                                Id = reader.GetInt32(0),
+                                MachineId = reader.GetString(1),
+                                SerialNumber = reader.GetString(2),
+                                LotNumber = reader.GetString(3),
+                                ProductSerial = reader.IsDBNull(4) ? null : reader.GetString(4),
+                                DetectionDate = reader.GetDateTime(5),
+                                IsAIOk = reader.GetBoolean(6),
+                                PathIndex = reader.IsDBNull(7) ? null : reader.GetString(7),
+                                Sides = new List<SideData>()
+                            });
+                        }
+                    }
+                }
+
+                foreach (var record in panelRecords)
+                {
+                    var sidesSql = "SELECT Side, TotalDefectsCount, RemainingDefectsCount, HeatPoints, State FROM PanelSides WHERE PanelId = @PanelId";
+                    using (var sidesCmd = new SQLiteCommand(sidesSql, connection))
+                    {
+                        sidesCmd.Parameters.AddWithValue("@PanelId", record.Id);
+                        using (var sidesReader = sidesCmd.ExecuteReader())
+                        {
+                            while (sidesReader.Read())
+                            {
+                                var sideData = new SideData
+                                {
+                                    Side = sidesReader.GetString(0),
+                                    TotalDefectsCount = sidesReader.GetInt32(1),
+                                    RemainingDefectsCount = sidesReader.GetInt32(2),
+                                    State = sidesReader.IsDBNull(4) ? 0 : sidesReader.GetInt32(4)
+                                };
+
+                                if (!sidesReader.IsDBNull(3))
+                                {
+                                    sideData.HeatPoints = JsonConvert.DeserializeObject<List<HeatPoint>>(sidesReader.GetString(3));
+                                }
+                                else
+                                {
+                                    sideData.HeatPoints = new List<HeatPoint>();
+                                }
+                                record.Sides.Add(sideData);
+                            }
+                        }
+                    }
+                }
+            }
+            return panelRecords;
+        }
+
+        /// <summary>
+        /// 1.	输入起止时间，输出panels数据库所有的数据
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <returns></returns>
+        public List<PanelDataRecord> GetPanelsData(DateTime start, DateTime end)
+        {
+            var panelRecords = new List<PanelDataRecord>();
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+                var sql = "SELECT Id, MachineId, SerialNumber, LotNumber, ProductSerial, DetectionDate, IsAIOk, PathIndex FROM Panels WHERE DetectionDate BETWEEN @Start AND @End";
+                using (var cmd = new SQLiteCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@Start", start);
+                    cmd.Parameters.AddWithValue("@End", end);
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            panelRecords.Add(new PanelDataRecord
+                            {
+                                Id = reader.GetInt32(0),
+                                MachineId = reader.GetString(1),
+                                SerialNumber = reader.GetString(2),
+                                LotNumber = reader.GetString(3),
+                                ProductSerial = reader.IsDBNull(4) ? null : reader.GetString(4),
+                                DetectionDate = reader.GetDateTime(5),
+                                IsAIOk = reader.GetBoolean(6),
+                                PathIndex = reader.IsDBNull(7) ? null : reader.GetString(7),
+                                Sides = new List<SideData>()
+                            });
+                        }
+                    }
+                }
+
+                foreach (var record in panelRecords)
+                {
+                    var sidesSql = "SELECT Side, TotalDefectsCount, RemainingDefectsCount, HeatPoints, State FROM PanelSides WHERE PanelId = @PanelId";
+                    using (var sidesCmd = new SQLiteCommand(sidesSql, connection))
+                    {
+                        sidesCmd.Parameters.AddWithValue("@PanelId", record.Id);
+                        using (var sidesReader = sidesCmd.ExecuteReader())
+                        {
+                            while (sidesReader.Read())
+                            {
+                                var sideData = new SideData
+                                {
+                                    Side = sidesReader.GetString(0),
+                                    TotalDefectsCount = sidesReader.GetInt32(1),
+                                    RemainingDefectsCount = sidesReader.GetInt32(2),
+                                    State = sidesReader.IsDBNull(4) ? 0 : sidesReader.GetInt32(4)
+                                };
+
+                                if (!sidesReader.IsDBNull(3))
+                                {
+                                    sideData.HeatPoints = JsonConvert.DeserializeObject<List<HeatPoint>>(sidesReader.GetString(3));
+                                }
+                                else
+                                {
+                                    sideData.HeatPoints = new List<HeatPoint>();
+                                }
+                                record.Sides.Add(sideData);
+                            }
+                        }
+                    }
+                }
+            }
+            return panelRecords;
+        }
+
+        /// <summary>
         /// 生成 EmployeeReport 测试数据
         /// </summary>
         /// <param name="recordCount">要生成的记录数</param>

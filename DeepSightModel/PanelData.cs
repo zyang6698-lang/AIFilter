@@ -63,7 +63,61 @@ namespace DeepSightModel
         public string LotNumber { get; set; }
         public string ProductSerial { get; set; }
         public bool IsAIOk { get; set; }
+        public string PathIndex { get; set; }
+        public List<SideData> Sides { get; set; }
+
+        public static BoardStat GetBoardStat(List<PanelDataRecord> records)
+        {
+
+            int aviCount = 0;
+            int aviOKCount = 0;
+            int aiFilterCount = 0;
+            int aiFilterOKCount = 0;
+            int aiFilterUninspectedCount = 0;
+
+            for (int i = 0; i < records.Count; i++)
+            {
+                aviCount++;
+
+                if (records[i].Sides.Count == 2)
+                {
+                    var sideA = records[i].Sides[0];
+                    var sideB = records[i].Sides[1];
+                    var stateA = sideA.State;
+                    var stateB = sideB.State;
+
+                    aiFilterCount += sideA.TotalDefectsCount + sideB.TotalDefectsCount;
+
+                    if (stateA == 0 && stateB == 0)
+                        aviOKCount++;
+                    else if (stateA == 3 || stateB == 3)
+                        aiFilterUninspectedCount += sideA.TotalDefectsCount + sideB.TotalDefectsCount;
+                    else
+                    {
+                        aiFilterOKCount = (sideA.TotalDefectsCount + sideB.TotalDefectsCount) - (sideA.RemainingDefectsCount + sideB.RemainingDefectsCount);
+                    }
+                }
+            }
+            return new BoardStat
+            {
+                aviCount = aviCount,
+                aviOKCount = aviOKCount,
+                aiFilterCount = aiFilterCount,
+                aiFilterOKCount = aiFilterOKCount,
+                aiFilterUninspectedCount = aiFilterUninspectedCount
+            };
+        }
     }
+
+    public class BoardStat
+    {
+      public int aviCount { get; set; }
+      public int aviOKCount { get; set; } 
+      public int aiFilterCount { get; set; } 
+      public int aiFilterOKCount { get; set; } 
+      public int aiFilterUninspectedCount { get; set; } 
+    }
+
 
     /// <summary>
     /// 用于统计查询的每日数据摘要
@@ -75,4 +129,5 @@ namespace DeepSightModel
         public int TotalBoards { get; set; }
         public int AIOkBoards { get; set; }
     }
+    
 }

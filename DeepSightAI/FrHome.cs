@@ -74,7 +74,7 @@ namespace DeepSightAI
             Load += FrHome_Load;
             FormClosing += FrHome_FormClosing;
 
-            uph_timer.Interval = 1000 * 10;
+            uph_timer.Interval = 1000 * 5;
             uph_timer.Enabled = true;
             uph_timer.Elapsed += Uph_timer_Elapsed;
         }
@@ -294,24 +294,24 @@ namespace DeepSightAI
         {
             try
             {
-                var today = DateTime.Today;
-                var stats = Machine.master.workClass.GetDefectCountsPerMachine(today, today.AddDays(1).AddTicks(-1));
+                //var today = DateTime.Today;
+                //var stats = Machine.master.workClass.GetDefectCountsPerMachine(today, today.AddDays(1).AddTicks(-1));
+                //foreach (var machineStat in stats)
+                //{
+                //    string machineName = machineStat.Key;
+                //    int totalDefects = (int)machineStat.Value.TotalDefects;
+                //    int aiOkDefects = (int)machineStat.Value.AIOkDefects;
 
-                foreach (var machineStat in stats)
-                {
-                    string machineName = machineStat.Key;
-                    int totalDefects = (int)machineStat.Value.TotalDefects;
-                    int aiOkDefects = (int)machineStat.Value.AIOkDefects;
-
-                    if (this.IsHandleCreated)
-                    {
-                        this.BeginInvoke(new Action(() =>
-                        {
-                            aviCtr2Container.UpdateAviCtrStats(machineName, totalDefects, aiOkDefects);
-                        }));
-                    }
-                }
-
+                //    if (this.IsHandleCreated)
+                //    {
+                //        this.BeginInvoke(new Action(() =>
+                //        {
+                //            aviCtr2Container.UpdateAviCtrStats(machineName, totalDefects, aiOkDefects);
+                //        }));
+                //    }
+                //}
+                UpdateMainBorad();
+                UpdateMachineBoard();
                 UpdateLotSn();
             }
             catch (Exception ex)
@@ -320,9 +320,30 @@ namespace DeepSightAI
             }
         }
 
-        private Mutex mutex = new Mutex();
+        private void UpdateMainBorad()
+        {
+            var today = DateTime.Today;
+            var AllData = Machine.master.workClass.GetPanelsData(today, today.AddDays(1).AddTicks(-1));
+            var boardStat = PanelDataRecord.GetBoardStat(AllData);
 
+            if (this.IsHandleCreated)
+            {
+                this.BeginInvoke(new Action(() =>
+                {
+                    lbl_SnTotalCount.Text = $"今日产量\n{boardStat.aviCount}";
+                    lbl_totalDefectCount.Text = $"AVI产生图片数\n{boardStat.aiFilterCount}";
+                    lbl_AiAllCount.Text = $"AI推理图片数\n{boardStat.aiFilterCount - boardStat.aiFilterUninspectedCount}";
+                    lbl_aiFilterOKCount.Text = $"AI Pass 图片数\n{boardStat.aiFilterOKCount}";
+                    lbl_aviPassRateCount.Text = $"AVI Pass Rate\n{(double)boardStat.aviOKCount / (boardStat.aviCount):P}";
+                    lbl_filteredOkCount.Text = $"AI Pass Rate\n{(double)boardStat.aiFilterOKCount / (boardStat.aiFilterCount - boardStat.aiFilterUninspectedCount):P}";
+                }));
+            }
+        }
 
+        private void UpdateMachineBoard()
+        {
+            aviCtr2Container.UpdateAll(Machine.master.workClass.GetLatestLotAndProductSerial, Machine.master.workClass.GetPanelsDataByMachineAndLot);
+        }
 
         public void ClearProduct(int code = 0)
         {

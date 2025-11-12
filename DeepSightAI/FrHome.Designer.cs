@@ -29,9 +29,9 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle7 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle8 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle9 = new System.Windows.Forms.DataGridViewCellStyle();
             this.table_main = new System.Windows.Forms.TableLayoutPanel();
             this.panel_show = new System.Windows.Forms.Panel();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
@@ -55,12 +55,12 @@
             this.btnPrevious = new System.Windows.Forms.Button();
             this.btnNext = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.lbl_OKimageCount = new System.Windows.Forms.Label();
-            this.lbl_Count = new System.Windows.Forms.Label();
-            this.lbl_AVICount = new System.Windows.Forms.Label();
-            this.lbl_ImageCount = new System.Windows.Forms.Label();
-            this.lbl_AIPASS = new System.Windows.Forms.Label();
-            this.lbl_ToghRate = new System.Windows.Forms.Label();
+            this.lbl_totalDefectCount = new System.Windows.Forms.Label();
+            this.lbl_AiAllCount = new System.Windows.Forms.Label();
+            this.lbl_aiFilterOKCount = new System.Windows.Forms.Label();
+            this.lbl_aviPassRateCount = new System.Windows.Forms.Label();
+            this.lbl_filteredOkCount = new System.Windows.Forms.Label();
+            this.lbl_SnTotalCount = new System.Windows.Forms.Label();
             this.table_main.SuspendLayout();
             this.panel_show.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -101,7 +101,7 @@
             this.table_main.Name = "table_main";
             this.table_main.RowCount = 1;
             this.table_main.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.table_main.Size = new System.Drawing.Size(1499, 570);
+            this.table_main.Size = new System.Drawing.Size(1691, 851);
             this.table_main.TabIndex = 0;
             // 
             // panel_show
@@ -110,7 +110,7 @@
             this.panel_show.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel_show.Location = new System.Drawing.Point(3, 3);
             this.panel_show.Name = "panel_show";
-            this.panel_show.Size = new System.Drawing.Size(1493, 564);
+            this.panel_show.Size = new System.Drawing.Size(1685, 845);
             this.panel_show.TabIndex = 2;
             // 
             // splitContainer1
@@ -127,8 +127,8 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
-            this.splitContainer1.Size = new System.Drawing.Size(1493, 564);
-            this.splitContainer1.SplitterDistance = 447;
+            this.splitContainer1.Size = new System.Drawing.Size(1685, 845);
+            this.splitContainer1.SplitterDistance = 504;
             this.splitContainer1.TabIndex = 0;
             // 
             // splitContainer4
@@ -145,8 +145,8 @@
             // splitContainer4.Panel2
             // 
             this.splitContainer4.Panel2.Controls.Add(this.rich_log);
-            this.splitContainer4.Size = new System.Drawing.Size(447, 564);
-            this.splitContainer4.SplitterDistance = 463;
+            this.splitContainer4.Size = new System.Drawing.Size(504, 845);
+            this.splitContainer4.SplitterDistance = 693;
             this.splitContainer4.TabIndex = 1;
             // 
             // dataGridViewData
@@ -156,42 +156,42 @@
             this.dataGridViewData.AllowUserToResizeColumns = false;
             this.dataGridViewData.AllowUserToResizeRows = false;
             this.dataGridViewData.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridViewData.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle7.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle7.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            dataGridViewCellStyle7.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle7.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            dataGridViewCellStyle7.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            dataGridViewCellStyle7.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle7.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewData.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle7;
             this.dataGridViewData.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewData.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Code,
             this.AVI,
             this.AI,
             this.Status});
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(247)))), ((int)(((byte)(249)))), ((int)(((byte)(235)))));
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.InactiveCaption;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dataGridViewData.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle8.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle8.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            dataGridViewCellStyle8.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle8.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(247)))), ((int)(((byte)(249)))), ((int)(((byte)(235)))));
+            dataGridViewCellStyle8.SelectionBackColor = System.Drawing.SystemColors.InactiveCaption;
+            dataGridViewCellStyle8.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle8.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dataGridViewData.DefaultCellStyle = dataGridViewCellStyle8;
             this.dataGridViewData.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridViewData.EnableHeadersVisualStyles = false;
             this.dataGridViewData.Location = new System.Drawing.Point(0, 0);
             this.dataGridViewData.MultiSelect = false;
             this.dataGridViewData.Name = "dataGridViewData";
             this.dataGridViewData.ReadOnly = true;
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridViewData.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle9.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle9.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            dataGridViewCellStyle9.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle9.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle9.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle9.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle9.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewData.RowHeadersDefaultCellStyle = dataGridViewCellStyle9;
             this.dataGridViewData.RowHeadersVisible = false;
             this.dataGridViewData.RowHeadersWidth = 51;
             this.dataGridViewData.RowTemplate.Height = 27;
@@ -200,7 +200,7 @@
             this.dataGridViewData.ShowCellToolTips = false;
             this.dataGridViewData.ShowEditingIcon = false;
             this.dataGridViewData.ShowRowErrors = false;
-            this.dataGridViewData.Size = new System.Drawing.Size(447, 463);
+            this.dataGridViewData.Size = new System.Drawing.Size(504, 693);
             this.dataGridViewData.TabIndex = 2;
             this.dataGridViewData.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewData_CellClick);
             // 
@@ -251,7 +251,7 @@
             this.rich_log.Margin = new System.Windows.Forms.Padding(6);
             this.rich_log.Name = "rich_log";
             this.rich_log.ReadOnly = true;
-            this.rich_log.Size = new System.Drawing.Size(447, 97);
+            this.rich_log.Size = new System.Drawing.Size(504, 148);
             this.rich_log.TabIndex = 12;
             this.rich_log.Text = "";
             // 
@@ -293,8 +293,8 @@
             // 
             this.splitContainer2.Panel2.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.splitContainer2.Panel2.Controls.Add(this.splitContainer3);
-            this.splitContainer2.Size = new System.Drawing.Size(1042, 564);
-            this.splitContainer2.SplitterDistance = 392;
+            this.splitContainer2.Size = new System.Drawing.Size(1177, 845);
+            this.splitContainer2.SplitterDistance = 587;
             this.splitContainer2.TabIndex = 0;
             // 
             // avi_panel
@@ -304,7 +304,7 @@
             this.avi_panel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.avi_panel.Location = new System.Drawing.Point(0, 0);
             this.avi_panel.Name = "avi_panel";
-            this.avi_panel.Size = new System.Drawing.Size(1042, 392);
+            this.avi_panel.Size = new System.Drawing.Size(1177, 587);
             this.avi_panel.TabIndex = 0;
             // 
             // aviCtr2Container
@@ -313,7 +313,7 @@
             this.aviCtr2Container.Location = new System.Drawing.Point(0, 0);
             this.aviCtr2Container.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.aviCtr2Container.Name = "aviCtr2Container";
-            this.aviCtr2Container.Size = new System.Drawing.Size(1042, 392);
+            this.aviCtr2Container.Size = new System.Drawing.Size(1177, 587);
             this.aviCtr2Container.TabIndex = 0;
             // 
             // splitContainer3
@@ -329,8 +329,8 @@
             // splitContainer3.Panel2
             // 
             this.splitContainer3.Panel2.Controls.Add(this.panel1);
-            this.splitContainer3.Size = new System.Drawing.Size(1042, 168);
-            this.splitContainer3.SplitterDistance = 482;
+            this.splitContainer3.Size = new System.Drawing.Size(1177, 254);
+            this.splitContainer3.SplitterDistance = 544;
             this.splitContainer3.TabIndex = 0;
             // 
             // splitContainer5
@@ -350,8 +350,8 @@
             this.splitContainer5.Panel2.Controls.Add(this.lblPageInfo);
             this.splitContainer5.Panel2.Controls.Add(this.btnPrevious);
             this.splitContainer5.Panel2.Controls.Add(this.btnNext);
-            this.splitContainer5.Size = new System.Drawing.Size(482, 168);
-            this.splitContainer5.SplitterDistance = 136;
+            this.splitContainer5.Size = new System.Drawing.Size(544, 254);
+            this.splitContainer5.SplitterDistance = 205;
             this.splitContainer5.TabIndex = 0;
             // 
             // table_Small
@@ -368,7 +368,7 @@
             this.table_Small.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 766F));
             this.table_Small.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 766F));
             this.table_Small.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 766F));
-            this.table_Small.Size = new System.Drawing.Size(482, 136);
+            this.table_Small.Size = new System.Drawing.Size(544, 205);
             this.table_Small.TabIndex = 11;
             // 
             // lblPageInfo
@@ -399,7 +399,7 @@
             // btnNext
             // 
             this.btnNext.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnNext.Location = new System.Drawing.Point(404, 8);
+            this.btnNext.Location = new System.Drawing.Point(466, 8);
             this.btnNext.Name = "btnNext";
             this.btnNext.Size = new System.Drawing.Size(75, 23);
             this.btnNext.TabIndex = 44;
@@ -410,103 +410,108 @@
             // panel1
             // 
             this.panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.panel1.Controls.Add(this.lbl_OKimageCount);
-            this.panel1.Controls.Add(this.lbl_Count);
-            this.panel1.Controls.Add(this.lbl_AVICount);
-            this.panel1.Controls.Add(this.lbl_ImageCount);
-            this.panel1.Controls.Add(this.lbl_AIPASS);
-            this.panel1.Controls.Add(this.lbl_ToghRate);
+            this.panel1.Controls.Add(this.lbl_SnTotalCount);
+            this.panel1.Controls.Add(this.lbl_totalDefectCount);
+            this.panel1.Controls.Add(this.lbl_AiAllCount);
+            this.panel1.Controls.Add(this.lbl_aiFilterOKCount);
+            this.panel1.Controls.Add(this.lbl_aviPassRateCount);
+            this.panel1.Controls.Add(this.lbl_filteredOkCount);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(556, 168);
+            this.panel1.Size = new System.Drawing.Size(629, 254);
             this.panel1.TabIndex = 0;
             // 
-            // lbl_OKimageCount
+            // lbl_totalDefectCount
             // 
-            this.lbl_OKimageCount.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.lbl_OKimageCount.Font = new System.Drawing.Font("幼圆", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lbl_OKimageCount.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.lbl_OKimageCount.Location = new System.Drawing.Point(168, 160);
-            this.lbl_OKimageCount.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.lbl_OKimageCount.Name = "lbl_OKimageCount";
-            this.lbl_OKimageCount.Size = new System.Drawing.Size(335, 26);
-            this.lbl_OKimageCount.TabIndex = 39;
-            this.lbl_OKimageCount.Text = "AI_PASS_图片数:0";
-            this.lbl_OKimageCount.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.lbl_totalDefectCount.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.lbl_totalDefectCount.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(66)))), ((int)(((byte)(82)))));
+            this.lbl_totalDefectCount.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lbl_totalDefectCount.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Bold);
+            this.lbl_totalDefectCount.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(110)))), ((int)(((byte)(231)))), ((int)(((byte)(183)))));
+            this.lbl_totalDefectCount.Location = new System.Drawing.Point(225, 20);
+            this.lbl_totalDefectCount.Name = "lbl_totalDefectCount";
+            this.lbl_totalDefectCount.Size = new System.Drawing.Size(180, 100);
+            this.lbl_totalDefectCount.TabIndex = 0;
+            this.lbl_totalDefectCount.Text = "-";
+            this.lbl_totalDefectCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // lbl_Count
+            // lbl_AiAllCount
             // 
-            this.lbl_Count.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.lbl_Count.Font = new System.Drawing.Font("幼圆", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lbl_Count.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.lbl_Count.Location = new System.Drawing.Point(168, 4);
-            this.lbl_Count.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.lbl_Count.Name = "lbl_Count";
-            this.lbl_Count.Size = new System.Drawing.Size(320, 26);
-            this.lbl_Count.TabIndex = 35;
-            this.lbl_Count.Text = "今日产量:0 PCS";
-            this.lbl_Count.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.lbl_AiAllCount.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.lbl_AiAllCount.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(66)))), ((int)(((byte)(82)))));
+            this.lbl_AiAllCount.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lbl_AiAllCount.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Bold);
+            this.lbl_AiAllCount.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(210)))), ((int)(((byte)(127)))));
+            this.lbl_AiAllCount.Location = new System.Drawing.Point(420, 20);
+            this.lbl_AiAllCount.Name = "lbl_AiAllCount";
+            this.lbl_AiAllCount.Size = new System.Drawing.Size(180, 100);
+            this.lbl_AiAllCount.TabIndex = 1;
+            this.lbl_AiAllCount.Text = "-";
+            this.lbl_AiAllCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // lbl_AVICount
+            // lbl_aiFilterOKCount
             // 
-            this.lbl_AVICount.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.lbl_AVICount.Font = new System.Drawing.Font("幼圆", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lbl_AVICount.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.lbl_AVICount.Location = new System.Drawing.Point(168, 56);
-            this.lbl_AVICount.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.lbl_AVICount.Name = "lbl_AVICount";
-            this.lbl_AVICount.Size = new System.Drawing.Size(348, 26);
-            this.lbl_AVICount.TabIndex = 36;
-            this.lbl_AVICount.Text = "今日AVI产生图片数:0";
-            this.lbl_AVICount.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.lbl_aiFilterOKCount.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.lbl_aiFilterOKCount.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(66)))), ((int)(((byte)(82)))));
+            this.lbl_aiFilterOKCount.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lbl_aiFilterOKCount.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Bold);
+            this.lbl_aiFilterOKCount.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(143)))), ((int)(((byte)(163)))));
+            this.lbl_aiFilterOKCount.Location = new System.Drawing.Point(30, 135);
+            this.lbl_aiFilterOKCount.Name = "lbl_aiFilterOKCount";
+            this.lbl_aiFilterOKCount.Size = new System.Drawing.Size(180, 100);
+            this.lbl_aiFilterOKCount.TabIndex = 2;
+            this.lbl_aiFilterOKCount.Text = "-";
+            this.lbl_aiFilterOKCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // lbl_ImageCount
+            // lbl_aviPassRateCount
             // 
-            this.lbl_ImageCount.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.lbl_ImageCount.Font = new System.Drawing.Font("幼圆", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lbl_ImageCount.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.lbl_ImageCount.Location = new System.Drawing.Point(168, 108);
-            this.lbl_ImageCount.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.lbl_ImageCount.Name = "lbl_ImageCount";
-            this.lbl_ImageCount.Size = new System.Drawing.Size(364, 26);
-            this.lbl_ImageCount.TabIndex = 37;
-            this.lbl_ImageCount.Text = "今日推理图片数:0";
-            this.lbl_ImageCount.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.lbl_aviPassRateCount.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.lbl_aviPassRateCount.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(66)))), ((int)(((byte)(82)))));
+            this.lbl_aviPassRateCount.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lbl_aviPassRateCount.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Bold);
+            this.lbl_aviPassRateCount.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(208)))), ((int)(((byte)(179)))), ((int)(((byte)(255)))));
+            this.lbl_aviPassRateCount.Location = new System.Drawing.Point(225, 135);
+            this.lbl_aviPassRateCount.Name = "lbl_aviPassRateCount";
+            this.lbl_aviPassRateCount.Size = new System.Drawing.Size(180, 100);
+            this.lbl_aviPassRateCount.TabIndex = 3;
+            this.lbl_aviPassRateCount.Text = "-";
+            this.lbl_aviPassRateCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // lbl_AIPASS
+            // lbl_filteredOkCount
             // 
-            this.lbl_AIPASS.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.lbl_AIPASS.Font = new System.Drawing.Font("幼圆", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lbl_AIPASS.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.lbl_AIPASS.Location = new System.Drawing.Point(2, 30);
-            this.lbl_AIPASS.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.lbl_AIPASS.Name = "lbl_AIPASS";
-            this.lbl_AIPASS.Size = new System.Drawing.Size(83, 26);
-            this.lbl_AIPASS.TabIndex = 34;
-            this.lbl_AIPASS.Text = "AI_PASS_PCS数:0 PCS";
-            this.lbl_AIPASS.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.lbl_AIPASS.Visible = false;
+            this.lbl_filteredOkCount.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.lbl_filteredOkCount.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(66)))), ((int)(((byte)(82)))));
+            this.lbl_filteredOkCount.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lbl_filteredOkCount.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Bold);
+            this.lbl_filteredOkCount.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(127)))), ((int)(((byte)(227)))), ((int)(((byte)(255)))));
+            this.lbl_filteredOkCount.Location = new System.Drawing.Point(420, 135);
+            this.lbl_filteredOkCount.Name = "lbl_filteredOkCount";
+            this.lbl_filteredOkCount.Size = new System.Drawing.Size(180, 100);
+            this.lbl_filteredOkCount.TabIndex = 4;
+            this.lbl_filteredOkCount.Text = "-";
+            this.lbl_filteredOkCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // lbl_ToghRate
+            // lbl_SnTotalCount
             // 
-            this.lbl_ToghRate.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.lbl_ToghRate.Font = new System.Drawing.Font("幼圆", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lbl_ToghRate.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.lbl_ToghRate.Location = new System.Drawing.Point(168, 212);
-            this.lbl_ToghRate.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.lbl_ToghRate.Name = "lbl_ToghRate";
-            this.lbl_ToghRate.Size = new System.Drawing.Size(348, 26);
-            this.lbl_ToghRate.TabIndex = 38;
-            this.lbl_ToghRate.Text = "AI_PASS_Rate:0.0%";
-            this.lbl_ToghRate.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.lbl_SnTotalCount.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.lbl_SnTotalCount.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(66)))), ((int)(((byte)(82)))));
+            this.lbl_SnTotalCount.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lbl_SnTotalCount.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Bold);
+            this.lbl_SnTotalCount.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(127)))), ((int)(((byte)(207)))), ((int)(((byte)(255)))));
+            this.lbl_SnTotalCount.Location = new System.Drawing.Point(30, 20);
+            this.lbl_SnTotalCount.Name = "lbl_SnTotalCount";
+            this.lbl_SnTotalCount.Size = new System.Drawing.Size(180, 100);
+            this.lbl_SnTotalCount.TabIndex = 5;
+            this.lbl_SnTotalCount.Text = "-";
+            this.lbl_SnTotalCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // FrHome
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
-            this.ClientSize = new System.Drawing.Size(1499, 570);
+            this.ClientSize = new System.Drawing.Size(1691, 851);
             this.Controls.Add(this.table_main);
             this.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
@@ -567,12 +572,12 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn AI;
         private System.Windows.Forms.DataGridViewTextBoxColumn Status;
         private System.Windows.Forms.Panel panel1;
-        public System.Windows.Forms.Label lbl_Count;
-        public System.Windows.Forms.Label lbl_AVICount;
-        public System.Windows.Forms.Label lbl_ImageCount;
-        public System.Windows.Forms.Label lbl_AIPASS;
-        public System.Windows.Forms.Label lbl_ToghRate;
-        public System.Windows.Forms.Label lbl_OKimageCount;
         private SettingPages.AviCtr2Container aviCtr2Container;
+        private System.Windows.Forms.Label lbl_totalDefectCount;
+        private System.Windows.Forms.Label lbl_AiAllCount;
+        private System.Windows.Forms.Label lbl_aiFilterOKCount;
+        private System.Windows.Forms.Label lbl_aviPassRateCount;
+        private System.Windows.Forms.Label lbl_filteredOkCount;
+        private System.Windows.Forms.Label lbl_SnTotalCount;
     }
 }

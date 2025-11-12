@@ -160,14 +160,14 @@ namespace DeepSightAI
                     result.vb_List.AddRange(pcsResult.vb_List);
                 }
 
-                FrHome.Instance.lbl_AVICount.Invoke(new Action(() =>
-                {
-                    FrHome.Instance.lbl_AVICount.Text = $"今日AVI产生图片数:{Machine.sysConfig.AVIImageCount}";
-                }));
-                FrHome.Instance.lbl_ImageCount.Invoke(new Action(() =>
-                {
-                    FrHome.Instance.lbl_ImageCount.Text = $"今日推理图片数:{Machine.sysConfig.AVIImageCount-Machine.sysConfig.ByPassCount}";
-                }));
+                //FrHome.Instance.lbl_AVICount.Invoke(new Action(() =>
+                //{
+                //    FrHome.Instance.lbl_AVICount.Text = $"今日AVI产生图片数:{Machine.sysConfig.AVIImageCount}";
+                //}));
+                //FrHome.Instance.lbl_ImageCount.Invoke(new Action(() =>
+                //{
+                //    FrHome.Instance.lbl_ImageCount.Text = $"今日推理图片数:{Machine.sysConfig.AVIImageCount-Machine.sysConfig.ByPassCount}";
+                //}));
                 ////推理图片数
                 //this.lbl_ImageCount.Invoke(new MethodInvoker(() =>
                 //{
@@ -250,22 +250,7 @@ namespace DeepSightAI
             timer.Start();
             Machine.master.workClass.isShowBox = this.btn_showBox.Checked;
             this.lbl_title.Text = "ATS_AI";
-            FrHome.Instance.lbl_Count.Invoke(new MethodInvoker(() =>
-            {
-                FrHome.Instance.lbl_Count.Text = $"今日产量:{Machine.sysConfig.TotalCount} PCS";
-            }));
-            FrHome.Instance.lbl_AVICount.Invoke(new Action(() =>
-            {
-                FrHome.Instance.lbl_AVICount.Text = $"今日AVI产生图片数:{Machine.sysConfig.AVIImageCount}";
-            }));
-            FrHome.Instance.lbl_ImageCount.Invoke(new Action(() =>
-            {
-                FrHome.Instance.lbl_ImageCount.Text = $"今日推理图片数:{Machine.sysConfig.AVIImageCount}";
-            }));
-            FrHome.Instance.lbl_OKimageCount.Invoke(new MethodInvoker(() =>
-            {
-                FrHome.Instance.lbl_OKimageCount.Text = $"AI_PASS_图片数:{Machine.sysConfig.AIPassImageCount}";
-            }));
+
 
         }
 
@@ -294,31 +279,10 @@ namespace DeepSightAI
                         //{
                         //    this.lbl_Count.Text = $"当前总作业数:{++total_count}";
                         //}));
-                        FrHome.Instance.lbl_Count.Invoke(new MethodInvoker(() =>
-                        {
-                            FrHome.Instance.lbl_Count.Text = $"今日产量:{++Machine.sysConfig.TotalCount} PCS";
-                        }));
+
 
                         //int total = ok_count + ng_count;
-                        FrHome.Instance.lbl_ToghRate.Invoke(new MethodInvoker(() =>
-                        {
-                            //if (total == 0)
-                            //    total = 1;
 
-                            double percentage = ((double)Machine.sysConfig.AIPassImageCount / (Machine.sysConfig.AVIImageCount-Machine.sysConfig.ByPassCount)) * 100;
-                            //if (total_count == 0)
-                            //    total_count = 1;
-                            //double percentage = ((double)AI_PassCount / total_count) * 100;
-                            FrHome.Instance.lbl_ToghRate.Text = $"AI_PASS_Rate:{percentage:F1}%";
-                        }));
-                        FrHome.Instance.lbl_AIPASS.Invoke(new MethodInvoker(() =>
-                        {
-                            FrHome.Instance.lbl_AIPASS.Text = $"AI_PASS_PCS数:{Machine.sysConfig.AIPassPCS} PCS";
-                        }));
-                        FrHome.Instance.lbl_OKimageCount.Invoke(new MethodInvoker(() =>
-                       {
-                           FrHome.Instance.lbl_OKimageCount.Text = $"AI_PASS_图片数:{Machine.sysConfig.AIPassImageCount}";
-                       }));
                     }
                     else
                     {
@@ -999,12 +963,7 @@ namespace DeepSightAI
                     ResetCount();
                     _lastResetDate = now.Date;
                 }
-                //int total = ok_count + ng_count;
-                //if (total == 0)
-                //    total = 1; // 防止除以0错误
-                //double percentage = ((double)ok_count / total) * 100;
-                //; // 格式化为两位小数的百分比字符串
-                //lbl_ToghRate.Text = $"当前过滤率:{percentage:F1}%";
+
             }
             catch (System.Exception ex)
             {

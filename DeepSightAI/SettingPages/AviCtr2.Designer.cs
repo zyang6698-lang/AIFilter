@@ -35,17 +35,17 @@
             this.labelCurrentPartNumberValue = new System.Windows.Forms.Label();
             this.labelLotValue = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
             this.lblOperatingRate = new System.Windows.Forms.Label();
             this.lblAiPassRate = new System.Windows.Forms.Label();
+            this.lblAviPassRate = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxStatus)).BeginInit();
             this.SuspendLayout();
             // 
             // labelCurrentWorkOrder
             // 
             this.labelCurrentWorkOrder.AutoSize = true;
-            this.labelCurrentWorkOrder.ForeColor = System.Drawing.Color.White;
-            this.labelCurrentWorkOrder.Location = new System.Drawing.Point(146, 64);
+            this.labelCurrentWorkOrder.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(199)))), ((int)(((byte)(220)))));
+            this.labelCurrentWorkOrder.Location = new System.Drawing.Point(160, 64);
             this.labelCurrentWorkOrder.Name = "labelCurrentWorkOrder";
             this.labelCurrentWorkOrder.Size = new System.Drawing.Size(53, 15);
             this.labelCurrentWorkOrder.TabIndex = 4;
@@ -54,7 +54,7 @@
             // labelCurrentPartNumber
             // 
             this.labelCurrentPartNumber.AutoSize = true;
-            this.labelCurrentPartNumber.ForeColor = System.Drawing.Color.White;
+            this.labelCurrentPartNumber.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(199)))), ((int)(((byte)(220)))));
             this.labelCurrentPartNumber.Location = new System.Drawing.Point(17, 64);
             this.labelCurrentPartNumber.Name = "labelCurrentPartNumber";
             this.labelCurrentPartNumber.Size = new System.Drawing.Size(53, 15);
@@ -65,7 +65,7 @@
             // 
             this.labelLineName.AutoSize = true;
             this.labelLineName.Font = new System.Drawing.Font("宋体", 18F, System.Drawing.FontStyle.Bold);
-            this.labelLineName.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(201)))), ((int)(((byte)(127)))));
+            this.labelLineName.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(240)))), ((int)(((byte)(250)))));
             this.labelLineName.Location = new System.Drawing.Point(60, 15);
             this.labelLineName.Name = "labelLineName";
             this.labelLineName.Size = new System.Drawing.Size(173, 30);
@@ -83,7 +83,7 @@
             // labelCurrentPartNumberValue
             // 
             this.labelCurrentPartNumberValue.AutoSize = true;
-            this.labelCurrentPartNumberValue.ForeColor = System.Drawing.Color.LightGray;
+            this.labelCurrentPartNumberValue.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(199)))), ((int)(((byte)(220)))));
             this.labelCurrentPartNumberValue.Location = new System.Drawing.Point(62, 64);
             this.labelCurrentPartNumberValue.Name = "labelCurrentPartNumberValue";
             this.labelCurrentPartNumberValue.Size = new System.Drawing.Size(15, 15);
@@ -93,8 +93,8 @@
             // labelLotValue
             // 
             this.labelLotValue.AutoSize = true;
-            this.labelLotValue.ForeColor = System.Drawing.Color.LightGray;
-            this.labelLotValue.Location = new System.Drawing.Point(194, 66);
+            this.labelLotValue.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(199)))), ((int)(((byte)(220)))));
+            this.labelLotValue.Location = new System.Drawing.Point(208, 64);
             this.labelLotValue.Name = "labelLotValue";
             this.labelLotValue.Size = new System.Drawing.Size(15, 15);
             this.labelLotValue.TabIndex = 14;
@@ -104,29 +104,18 @@
             // 
             this.label1.AutoSize = true;
             this.label1.ForeColor = System.Drawing.Color.White;
-            this.label1.Location = new System.Drawing.Point(262, 111);
+            this.label1.Location = new System.Drawing.Point(268, 141);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(60, 15);
             this.label1.TabIndex = 15;
             this.label1.Text = "稼动率:";
             this.label1.Visible = false;
             // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.ForeColor = System.Drawing.Color.White;
-            this.label2.Location = new System.Drawing.Point(262, 136);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(111, 15);
-            this.label2.TabIndex = 16;
-            this.label2.Text = "AI Pass Rate:";
-            this.label2.Visible = false;
-            // 
             // lblOperatingRate
             // 
             this.lblOperatingRate.AutoSize = true;
             this.lblOperatingRate.ForeColor = System.Drawing.Color.LightGray;
-            this.lblOperatingRate.Location = new System.Drawing.Point(332, 111);
+            this.lblOperatingRate.Location = new System.Drawing.Point(338, 141);
             this.lblOperatingRate.Name = "lblOperatingRate";
             this.lblOperatingRate.Size = new System.Drawing.Size(31, 15);
             this.lblOperatingRate.TabIndex = 17;
@@ -135,24 +124,34 @@
             // 
             // lblAiPassRate
             // 
-            this.lblAiPassRate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lblAiPassRate.AutoSize = true;
-            this.lblAiPassRate.Font = new System.Drawing.Font("宋体", 16F);
-            this.lblAiPassRate.ForeColor = System.Drawing.Color.LightGray;
-            this.lblAiPassRate.Location = new System.Drawing.Point(278, 18);
+            this.lblAiPassRate.Font = new System.Drawing.Font("宋体", 9F);
+            this.lblAiPassRate.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(199)))), ((int)(((byte)(220)))));
+            this.lblAiPassRate.Location = new System.Drawing.Point(160, 97);
             this.lblAiPassRate.Name = "lblAiPassRate";
-            this.lblAiPassRate.Size = new System.Drawing.Size(54, 27);
+            this.lblAiPassRate.Size = new System.Drawing.Size(111, 15);
             this.lblAiPassRate.TabIndex = 18;
-            this.lblAiPassRate.Text = "99%";
+            this.lblAiPassRate.Text = "AI Pass Rate:";
+            // 
+            // lblAviPassRate
+            // 
+            this.lblAviPassRate.AutoSize = true;
+            this.lblAviPassRate.Font = new System.Drawing.Font("宋体", 9F);
+            this.lblAviPassRate.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(199)))), ((int)(((byte)(220)))));
+            this.lblAviPassRate.Location = new System.Drawing.Point(17, 97);
+            this.lblAviPassRate.Name = "lblAviPassRate";
+            this.lblAviPassRate.Size = new System.Drawing.Size(111, 15);
+            this.lblAviPassRate.TabIndex = 20;
+            this.lblAviPassRate.Text = "AVI Pass Rate";
             // 
             // AviCtr2
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(57)))), ((int)(((byte)(69)))));
+            this.Controls.Add(this.lblAviPassRate);
             this.Controls.Add(this.lblAiPassRate);
             this.Controls.Add(this.lblOperatingRate);
-            this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.labelLotValue);
             this.Controls.Add(this.labelCurrentPartNumberValue);
@@ -161,7 +160,7 @@
             this.Controls.Add(this.labelCurrentPartNumber);
             this.Controls.Add(this.labelCurrentWorkOrder);
             this.Name = "AviCtr2";
-            this.Size = new System.Drawing.Size(365, 91);
+            this.Size = new System.Drawing.Size(351, 127);
             this.DoubleClick += new System.EventHandler(this.AviCtr2_DoubleClick);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxStatus)).EndInit();
             this.ResumeLayout(false);
@@ -177,8 +176,8 @@
         private System.Windows.Forms.Label labelCurrentPartNumberValue;
         private System.Windows.Forms.Label labelLotValue;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label lblOperatingRate;
         private System.Windows.Forms.Label lblAiPassRate;
+        private System.Windows.Forms.Label lblAviPassRate;
     }
 }
