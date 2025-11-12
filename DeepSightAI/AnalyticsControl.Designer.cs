@@ -31,7 +31,6 @@
             this.btnShowAnalytics = new System.Windows.Forms.Button();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.btnReadEmployeeData = new System.Windows.Forms.Button();
-            this.btnTestDB = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -57,7 +56,6 @@
             // 
             // splitContainer1.Panel1
             // 
-            this.splitContainer1.Panel1.Controls.Add(this.btnTestDB);
             this.splitContainer1.Panel1.Controls.Add(this.btnReadEmployeeData);
             this.splitContainer1.Panel1.Controls.Add(this.btnShowAnalytics);
             this.splitContainer1.Size = new System.Drawing.Size(726, 493);
@@ -75,18 +73,6 @@
             this.btnReadEmployeeData.Text = "读取员工数据";
             this.btnReadEmployeeData.UseVisualStyleBackColor = false;
             this.btnReadEmployeeData.Click += new System.EventHandler(this.btnReadEmployeeData_Click);
-            // 
-            // btnTestDB
-            // 
-            this.btnTestDB.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
-            this.btnTestDB.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.btnTestDB.Location = new System.Drawing.Point(46, 161);
-            this.btnTestDB.Name = "btnTestDB";
-            this.btnTestDB.Size = new System.Drawing.Size(110, 33);
-            this.btnTestDB.TabIndex = 121;
-            this.btnTestDB.Text = "测试sqlite";
-            this.btnTestDB.UseVisualStyleBackColor = false;
-            this.btnTestDB.Click += new System.EventHandler(this.btnTestDB_Click);
             // 
             // AnalyticsControl
             // 
@@ -108,6 +94,5 @@
         private System.Windows.Forms.Button btnShowAnalytics;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.Button btnReadEmployeeData;
-        private System.Windows.Forms.Button btnTestDB;
     }
 }
