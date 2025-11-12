@@ -169,6 +169,7 @@ namespace DeepSightModel
                     AIPassPCS = 0,
                     AIPassImageCount=0,
                     ByPassCount=0,
+                    
                 };
                 return Save(config);
             }

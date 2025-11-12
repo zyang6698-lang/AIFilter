@@ -170,6 +170,10 @@ namespace DeepSightAI.SettingPages
             double ratio = TotalImages > 0 ? (double)AiOkImages / TotalImages : 0;
             SetAiPassRate($"{ratio:P2}");
             SetOperatingRate($"{Utilization:P2}");
+
+            labelCurrentPartNumberValue.Text= ProductSerial;
+            labelLotValue.Text = LotId;
+
             if (toolTip != null )
             {
                 toolTip.SetToolTip(this, info.ToString());

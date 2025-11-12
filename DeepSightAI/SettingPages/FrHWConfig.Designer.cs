@@ -127,6 +127,7 @@ namespace DeepSightAI.SettingPages
             // uiGroupBox1
             // 
             this.uiGroupBox1.Controls.Add(this.aviCtr2Container1);
+            this.uiGroupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.uiGroupBox1.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.uiGroupBox1.FillDisableColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.uiGroupBox1.Font = new System.Drawing.Font("微软雅黑", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
@@ -137,7 +138,7 @@ namespace DeepSightAI.SettingPages
             this.uiGroupBox1.Name = "uiGroupBox1";
             this.uiGroupBox1.Padding = new System.Windows.Forms.Padding(27, 25, 27, 25);
             this.uiGroupBox1.RectColor = System.Drawing.Color.FromArgb(((int)(((byte)(110)))), ((int)(((byte)(190)))), ((int)(((byte)(40)))));
-            this.uiGroupBox1.Size = new System.Drawing.Size(594, 405);
+            this.uiGroupBox1.Size = new System.Drawing.Size(737, 608);
             this.uiGroupBox1.Style = Sunny.UI.UIStyle.Custom;
             this.uiGroupBox1.TabIndex = 27;
             this.uiGroupBox1.Text = "AVI配置";
@@ -583,10 +584,11 @@ namespace DeepSightAI.SettingPages
             // 
             // aviCtr2Container1
             // 
-            this.aviCtr2Container1.Location = new System.Drawing.Point(125, 175);
-            this.aviCtr2Container1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.aviCtr2Container1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.aviCtr2Container1.Location = new System.Drawing.Point(23, 21);
+            this.aviCtr2Container1.Margin = new System.Windows.Forms.Padding(6, 9, 6, 9);
             this.aviCtr2Container1.Name = "aviCtr2Container1";
-            this.aviCtr2Container1.Size = new System.Drawing.Size(667, 500);
+            this.aviCtr2Container1.Size = new System.Drawing.Size(569, 465);
             this.aviCtr2Container1.TabIndex = 0;
             // 
             // FrHWConfig

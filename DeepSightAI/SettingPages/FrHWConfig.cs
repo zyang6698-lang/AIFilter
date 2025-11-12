@@ -334,15 +334,15 @@ namespace DeepSightAI.SettingPages
                 //Machine.aviconfig.TemporaryFileStorageArea_A = FrHWConfig.Instance.txt_temporary_file_storage_area_A.Text;
                 //Machine.aviconfig.TemporaryFileStorageArea_B = FrHWConfig.Instance.txt_temporary_file_storage_area_B.Text;
 
+                var watchPaths = aviCtr2Container1.GetAllConfigs();
+
                 for (int i = 0; i < FrHWConfig.Instance.txt_station_count.Value; i++)
                 {
-                    AviCtr2 ctr = FrHWConfig.Instance.aviCtr2Container1.Controls[i] as AviCtr2;
-                    if (ctr != null)
-                    {
-                        //工站信息
-                        WatchPathConfig stationParam = ctr.ctrConfig;
-                        Machine.aviconfig.WatchPaths.Add(stationParam);
-                    }
+
+                    //工站信息
+                    WatchPathConfig stationParam = watchPaths[i];
+                    Machine.aviconfig.WatchPaths.Add(stationParam);
+
                 }
 
                 //for (int i = 0; i < FrHWConfig.Instance.txt_station_count.Value; i++)

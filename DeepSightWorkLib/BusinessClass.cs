@@ -831,8 +831,40 @@ namespace DeepSightWorkLib
                     }
 
                     PcsInfo pcsInfo = null;
+
+                    // info的PcsInfo在ATS只有一条，做其他项目时要注意
                     if (info.PcsInfo.TryGetValue((i + 1).ToString(), out pcsInfo))
                     {
+
+                        //AVI OK信息存储
+                        if (pcsInfo.DefectInfo.Count==0)
+                        {
+
+                            DateTime detectionDate;
+                            if (!DateTime.TryParse(info.AviCreateTime, out detectionDate))
+                            {
+                                detectionDate = DateTime.Now;
+                                LogTextHelper.Info($"无法解析 AviCreateTime '{info.AviCreateTime}'。将使用当前时间 '{detectionDate}' 作为备用。");
+                            }
+                            databaseHelper.SavePanelSide(new PanelSideRecord()
+                            {
+                                Data = new SideData()
+                                {
+                                    HeatPoints = new List<HeatPoint>(),
+                                    State = 0,
+                                    RemainingDefectsCount = 0,
+                                    TotalDefectsCount = 0
+                                },
+                                ProductSerial = info.ProductSerial,
+                                DetectionDate = detectionDate,
+                                LotNumber = info.LotId,
+                                SerialNumber = info.SerialNumber,
+                                MachineId = info.StationName,
+                                Side = info.SideIndex,
+                                PathIndex = info.PathIndex
+                            });
+                        }
+
                         for (int j = 0; j < pcsInfo.DefectInfo.Count; j++)
                         {
                             //奥特斯
@@ -1181,9 +1213,9 @@ namespace DeepSightWorkLib
                         LogTextHelper.Info($"无法解析 AviCreateTime '{panelInfo.AviCreateTime}'。将使用当前时间 '{detectionDate}' 作为备用。");
                     }
 
+                    //panelInfo.PcsInfo.FirstOrDefault().Value.DefectInfo.Count();
 
-
-                    //存数据到db TODO 加一个bypass数量
+                    //存数据到db 加一个bypass数量
                     databaseHelper.SavePanelSide(new PanelSideRecord()
                     {
                         Data = new SideData()
@@ -1197,7 +1229,7 @@ namespace DeepSightWorkLib
                                 ImagePath = o.ImagePath,
 
                             }).ToList(),
-                            State  = resList.Count == 0 ? 0 : resList.Contains("2") ? 3 : resList.Contains( "1") ? 2 : 1,
+                            State  =  resList.Contains("2") ? 3 : resList.Contains( "1") ? 2 : 1,
                             RemainingDefectsCount = resList.Where(t => t == "1").Count(),
                             TotalDefectsCount = resList.Where(t => t == "1" || t == "2").Count()
                         },

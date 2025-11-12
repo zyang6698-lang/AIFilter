@@ -113,8 +113,8 @@ namespace DeepSightAI
 
                     }
                 }
-                //LogTextHelper.Info($"结果信息数量：{msg.Count}");
-                //LogTextHelper.Info($"ByPass结果数量:{msg.Where(t => t == "2").Count()}");
+                LogTextHelper.Info($"结果信息数量：{msg.Count}");
+                LogTextHelper.Info($"ByPass结果数量:{msg.Where(t => t == "2").Count()}");
                 Machine.sysConfig.AVIImageCount += msg.Count;
                 Machine.sysConfig.ByPassCount += msg.Where(t => t == "2").Count();
                 //结果
@@ -1020,6 +1020,7 @@ namespace DeepSightAI
             Machine.sysConfig.AIPassPCS = 0;
             Machine.sysConfig.AVIImageCount = 0;
             Machine.sysConfig.AIPassImageCount = 0;
+            Machine.sysConfig.ByPassCount = 0;
 
         }
 

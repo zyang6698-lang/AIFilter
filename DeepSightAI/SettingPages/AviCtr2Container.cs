@@ -54,7 +54,14 @@ namespace DeepSightAI.SettingPages
                 Console.WriteLine($"Failed to create AviCtr2: {ex.Message}");
             }
         }
-
+        /// <summary>
+        /// 获取所有 AviCtr2 控件的配置列表
+        /// </summary>
+        /// <returns>WatchPathConfig 列表</returns>
+        public List<WatchPathConfig> GetAllConfigs()
+        {
+            return aviCtr2Controls.Select(ctr => ctr.ctrConfig).ToList();
+        }
         /// <summary>
         /// 更新指定名称的 AviCtr2 控件的统计信息
         /// </summary>
@@ -125,7 +132,7 @@ namespace DeepSightAI.SettingPages
                             if (tmp.LotNumber != null && tmp.SerialNumber != null)
                             {
                                 ctr.LotId = tmp.LotNumber;
-                                ctr.ProductSerial = tmp.SerialNumber;
+                                ctr.ProductSerial = tmp.ProductSerial;
                                 ctr.PathIndex = tmp.PathIndex;
                             }
                         }
