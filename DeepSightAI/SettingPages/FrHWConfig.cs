@@ -138,30 +138,6 @@ namespace DeepSightAI.SettingPages
                     for (int i = 0; i < num; i++)
                     {
 
-                        //TabPage tabPage = new TabPage
-                        //{
-                        //    Text = "工站" + (tabControl.Controls.Count + 1),
-                        //};
-
-                        //tabPage.Controls.Clear();
-                        //Panel panel = new Panel
-                        //{
-                        //    BackColor = System.Drawing.SystemColors.Control,
-                        //    Dock = System.Windows.Forms.DockStyle.Fill
-                        //};
-
-                        //FrStationCofig frStationCofig = new FrStationCofig
-                        //{
-                        //    TopLevel = false,
-                        //    Parent = panel,
-                        //    Dock = DockStyle.Fill
-                        //};
-                        //frStationCofig.Show();
-                        //tabPage.Controls.Add(panel);
-
-                        //tabControl.Controls.Add(tabPage);
-
-                        ////**************************************
                         if (txt_station_count.Value > Machine.aviconfig.WatchPaths.Count())
                         {
                             WatchPathConfig watchPath = new WatchPathConfig()
@@ -195,9 +171,9 @@ namespace DeepSightAI.SettingPages
                     //}
                     for (int i = 0; i < num; i++)
                     {
-                        int index = avi_panel.Controls.Count;
+                        int index = aviCtr2Container1.Controls.Count;
 
-                        avi_panel.Controls.RemoveAt(index - 1);
+                        aviCtr2Container1.Controls.RemoveAt(index - 1);
                     }
                     lblstationcount.Text = txt_station_count.Value.ToString();
                 }
@@ -244,12 +220,11 @@ namespace DeepSightAI.SettingPages
                 //FrHWConfig.Instance.txt_temporary_file_storage_area_B.Text = Machine.aviconfig.TemporaryFileStorageArea_B;
 
 
-
-                for (int i = 0; i < Machine.aviconfig.WatchPaths.Count; i++)
-                {
-                    AddAviControl(Machine.aviconfig.WatchPaths[i], i);
-                   // AddParam(i);
-                }
+                aviCtr2Container1.CreateMachinePanels(Machine.aviconfig.WatchPaths);
+                //for (int i = 0; i < Machine.aviconfig.WatchPaths.Count; i++)
+                //{
+                //     AddParam(i);
+                //}
             }
             catch (Exception ex)
             {
@@ -262,18 +237,18 @@ namespace DeepSightAI.SettingPages
         {
             try
             {
-                AviCtr ctr = new AviCtr(watchPath);
-                ctr.Size = new Size(150, 150); // 根据需求调整
+                AviCtr2 ctr = new AviCtr2(watchPath);
+                ctr.Size = new Size(200, 100); // 根据需求调整
 
                 // 计算位置 - 根据索引排列
-                int cols = 7; // 每行显示4个
-                int spacing = 0; // 间距
+                int cols = 5; // 每行显示5个
+                int spacing = 5; // 间距
 
                 int x = (index % cols) * (ctr.Width + spacing) + spacing;
                 int y = (index / cols) * (ctr.Height + spacing) + spacing;
 
                 ctr.Location = new Point(x, y + 50);
-                this.avi_panel.Controls.Add(ctr);
+                this.aviCtr2Container1.Controls.Add(ctr);
             }
             catch (Exception ex)
             {
@@ -286,12 +261,9 @@ namespace DeepSightAI.SettingPages
         {
             try
             {
-                AviCtr ctr = new AviCtr(Machine.aviconfig.WatchPaths[i]);
+                AviCtr2 ctr = new AviCtr2(Machine.aviconfig.WatchPaths[i]);
 
-                ctr.Size = new Size(150, 150);
-
-
-                this.avi_panel.Controls.Add(ctr);
+                this.aviCtr2Container1.Controls.Add(ctr);
 
                 //TabPage tabPage = FrHWConfig.Instance.tabControl.Controls[i] as TabPage;
                 //if (tabPage.Controls.Count > 0)
@@ -364,8 +336,8 @@ namespace DeepSightAI.SettingPages
 
                 for (int i = 0; i < FrHWConfig.Instance.txt_station_count.Value; i++)
                 {
-                    AviCtr ctr = FrHWConfig.Instance.avi_panel.Controls[i] as AviCtr;
-                    if (ctr.Controls.Count > 0)
+                    AviCtr2 ctr = FrHWConfig.Instance.aviCtr2Container1.Controls[i] as AviCtr2;
+                    if (ctr != null)
                     {
                         //工站信息
                         WatchPathConfig stationParam = ctr.ctrConfig;

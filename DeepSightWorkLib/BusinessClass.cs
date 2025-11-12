@@ -1291,13 +1291,19 @@ namespace DeepSightWorkLib
                         int res;
                         if (int.TryParse(result, out res))
                         {
-                            if (res == 1)
+                            switch (res)
                             {
-                                result = "NG";
-                            }
-                            else
-                            {
-                                result = "OK";
+                                case 0:
+                                    result = "OK";
+                                    break;
+                                case 1:
+                                    result = "NG";
+                                    break;
+                                case 2:
+                                    result = "ByPass";
+                                    break;      
+                                default:
+                                    break;
                             }
                         }
                         DisplaysList[index].DrawStatus($"AI结果:{result}");
@@ -1359,13 +1365,19 @@ namespace DeepSightWorkLib
                             int res;
                             if (int.TryParse(result, out res))
                             {
-                                if (res == 1)
+                                switch (res)
                                 {
-                                    result = "NG";
-                                }
-                                else
-                                {
-                                    result = "OK";
+                                    case 0:
+                                        result = "OK";
+                                        break;
+                                    case 1:
+                                        result = "NG";
+                                        break;
+                                    case 2:
+                                        result = "ByPass";
+                                        break;
+                                    default:
+                                        break;
                                 }
                             }
                             DisplaysList2[index].DrawStatus($"AI结果:{result}");
@@ -1417,13 +1429,19 @@ namespace DeepSightWorkLib
                         int res;
                         if (int.TryParse(result, out res))
                         {
-                            if (res == 1)
+                            switch (res)
                             {
-                                result = "NG";
-                            }
-                            else
-                            {
-                                result = "OK";
+                                case 0:
+                                    result = "OK";
+                                    break;
+                                case 1:
+                                    result = "NG";
+                                    break;
+                                case 2:
+                                    result = "ByPass";
+                                    break;
+                                default:
+                                    break;
                             }
                         }
                         DisplaysList2[index].DrawStatus($"AI结果:{result}");

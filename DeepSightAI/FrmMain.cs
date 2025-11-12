@@ -113,6 +113,8 @@ namespace DeepSightAI
 
                     }
                 }
+                //LogTextHelper.Info($"结果信息数量：{msg.Count}");
+                //LogTextHelper.Info($"ByPass结果数量:{msg.Where(t => t == "2").Count()}");
                 Machine.sysConfig.AVIImageCount += msg.Count;
                 Machine.sysConfig.ByPassCount += msg.Where(t => t == "2").Count();
                 //结果
@@ -336,12 +338,14 @@ namespace DeepSightAI
                                         int Count = 0;
                                         int OK = 0;
                                         int NG = 0;
+                                        int ByPass = 0;
                                         if (FrHome.Instance.dic_Results.TryGetValue(sn, out res_lbl))
                                         {
                                             Count = res_lbl.Count();
                                             OK = res_lbl.Where(o => o.Contains("0")).Count();
                                             NG = res_lbl.Where(o => o.Contains("1")).Count();
-                                            msg = $"{msg}_{"图片一致"}_OK:{OK} NG:{NG}";
+                                            ByPass = res_lbl.Where(o => o.Contains("2")).Count();
+                                            msg = $"{msg}_{"图片一致"}_OK:{OK} NG:{NG} ByPass{ByPass}";
                                             if (NG == 0)
                                             {
                                                 Machine.sysConfig.AIPassPCS++;
