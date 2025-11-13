@@ -55,6 +55,9 @@
             this.btnPrevious = new System.Windows.Forms.Button();
             this.btnNext = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.lbl_utilizationRate = new System.Windows.Forms.Label();
+            this.lbl_boardAiPassRate = new System.Windows.Forms.Label();
+            this.lbl_boardFirstPassRate = new System.Windows.Forms.Label();
             this.lbl_SnTotalCount = new System.Windows.Forms.Label();
             this.lbl_totalDefectCount = new System.Windows.Forms.Label();
             this.lbl_AiAllCount = new System.Windows.Forms.Label();
@@ -294,7 +297,7 @@
             this.splitContainer2.Panel2.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.splitContainer2.Panel2.Controls.Add(this.splitContainer3);
             this.splitContainer2.Size = new System.Drawing.Size(1177, 845);
-            this.splitContainer2.SplitterDistance = 587;
+            this.splitContainer2.SplitterDistance = 485;
             this.splitContainer2.TabIndex = 0;
             // 
             // avi_panel
@@ -304,7 +307,7 @@
             this.avi_panel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.avi_panel.Location = new System.Drawing.Point(0, 0);
             this.avi_panel.Name = "avi_panel";
-            this.avi_panel.Size = new System.Drawing.Size(1177, 587);
+            this.avi_panel.Size = new System.Drawing.Size(1177, 485);
             this.avi_panel.TabIndex = 0;
             // 
             // aviCtr2Container
@@ -313,7 +316,7 @@
             this.aviCtr2Container.Location = new System.Drawing.Point(0, 0);
             this.aviCtr2Container.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.aviCtr2Container.Name = "aviCtr2Container";
-            this.aviCtr2Container.Size = new System.Drawing.Size(1177, 587);
+            this.aviCtr2Container.Size = new System.Drawing.Size(1177, 485);
             this.aviCtr2Container.TabIndex = 0;
             // 
             // splitContainer3
@@ -329,7 +332,7 @@
             // splitContainer3.Panel2
             // 
             this.splitContainer3.Panel2.Controls.Add(this.panel1);
-            this.splitContainer3.Size = new System.Drawing.Size(1177, 254);
+            this.splitContainer3.Size = new System.Drawing.Size(1177, 356);
             this.splitContainer3.SplitterDistance = 544;
             this.splitContainer3.TabIndex = 0;
             // 
@@ -350,8 +353,8 @@
             this.splitContainer5.Panel2.Controls.Add(this.lblPageInfo);
             this.splitContainer5.Panel2.Controls.Add(this.btnPrevious);
             this.splitContainer5.Panel2.Controls.Add(this.btnNext);
-            this.splitContainer5.Size = new System.Drawing.Size(544, 254);
-            this.splitContainer5.SplitterDistance = 205;
+            this.splitContainer5.Size = new System.Drawing.Size(544, 356);
+            this.splitContainer5.SplitterDistance = 287;
             this.splitContainer5.TabIndex = 0;
             // 
             // table_Small
@@ -368,7 +371,7 @@
             this.table_Small.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 766F));
             this.table_Small.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 766F));
             this.table_Small.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 766F));
-            this.table_Small.Size = new System.Drawing.Size(544, 205);
+            this.table_Small.Size = new System.Drawing.Size(544, 287);
             this.table_Small.TabIndex = 11;
             // 
             // lblPageInfo
@@ -410,6 +413,9 @@
             // panel1
             // 
             this.panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.panel1.Controls.Add(this.lbl_utilizationRate);
+            this.panel1.Controls.Add(this.lbl_boardAiPassRate);
+            this.panel1.Controls.Add(this.lbl_boardFirstPassRate);
             this.panel1.Controls.Add(this.lbl_SnTotalCount);
             this.panel1.Controls.Add(this.lbl_totalDefectCount);
             this.panel1.Controls.Add(this.lbl_AiAllCount);
@@ -419,8 +425,50 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(629, 254);
+            this.panel1.Size = new System.Drawing.Size(629, 356);
             this.panel1.TabIndex = 0;
+            // 
+            // lbl_utilizationRate
+            // 
+            this.lbl_utilizationRate.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.lbl_utilizationRate.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(66)))), ((int)(((byte)(82)))));
+            this.lbl_utilizationRate.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lbl_utilizationRate.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Bold);
+            this.lbl_utilizationRate.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(208)))), ((int)(((byte)(179)))), ((int)(((byte)(255)))));
+            this.lbl_utilizationRate.Location = new System.Drawing.Point(411, 245);
+            this.lbl_utilizationRate.Name = "lbl_utilizationRate";
+            this.lbl_utilizationRate.Size = new System.Drawing.Size(180, 100);
+            this.lbl_utilizationRate.TabIndex = 8;
+            this.lbl_utilizationRate.Text = "稼动率\n-";
+            this.lbl_utilizationRate.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // lbl_boardAiPassRate
+            // 
+            this.lbl_boardAiPassRate.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.lbl_boardAiPassRate.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(66)))), ((int)(((byte)(82)))));
+            this.lbl_boardAiPassRate.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lbl_boardAiPassRate.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Bold);
+            this.lbl_boardAiPassRate.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(110)))), ((int)(((byte)(231)))), ((int)(((byte)(183)))));
+            this.lbl_boardAiPassRate.Location = new System.Drawing.Point(216, 245);
+            this.lbl_boardAiPassRate.Name = "lbl_boardAiPassRate";
+            this.lbl_boardAiPassRate.Size = new System.Drawing.Size(180, 100);
+            this.lbl_boardAiPassRate.TabIndex = 7;
+            this.lbl_boardAiPassRate.Text = "板子AIPass率\n-";
+            this.lbl_boardAiPassRate.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // lbl_boardFirstPassRate
+            // 
+            this.lbl_boardFirstPassRate.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.lbl_boardFirstPassRate.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(66)))), ((int)(((byte)(82)))));
+            this.lbl_boardFirstPassRate.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lbl_boardFirstPassRate.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Bold);
+            this.lbl_boardFirstPassRate.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(127)))), ((int)(((byte)(207)))), ((int)(((byte)(255)))));
+            this.lbl_boardFirstPassRate.Location = new System.Drawing.Point(21, 245);
+            this.lbl_boardFirstPassRate.Name = "lbl_boardFirstPassRate";
+            this.lbl_boardFirstPassRate.Size = new System.Drawing.Size(180, 100);
+            this.lbl_boardFirstPassRate.TabIndex = 6;
+            this.lbl_boardFirstPassRate.Text = "板子一次Pass率\n-";
+            this.lbl_boardFirstPassRate.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // lbl_SnTotalCount
             // 
@@ -429,7 +477,7 @@
             this.lbl_SnTotalCount.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.lbl_SnTotalCount.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Bold);
             this.lbl_SnTotalCount.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(127)))), ((int)(((byte)(207)))), ((int)(((byte)(255)))));
-            this.lbl_SnTotalCount.Location = new System.Drawing.Point(30, 20);
+            this.lbl_SnTotalCount.Location = new System.Drawing.Point(21, 15);
             this.lbl_SnTotalCount.Name = "lbl_SnTotalCount";
             this.lbl_SnTotalCount.Size = new System.Drawing.Size(180, 100);
             this.lbl_SnTotalCount.TabIndex = 5;
@@ -443,7 +491,7 @@
             this.lbl_totalDefectCount.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.lbl_totalDefectCount.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Bold);
             this.lbl_totalDefectCount.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(110)))), ((int)(((byte)(231)))), ((int)(((byte)(183)))));
-            this.lbl_totalDefectCount.Location = new System.Drawing.Point(225, 20);
+            this.lbl_totalDefectCount.Location = new System.Drawing.Point(216, 15);
             this.lbl_totalDefectCount.Name = "lbl_totalDefectCount";
             this.lbl_totalDefectCount.Size = new System.Drawing.Size(180, 100);
             this.lbl_totalDefectCount.TabIndex = 0;
@@ -457,7 +505,7 @@
             this.lbl_AiAllCount.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.lbl_AiAllCount.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Bold);
             this.lbl_AiAllCount.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(210)))), ((int)(((byte)(127)))));
-            this.lbl_AiAllCount.Location = new System.Drawing.Point(225, 135);
+            this.lbl_AiAllCount.Location = new System.Drawing.Point(216, 130);
             this.lbl_AiAllCount.Name = "lbl_AiAllCount";
             this.lbl_AiAllCount.Size = new System.Drawing.Size(180, 100);
             this.lbl_AiAllCount.TabIndex = 1;
@@ -471,7 +519,7 @@
             this.lbl_aiFilterOKCount.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.lbl_aiFilterOKCount.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Bold);
             this.lbl_aiFilterOKCount.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(143)))), ((int)(((byte)(163)))));
-            this.lbl_aiFilterOKCount.Location = new System.Drawing.Point(30, 135);
+            this.lbl_aiFilterOKCount.Location = new System.Drawing.Point(21, 130);
             this.lbl_aiFilterOKCount.Name = "lbl_aiFilterOKCount";
             this.lbl_aiFilterOKCount.Size = new System.Drawing.Size(180, 100);
             this.lbl_aiFilterOKCount.TabIndex = 2;
@@ -485,7 +533,7 @@
             this.lbl_aviPassRateCount.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.lbl_aviPassRateCount.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Bold);
             this.lbl_aviPassRateCount.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(208)))), ((int)(((byte)(179)))), ((int)(((byte)(255)))));
-            this.lbl_aviPassRateCount.Location = new System.Drawing.Point(420, 20);
+            this.lbl_aviPassRateCount.Location = new System.Drawing.Point(411, 15);
             this.lbl_aviPassRateCount.Name = "lbl_aviPassRateCount";
             this.lbl_aviPassRateCount.Size = new System.Drawing.Size(180, 100);
             this.lbl_aviPassRateCount.TabIndex = 3;
@@ -499,7 +547,7 @@
             this.lbl_filteredOkCount.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.lbl_filteredOkCount.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Bold);
             this.lbl_filteredOkCount.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(127)))), ((int)(((byte)(227)))), ((int)(((byte)(255)))));
-            this.lbl_filteredOkCount.Location = new System.Drawing.Point(420, 135);
+            this.lbl_filteredOkCount.Location = new System.Drawing.Point(411, 130);
             this.lbl_filteredOkCount.Name = "lbl_filteredOkCount";
             this.lbl_filteredOkCount.Size = new System.Drawing.Size(180, 100);
             this.lbl_filteredOkCount.TabIndex = 4;
@@ -579,5 +627,8 @@
         private System.Windows.Forms.Label lbl_aviPassRateCount;
         private System.Windows.Forms.Label lbl_filteredOkCount;
         private System.Windows.Forms.Label lbl_SnTotalCount;
+        private System.Windows.Forms.Label lbl_boardFirstPassRate;
+        private System.Windows.Forms.Label lbl_boardAiPassRate;
+        private System.Windows.Forms.Label lbl_utilizationRate;
     }
 }

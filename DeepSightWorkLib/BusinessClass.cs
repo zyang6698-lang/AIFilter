@@ -846,6 +846,9 @@ namespace DeepSightWorkLib
                                 detectionDate = DateTime.Now;
                                 LogTextHelper.Info($"无法解析 AviCreateTime '{info.AviCreateTime}'。将使用当前时间 '{detectionDate}' 作为备用。");
                             }
+
+                            LogTextHelper.Info($"{info.SerialNumber}存储PanelSide的AVI OK数据到数据库...");
+
                             databaseHelper.SavePanelSide(new PanelSideRecord()
                             {
                                 Data = new SideData()
@@ -1212,10 +1215,9 @@ namespace DeepSightWorkLib
                         detectionDate = DateTime.Now;
                         LogTextHelper.Info($"无法解析 AviCreateTime '{panelInfo.AviCreateTime}'。将使用当前时间 '{detectionDate}' 作为备用。");
                     }
-
-                    //panelInfo.PcsInfo.FirstOrDefault().Value.DefectInfo.Count();
-
                     //存数据到db 加一个bypass数量
+                    LogTextHelper.Info("Reslist:"+   string.Join(", ", resList));
+                    LogTextHelper.Info($"存储{panelInfo.SerialNumber} PanelSide数据到数据库...");
                     databaseHelper.SavePanelSide(new PanelSideRecord()
                     {
                         Data = new SideData()
@@ -1229,12 +1231,13 @@ namespace DeepSightWorkLib
                                 ImagePath = o.ImagePath,
 
                             }).ToList(),
-                            State  =  resList.Contains("2") ? 3 : resList.Contains( "1") ? 2 : 1,
+                            State  = resList.Count==0 || resList.Contains("2") ? 3 : resList.Contains( "1") ? 2 : 1,
                             RemainingDefectsCount = resList.Where(t => t == "1").Count(),
                             TotalDefectsCount = resList.Where(t => t == "1" || t == "2").Count()
                         },
                         ProductSerial = panelInfo.ProductSerial,
-                        DetectionDate = detectionDate,
+                        DetectionDate = DateTime.Now,
+                        AviCreationTime=detectionDate,
                         LotNumber = panelInfo.LotId,
                         SerialNumber = panelInfo.SerialNumber,
                         MachineId = panelInfo.StationName,

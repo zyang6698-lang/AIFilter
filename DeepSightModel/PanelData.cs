@@ -31,7 +31,7 @@ namespace DeepSightModel
         // 0: AVI OK
         // 1: AVI NG 但过滤后OK
         // 2: AVI NG 过滤后仍NG
-        // 3: AVI NG 未过滤
+        // 3: AVI NG 未过滤/过滤异常
         public int State { get; set; }
     }
 
@@ -48,6 +48,8 @@ namespace DeepSightModel
         public string Side { get; set; } // "A"  "B"
         public SideData Data { get; set; } = new SideData();
         public string PathIndex { get; set; }
+        public DateTime? AviCreationTime { get; set; }
+
     }
 
 
@@ -64,6 +66,7 @@ namespace DeepSightModel
         public string ProductSerial { get; set; }
         public bool IsAIOk { get; set; }
         public string PathIndex { get; set; }
+        public DateTime? AviCreationTime { get; set; }
         public List<SideData> Sides { get; set; }
 
         public static BoardStat GetBoardStat(List<PanelDataRecord> records)

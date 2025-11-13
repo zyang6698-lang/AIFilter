@@ -34,7 +34,8 @@ namespace DeepsightSqlite
                     ProductSerial TEXT,
                     DetectionDate DATETIME NOT NULL,
                     IsAIOk BOOLEAN NOT NULL,
-                    PathIndex TEXT
+                    PathIndex TEXT,
+                    AviCreationTime DATETIME
                 );";
 
                 string createPanelSidesTable = @"
@@ -70,7 +71,6 @@ namespace DeepsightSqlite
                     command.CommandText = createEmployeeReportsTable;
                     command.ExecuteNonQuery();
 
-                    
                 }
             }
         }
@@ -99,7 +99,7 @@ namespace DeepsightSqlite
                         else
                         {
                             var insertPanelCmd = new SQLiteCommand(
-                                "INSERT INTO Panels (MachineId, SerialNumber, LotNumber, DetectionDate, IsAIOk, ProductSerial, PathIndex) VALUES (@MachineId, @SN, @Lot, @Date, @IsAIOk, @ProductSerial, @PathIndex); SELECT last_insert_rowid();",
+                                "INSERT INTO Panels (MachineId, SerialNumber, LotNumber, DetectionDate, IsAIOk, ProductSerial, PathIndex, AviCreationTime) VALUES (@MachineId, @SN, @Lot, @Date, @IsAIOk, @ProductSerial, @PathIndex, @AviCreationTime); SELECT last_insert_rowid();",
                                 connection);
                             insertPanelCmd.Parameters.AddWithValue("@MachineId", record.MachineId);
                             insertPanelCmd.Parameters.AddWithValue("@SN", record.SerialNumber);
@@ -108,6 +108,7 @@ namespace DeepsightSqlite
                             insertPanelCmd.Parameters.AddWithValue("@IsAIOk", false); // ³õÊ¼Ä¬ÈÏÎª false
                             insertPanelCmd.Parameters.AddWithValue("@ProductSerial", record.ProductSerial);
                             insertPanelCmd.Parameters.AddWithValue("@PathIndex", record.PathIndex);
+                            insertPanelCmd.Parameters.AddWithValue("@AviCreationTime", record.AviCreationTime);
                             panelId = (long)insertPanelCmd.ExecuteScalar();
                         }
                     }
@@ -423,7 +424,7 @@ namespace DeepsightSqlite
                 using (var connection = new SQLiteConnection(connectionString))
                 {
                     connection.Open();
-                    var cmd = new SQLiteCommand("SELECT SerialNumber, LotNumber, ProductSerial, PathIndex FROM Panels WHERE MachineId = @MachineId ORDER BY DetectionDate DESC LIMIT 1", connection);
+                    var cmd = new SQLiteCommand("SELECT SerialNumber, LotNumber, ProductSerial, PathIndex, AviCreationTime FROM Panels WHERE MachineId = @MachineId ORDER BY DetectionDate DESC LIMIT 1", connection);
                     cmd.Parameters.AddWithValue("@MachineId", machineId);
                     using (var reader = cmd.ExecuteReader())
                     {
@@ -433,6 +434,7 @@ namespace DeepsightSqlite
                             string lotNumber = reader.GetString(1);
                             string ProductSerial = reader.IsDBNull(2) ? null : reader.GetString(2);
                             string pathIndex = reader.IsDBNull(3) ? null : reader.GetString(3);
+                            DateTime? AviCreationTime = reader.IsDBNull(4) ? (DateTime?)null : reader.GetDateTime(4);
                             return (serialNumber, lotNumber, ProductSerial, pathIndex);
                         }
                     }
@@ -761,7 +763,7 @@ namespace DeepsightSqlite
             using (var connection = new SQLiteConnection(connectionString))
             {
                 connection.Open();
-                var sql = "SELECT Id, MachineId, SerialNumber, LotNumber, ProductSerial, DetectionDate, IsAIOk, PathIndex FROM Panels WHERE MachineId = @MachineId AND LotNumber = @LotNumber";
+                var sql = "SELECT Id, MachineId, SerialNumber, LotNumber, ProductSerial, DetectionDate, IsAIOk, PathIndex, AviCreationTime FROM Panels WHERE MachineId = @MachineId AND LotNumber = @LotNumber";
                 using (var cmd = new SQLiteCommand(sql, connection))
                 {
                     cmd.Parameters.AddWithValue("@MachineId", machineId);
@@ -780,6 +782,7 @@ namespace DeepsightSqlite
                                 DetectionDate = reader.GetDateTime(5),
                                 IsAIOk = reader.GetBoolean(6),
                                 PathIndex = reader.IsDBNull(7) ? null : reader.GetString(7),
+                                AviCreationTime = reader.IsDBNull(8) ? (DateTime?)null : reader.GetDateTime(8),
                                 Sides = new List<SideData>()
                             });
                         }
@@ -833,7 +836,7 @@ namespace DeepsightSqlite
             using (var connection = new SQLiteConnection(connectionString))
             {
                 connection.Open();
-                var sql = "SELECT Id, MachineId, SerialNumber, LotNumber, ProductSerial, DetectionDate, IsAIOk, PathIndex FROM Panels WHERE DetectionDate BETWEEN @Start AND @End";
+                var sql = "SELECT Id, MachineId, SerialNumber, LotNumber, ProductSerial, DetectionDate, IsAIOk, PathIndex, avicreationtime FROM Panels WHERE DetectionDate BETWEEN @Start AND @End";
                 using (var cmd = new SQLiteCommand(sql, connection))
                 {
                     cmd.Parameters.AddWithValue("@Start", start);
@@ -852,6 +855,7 @@ namespace DeepsightSqlite
                                 DetectionDate = reader.GetDateTime(5),
                                 IsAIOk = reader.GetBoolean(6),
                                 PathIndex = reader.IsDBNull(7) ? null : reader.GetString(7),
+                                AviCreationTime = reader.IsDBNull(8) ? (DateTime?)null : reader.GetDateTime(8),
                                 Sides = new List<SideData>()
                             });
                         }
