@@ -49,37 +49,47 @@ namespace DeepSightAI
         {
             var AllEmployeeReports = new List<EmployeeReport>();
 
-            string folder = "D\\minio\\deepresults\\ats_data";
+            //string folder = "D\\minio\\deepresults\\ats_data";
 
-            var allCsv = ReadAndProcessCSV.ProcessCsvFiles(folder);
-            LogTextHelper.Info("获取了所有的csv文件路径");
-
-            if (allCsv != null)
+            foreach (var cfg in Machine.aviconfig.WatchPaths)
             {
-                LogTextHelper.Info("开始读取并处理csv文件");
-
-                await Task.Run(() =>
+                if (cfg.IsEnable)
                 {
-                    foreach (string filePath in allCsv)
+                    var folder = cfg.DeepsightAgentDataWorkspace;
+
+                    var allCsv = ReadAndProcessCSV.ProcessCsvFiles(folder);
+                    LogTextHelper.Info($"获取了{folder}所有的csv文件路径");
+
+                    if (allCsv != null)
                     {
-                        var list = ReadAndProcessCSV.ReadCsvFile(filePath);
-                        AllEmployeeReports.AddRange(list);
+                        LogTextHelper.Info("开始读取并处理csv文件");
+
+                        await Task.Run(() =>
+                        {
+                            foreach (string filePath in allCsv)
+                            {
+                                var list = ReadAndProcessCSV.ReadCsvFile(filePath);
+                                AllEmployeeReports.AddRange(list);
+                            }
+                        });
+
+                        foreach (var record in AllEmployeeReports)
+                        {
+                            dataQueues.Enqueue(record); // Enqueue() 将元素添加到队尾
+                            Machine.master.workClass.SaveEmployeeReport(record);
+                            LogTextHelper.Info($"员工报点数据已解析,员工工号：{record.ID}，SN：{record.SN}，总NG数：{record.AllNGNumber}，起始时间：{record.StartTime}，结束时间：{record.StartTime}");
+                        }
+
+                        LogTextHelper.Info($"数据已经全部解析，总数为{dataQueues.Count}");
                     }
-                });
-
-                foreach (var record in AllEmployeeReports)
-                {
-                    dataQueues.Enqueue(record); // Enqueue() 将元素添加到队尾
-                    Machine.master.workClass.SaveEmployeeReport(record);
-                    LogTextHelper.Info($"员工报点数据已解析,员工工号：{record.ID}，SN：{record.SN}，总NG数：{record.AllNGNumber}，起始时间：{record.StartTime}，结束时间：{record.StartTime}");
+                    else
+                    {
+                        LogTextHelper.Error("未找到csv文件！");
+                    }
                 }
+            }
 
-                LogTextHelper.Info($"数据已经全部解析，总数为{dataQueues.Count}");
-            }
-            else
-            {
-                LogTextHelper.Error("未找到csv文件！");
-            }
+
         }
 
 
