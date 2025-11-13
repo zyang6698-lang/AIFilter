@@ -1,9 +1,11 @@
+using DeepSightAI.Properties;
 using DeepSightModel;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,6 +20,10 @@ namespace DeepSightAI.SettingPages
         public AviCtr2Container()
         {
             InitializeComponent();
+            flowLayoutPanel1.BackColor = Color.Transparent;
+
+            this.SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer, true);
+            this.UpdateStyles();
         }
 
         /// <summary>
@@ -117,6 +123,42 @@ namespace DeepSightAI.SettingPages
             }
         }
 
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+            try
+            {
+                // 使用资源中的背景图片
+                Image backgroundImage = Resources.background;
+                if (backgroundImage != null)
+                {
+                    // 设置透明度
+                    float transparency = 0.725f; // 80% 透明度 (0.0f 完全透明, 1.0f 完全不透明)
+
+                    var colorMatrix = new ColorMatrix(new float[][]
+                   {
+                        new float[] {1, 0, 0, 0, 0},
+                        new float[] {0, 1, 0, 0, 0},
+                        new float[] {0, 0, 1, 0, 0},
+                        new float[] {0, 0, 0, transparency, 0},
+                        new float[] {0, 0, 0, 0, 1}
+                   });
+                    using (var imageAttributes = new ImageAttributes())
+                    {
+                        imageAttributes.SetColorMatrix(colorMatrix, ColorMatrixFlag.Default, ColorAdjustType.Bitmap);
+                        var destRect = new Rectangle(0, 0, this.Width, this.Height);
+                        e.Graphics.DrawImage(backgroundImage, destRect, 0, 0, backgroundImage.Width, backgroundImage.Height, GraphicsUnit.Pixel, imageAttributes);
+                    }
+
+
+                }
+            }
+            catch (Exception ex)
+            {
+                // 可以记录异常，但在OnPaint中最好不要抛出异常
+                Console.WriteLine("Failed to draw background image: " + ex.Message);
+            }
+        }
 
         public void UpdateAllAviCtrLotSn(Func<string, (string SerialNumber, string LotNumber, string ProductSerial, string PathIndex)> getLatestPanelInfo)
         {
@@ -161,7 +203,7 @@ namespace DeepSightAI.SettingPages
 
                             ctr.AiOkImages= boardStat.aiFilterOKCount;
                             ctr.AiFilterCount= boardStat.aiFilterCount;
-                            ctr.AviPassRate= boardStat.aviCount == 0 ? 0 : (double)boardStat.aviOKCount / boardStat.aviCount * 100;
+                            ctr.AviPassRate= boardStat.aviPanelCount == 0 ? 0 : (double)boardStat.aviPanelOKCount / boardStat.aviPanelCount * 100;
 
                         }
                     }

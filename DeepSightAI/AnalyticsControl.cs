@@ -49,13 +49,7 @@ namespace DeepSightAI
         {
             var AllEmployeeReports = new List<EmployeeReport>();
 
-            var dlg = new FolderBrowserDialog();
-            string folder = string.Empty;
-
-            if (dlg.ShowDialog() == DialogResult.OK)
-            {
-                folder = dlg.SelectedPath;
-            }
+            string folder = "D\\minio\\deepresults\\ats_data";
 
             var allCsv = ReadAndProcessCSV.ProcessCsvFiles(folder);
             LogTextHelper.Info("获取了所有的csv文件路径");
@@ -92,9 +86,13 @@ namespace DeepSightAI
 
         private void btnTestDB_Click(object sender, EventArgs e)
         {
-            //Machine.master.workClass.TestDatabaseReadWrite();
-            //Machine.master.workClass.TestDatabaseWrite();
             Machine.master.workClass.GenerateVRSTestData();
+        }
+
+        private void btnTest_Click(object sender, EventArgs e)
+        {
+            Machine.master.workClass.TestDatabaseWrite();
+
         }
     }
 }

@@ -469,6 +469,7 @@ namespace DeepsightSqlite
                     string ProductSerial = $"ProductSerial-{random.Next(1, 5)}";
                     string pathIndex = $"Path/Index/{Guid.NewGuid().ToString().Substring(0, 8)}";
                     DateTime detectionDate = date.AddHours(random.Next(0, 24)).AddMinutes(random.Next(0, 60));
+                    DateTime? aviCreationTime = detectionDate.AddSeconds(-random.Next(30, 300));
 
                     // Side A
                     var sideAData = new SideData
@@ -477,6 +478,22 @@ namespace DeepsightSqlite
                         HeatPoints = new List<HeatPoint>()
                     };
                     sideAData.RemainingDefectsCount = random.Next(0, sideAData.TotalDefectsCount + 1);
+
+                    // 根据缺陷数生成 State
+                    if (sideAData.TotalDefectsCount == 0)
+                    {
+                        sideAData.State = 0; // AVI OK
+                    }
+                    else if (sideAData.RemainingDefectsCount == 0)
+                    {
+                        sideAData.State = 1; // AVI NG, AI OK
+                    }
+                    else
+                    {
+                        // 随机分配 2 (仍NG) 或 3 (未检测)
+                        sideAData.State = random.Next(2, 4);
+                    }
+
                     for (int j = 0; j < sideAData.TotalDefectsCount; j++)
                     {
                         sideAData.HeatPoints.Add(new HeatPoint());
@@ -491,7 +508,8 @@ namespace DeepsightSqlite
                         ProductSerial = ProductSerial,
                         PathIndex = pathIndex,
                         Side = "A",
-                        Data = sideAData
+                        Data = sideAData,
+                        AviCreationTime = aviCreationTime
                     };
                     dbHelper.SavePanelSide(recordA);
 
@@ -502,6 +520,21 @@ namespace DeepsightSqlite
                         HeatPoints = new List<HeatPoint>()
                     };
                     sideBData.RemainingDefectsCount = random.Next(0, sideBData.TotalDefectsCount + 1);
+
+                    // 根据缺陷数生成 State
+                    if (sideBData.TotalDefectsCount == 0)
+                    {
+                        sideBData.State = 0; // AVI OK
+                    }
+                    else if (sideBData.RemainingDefectsCount == 0)
+                    {
+                        sideBData.State = 1; // AVI NG, AI OK
+                    }
+                    else
+                    {
+                        sideBData.State = random.Next(2, 4); // 随机分配 2 (仍NG) 或 3 (未检测)
+                    }
+
                     for (int j = 0; j < sideBData.TotalDefectsCount; j++)
                     {
                         sideBData.HeatPoints.Add(new HeatPoint());
@@ -516,7 +549,8 @@ namespace DeepsightSqlite
                         ProductSerial = ProductSerial,
                         PathIndex = pathIndex,
                         Side = "B",
-                        Data = sideBData
+                        Data = sideBData,
+                        AviCreationTime = aviCreationTime
                     };
                     dbHelper.SavePanelSide(recordB);
                 }

@@ -53,8 +53,9 @@ namespace DeepSightAI.SettingPages
         public double AviPassRate
         {
             get { return aviPassRate; }
-            set {
-                if (aviPassRate!=value)
+            set
+            {
+                if (aviPassRate != value)
                 {
                     aviPassRate = value;
                     UpdateDisplay();
@@ -163,10 +164,49 @@ namespace DeepSightAI.SettingPages
         public AviCtr2(WatchPathConfig _config)
         {
             InitializeComponent();
+            // 设置半透明背景
+            this.BackColor = Color.FromArgb(210, 47, 53, 77); // 100是透明度 (0-255), 后面是RGB颜色
+            SetTransparentBackground(this);
+
             InitializeToolTip();
             ctrConfig = _config;
             SetName(ctrConfig.AviName);
             UpdateDisplay();
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+            // 绘制边框
+            Color borderColor = ColorTranslator.FromHtml("#5F78A0");
+            int borderWidth = 2; // 边框宽度
+            using (Pen borderPen = new Pen(borderColor, borderWidth))
+            {
+                // 绘制一个矩形作为边框
+                // 为了让边框完全在控件内部，需要从 (borderWidth / 2) 开始绘制
+                e.Graphics.DrawRectangle(borderPen,
+                                         borderWidth / 2,
+                                         borderWidth / 2,
+                                         this.ClientSize.Width - borderWidth,
+                                         this.ClientSize.Height - borderWidth);
+            }
+        }
+
+        private void SetTransparentBackground(Control control)
+        {
+            foreach (Control c in control.Controls)
+            {
+                // 对 Label 和 PictureBox 设置透明背景
+                if (c is Label || c is PictureBox)
+                {
+                    c.BackColor = Color.Transparent;
+                }
+                // 递归设置子控件
+                if (c.HasChildren)
+                {
+                    SetTransparentBackground(c);
+                }
+            }
         }
         private void InitializeToolTip()
         {
@@ -186,13 +226,13 @@ namespace DeepSightAI.SettingPages
             //SetAiPassRate($"{ratio:P2}");
             SetOperatingRate($"{Utilization:P2}");
 
-            lblAiPassRate.Text= $"AI:{ratio:P2}";
-            lblAviPassRate.Text= $"AVI:{AviPassRate:P2}";
+            lblAiPassRate.Text = $"AI Pass Rate:{ratio:P2}";
+            lblAviPassRate.Text = $"AVI Pass Rate:{AviPassRate:P2}";
 
-            labelCurrentPartNumberValue.Text= ProductSerial;
+            labelCurrentPartNumberValue.Text = ProductSerial;
             labelLotValue.Text = LotId;
 
-            if (toolTip != null )
+            if (toolTip != null)
             {
                 toolTip.SetToolTip(this, info.ToString());
             }
@@ -272,12 +312,14 @@ namespace DeepSightAI.SettingPages
         /// <param name="strValue">稼动率值</param>
         public void SetOperatingRate(string strValue)
         {
-            if (this.lblOperatingRate.InvokeRequired) {
+            if (this.lblOperatingRate.InvokeRequired)
+            {
                 this.lblOperatingRate.BeginInvoke(new Action(() => {
                     this.lblOperatingRate.Text = strValue;
                 }));
             }
-            else {
+            else
+            {
                 this.lblOperatingRate.Text = strValue;
             }
         }
@@ -288,12 +330,14 @@ namespace DeepSightAI.SettingPages
         /// <param name="strValue">AI Pass Rate 值</param>
         public void SetAiPassRate(string strValue)
         {
-            if (this.lblAiPassRate.InvokeRequired) {
+            if (this.lblAiPassRate.InvokeRequired)
+            {
                 this.lblAiPassRate.BeginInvoke(new Action(() => {
                     this.lblAiPassRate.Text = strValue;
                 }));
             }
-            else {
+            else
+            {
                 this.lblAiPassRate.Text = strValue;
             }
         }

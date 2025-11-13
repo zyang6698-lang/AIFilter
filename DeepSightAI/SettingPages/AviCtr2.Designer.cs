@@ -31,13 +31,13 @@
             this.labelCurrentWorkOrder = new System.Windows.Forms.Label();
             this.labelCurrentPartNumber = new System.Windows.Forms.Label();
             this.labelLineName = new System.Windows.Forms.Label();
-            this.pictureBoxStatus = new System.Windows.Forms.PictureBox();
             this.labelCurrentPartNumberValue = new System.Windows.Forms.Label();
             this.labelLotValue = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.lblOperatingRate = new System.Windows.Forms.Label();
             this.lblAiPassRate = new System.Windows.Forms.Label();
             this.lblAviPassRate = new System.Windows.Forms.Label();
+            this.pictureBoxStatus = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxStatus)).BeginInit();
             this.SuspendLayout();
             // 
@@ -45,17 +45,17 @@
             // 
             this.labelCurrentWorkOrder.AutoSize = true;
             this.labelCurrentWorkOrder.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(199)))), ((int)(((byte)(220)))));
-            this.labelCurrentWorkOrder.Location = new System.Drawing.Point(160, 64);
+            this.labelCurrentWorkOrder.Location = new System.Drawing.Point(14, 101);
             this.labelCurrentWorkOrder.Name = "labelCurrentWorkOrder";
-            this.labelCurrentWorkOrder.Size = new System.Drawing.Size(53, 15);
+            this.labelCurrentWorkOrder.Size = new System.Drawing.Size(47, 15);
             this.labelCurrentWorkOrder.TabIndex = 4;
-            this.labelCurrentWorkOrder.Text = "工单 :";
+            this.labelCurrentWorkOrder.Text = "Lot :";
             // 
             // labelCurrentPartNumber
             // 
             this.labelCurrentPartNumber.AutoSize = true;
             this.labelCurrentPartNumber.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(199)))), ((int)(((byte)(220)))));
-            this.labelCurrentPartNumber.Location = new System.Drawing.Point(17, 64);
+            this.labelCurrentPartNumber.Location = new System.Drawing.Point(14, 73);
             this.labelCurrentPartNumber.Name = "labelCurrentPartNumber";
             this.labelCurrentPartNumber.Size = new System.Drawing.Size(53, 15);
             this.labelCurrentPartNumber.TabIndex = 5;
@@ -72,19 +72,11 @@
             this.labelLineName.TabIndex = 6;
             this.labelLineName.Text = "SMT-LINE-A";
             // 
-            // pictureBoxStatus
-            // 
-            this.pictureBoxStatus.Location = new System.Drawing.Point(20, 15);
-            this.pictureBoxStatus.Name = "pictureBoxStatus";
-            this.pictureBoxStatus.Size = new System.Drawing.Size(30, 30);
-            this.pictureBoxStatus.TabIndex = 8;
-            this.pictureBoxStatus.TabStop = false;
-            // 
             // labelCurrentPartNumberValue
             // 
             this.labelCurrentPartNumberValue.AutoSize = true;
             this.labelCurrentPartNumberValue.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(199)))), ((int)(((byte)(220)))));
-            this.labelCurrentPartNumberValue.Location = new System.Drawing.Point(62, 64);
+            this.labelCurrentPartNumberValue.Location = new System.Drawing.Point(52, 73);
             this.labelCurrentPartNumberValue.Name = "labelCurrentPartNumberValue";
             this.labelCurrentPartNumberValue.Size = new System.Drawing.Size(15, 15);
             this.labelCurrentPartNumberValue.TabIndex = 13;
@@ -94,7 +86,7 @@
             // 
             this.labelLotValue.AutoSize = true;
             this.labelLotValue.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(199)))), ((int)(((byte)(220)))));
-            this.labelLotValue.Location = new System.Drawing.Point(208, 64);
+            this.labelLotValue.Location = new System.Drawing.Point(54, 101);
             this.labelLotValue.Name = "labelLotValue";
             this.labelLotValue.Size = new System.Drawing.Size(15, 15);
             this.labelLotValue.TabIndex = 14;
@@ -104,7 +96,7 @@
             // 
             this.label1.AutoSize = true;
             this.label1.ForeColor = System.Drawing.Color.White;
-            this.label1.Location = new System.Drawing.Point(268, 141);
+            this.label1.Location = new System.Drawing.Point(260, 148);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(60, 15);
             this.label1.TabIndex = 15;
@@ -115,7 +107,7 @@
             // 
             this.lblOperatingRate.AutoSize = true;
             this.lblOperatingRate.ForeColor = System.Drawing.Color.LightGray;
-            this.lblOperatingRate.Location = new System.Drawing.Point(338, 141);
+            this.lblOperatingRate.Location = new System.Drawing.Point(318, 148);
             this.lblOperatingRate.Name = "lblOperatingRate";
             this.lblOperatingRate.Size = new System.Drawing.Size(31, 15);
             this.lblOperatingRate.TabIndex = 17;
@@ -127,7 +119,7 @@
             this.lblAiPassRate.AutoSize = true;
             this.lblAiPassRate.Font = new System.Drawing.Font("宋体", 9F);
             this.lblAiPassRate.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(199)))), ((int)(((byte)(220)))));
-            this.lblAiPassRate.Location = new System.Drawing.Point(160, 97);
+            this.lblAiPassRate.Location = new System.Drawing.Point(147, 101);
             this.lblAiPassRate.Name = "lblAiPassRate";
             this.lblAiPassRate.Size = new System.Drawing.Size(111, 15);
             this.lblAiPassRate.TabIndex = 18;
@@ -138,11 +130,19 @@
             this.lblAviPassRate.AutoSize = true;
             this.lblAviPassRate.Font = new System.Drawing.Font("宋体", 9F);
             this.lblAviPassRate.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(199)))), ((int)(((byte)(220)))));
-            this.lblAviPassRate.Location = new System.Drawing.Point(17, 97);
+            this.lblAviPassRate.Location = new System.Drawing.Point(147, 68);
             this.lblAviPassRate.Name = "lblAviPassRate";
             this.lblAviPassRate.Size = new System.Drawing.Size(111, 15);
             this.lblAviPassRate.TabIndex = 20;
             this.lblAviPassRate.Text = "AVI Pass Rate";
+            // 
+            // pictureBoxStatus
+            // 
+            this.pictureBoxStatus.Location = new System.Drawing.Point(20, 15);
+            this.pictureBoxStatus.Name = "pictureBoxStatus";
+            this.pictureBoxStatus.Size = new System.Drawing.Size(30, 30);
+            this.pictureBoxStatus.TabIndex = 8;
+            this.pictureBoxStatus.TabStop = false;
             // 
             // AviCtr2
             // 
@@ -160,7 +160,7 @@
             this.Controls.Add(this.labelCurrentPartNumber);
             this.Controls.Add(this.labelCurrentWorkOrder);
             this.Name = "AviCtr2";
-            this.Size = new System.Drawing.Size(351, 127);
+            this.Size = new System.Drawing.Size(296, 145);
             this.DoubleClick += new System.EventHandler(this.AviCtr2_DoubleClick);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxStatus)).EndInit();
             this.ResumeLayout(false);

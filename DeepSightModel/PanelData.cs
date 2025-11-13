@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DeepSightModel
 {
@@ -71,54 +72,68 @@ namespace DeepSightModel
 
         public static BoardStat GetBoardStat(List<PanelDataRecord> records)
         {
-
-            int aviCount = 0;
-            int aviOKCount = 0;
-            int aiFilterCount = 0;
-            int aiFilterOKCount = 0;
-            int aiFilterUninspectedCount = 0;
-
-            for (int i = 0; i < records.Count; i++)
-            {
-                aviCount++;
-
-                if (records[i].Sides.Count == 2)
+            // 使用 PLINQ 并行处理记录
+            return records.AsParallel()
+                .Select(record =>
                 {
-                    var sideA = records[i].Sides[0];
-                    var sideB = records[i].Sides[1];
-                    var stateA = sideA.State;
-                    var stateB = sideB.State;
+                    var stat = new BoardStat();
+                    stat.aviPanelCount = 1; // 每个记录计为1
 
-                    aiFilterCount += sideA.TotalDefectsCount + sideB.TotalDefectsCount;
-
-                    if (stateA == 0 && stateB == 0)
-                        aviOKCount++;
-                    else if (stateA == 3 || stateB == 3)
-                        aiFilterUninspectedCount += sideA.TotalDefectsCount + sideB.TotalDefectsCount;
-                    else
+                    if (record.Sides.Count == 2)
                     {
-                        aiFilterOKCount = (sideA.TotalDefectsCount + sideB.TotalDefectsCount) - (sideA.RemainingDefectsCount + sideB.RemainingDefectsCount);
+                        var sideA = record.Sides[0];
+                        var sideB = record.Sides[1];
+                        var stateA = sideA.State;
+                        var stateB = sideB.State;
+
+                        stat.aiFilterCount = sideA.TotalDefectsCount + sideB.TotalDefectsCount;
+                        stat.aiFilterOKCount = (sideA.TotalDefectsCount + sideB.TotalDefectsCount) - (sideA.RemainingDefectsCount + sideB.RemainingDefectsCount);
+
+                        if (stateA == 0 && stateB == 0)
+                            stat.aviPanelOKCount = 1;
+                        else if (stateA == 3 || stateB == 3)
+                            stat.aiFilterUninspectedCount = sideA.TotalDefectsCount + sideB.TotalDefectsCount;
+
+                        if ((sideA.TotalDefectsCount + sideB.TotalDefectsCount)>0&& (sideA.RemainingDefectsCount + sideB.RemainingDefectsCount)==0)
+                        {
+                            stat.aiPanelOKCount = 1;
+                        }
                     }
-                }
-            }
-            return new BoardStat
-            {
-                aviCount = aviCount,
-                aviOKCount = aviOKCount,
-                aiFilterCount = aiFilterCount,
-                aiFilterOKCount = aiFilterOKCount,
-                aiFilterUninspectedCount = aiFilterUninspectedCount
-            };
+                    return stat;
+                })
+                .Aggregate(
+                    new BoardStat(), // 初始累加器
+                    (total, current) => // 聚合函数
+                    {
+                        total.aviPanelCount += current.aviPanelCount;
+                        total.aviPanelOKCount += current.aviPanelOKCount;
+                        total.aiFilterCount += current.aiFilterCount;
+                        total.aiPanelOKCount += current.aiPanelOKCount;
+                        total.aiFilterOKCount += current.aiFilterOKCount;
+                        total.aiFilterUninspectedCount += current.aiFilterUninspectedCount;
+                        return total;
+                    });
         }
     }
 
     public class BoardStat
     {
-      public int aviCount { get; set; }
-      public int aviOKCount { get; set; } 
-      public int aiFilterCount { get; set; } 
-      public int aiFilterOKCount { get; set; } 
-      public int aiFilterUninspectedCount { get; set; } 
+        //  面板维度
+
+        // AVI检测面板总数
+        public int aviPanelCount { get; set; }
+        // AVI检测面板OK数
+        public int aviPanelOKCount { get; set; }
+        //  AI检测面板OK总数
+        public int aiPanelOKCount { get; set; }
+        //  报点维度
+
+        // AI检测报点总数
+        public int aiFilterCount { get; set; }
+        // AI检测报点OK数
+        public int aiFilterOKCount { get; set; }
+        // AI检测未检测报点数
+        public int aiFilterUninspectedCount { get; set; }
     }
 
 

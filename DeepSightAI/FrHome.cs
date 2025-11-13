@@ -74,7 +74,7 @@ namespace DeepSightAI
             Load += FrHome_Load;
             FormClosing += FrHome_FormClosing;
 
-            uph_timer.Interval = 1000 * 5;
+            uph_timer.Interval = 1000 * 2;
             uph_timer.Enabled = true;
             uph_timer.Elapsed += Uph_timer_Elapsed;
         }
@@ -289,7 +289,6 @@ namespace DeepSightAI
         }
 
         public System.Timers.Timer uph_timer = new System.Timers.Timer();
-        int Minutes = 0;
         private void Uph_timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             try
@@ -330,12 +329,17 @@ namespace DeepSightAI
             {
                 this.BeginInvoke(new Action(() =>
                 {
-                    lbl_SnTotalCount.Text = $"今日产量\n{boardStat.aviCount}";
+                    lbl_SnTotalCount.Text = $"今日产量Array\n{boardStat.aviPanelCount}";
                     lbl_totalDefectCount.Text = $"AVI产生图片数\n{boardStat.aiFilterCount}";
                     lbl_AiAllCount.Text = $"AI推理图片数\n{boardStat.aiFilterCount - boardStat.aiFilterUninspectedCount}";
+
                     lbl_aiFilterOKCount.Text = $"AI Pass 图片数\n{boardStat.aiFilterOKCount}";
-                    lbl_aviPassRateCount.Text = $"AVI Pass Rate\n{(double)boardStat.aviOKCount / (boardStat.aviCount):P}";
-                    lbl_filteredOkCount.Text = $"AI Pass Rate\n{(double)boardStat.aiFilterOKCount / (boardStat.aiFilterCount - boardStat.aiFilterUninspectedCount):P}";
+                    lbl_aviPassRateCount.Text = $"AVI Pass Rate_AI前\n{(double)boardStat.aviPanelOKCount / (boardStat.aviPanelCount):P2}";
+                    lbl_filteredOkCount.Text = $"AI Pass Rate\n{(double)boardStat.aiFilterOKCount / (boardStat.aiFilterCount - boardStat.aiFilterUninspectedCount):P2}";
+
+                    lbl_utilizationRate.Text= $"今日机台利用率\n-";
+                    lbl_boardAiPassRate.Text=$"AVI Pass Rate_AI后\n{(double)(boardStat.aviPanelOKCount+boardStat.aiPanelOKCount) / (boardStat.aviPanelCount):P2}";
+                    lbl_CountPerPanel.Text=$"平均报点数\n{(double)boardStat.aiFilterCount/boardStat.aviPanelCount:0.00}";
                 }));
             }
         }
@@ -350,12 +354,6 @@ namespace DeepSightAI
             try
             {
                 uph_timer.Stop();
-                if (code != 0)
-                {
-                    Minutes = 0;
-
-                }
-                //FrmMain.Instance.rich_log.Clear();
             }
             catch (Exception ex)
             {

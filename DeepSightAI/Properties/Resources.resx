@@ -121,14 +121,11 @@
   <data name="258E8E82-945C-49b9-9353-77868CDD1140" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\258E8E82-945C-49b9-9353-77868CDD1140.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="tool2" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\tool2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="search2" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\search2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="Fn2" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Fn2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="machine_red1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\machine_red.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="pho2" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pho2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -139,17 +136,26 @@
   <data name="max" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\max.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="machine_grey" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\machine_grey.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="stop2" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\stop2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="machine_red1" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\machine_red.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="pho1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\pho1.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="按钮__2_" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\按钮 (2).png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="stop1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\stop1.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="在线" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\在线.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="deepsight" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\deepsight.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="tool1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\tool1.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="Error" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Error.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -160,8 +166,8 @@
   <data name="ButtonUp" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\ButtonUp.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="钉子__3_" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\钉子 (3).png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="按钮__2_" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\按钮 (2).png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="login" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\login.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -172,11 +178,11 @@
   <data name="start2" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\start2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="reset1" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\reset1.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="pause1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\pause1.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="alarm1" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\alarm1.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="home2" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\home2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="钉" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\钉.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -190,26 +196,23 @@
   <data name="user2" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\user2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="chart2" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\chart2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="Warn" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Warn.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="home2" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\home2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="钉子__3_" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\钉子 (3).png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="stop1" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\stop1.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="alarm1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\alarm1.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="pause1" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\pause1.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="tool2" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\tool2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="min" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\min.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="deepsight" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\deepsight.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="reset1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\reset1.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="user1" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\user1.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -220,6 +223,9 @@
   <data name="pause2" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pause2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="Fn2" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Fn2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="reset2" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\reset2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -229,17 +235,14 @@
   <data name="按钮" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\按钮.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="tool1" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\tool1.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="按钮__1_" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\按钮 (1).png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="chart2" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\chart2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="start1" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\start1.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="pho1" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\pho1.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="按钮__1_" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\按钮 (1).png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="home1" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\home1.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -250,7 +253,7 @@
   <data name="离线" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\离线.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="machine_grey" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\machine_grey.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="background" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\background.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

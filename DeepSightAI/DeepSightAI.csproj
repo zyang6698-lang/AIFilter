@@ -433,6 +433,9 @@
     <EmbeddedResource Include="SettingPages\AviCtr2.resx">
       <DependentUpon>AviCtr2.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingPages\AviCtr2Container.resx">
+      <DependentUpon>AviCtr2Container.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingPages\FrAIConfig.resx">
       <DependentUpon>FrAIConfig.cs</DependentUpon>
     </EmbeddedResource>
@@ -501,6 +504,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\258E8E82-945C-49b9-9353-77868CDD1140.png" />
+    <Content Include="Resources\background.jpg" />
     <Content Include="Resources\alarm1.png" />
     <Content Include="Resources\alarm2.png" />
     <Content Include="Resources\ButtonDown.png" />
