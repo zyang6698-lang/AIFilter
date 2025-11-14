@@ -1588,115 +1588,30 @@ namespace DeepSightWorkLib
         /// <summary>
         /// 用于测试数据库读写功能的方法
         /// </summary>
-        public void TestDatabaseReadWrite()
-        {
-            try
-            {
-                LogTextHelper.Info("--- 开始数据库读写测试 ---");
-
-                var testDate = DateTime.Now;
-                string machineId = "TestMachine-01";
-                string sn = $"TestSN-{Guid.NewGuid().ToString().Substring(0, 8)}";
-                string lot = "TestLot-123";
-
-                // 1. 准备测试数据并写入数据库
-                LogTextHelper.Info($"准备写入数据: SN={sn}, Lot={lot}");
-
-                // A面数据: 10个总缺陷, 0个剩余缺陷 (AI OK)
-                var recordA = new PanelSideRecord
-                {
-                    MachineId = machineId,
-                    DetectionDate = testDate,
-                    SerialNumber = sn,
-                    LotNumber = lot,
-                    Side = "A",
-                    Data = new SideData
-                    {
-                        TotalDefectsCount = 10,
-                        RemainingDefectsCount = 0,
-                        HeatPoints = new List<HeatPoint>
-                        {
-                            new HeatPoint { DefectName = "Scratch", RoiX = 100, RoiY = 150 },
-                            new HeatPoint { DefectName = "Open", RoiX = 200, RoiY = 250 }
-                        }
-                    }
-                };
-                databaseHelper.SavePanelSide(recordA);
-                LogTextHelper.Info("A面数据写入成功。");
-
-                // B面数据: 8个总缺陷, 0个剩余缺陷 (AI OK)
-                var recordB = new PanelSideRecord
-                {
-                    MachineId = machineId,
-                    DetectionDate = testDate,
-                    SerialNumber = sn,
-                    LotNumber = lot,
-                    Side = "B",
-                    Data = new SideData
-                    {
-                        TotalDefectsCount = 8,
-                        RemainingDefectsCount = 0,
-                        HeatPoints = new List<HeatPoint>
-                        {
-                            new HeatPoint { DefectName = "Short", RoiX = 300, RoiY = 350 }
-                        }
-                    }
-                };
-                databaseHelper.SavePanelSide(recordB);
-                LogTextHelper.Info("B面数据写入成功，面板 IsAIOk 状态已更新。");
-
-                // 2. 执行读取测试
-                LogTextHelper.Info("--- 开始读取验证 ---");
-
-                // 查询逻辑 1: 根据 lot 号获取所有 sn
-                var sns = databaseHelper.GetSerialNumbersByLot(lot);
-                LogTextHelper.Info($"[查询1] Lot '{lot}' 包含的SN: {string.Join(", ", sns)}. (应包含 {sn})");
-
-                // 查询逻辑 2: 根据时间和 sn 获取所有 heatpoint 信息
-                var heatpoints = databaseHelper.GetHeatPoints(sn, testDate);
-                LogTextHelper.Info($"[查询2] SN '{sn}' 在日期 '{testDate.ToShortDateString()}' 的HeatPoints数量: {heatpoints.Count}. (应为 3)");
-
-                // 查询逻辑 3 & 5: 获取机台在时间段内的板数统计
-                var boardCounts = databaseHelper.GetBoardCounts(testDate.Date, testDate.Date.AddDays(1), machineId);
-                LogTextHelper.Info($"[查询3/5] 机台 '{machineId}' 在今天总板数: {boardCounts.TotalBoards}, AI OK 板数: {boardCounts.AIOkBoards}.");
-
-                // 查询逻辑 4 & 6: 获取机台在时间段内的报点数统计
-                var defectCounts = databaseHelper.GetDefectCounts(testDate.Date, testDate.Date.AddDays(1), machineId);
-                LogTextHelper.Info($"[查询4/6] 机台 '{machineId}' 在今天总报点数: {defectCounts.TotalDefects}, AI OK 报点数: {defectCounts.AIOkDefects}. (此面板贡献18个)");
-
-                LogTextHelper.Info("--- 数据库读写测试结束 ---");
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error("数据库测试时发生异常", ex);
-            }
-        }
         public void TestDatabaseWrite()
         {
             DatabaseHelper.GenerateTestData();
         }
-        public Dictionary<string, (long TotalDefects, long AIOkDefects)> GetDefectCountsPerMachine(DateTime start,DateTime end)=>
+        public Task< Dictionary<string, (long TotalDefects, long AIOkDefects)>> GetDefectCountsPerMachine(DateTime start,DateTime end)=>
             databaseHelper.GetDefectCountsPerMachine(start,end);
         public void GenerateVRSTestData()=>DatabaseHelper.GenerateEmployeeReportTestData(5000);
 
-        public (string SerialNumber, string LotNumber,string ProductSerial,string PathIndex) GetLatestPanelInfoByMachineId(string machineId)=>
+        public Task< (string SerialNumber, string LotNumber,string ProductSerial,string PathIndex)> GetLatestPanelInfoByMachineId(string machineId)=>
             databaseHelper.GetLatestPanelInfoByMachineId(machineId);
 
         public void SaveEmployeeReport(EmployeeReport report)=>
             databaseHelper.SaveEmployeeReport(report);
 
-        public (int totalSnCount, int uninspectedCount, int stillNgCount, int aviOkCount, int filteredOkCount) GetSnStateCountsByLot(string lotNumber) =>
+        public Task< (int totalSnCount, int uninspectedCount, int stillNgCount, int aviOkCount, int filteredOkCount)> GetSnStateCountsByLot(string lotNumber) =>
             databaseHelper.GetSnStateCountsByLot(lotNumber);
 
-        public (int totalSnCount, int uninspectedCount, int stillNgCount, int aviOkCount, int filteredOkCount) GetSnStateCountsByTime(DateTime start, DateTime end)=>
-                        databaseHelper.GetSnStateCountsByTime(start, end);
-        public List<PanelDataRecord> GetPanelsData(DateTime start, DateTime end)=>
+        public Task< List<PanelDataRecord> >GetPanelsData(DateTime start, DateTime end)=>
             databaseHelper.GetPanelsData(start, end);
 
-        public (string LotNumber, string ProductSerial) GetLatestLotAndProductSerial(string machineId)=>
+        public Task<(string LotNumber, string ProductSerial)> GetLatestLotAndProductSerial(string machineId)=>
              databaseHelper.GetLatestLotAndProductSerial(machineId);
 
-        public List<PanelDataRecord> GetPanelsDataByMachineAndLot(string machineId, string lotNumber)=>
+        public Task<List<PanelDataRecord>> GetPanelsDataByMachineAndLot(string machineId, string lotNumber)=>
             databaseHelper.GetPanelsDataByMachineAndLot(machineId, lotNumber);
 
         #endregion

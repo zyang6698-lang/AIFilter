@@ -2,17 +2,65 @@ using DeepSightModel;
 using DeepSightTool;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace DeepsightSqlite
 {
-    public class DatabaseHelper
+    public class DatabaseHelper : IDisposable
     {
         private static readonly string dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "deepsight.db");
         private static readonly string connectionString = $"Data Source={dbPath};Version=3;";
+        private readonly BlockingCollection<Action<SQLiteConnection>> _dbQueue = new BlockingCollection<Action<SQLiteConnection>>();
+        private readonly Thread _dbThread;
+        private bool _disposed = false;
+
+        public DatabaseHelper()
+        {
+            _dbThread = new Thread(ProcessQueue)
+            {
+                IsBackground = true,
+                Name = "DatabaseThread"
+            };
+            _dbThread.Start();
+        }
+
+        private void ProcessQueue()
+        {
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+                foreach (var action in _dbQueue.GetConsumingEnumerable())
+                {
+                    if (_disposed) break;
+                    try
+                    {
+                        action(connection);
+                    }
+                    catch (Exception ex)
+                    {
+                        // It's important to log exceptions from the queue
+                        LogTextHelper.Error($"Exception in database queue: {ex}");
+                    }
+                }
+            }
+        }
+
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                _disposed = true;
+                _dbQueue.CompleteAdding();
+                _dbThread.Join();
+                _dbQueue.Dispose();
+            }
+        }
 
         public static void InitializeDatabase()
         {
@@ -80,9 +128,8 @@ namespace DeepsightSqlite
         /// </summary>
         public void SavePanelSide(PanelSideRecord record)
         {
-            using (var connection = new SQLiteConnection(connectionString))
+            _dbQueue.Add(connection =>
             {
-                connection.Open();
                 using (var transaction = connection.BeginTransaction())
                 {
                     long panelId;
@@ -90,6 +137,7 @@ namespace DeepsightSqlite
                     // 1. 查找或创建 Panel 记录
                     using (var cmd = new SQLiteCommand("SELECT Id FROM Panels WHERE SerialNumber = @SN", connection))
                     {
+                        cmd.Transaction = transaction;
                         cmd.Parameters.AddWithValue("@SN", record.SerialNumber);
                         var result = cmd.ExecuteScalar();
                         if (result != null)
@@ -100,7 +148,7 @@ namespace DeepsightSqlite
                         {
                             var insertPanelCmd = new SQLiteCommand(
                                 "INSERT INTO Panels (MachineId, SerialNumber, LotNumber, DetectionDate, IsAIOk, ProductSerial, PathIndex, AviCreationTime) VALUES (@MachineId, @SN, @Lot, @Date, @IsAIOk, @ProductSerial, @PathIndex, @AviCreationTime); SELECT last_insert_rowid();",
-                                connection);
+                                connection, transaction);
                             insertPanelCmd.Parameters.AddWithValue("@MachineId", record.MachineId);
                             insertPanelCmd.Parameters.AddWithValue("@SN", record.SerialNumber);
                             insertPanelCmd.Parameters.AddWithValue("@Lot", record.LotNumber);
@@ -116,7 +164,7 @@ namespace DeepsightSqlite
                     // 2. 插入 SideData
                     var insertSideCmd = new SQLiteCommand(
                         "INSERT INTO PanelSides (PanelId, Side, TotalDefectsCount, RemainingDefectsCount, HeatPoints, State) VALUES (@PanelId, @Side, @Total, @Remaining, @HeatPoints, @State)",
-                        connection);
+                        connection, transaction);
                     insertSideCmd.Parameters.AddWithValue("@PanelId", panelId);
                     insertSideCmd.Parameters.AddWithValue("@Side", record.Side);
                     insertSideCmd.Parameters.AddWithValue("@Total", record.Data.TotalDefectsCount);
@@ -126,7 +174,7 @@ namespace DeepsightSqlite
                     insertSideCmd.ExecuteNonQuery();
 
                     // 3. 检查是否双面数据都已存在，并更新 IsAIOk
-                    var checkSidesCmd = new SQLiteCommand("SELECT Side, TotalDefectsCount, RemainingDefectsCount FROM PanelSides WHERE PanelId = @PanelId", connection);
+                    var checkSidesCmd = new SQLiteCommand("SELECT Side, TotalDefectsCount, RemainingDefectsCount FROM PanelSides WHERE PanelId = @PanelId", connection, transaction);
                     checkSidesCmd.Parameters.AddWithValue("@PanelId", panelId);
                     var sides = new List<(string Side, int Total, int Remaining)>();
                     using (var reader = checkSidesCmd.ExecuteReader())
@@ -143,7 +191,7 @@ namespace DeepsightSqlite
                         bool isSideBOk = sides.Any(s => s.Side == "B" && s.Total > 0 && s.Remaining == 0);
                         bool isPanelAIOk = isSideAOk && isSideBOk;
 
-                        var updatePanelCmd = new SQLiteCommand("UPDATE Panels SET IsAIOk = @IsAIOk WHERE Id = @PanelId", connection);
+                        var updatePanelCmd = new SQLiteCommand("UPDATE Panels SET IsAIOk = @IsAIOk WHERE Id = @PanelId", connection, transaction);
                         updatePanelCmd.Parameters.AddWithValue("@IsAIOk", isPanelAIOk);
                         updatePanelCmd.Parameters.AddWithValue("@PanelId", panelId);
                         updatePanelCmd.ExecuteNonQuery();
@@ -151,101 +199,136 @@ namespace DeepsightSqlite
 
                     transaction.Commit();
                 }
-            }
+            });
         }
 
         // 查询逻辑 1: 根据 lot 号获取所有 sn
-        public List<string> GetSerialNumbersByLot(string lotNumber)
+        public Task<List<string>> GetSerialNumbersByLot(string lotNumber)
         {
-            var serialNumbers = new List<string>();
-            using (var connection = new SQLiteConnection(connectionString))
+            var tcs = new TaskCompletionSource<List<string>>();
+            _dbQueue.Add(connection =>
             {
-                connection.Open();
-                var cmd = new SQLiteCommand("SELECT SerialNumber FROM Panels WHERE LotNumber = @Lot", connection);
-                cmd.Parameters.AddWithValue("@Lot", lotNumber);
-                using (var reader = cmd.ExecuteReader())
+                try
                 {
-                    while (reader.Read())
+                    var serialNumbers = new List<string>();
+                    using (var cmd = new SQLiteCommand("SELECT SerialNumber FROM Panels WHERE LotNumber = @Lot", connection))
                     {
-                        serialNumbers.Add(reader.GetString(0));
+                        cmd.Parameters.AddWithValue("@Lot", lotNumber);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                serialNumbers.Add(reader.GetString(0));
+                            }
+                        }
                     }
+                    tcs.SetResult(serialNumbers);
                 }
-            }
-            return serialNumbers;
+                catch (Exception ex)
+                {
+                    tcs.SetException(ex);
+                }
+            });
+            return tcs.Task;
         }
 
         // 查询逻辑 2: 根据时间和 sn 获取所有 heatpoint 信息
-        public List<HeatPoint> GetHeatPoints(string serialNumber, DateTime detectionDate)
+        public Task<List<HeatPoint>> GetHeatPoints(string serialNumber, DateTime detectionDate)
         {
-            var heatPoints = new List<HeatPoint>();
-            using (var connection = new SQLiteConnection(connectionString))
+            var tcs = new TaskCompletionSource<List<HeatPoint>>();
+            _dbQueue.Add(connection =>
             {
-                connection.Open();
-                var cmd = new SQLiteCommand(
-                    "SELECT ps.HeatPoints FROM PanelSides ps JOIN Panels p ON ps.PanelId = p.Id WHERE p.SerialNumber = @SN AND date(p.DetectionDate) = date(@Date)",
-                    connection);
-                cmd.Parameters.AddWithValue("@SN", serialNumber);
-                cmd.Parameters.AddWithValue("@Date", detectionDate.Date);
-
-                using (var reader = cmd.ExecuteReader())
+                try
                 {
-                    while (reader.Read())
+                    var heatPoints = new List<HeatPoint>();
+                    using (var cmd = new SQLiteCommand(
+                        "SELECT ps.HeatPoints FROM PanelSides ps JOIN Panels p ON ps.PanelId = p.Id WHERE p.SerialNumber = @SN AND date(p.DetectionDate) = date(@Date)",
+                        connection))
                     {
-                        if (!reader.IsDBNull(0))
+                        cmd.Parameters.AddWithValue("@SN", serialNumber);
+                        cmd.Parameters.AddWithValue("@Date", detectionDate.Date);
+
+                        using (var reader = cmd.ExecuteReader())
                         {
-                            var heatPointsJson = reader.GetString(0);
-                            var points = JsonConvert.DeserializeObject<List<HeatPoint>>(heatPointsJson);
-                            if (points != null)
+                            while (reader.Read())
                             {
-                                heatPoints.AddRange(points);
+                                if (!reader.IsDBNull(0))
+                                {
+                                    var heatPointsJson = reader.GetString(0);
+                                    var points = JsonConvert.DeserializeObject<List<HeatPoint>>(heatPointsJson);
+                                    if (points != null)
+                                    {
+                                        heatPoints.AddRange(points);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    tcs.SetResult(heatPoints);
+                }
+                catch (Exception ex)
+                {
+                    tcs.SetException(ex);
+                }
+            });
+            return tcs.Task;
+        }
+
+        // 查询逻辑 3 & 5 的组合: 获取机台在时间段内的板数统计
+        public Task<(int TotalBoards, int AIOkBoards)> GetBoardCounts(DateTime start, DateTime end, string machineId = null)
+        {
+            var tcs = new TaskCompletionSource<(int, int)>();
+            _dbQueue.Add(connection =>
+            {
+                try
+                {
+                    var sql = "SELECT COUNT(*), SUM(CASE WHEN IsAIOk = 1 THEN 1 ELSE 0 END) FROM Panels WHERE DetectionDate BETWEEN @Start AND @End";
+                    if (!string.IsNullOrEmpty(machineId))
+                    {
+                        sql += " AND MachineId = @MachineId";
+                    }
+
+                    using (var cmd = new SQLiteCommand(sql, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@Start", start);
+                        cmd.Parameters.AddWithValue("@End", end);
+                        if (!string.IsNullOrEmpty(machineId))
+                        {
+                            cmd.Parameters.AddWithValue("@MachineId", machineId);
+                        }
+
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                int totalBoards = reader.GetInt32(0);
+                                int aiOkBoards = reader.IsDBNull(1) ? 0 : reader.GetInt32(1);
+                                tcs.SetResult((totalBoards, aiOkBoards));
+                            }
+                            else
+                            {
+                                tcs.SetResult((0, 0));
                             }
                         }
                     }
                 }
-            }
-            return heatPoints;
-        }
-
-        // 查询逻辑 3 & 5 的组合: 获取机台在时间段内的板数统计
-        public (int TotalBoards, int AIOkBoards) GetBoardCounts(DateTime start, DateTime end, string machineId = null)
-        {
-            using (var connection = new SQLiteConnection(connectionString))
-            {
-                connection.Open();
-                var sql = "SELECT COUNT(*), SUM(CASE WHEN IsAIOk = 1 THEN 1 ELSE 0 END) FROM Panels WHERE DetectionDate BETWEEN @Start AND @End";
-                if (!string.IsNullOrEmpty(machineId))
+                catch (Exception ex)
                 {
-                    sql += " AND MachineId = @MachineId";
+                    tcs.SetException(ex);
                 }
-
-                var cmd = new SQLiteCommand(sql, connection);
-                cmd.Parameters.AddWithValue("@Start", start);
-                cmd.Parameters.AddWithValue("@End", end);
-                if (!string.IsNullOrEmpty(machineId))
-                {
-                    cmd.Parameters.AddWithValue("@MachineId", machineId);
-                }
-
-                using (var reader = cmd.ExecuteReader())
-                {
-                    if (reader.Read())
-                    {
-                        int totalBoards = reader.GetInt32(0);
-                        int aiOkBoards = reader.IsDBNull(1) ? 0 : reader.GetInt32(1);
-                        return (totalBoards, aiOkBoards);
-                    }
-                }
-            }
-            return (0, 0);
+            });
+            return tcs.Task;
         }
 
         // 查询逻辑 4 & 6 的组合: 获取机台在时间段内的报点数统计
-        public (long TotalDefects, long AIOkDefects) GetDefectCounts(DateTime start, DateTime end, string machineId = null)
+        public Task<(long TotalDefects, long AIOkDefects)> GetDefectCounts(DateTime start, DateTime end, string machineId = null)
         {
-            using (var connection = new SQLiteConnection(connectionString))
+            var tcs = new TaskCompletionSource<(long, long)>();
+            _dbQueue.Add(connection =>
             {
-                connection.Open();
-                var sql = @"
+                try
+                {
+                    var sql = @"
                 SELECT 
                     SUM(ps.TotalDefectsCount),
                     SUM(CASE WHEN p.IsAIOk = 1 THEN ps.TotalDefectsCount ELSE 0 END)
@@ -253,38 +336,48 @@ namespace DeepsightSqlite
                 JOIN Panels p ON ps.PanelId = p.Id
                 WHERE p.DetectionDate BETWEEN @Start AND @End";
 
-                if (!string.IsNullOrEmpty(machineId))
-                {
-                    sql += " AND p.MachineId = @MachineId";
-                }
-
-                var cmd = new SQLiteCommand(sql, connection);
-                cmd.Parameters.AddWithValue("@Start", start);
-                cmd.Parameters.AddWithValue("@End", end);
-                if (!string.IsNullOrEmpty(machineId))
-                {
-                    cmd.Parameters.AddWithValue("@MachineId", machineId);
-                }
-
-                using (var reader = cmd.ExecuteReader())
-                {
-                    if (reader.Read())
+                    if (!string.IsNullOrEmpty(machineId))
                     {
-                        long totalDefects = reader.IsDBNull(0) ? 0 : Convert.ToInt64(reader.GetValue(0));
-                        long aiOkDefects = reader.IsDBNull(1) ? 0 : Convert.ToInt64(reader.GetValue(1));
-                        return (totalDefects, aiOkDefects);
+                        sql += " AND p.MachineId = @MachineId";
+                    }
+
+                    using (var cmd = new SQLiteCommand(sql, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@Start", start);
+                        cmd.Parameters.AddWithValue("@End", end);
+                        if (!string.IsNullOrEmpty(machineId))
+                        {
+                            cmd.Parameters.AddWithValue("@MachineId", machineId);
+                        }
+
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                long totalDefects = reader.IsDBNull(0) ? 0 : Convert.ToInt64(reader.GetValue(0));
+                                long aiOkDefects = reader.IsDBNull(1) ? 0 : Convert.ToInt64(reader.GetValue(1));
+                                tcs.SetResult((totalDefects, aiOkDefects));
+                            }
+                            else
+                            {
+                                tcs.SetResult((0, 0));
+                            }
+                        }
                     }
                 }
-            }
-            return (0, 0);
+                catch (Exception ex)
+                {
+                    tcs.SetException(ex);
+                }
+            });
+            return tcs.Task;
         }
 
 
         public void SaveEmployeeReport(EmployeeReport report)
         {
-            using (var connection = new SQLiteConnection(connectionString))
+            _dbQueue.Add(connection =>
             {
-                connection.Open();
                 var sql = "INSERT INTO EmployeeReports (EmployeeID, SN, AllNGNumber, StartTime, EndTime, VRSOKNumber) VALUES (@ID, @SN, @AllNGNumber, @StartTime, @EndTime, @VRSOKNumber)";
                 using (var cmd = new SQLiteCommand(sql, connection))
                 {
@@ -296,72 +389,90 @@ namespace DeepsightSqlite
                     cmd.Parameters.AddWithValue("@VRSOKNumber", report.VRSOKNumber);
                     cmd.ExecuteNonQuery();
                 }
-            }
+            });
         }
 
-        public List<EmployeeReport> GetEmployeeReports(DateTime start, DateTime end)
+        public Task<List<EmployeeReport>> GetEmployeeReports(DateTime start, DateTime end)
         {
-            var reports = new List<EmployeeReport>();
-            using (var connection = new SQLiteConnection(connectionString))
+            var tcs = new TaskCompletionSource<List<EmployeeReport>>();
+            _dbQueue.Add(connection =>
             {
-                connection.Open();
-                var sql = "SELECT EmployeeID, SN, AllNGNumber, StartTime, EndTime, VRSOKNumber FROM EmployeeReports WHERE StartTime >= @Start AND EndTime <= @End";
-                using (var cmd = new SQLiteCommand(sql, connection))
+                try
                 {
-                    cmd.Parameters.AddWithValue("@Start", start);
-                    cmd.Parameters.AddWithValue("@End", end);
-                    using (var reader = cmd.ExecuteReader())
+                    var reports = new List<EmployeeReport>();
+                    var sql = "SELECT EmployeeID, SN, AllNGNumber, StartTime, EndTime, VRSOKNumber FROM EmployeeReports WHERE StartTime >= @Start AND EndTime <= @End";
+                    using (var cmd = new SQLiteCommand(sql, connection))
                     {
-                        while (reader.Read())
+                        cmd.Parameters.AddWithValue("@Start", start);
+                        cmd.Parameters.AddWithValue("@End", end);
+                        using (var reader = cmd.ExecuteReader())
                         {
-                            reports.Add(new EmployeeReport
+                            while (reader.Read())
                             {
-                                ID = reader.GetString(0),
-                                SN = reader.GetString(1),
-                                AllNGNumber = reader.GetInt32(2),
-                                StartTime = reader.GetDateTime(3),
-                                EndTime = reader.GetDateTime(4),
-                                VRSOKNumber = reader.GetInt32(5)
-                            });
+                                reports.Add(new EmployeeReport
+                                {
+                                    ID = reader.GetString(0),
+                                    SN = reader.GetString(1),
+                                    AllNGNumber = reader.GetInt32(2),
+                                    StartTime = reader.GetDateTime(3),
+                                    EndTime = reader.GetDateTime(4),
+                                    VRSOKNumber = reader.GetInt32(5)
+                                });
+                            }
                         }
                     }
+                    tcs.SetResult(reports);
                 }
-            }
-            return reports;
+                catch (Exception ex)
+                {
+                    tcs.SetException(ex);
+                }
+            });
+            return tcs.Task;
         }
 
         /// <summary>
         /// 获取数据库中所有唯一的 MachineId
         /// </summary>
-        public List<string> GetAllMachineIds()
+        public Task<List<string>> GetAllMachineIds()
         {
-            var machineIds = new List<string>();
-            using (var connection = new SQLiteConnection(connectionString))
+            var tcs = new TaskCompletionSource<List<string>>();
+            _dbQueue.Add(connection =>
             {
-                connection.Open();
-                var cmd = new SQLiteCommand("SELECT DISTINCT MachineId FROM Panels", connection);
-                using (var reader = cmd.ExecuteReader())
+                try
                 {
-                    while (reader.Read())
+                    var machineIds = new List<string>();
+                    using (var cmd = new SQLiteCommand("SELECT DISTINCT MachineId FROM Panels", connection))
                     {
-                        machineIds.Add(reader.GetString(0));
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                machineIds.Add(reader.GetString(0));
+                            }
+                        }
                     }
+                    tcs.SetResult(machineIds);
                 }
-            }
-            return machineIds;
+                catch (Exception ex)
+                {
+                    tcs.SetException(ex);
+                }
+            });
+            return tcs.Task;
         }
 
         /// <summary>
         /// 获取每个机台在时间段内的板数统计
         /// </summary>
-        public Dictionary<string, (int TotalBoards, int AIOkBoards)> GetBoardCountsPerMachine(DateTime start, DateTime end)
+        public async Task<Dictionary<string, (int TotalBoards, int AIOkBoards)>> GetBoardCountsPerMachine(DateTime start, DateTime end)
         {
             var results = new Dictionary<string, (int TotalBoards, int AIOkBoards)>();
-            var machineIds = GetAllMachineIds();
+            var machineIds = await GetAllMachineIds();
 
             foreach (var machineId in machineIds)
             {
-                var counts = GetBoardCounts(start, end, machineId);
+                var counts = await GetBoardCounts(start, end, machineId);
                 if (counts.TotalBoards > 0) // 只添加有数据的机台
                 {
                     results[machineId] = counts;
@@ -373,14 +484,14 @@ namespace DeepsightSqlite
         /// <summary>
         /// 获取每个机台在时间段内的报点数统计
         /// </summary>
-        public Dictionary<string, (long TotalDefects, long AIOkDefects)> GetDefectCountsPerMachine(DateTime start, DateTime end)
+        public async Task<Dictionary<string, (long TotalDefects, long AIOkDefects)>> GetDefectCountsPerMachine(DateTime start, DateTime end)
         {
             var results = new Dictionary<string, (long TotalDefects, long AIOkDefects)>();
-            var machineIds = GetAllMachineIds();
+            var machineIds = await GetAllMachineIds();
 
             foreach (var machineId in machineIds)
             {
-                var counts = GetDefectCounts(start, end, machineId);
+                var counts = await GetDefectCounts(start, end, machineId);
                 if (counts.TotalDefects > 0) // 只添加有数据的机台
                 {
                     results[machineId] = counts;
@@ -392,24 +503,34 @@ namespace DeepsightSqlite
         /// <summary>
         /// 获取一个时间段内所有的 DetectionDate
         /// </summary>
-        public List<DateTime> GetDetectionDates(DateTime start, DateTime end)
+        public Task<List<DateTime>> GetDetectionDates(DateTime start, DateTime end)
         {
-            var detectionDates = new List<DateTime>();
-            using (var connection = new SQLiteConnection(connectionString))
+            var tcs = new TaskCompletionSource<List<DateTime>>();
+            _dbQueue.Add(connection =>
             {
-                connection.Open();
-                var cmd = new SQLiteCommand("SELECT DISTINCT DetectionDate FROM Panels WHERE DetectionDate BETWEEN @Start AND @End", connection);
-                cmd.Parameters.AddWithValue("@Start", start);
-                cmd.Parameters.AddWithValue("@End", end);
-                using (var reader = cmd.ExecuteReader())
+                try
                 {
-                    while (reader.Read())
+                    var detectionDates = new List<DateTime>();
+                    using (var cmd = new SQLiteCommand("SELECT DISTINCT DetectionDate FROM Panels WHERE DetectionDate BETWEEN @Start AND @End", connection))
                     {
-                        detectionDates.Add(reader.GetDateTime(0));
+                        cmd.Parameters.AddWithValue("@Start", start);
+                        cmd.Parameters.AddWithValue("@End", end);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                detectionDates.Add(reader.GetDateTime(0));
+                            }
+                        }
                     }
+                    tcs.SetResult(detectionDates);
                 }
-            }
-            return detectionDates;
+                catch (Exception ex)
+                {
+                    tcs.SetException(ex);
+                }
+            });
+            return tcs.Task;
         }
 
         /// <summary>
@@ -417,35 +538,41 @@ namespace DeepsightSqlite
         /// </summary>
         /// <param name="machineId">机器ID</param>
         /// <returns>最新的 SN 和 Lot</returns>
-        public (string SerialNumber, string LotNumber, string ProductSerial,string PathIndex) GetLatestPanelInfoByMachineId(string machineId)
+        public Task<(string SerialNumber, string LotNumber, string ProductSerial, string PathIndex)> GetLatestPanelInfoByMachineId(string machineId)
         {
-            try
+            var tcs = new TaskCompletionSource<(string, string, string, string)>();
+            _dbQueue.Add(connection =>
             {
-                using (var connection = new SQLiteConnection(connectionString))
+                try
                 {
-                    connection.Open();
-                    var cmd = new SQLiteCommand("SELECT SerialNumber, LotNumber, ProductSerial, PathIndex, AviCreationTime FROM Panels WHERE MachineId = @MachineId ORDER BY DetectionDate DESC LIMIT 1", connection);
-                    cmd.Parameters.AddWithValue("@MachineId", machineId);
-                    using (var reader = cmd.ExecuteReader())
+                    using (var cmd = new SQLiteCommand("SELECT SerialNumber, LotNumber, ProductSerial, PathIndex, AviCreationTime FROM Panels WHERE MachineId = @MachineId ORDER BY DetectionDate DESC LIMIT 1", connection))
                     {
-                        if (reader.Read())
+                        cmd.Parameters.AddWithValue("@MachineId", machineId);
+                        using (var reader = cmd.ExecuteReader())
                         {
-                            string serialNumber = reader.GetString(0);
-                            string lotNumber = reader.GetString(1);
-                            string ProductSerial = reader.IsDBNull(2) ? null : reader.GetString(2);
-                            string pathIndex = reader.IsDBNull(3) ? null : reader.GetString(3);
-                            DateTime? AviCreationTime = reader.IsDBNull(4) ? (DateTime?)null : reader.GetDateTime(4);
-                            return (serialNumber, lotNumber, ProductSerial, pathIndex);
+                            if (reader.Read())
+                            {
+                                string serialNumber = reader.GetString(0);
+                                string lotNumber = reader.GetString(1);
+                                string ProductSerial = reader.IsDBNull(2) ? null : reader.GetString(2);
+                                string pathIndex = reader.IsDBNull(3) ? null : reader.GetString(3);
+                                tcs.SetResult((serialNumber, lotNumber, ProductSerial, pathIndex));
+                            }
+                            else
+                            {
+                                tcs.SetResult((null, null, null, null));
+                            }
                         }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                // Log the exception
-                LogTextHelper.Warn($"Error in GetLatestPanelInfoByMachineId: {ex.Message}");
-            }
-            return (null, null, null, null);
+                catch (Exception ex)
+                {
+                    // Log the exception
+                    LogTextHelper.Warn($"Error in GetLatestPanelInfoByMachineId: {ex.Message}");
+                    tcs.SetException(ex);
+                }
+            });
+            return tcs.Task;
         }
 
         /// <summary>
@@ -565,67 +692,75 @@ namespace DeepsightSqlite
         /// <param name="start"></param>
         /// <param name="end"></param>
         /// <returns></returns>
-        public (int totalSnCount, int uninspectedCount, int stillNgCount, int aviOkCount, int filteredOkCount) GetSnStateCounts(DateTime start, DateTime end)
+        public Task<(int totalSnCount, int uninspectedCount, int stillNgCount, int aviOkCount, int filteredOkCount)> GetSnStateCounts(DateTime start, DateTime end)
         {
-            var snStates = new Dictionary<string, List<int?>>();
-            using (var connection = new SQLiteConnection(connectionString))
+            var tcs = new TaskCompletionSource<(int, int, int, int, int)>();
+            _dbQueue.Add(connection =>
             {
-                connection.Open();
-                var sql = @"
+                try
+                {
+                    var snStates = new Dictionary<string, List<int?>>();
+                    var sql = @"
                     SELECT p.SerialNumber, ps.State
                     FROM Panels p
                     JOIN PanelSides ps ON p.Id = ps.PanelId
                     WHERE p.DetectionDate BETWEEN @Start AND @End";
 
-                using (var cmd = new SQLiteCommand(sql, connection))
-                {
-                    cmd.Parameters.AddWithValue("@Start", start);
-                    cmd.Parameters.AddWithValue("@End", end);
-                    using (var reader = cmd.ExecuteReader())
+                    using (var cmd = new SQLiteCommand(sql, connection))
                     {
-                        while (reader.Read())
+                        cmd.Parameters.AddWithValue("@Start", start);
+                        cmd.Parameters.AddWithValue("@End", end);
+                        using (var reader = cmd.ExecuteReader())
                         {
-                            string sn = reader.GetString(0);
-                            int? state = reader.IsDBNull(1) ? (int?)null : reader.GetInt32(1);
-
-                            if (!snStates.ContainsKey(sn))
+                            while (reader.Read())
                             {
-                                snStates[sn] = new List<int?>();
+                                string sn = reader.GetString(0);
+                                int? state = reader.IsDBNull(1) ? (int?)null : reader.GetInt32(1);
+
+                                if (!snStates.ContainsKey(sn))
+                                {
+                                    snStates[sn] = new List<int?>();
+                                }
+                                snStates[sn].Add(state);
                             }
-                            snStates[sn].Add(state);
                         }
                     }
+
+                    int totalSnCount = snStates.Count;
+                    int uninspectedCount = 0;
+                    int stillNgCount = 0;
+                    int aviOkCount = 0;
+
+                    foreach (var states in snStates.Values)
+                    {
+                        // 1. 如果有一个state为3，则添加到未检测结果数
+                        if (states.Any(s => s == 3))
+                        {
+                            uninspectedCount++;
+                        }
+                        // 2. 如果有一个state为2，则添加到过滤后仍NG结果数
+                        else if (states.Any(s => s == 2))
+                        {
+                            stillNgCount++;
+                        }
+                        // 3. 如果有两个state为0，则添加到AVI OK的结果数
+                        else if (states.Count(s => s == 0) == 2)
+                        {
+                            aviOkCount++;
+                        }
+                    }
+
+                    // 4. 剩余情况，添加到过滤后OK的数
+                    int filteredOkCount = totalSnCount - uninspectedCount - stillNgCount - aviOkCount;
+
+                    tcs.SetResult((totalSnCount, uninspectedCount, stillNgCount, aviOkCount, filteredOkCount));
                 }
-            }
-
-            int totalSnCount = snStates.Count;
-            int uninspectedCount = 0;
-            int stillNgCount = 0;
-            int aviOkCount = 0;
-
-            foreach (var states in snStates.Values)
-            {
-                // 1. 如果有一个state为3，则添加到未检测结果数
-                if (states.Any(s => s == 3))
+                catch (Exception ex)
                 {
-                    uninspectedCount++;
+                    tcs.SetException(ex);
                 }
-                // 2. 如果有一个state为2，则添加到过滤后仍NG结果数
-                else if (states.Any(s => s == 2))
-                {
-                    stillNgCount++;
-                }
-                // 3. 如果有两个state为0，则添加到AVI OK的结果数
-                else if (states.Count(s => s == 0) == 2)
-                {
-                    aviOkCount++;
-                }
-            }
-
-            // 4. 剩余情况，添加到过滤后OK的数
-            int filteredOkCount = totalSnCount - uninspectedCount - stillNgCount - aviOkCount;
-
-            return (totalSnCount, uninspectedCount, stillNgCount, aviOkCount, filteredOkCount);
+            });
+            return tcs.Task;
         }
 
 
@@ -638,224 +773,255 @@ namespace DeepsightSqlite
         /// </summary>
         /// <param name="lotNumber"></param>
         /// <returns></returns>
-        public (int totalSnCount, int uninspectedCount, int stillNgCount, int aviOkCount, int filteredOkCount) GetSnStateCountsByLot(string lotNumber)
+        public Task<(int totalSnCount, int uninspectedCount, int stillNgCount, int aviOkCount, int filteredOkCount)> GetSnStateCountsByLot(string lotNumber)
         {
-            var snStates = new Dictionary<string, List<int?>>();
-            using (var connection = new SQLiteConnection(connectionString))
+            var tcs = new TaskCompletionSource<(int, int, int, int, int)>();
+            _dbQueue.Add(connection =>
             {
-                connection.Open();
-                var sql = @"
+                try
+                {
+                    var snStates = new Dictionary<string, List<int?>>();
+                    var sql = @"
                     SELECT p.SerialNumber, ps.State
                     FROM Panels p
                     JOIN PanelSides ps ON p.Id = ps.PanelId
                     WHERE p.LotNumber = @LotNumber";
 
-                using (var cmd = new SQLiteCommand(sql, connection))
-                {
-                    cmd.Parameters.AddWithValue("@LotNumber", lotNumber);
-                    using (var reader = cmd.ExecuteReader())
+                    using (var cmd = new SQLiteCommand(sql, connection))
                     {
-                        while (reader.Read())
+                        cmd.Parameters.AddWithValue("@LotNumber", lotNumber);
+                        using (var reader = cmd.ExecuteReader())
                         {
-                            string sn = reader.GetString(0);
-                            int? state = reader.IsDBNull(1) ? (int?)null : reader.GetInt32(1);
-
-                            if (!snStates.ContainsKey(sn))
+                            while (reader.Read())
                             {
-                                snStates[sn] = new List<int?>();
+                                string sn = reader.GetString(0);
+                                int? state = reader.IsDBNull(1) ? (int?)null : reader.GetInt32(1);
+
+                                if (!snStates.ContainsKey(sn))
+                                {
+                                    snStates[sn] = new List<int?>();
+                                }
+                                snStates[sn].Add(state);
                             }
-                            snStates[sn].Add(state);
                         }
                     }
+
+                    int totalSnCount = snStates.Count;
+                    int uninspectedCount = 0;
+                    int stillNgCount = 0;
+                    int aviOkCount = 0;
+
+                    foreach (var states in snStates.Values)
+                    {
+                        // 1. 如果有一个state为3，则添加到未检测结果数
+                        if (states.Any(s => s == 3))
+                        {
+                            uninspectedCount++;
+                        }
+                        // 2. 如果有一个state为2，则添加到过滤后仍NG结果数
+                        else if (states.Any(s => s == 2))
+                        {
+                            stillNgCount++;
+                        }
+                        // 3. 如果有两个state为0，则添加到AVI OK的结果数
+                        else if (states.Count(s => s == 0) == 2)
+                        {
+                            aviOkCount++;
+                        }
+                    }
+
+                    // 4. 剩余情况，添加到过滤后OK的数
+                    int filteredOkCount = totalSnCount - uninspectedCount - stillNgCount - aviOkCount;
+
+                    tcs.SetResult((totalSnCount, uninspectedCount, stillNgCount, aviOkCount, filteredOkCount));
                 }
-            }
-
-            int totalSnCount = snStates.Count;
-            int uninspectedCount = 0;
-            int stillNgCount = 0;
-            int aviOkCount = 0;
-
-            foreach (var states in snStates.Values)
-            {
-                // 1. 如果有一个state为3，则添加到未检测结果数
-                if (states.Any(s => s == 3))
+                catch (Exception ex)
                 {
-                    uninspectedCount++;
+                    tcs.SetException(ex);
                 }
-                // 2. 如果有一个state为2，则添加到过滤后仍NG结果数
-                else if (states.Any(s => s == 2))
-                {
-                    stillNgCount++;
-                }
-                // 3. 如果有两个state为0，则添加到AVI OK的结果数
-                else if (states.Count(s => s == 0) == 2)
-                {
-                    aviOkCount++;
-                }
-            }
-
-            // 4. 剩余情况，添加到过滤后OK的数
-            int filteredOkCount = totalSnCount - uninspectedCount - stillNgCount - aviOkCount;
-
-            return (totalSnCount, uninspectedCount, stillNgCount, aviOkCount, filteredOkCount);
+            });
+            return tcs.Task;
         }
 
-        public (int totalSnCount, int uninspectedCount, int stillNgCount, int aviOkCount, int filteredOkCount) GetSnStateCountsByTime(DateTime start, DateTime end)
+        public Task<(int totalSnCount, int uninspectedCount, int stillNgCount, int aviOkCount, int filteredOkCount)> GetSnStateCountsByTime(DateTime start, DateTime end)
         {
-            var snStates = new Dictionary<string, List<int?>>();
-            using (var connection = new SQLiteConnection(connectionString))
+            var tcs = new TaskCompletionSource<(int, int, int, int, int)>();
+            _dbQueue.Add(connection =>
             {
-                connection.Open();
-                var sql = @"
+                try
+                {
+                    var snStates = new Dictionary<string, List<int?>>();
+                    var sql = @"
             SELECT p.SerialNumber, ps.State
             FROM Panels p
             JOIN PanelSides ps ON p.Id = ps.PanelId
             WHERE p.DetectionDate BETWEEN @Start AND @End";
 
-                using (var cmd = new SQLiteCommand(sql, connection))
-                {
-                    cmd.Parameters.AddWithValue("@Start", start);
-                    cmd.Parameters.AddWithValue("@End", end);
-                    using (var reader = cmd.ExecuteReader())
+                    using (var cmd = new SQLiteCommand(sql, connection))
                     {
-                        while (reader.Read())
+                        cmd.Parameters.AddWithValue("@Start", start);
+                        cmd.Parameters.AddWithValue("@End", end);
+                        using (var reader = cmd.ExecuteReader())
                         {
-                            string sn = reader.GetString(0);
-                            int? state = reader.IsDBNull(1) ? (int?)null : reader.GetInt32(1);
-
-                            if (!snStates.ContainsKey(sn))
+                            while (reader.Read())
                             {
-                                snStates[sn] = new List<int?>();
+                                string sn = reader.GetString(0);
+                                int? state = reader.IsDBNull(1) ? (int?)null : reader.GetInt32(1);
+
+                                if (!snStates.ContainsKey(sn))
+                                {
+                                    snStates[sn] = new List<int?>();
+                                }
+                                snStates[sn].Add(state);
                             }
-                            snStates[sn].Add(state);
                         }
                     }
+
+                    int totalSnCount = snStates.Count;
+                    int uninspectedCount = 0;
+                    int stillNgCount = 0;
+                    int aviOkCount = 0;
+
+                    foreach (var states in snStates.Values)
+                    {
+                        // 1. 如果有一个state为3，则添加到未检测结果数
+                        if (states.Any(s => s == 3))
+                        {
+                            uninspectedCount++;
+                        }
+                        // 2. 如果有一个state为2，则添加到过滤后仍NG结果数
+                        else if (states.Any(s => s == 2))
+                        {
+                            stillNgCount++;
+                        }
+                        // 3. 如果有两个state为0，则添加到AVI OK的结果数
+                        else if (states.Count(s => s == 0) == 2)
+                        {
+                            aviOkCount++;
+                        }
+                    }
+
+                    // 4. 剩余情况，添加到过滤后OK的数
+                    int filteredOkCount = totalSnCount - uninspectedCount - stillNgCount - aviOkCount;
+
+                    tcs.SetResult((totalSnCount, uninspectedCount, stillNgCount, aviOkCount, filteredOkCount));
                 }
-            }
-
-            int totalSnCount = snStates.Count;
-            int uninspectedCount = 0;
-            int stillNgCount = 0;
-            int aviOkCount = 0;
-
-            foreach (var states in snStates.Values)
-            {
-                // 1. 如果有一个state为3，则添加到未检测结果数
-                if (states.Any(s => s == 3))
+                catch (Exception ex)
                 {
-                    uninspectedCount++;
+                    tcs.SetException(ex);
                 }
-                // 2. 如果有一个state为2，则添加到过滤后仍NG结果数
-                else if (states.Any(s => s == 2))
-                {
-                    stillNgCount++;
-                }
-                // 3. 如果有两个state为0，则添加到AVI OK的结果数
-                else if (states.Count(s => s == 0) == 2)
-                {
-                    aviOkCount++;
-                }
-            }
-
-            // 4. 剩余情况，添加到过滤后OK的数
-            int filteredOkCount = totalSnCount - uninspectedCount - stillNgCount - aviOkCount;
-
-            return (totalSnCount, uninspectedCount, stillNgCount, aviOkCount, filteredOkCount);
+            });
+            return tcs.Task;
         }
 
-        public (string LotNumber, string ProductSerial) GetLatestLotAndProductSerial(string machineId)
+        public Task<(string LotNumber, string ProductSerial)> GetLatestLotAndProductSerial(string machineId)
         {
-            try
+            var tcs = new TaskCompletionSource<(string, string)>();
+            _dbQueue.Add(connection =>
             {
-                using (var connection = new SQLiteConnection(connectionString))
+                try
                 {
-                    connection.Open();
-                    var cmd = new SQLiteCommand("SELECT LotNumber, ProductSerial FROM Panels WHERE MachineId = @MachineId ORDER BY DetectionDate DESC LIMIT 1", connection);
-                    cmd.Parameters.AddWithValue("@MachineId", machineId);
-                    using (var reader = cmd.ExecuteReader())
+                    using (var cmd = new SQLiteCommand("SELECT LotNumber, ProductSerial FROM Panels WHERE MachineId = @MachineId ORDER BY DetectionDate DESC LIMIT 1", connection))
                     {
-                        if (reader.Read())
+                        cmd.Parameters.AddWithValue("@MachineId", machineId);
+                        using (var reader = cmd.ExecuteReader())
                         {
-                            string lotNumber = reader.GetString(0);
-                            string productSerial = reader.IsDBNull(1) ? null : reader.GetString(1);
-                            return (lotNumber, productSerial);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                // Log the exception
-                LogTextHelper.Warn($"Error in GetLatestLotAndProductSerial: {ex.Message}");
-            }
-            return (null, null);
-        }
-
-        public List<PanelDataRecord> GetPanelsDataByMachineAndLot(string machineId, string lotNumber)
-        {
-            var panelRecords = new List<PanelDataRecord>();
-            using (var connection = new SQLiteConnection(connectionString))
-            {
-                connection.Open();
-                var sql = "SELECT Id, MachineId, SerialNumber, LotNumber, ProductSerial, DetectionDate, IsAIOk, PathIndex, AviCreationTime FROM Panels WHERE MachineId = @MachineId AND LotNumber = @LotNumber";
-                using (var cmd = new SQLiteCommand(sql, connection))
-                {
-                    cmd.Parameters.AddWithValue("@MachineId", machineId);
-                    cmd.Parameters.AddWithValue("@LotNumber", lotNumber);
-                    using (var reader = cmd.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            panelRecords.Add(new PanelDataRecord
+                            if (reader.Read())
                             {
-                                Id = reader.GetInt32(0),
-                                MachineId = reader.GetString(1),
-                                SerialNumber = reader.GetString(2),
-                                LotNumber = reader.GetString(3),
-                                ProductSerial = reader.IsDBNull(4) ? null : reader.GetString(4),
-                                DetectionDate = reader.GetDateTime(5),
-                                IsAIOk = reader.GetBoolean(6),
-                                PathIndex = reader.IsDBNull(7) ? null : reader.GetString(7),
-                                AviCreationTime = reader.IsDBNull(8) ? (DateTime?)null : reader.GetDateTime(8),
-                                Sides = new List<SideData>()
-                            });
-                        }
-                    }
-                }
-
-                foreach (var record in panelRecords)
-                {
-                    var sidesSql = "SELECT Side, TotalDefectsCount, RemainingDefectsCount, HeatPoints, State FROM PanelSides WHERE PanelId = @PanelId";
-                    using (var sidesCmd = new SQLiteCommand(sidesSql, connection))
-                    {
-                        sidesCmd.Parameters.AddWithValue("@PanelId", record.Id);
-                        using (var sidesReader = sidesCmd.ExecuteReader())
-                        {
-                            while (sidesReader.Read())
+                                string lotNumber = reader.GetString(0);
+                                string productSerial = reader.IsDBNull(1) ? null : reader.GetString(1);
+                                tcs.SetResult((lotNumber, productSerial));
+                            }
+                            else
                             {
-                                var sideData = new SideData
-                                {
-                                    Side = sidesReader.GetString(0),
-                                    TotalDefectsCount = sidesReader.GetInt32(1),
-                                    RemainingDefectsCount = sidesReader.GetInt32(2),
-                                    State = sidesReader.IsDBNull(4) ? 0 : sidesReader.GetInt32(4)
-                                };
-
-                                if (!sidesReader.IsDBNull(3))
-                                {
-                                    sideData.HeatPoints = JsonConvert.DeserializeObject<List<HeatPoint>>(sidesReader.GetString(3));
-                                }
-                                else
-                                {
-                                    sideData.HeatPoints = new List<HeatPoint>();
-                                }
-                                record.Sides.Add(sideData);
+                                tcs.SetResult((null, null));
                             }
                         }
                     }
                 }
-            }
-            return panelRecords;
+                catch (Exception ex)
+                {
+                    // Log the exception
+                    LogTextHelper.Warn($"Error in GetLatestLotAndProductSerial: {ex.Message}");
+                    tcs.SetException(ex);
+                }
+            });
+            return tcs.Task;
+        }
+
+        public Task<List<PanelDataRecord>> GetPanelsDataByMachineAndLot(string machineId, string lotNumber)
+        {
+            var tcs = new TaskCompletionSource<List<PanelDataRecord>>();
+            _dbQueue.Add(connection =>
+            {
+                try
+                {
+                    var panelRecords = new List<PanelDataRecord>();
+                    var sql = "SELECT Id, MachineId, SerialNumber, LotNumber, ProductSerial, DetectionDate, IsAIOk, PathIndex, AviCreationTime FROM Panels WHERE MachineId = @MachineId AND LotNumber = @LotNumber";
+                    using (var cmd = new SQLiteCommand(sql, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@MachineId", machineId);
+                        cmd.Parameters.AddWithValue("@LotNumber", lotNumber);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                panelRecords.Add(new PanelDataRecord
+                                {
+                                    Id = reader.GetInt32(0),
+                                    MachineId = reader.GetString(1),
+                                    SerialNumber = reader.GetString(2),
+                                    LotNumber = reader.GetString(3),
+                                    ProductSerial = reader.IsDBNull(4) ? null : reader.GetString(4),
+                                    DetectionDate = reader.GetDateTime(5),
+                                    IsAIOk = reader.GetBoolean(6),
+                                    PathIndex = reader.IsDBNull(7) ? null : reader.GetString(7),
+                                    AviCreationTime = reader.IsDBNull(8) ? (DateTime?)null : reader.GetDateTime(8),
+                                    Sides = new List<SideData>()
+                                });
+                            }
+                        }
+                    }
+
+                    foreach (var record in panelRecords)
+                    {
+                        var sidesSql = "SELECT Side, TotalDefectsCount, RemainingDefectsCount, HeatPoints, State FROM PanelSides WHERE PanelId = @PanelId";
+                        using (var sidesCmd = new SQLiteCommand(sidesSql, connection))
+                        {
+                            sidesCmd.Parameters.AddWithValue("@PanelId", record.Id);
+                            using (var sidesReader = sidesCmd.ExecuteReader())
+                            {
+                                while (sidesReader.Read())
+                                {
+                                    var sideData = new SideData
+                                    {
+                                        Side = sidesReader.GetString(0),
+                                        TotalDefectsCount = sidesReader.GetInt32(1),
+                                        RemainingDefectsCount = sidesReader.GetInt32(2),
+                                        State = sidesReader.IsDBNull(4) ? 0 : sidesReader.GetInt32(4)
+                                    };
+
+                                    if (!sidesReader.IsDBNull(3))
+                                    {
+                                        sideData.HeatPoints = JsonConvert.DeserializeObject<List<HeatPoint>>(sidesReader.GetString(3));
+                                    }
+                                    else
+                                    {
+                                        sideData.HeatPoints = new List<HeatPoint>();
+                                    }
+                                    record.Sides.Add(sideData);
+                                }
+                            }
+                        }
+                    }
+                    tcs.SetResult(panelRecords);
+                }
+                catch (Exception ex)
+                {
+                    tcs.SetException(ex);
+                }
+            });
+            return tcs.Task;
         }
 
         /// <summary>
@@ -864,71 +1030,79 @@ namespace DeepsightSqlite
         /// <param name="start"></param>
         /// <param name="end"></param>
         /// <returns></returns>
-        public List<PanelDataRecord> GetPanelsData(DateTime start, DateTime end)
+        public Task<List<PanelDataRecord>> GetPanelsData(DateTime start, DateTime end)
         {
-            var panelRecords = new List<PanelDataRecord>();
-            using (var connection = new SQLiteConnection(connectionString))
+            var tcs = new TaskCompletionSource<List<PanelDataRecord>>();
+            _dbQueue.Add(connection =>
             {
-                connection.Open();
-                var sql = "SELECT Id, MachineId, SerialNumber, LotNumber, ProductSerial, DetectionDate, IsAIOk, PathIndex, avicreationtime FROM Panels WHERE DetectionDate BETWEEN @Start AND @End";
-                using (var cmd = new SQLiteCommand(sql, connection))
+                try
                 {
-                    cmd.Parameters.AddWithValue("@Start", start);
-                    cmd.Parameters.AddWithValue("@End", end);
-                    using (var reader = cmd.ExecuteReader())
+                    var panelRecords = new List<PanelDataRecord>();
+                    var sql = "SELECT Id, MachineId, SerialNumber, LotNumber, ProductSerial, DetectionDate, IsAIOk, PathIndex, avicreationtime FROM Panels WHERE DetectionDate BETWEEN @Start AND @End";
+                    using (var cmd = new SQLiteCommand(sql, connection))
                     {
-                        while (reader.Read())
+                        cmd.Parameters.AddWithValue("@Start", start);
+                        cmd.Parameters.AddWithValue("@End", end);
+                        using (var reader = cmd.ExecuteReader())
                         {
-                            panelRecords.Add(new PanelDataRecord
+                            while (reader.Read())
                             {
-                                Id = reader.GetInt32(0),
-                                MachineId = reader.GetString(1),
-                                SerialNumber = reader.GetString(2),
-                                LotNumber = reader.GetString(3),
-                                ProductSerial = reader.IsDBNull(4) ? null : reader.GetString(4),
-                                DetectionDate = reader.GetDateTime(5),
-                                IsAIOk = reader.GetBoolean(6),
-                                PathIndex = reader.IsDBNull(7) ? null : reader.GetString(7),
-                                AviCreationTime = reader.IsDBNull(8) ? (DateTime?)null : reader.GetDateTime(8),
-                                Sides = new List<SideData>()
-                            });
-                        }
-                    }
-                }
-
-                foreach (var record in panelRecords)
-                {
-                    var sidesSql = "SELECT Side, TotalDefectsCount, RemainingDefectsCount, HeatPoints, State FROM PanelSides WHERE PanelId = @PanelId";
-                    using (var sidesCmd = new SQLiteCommand(sidesSql, connection))
-                    {
-                        sidesCmd.Parameters.AddWithValue("@PanelId", record.Id);
-                        using (var sidesReader = sidesCmd.ExecuteReader())
-                        {
-                            while (sidesReader.Read())
-                            {
-                                var sideData = new SideData
+                                panelRecords.Add(new PanelDataRecord
                                 {
-                                    Side = sidesReader.GetString(0),
-                                    TotalDefectsCount = sidesReader.GetInt32(1),
-                                    RemainingDefectsCount = sidesReader.GetInt32(2),
-                                    State = sidesReader.IsDBNull(4) ? 0 : sidesReader.GetInt32(4)
-                                };
-
-                                if (!sidesReader.IsDBNull(3))
-                                {
-                                    sideData.HeatPoints = JsonConvert.DeserializeObject<List<HeatPoint>>(sidesReader.GetString(3));
-                                }
-                                else
-                                {
-                                    sideData.HeatPoints = new List<HeatPoint>();
-                                }
-                                record.Sides.Add(sideData);
+                                    Id = reader.GetInt32(0),
+                                    MachineId = reader.GetString(1),
+                                    SerialNumber = reader.GetString(2),
+                                    LotNumber = reader.GetString(3),
+                                    ProductSerial = reader.IsDBNull(4) ? null : reader.GetString(4),
+                                    DetectionDate = reader.GetDateTime(5),
+                                    IsAIOk = reader.GetBoolean(6),
+                                    PathIndex = reader.IsDBNull(7) ? null : reader.GetString(7),
+                                    AviCreationTime = reader.IsDBNull(8) ? (DateTime?)null : reader.GetDateTime(8),
+                                    Sides = new List<SideData>()
+                                });
                             }
                         }
                     }
+
+                    foreach (var record in panelRecords)
+                    {
+                        var sidesSql = "SELECT Side, TotalDefectsCount, RemainingDefectsCount, HeatPoints, State FROM PanelSides WHERE PanelId = @PanelId";
+                        using (var sidesCmd = new SQLiteCommand(sidesSql, connection))
+                        {
+                            sidesCmd.Parameters.AddWithValue("@PanelId", record.Id);
+                            using (var sidesReader = sidesCmd.ExecuteReader())
+                            {
+                                while (sidesReader.Read())
+                                {
+                                    var sideData = new SideData
+                                    {
+                                        Side = sidesReader.GetString(0),
+                                        TotalDefectsCount = sidesReader.GetInt32(1),
+                                        RemainingDefectsCount = sidesReader.GetInt32(2),
+                                        State = sidesReader.IsDBNull(4) ? 0 : sidesReader.GetInt32(4)
+                                    };
+
+                                    if (!sidesReader.IsDBNull(3))
+                                    {
+                                        sideData.HeatPoints = JsonConvert.DeserializeObject<List<HeatPoint>>(sidesReader.GetString(3));
+                                    }
+                                    else
+                                    {
+                                        sideData.HeatPoints = new List<HeatPoint>();
+                                    }
+                                    record.Sides.Add(sideData);
+                                }
+                            }
+                        }
+                    }
+                    tcs.SetResult(panelRecords);
                 }
-            }
-            return panelRecords;
+                catch (Exception ex)
+                {
+                    tcs.SetException(ex);
+                }
+            });
+            return tcs.Task;
         }
 
         /// <summary>

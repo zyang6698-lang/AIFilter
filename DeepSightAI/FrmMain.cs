@@ -1,18 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Diagnostics;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using DeepSightAI.Properties;
+﻿using DeepSightAI.Properties;
 using DeepSightDB;
 using DeepSightEvent;
 using DeepSightModel;
@@ -21,6 +7,21 @@ using DeepSightWorkLib;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OpenCvSharp;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Diagnostics;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace DeepSightAI
 {
@@ -249,8 +250,9 @@ namespace DeepSightAI
             timer.Interval = 1000;
             timer.Start();
             Machine.master.workClass.isShowBox = this.btn_showBox.Checked;
-            this.lbl_title.Text = "ATS_AI";
-
+            string filePath = Assembly.GetExecutingAssembly().Location;
+            DateTime lastWriteTime = File.GetLastWriteTime(filePath);
+            this.lbl_title.Text = "ATS_AI ~ " + lastWriteTime.ToString("MMdd");
 
         }
 

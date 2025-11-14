@@ -74,7 +74,7 @@ namespace DeepSightAI
             Load += FrHome_Load;
             FormClosing += FrHome_FormClosing;
 
-            uph_timer.Interval = 1000 * 2;
+            uph_timer.Interval = 1000 * 4;
             uph_timer.Enabled = true;
             uph_timer.Elapsed += Uph_timer_Elapsed;
         }
@@ -319,11 +319,11 @@ namespace DeepSightAI
             }
         }
 
-        private void UpdateMainBorad()
+        private async void UpdateMainBorad()
         {
             var today = DateTime.Today;
-            var AllData = Machine.master.workClass.GetPanelsData(today, today.AddDays(1).AddTicks(-1));
-            var boardStat = PanelDataRecord.GetBoardStat(AllData);
+            var AllData = await Machine.master.workClass.GetPanelsData(today, today.AddDays(1).AddTicks(-1));
+            var boardStat =PanelDataRecord.GetBoardStat(AllData);
 
             if (this.IsHandleCreated)
             {
@@ -334,19 +334,19 @@ namespace DeepSightAI
                     lbl_AiAllCount.Text = $"AI推理图片数\n{boardStat.aiFilterCount - boardStat.aiFilterUninspectedCount}";
 
                     lbl_aiFilterOKCount.Text = $"AI Pass 图片数\n{boardStat.aiFilterOKCount}";
-                    lbl_aviPassRateCount.Text = $"AVI Pass Rate_AI前\n{(double)boardStat.aviPanelOKCount / (boardStat.aviPanelCount):P2}";
-                    lbl_filteredOkCount.Text = $"AI Pass Rate\n{(double)boardStat.aiFilterOKCount / (boardStat.aiFilterCount - boardStat.aiFilterUninspectedCount):P2}";
+                    lbl_aviPassRateCount.Text = $"AVI Pass Rate_AI前\n{(double)boardStat.aviPanelOKCount / (boardStat.aviPanelCount):P1}";
+                    lbl_filteredOkCount.Text = $"AI Pass Rate\n{(double)boardStat.aiFilterOKCount / (boardStat.aiFilterCount - boardStat.aiFilterUninspectedCount):P1}";
 
                     lbl_utilizationRate.Text= $"今日机台利用率\n-";
-                    lbl_boardAiPassRate.Text=$"AVI Pass Rate_AI后\n{(double)(boardStat.aviPanelOKCount+boardStat.aiPanelOKCount) / (boardStat.aviPanelCount):P2}";
-                    lbl_CountPerPanel.Text=$"平均报点数\n{(double)boardStat.aiFilterCount/boardStat.aviPanelCount:0.00}";
+                    lbl_boardAiPassRate.Text=$"AVI Pass Rate_AI后\n{(double)(boardStat.aviPanelOKCount+boardStat.aiPanelOKCount) / (boardStat.aviPanelCount):P1}";
+                    lbl_CountPerPanel.Text=$"平均报点数\n{(double)boardStat.aiFilterCount/boardStat.aviPanelCount:0.0}";
                 }));
             }
         }
 
-        private void UpdateMachineBoard()
+        private async Task UpdateMachineBoard()
         {
-            aviCtr2Container.UpdateAll(Machine.master.workClass.GetLatestLotAndProductSerial, Machine.master.workClass.GetPanelsDataByMachineAndLot);
+           await aviCtr2Container.UpdateAll(Machine.master.workClass.GetLatestLotAndProductSerial, Machine.master.workClass.GetPanelsDataByMachineAndLot);
         }
 
         public void ClearProduct(int code = 0)

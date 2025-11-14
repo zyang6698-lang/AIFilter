@@ -161,9 +161,28 @@ namespace DeepSightAI.SettingPages
                 }
             }
         }
+
+        // 缓存画笔和状态位图以提高性能
+        private readonly Pen _borderPen;
+        private readonly Dictionary<ControlStatus, Bitmap> _statusBitmaps = new Dictionary<ControlStatus, Bitmap>();
+
         public AviCtr2(WatchPathConfig _config)
         {
             InitializeComponent();
+
+            // 设置双缓冲
+            this.SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer, true);
+            this.UpdateStyles();
+
+            // 缓存边框画笔
+            Color borderColor = ColorTranslator.FromHtml("#5F78A0");
+            int borderWidth = 2;
+            _borderPen = new Pen(borderColor, borderWidth);
+
+            // 预先创建并缓存状态位图
+            InitializeStatusBitmaps();
+
+
             // 设置半透明背景
             this.BackColor = Color.FromArgb(210, 47, 53, 77); // 100是透明度 (0-255), 后面是RGB颜色
             SetTransparentBackground(this);
@@ -174,21 +193,68 @@ namespace DeepSightAI.SettingPages
             UpdateDisplay();
         }
 
+        private void InitializeStatusBitmaps()
+        {
+            // 如果控件尺寸无效，则不执行操作
+            if (pictureBoxStatus.Width <= 0 || pictureBoxStatus.Height <= 0) return;
+
+            foreach (ControlStatus status in Enum.GetValues(typeof(ControlStatus)))
+            {
+                Color statusColor = GetColorForStatus(status);
+                Bitmap bmp = new Bitmap(pictureBoxStatus.Width, pictureBoxStatus.Height);
+                using (Graphics g = Graphics.FromImage(bmp))
+                {
+                    g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                    // 使位图背景透明
+                    g.Clear(Color.Transparent);
+
+                    // 计算用于绘制居中圆形的矩形
+                    int diameter = Math.Min(pictureBoxStatus.Width, pictureBoxStatus.Height);
+                    // 留出一点边距，避免圆形紧贴边缘
+                    int margin = 1;
+                    int circleDiameter = Math.Max(diameter - (margin * 2), 1);
+                    int x = (pictureBoxStatus.Width - circleDiameter) / 2;
+                    int y = (pictureBoxStatus.Height - circleDiameter) / 2;
+                    var circleRect = new Rectangle(x, y, circleDiameter, circleDiameter);
+
+                    using (SolidBrush brush = new SolidBrush(statusColor))
+                    {
+                        g.FillEllipse(brush, circleRect);
+                    }
+                }
+                _statusBitmaps[status] = bmp;
+            }
+        }
+
+        //protected override void Dispose(bool disposing)
+        //{
+        //    if (disposing)
+        //    {
+        //        // 释放缓存的GDI对象
+        //        _borderPen?.Dispose();
+        //        foreach (var bmp in _statusBitmaps.Values)
+        //        {
+        //            bmp?.Dispose();
+        //        }
+        //        _statusBitmaps.Clear();
+        //        toolTip?.Dispose();
+        //        components?.Dispose();
+        //    }
+        //    base.Dispose(disposing);
+        //}
+
+
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
-            // 绘制边框
-            Color borderColor = ColorTranslator.FromHtml("#5F78A0");
-            int borderWidth = 2; // 边框宽度
-            using (Pen borderPen = new Pen(borderColor, borderWidth))
+            // 绘制边框 (使用缓存的画笔)
+            if (_borderPen != null)
             {
-                // 绘制一个矩形作为边框
-                // 为了让边框完全在控件内部，需要从 (borderWidth / 2) 开始绘制
-                e.Graphics.DrawRectangle(borderPen,
-                                         borderWidth / 2,
-                                         borderWidth / 2,
-                                         this.ClientSize.Width - borderWidth,
-                                         this.ClientSize.Height - borderWidth);
+                e.Graphics.DrawRectangle(_borderPen,
+                                         _borderPen.Width / 2,
+                                         _borderPen.Width / 2,
+                                         this.ClientSize.Width - _borderPen.Width,
+                                         this.ClientSize.Height - _borderPen.Width);
             }
         }
 
@@ -224,13 +290,13 @@ namespace DeepSightAI.SettingPages
             info.AppendLine($"图片总数: {AiFilterCount}");
             double ratio = AiFilterCount > 0 ? (double)AiOkImages / AiFilterCount : 0;
             //SetAiPassRate($"{ratio:P2}");
-            SetOperatingRate($"{Utilization:P2}");
+            SetOperatingRate($"{Utilization:P1}");
 
-            lblAiPassRate.Text = $"AI Pass Rate:{ratio:P2}";
-            lblAviPassRate.Text = $"AVI Pass Rate:{AviPassRate:P2}";
+            lblAiPassRate.Text = $"AI Pass Rate:{ratio:P1}";
+            lblAviPassRate.Text = $"AVI Pass Rate:{AviPassRate:P1}";
 
-            labelCurrentPartNumberValue.Text = ProductSerial;
-            labelLotValue.Text = LotId;
+            labelCurrentPartNumberValue.Text =$"Part Number:{ProductSerial}";
+            labelLotValue.Text =$"Lot: {LotId}";
 
             if (toolTip != null)
             {
@@ -242,51 +308,42 @@ namespace DeepSightAI.SettingPages
                 SetStatus(ctrConfig.IsEnable ? ControlStatus.Normal : ControlStatus.Disabled);
             }
         }
+
+        private Color GetColorForStatus(ControlStatus status)
+        {
+            switch (status)
+            {
+                case ControlStatus.Normal:
+                    return Color.Green;
+                case ControlStatus.Abnormal:
+                    return Color.Red;
+                case ControlStatus.Warning:
+                    return Color.Yellow;
+                case ControlStatus.Disabled:
+                default:
+                    return Color.Gray;
+            }
+        }
+
         /// <summary>
         /// 设置状态指示器的颜色
         /// </summary>
         /// <param name="status">要设置的状态</param>
         public void SetStatus(ControlStatus status)
         {
-            Color statusColor;
-            switch (status)
+            if (_statusBitmaps.TryGetValue(status, out Bitmap bmp))
             {
-                case ControlStatus.Normal:
-                    statusColor = Color.Green;
-                    break;
-                case ControlStatus.Abnormal:
-                    statusColor = Color.Red;
-                    break;
-                case ControlStatus.Warning:
-                    statusColor = Color.Yellow;
-                    break;
-                case ControlStatus.Disabled:
-                default:
-                    statusColor = Color.Gray;
-                    break;
-            }
-
-            // 创建一个圆形的位图作为指示器
-            Bitmap bmp = new Bitmap(pictureBoxStatus.Width, pictureBoxStatus.Height);
-            using (Graphics g = Graphics.FromImage(bmp))
-            {
-                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                using (SolidBrush brush = new SolidBrush(statusColor))
+                // 在UI线程上更新PictureBox的图像
+                if (pictureBoxStatus.InvokeRequired)
                 {
-                    g.FillEllipse(brush, 0, 0, pictureBoxStatus.Width, pictureBoxStatus.Height);
+                    pictureBoxStatus.BeginInvoke(new Action(() => {
+                        pictureBoxStatus.Image = bmp;
+                    }));
                 }
-            }
-
-            // 在UI线程上更新PictureBox的图像
-            if (pictureBoxStatus.InvokeRequired)
-            {
-                pictureBoxStatus.BeginInvoke(new Action(() => {
+                else
+                {
                     pictureBoxStatus.Image = bmp;
-                }));
-            }
-            else
-            {
-                pictureBoxStatus.Image = bmp;
+                }
             }
         }
         /// <summary>
@@ -364,5 +421,7 @@ namespace DeepSightAI.SettingPages
                 }
             }
         }
+
+
     }
 }

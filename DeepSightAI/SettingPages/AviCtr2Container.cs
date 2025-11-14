@@ -21,7 +21,8 @@ namespace DeepSightAI.SettingPages
         {
             InitializeComponent();
             flowLayoutPanel1.BackColor = Color.Transparent;
-
+            typeof(FlowLayoutPanel).GetProperty("DoubleBuffered", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+    .SetValue(flowLayoutPanel1, true, null);
             this.SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer, true);
             this.UpdateStyles();
         }
@@ -122,7 +123,14 @@ namespace DeepSightAI.SettingPages
                 }
             }
         }
-
+        readonly ColorMatrix colorMatrix = new ColorMatrix(new float[][]
+                   {
+                        new float[] {1, 0, 0, 0, 0},
+                        new float[] {0, 1, 0, 0, 0},
+                        new float[] {0, 0, 1, 0, 0},
+                        new float[] {0, 0, 0, 0.725f, 0},
+                        new float[] {0, 0, 0, 0, 1}
+                   });
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
@@ -132,25 +140,12 @@ namespace DeepSightAI.SettingPages
                 Image backgroundImage = Resources.background;
                 if (backgroundImage != null)
                 {
-                    // 设置透明度
-                    float transparency = 0.725f; // 80% 透明度 (0.0f 完全透明, 1.0f 完全不透明)
-
-                    var colorMatrix = new ColorMatrix(new float[][]
-                   {
-                        new float[] {1, 0, 0, 0, 0},
-                        new float[] {0, 1, 0, 0, 0},
-                        new float[] {0, 0, 1, 0, 0},
-                        new float[] {0, 0, 0, transparency, 0},
-                        new float[] {0, 0, 0, 0, 1}
-                   });
                     using (var imageAttributes = new ImageAttributes())
                     {
                         imageAttributes.SetColorMatrix(colorMatrix, ColorMatrixFlag.Default, ColorAdjustType.Bitmap);
                         var destRect = new Rectangle(0, 0, this.Width, this.Height);
                         e.Graphics.DrawImage(backgroundImage, destRect, 0, 0, backgroundImage.Width, backgroundImage.Height, GraphicsUnit.Pixel, imageAttributes);
                     }
-
-
                 }
             }
             catch (Exception ex)
@@ -160,17 +155,17 @@ namespace DeepSightAI.SettingPages
             }
         }
 
-        public void UpdateAllAviCtrLotSn(Func<string, (string SerialNumber, string LotNumber, string ProductSerial, string PathIndex)> getLatestPanelInfo)
+        public void UpdateAllAviCtrLotSn(Func<string,Task< (string SerialNumber, string LotNumber, string ProductSerial, string PathIndex)>> getLatestPanelInfo)
         {
             if (this.IsHandleCreated)
             {
-                this.BeginInvoke(new Action(() =>
+                this.BeginInvoke(new Action(async () =>
                 {
                     foreach (var ctr in aviCtr2Controls)
                     {
                         if (ctr.ctrConfig.IsEnable)
                         {
-                            var tmp = getLatestPanelInfo(ctr.ctrConfig.AviName);
+                            var tmp =await getLatestPanelInfo(ctr.ctrConfig.AviName);
                             if (tmp.LotNumber != null && tmp.SerialNumber != null)
                             {
                                 ctr.LotId = tmp.LotNumber;
@@ -183,22 +178,22 @@ namespace DeepSightAI.SettingPages
             }
         }
 
-        public void UpdateAll(Func<string,(string,string)> GetLatestLotAndProductSerial,Func<string,string, List<PanelDataRecord>> getLatestPanelData)
+        public async Task UpdateAll(Func<string, Task<(string, string)>> GetLatestLotAndProductSerial, Func<string, string, Task<List<PanelDataRecord>>> getLatestPanelData)
         {
             //根据机器名获取最新lot的列表
             if (this.IsHandleCreated)
             {
-                this.BeginInvoke(new Action(() =>
+                this.BeginInvoke(new Action(async () =>
                 {
                     foreach (var ctr in aviCtr2Controls)
                     {
                         if (ctr.ctrConfig.IsEnable)
                         {
-                            (string LotNumber, string ProductSerial) = GetLatestLotAndProductSerial(ctr.ctrConfig.AviName);
-                            var data= getLatestPanelData(ctr.ctrConfig.AviName, LotNumber);
+                            var tmp=await GetLatestLotAndProductSerial(ctr.ctrConfig.AviName);
+                            var data=await getLatestPanelData(ctr.ctrConfig.AviName, tmp.Item1);
 
-                            ctr.LotId = LotNumber;
-                            ctr.ProductSerial = ProductSerial;
+                            ctr.LotId = tmp.Item1;
+                            ctr.ProductSerial = tmp.Item2;
                             var boardStat=PanelDataRecord.GetBoardStat(data);
 
                             ctr.AiOkImages= boardStat.aiFilterOKCount;
