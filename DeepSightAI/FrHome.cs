@@ -257,10 +257,6 @@ namespace DeepSightAI
             }
         }
 
-        private void MasterWorkClass_OnCallBackClearPro()
-        {
-            ClearProduct();
-        }
 
         private void MasterWorkClass_OnWorkResultPro(string productId, int status)
         {
@@ -349,17 +345,6 @@ namespace DeepSightAI
            await aviCtr2Container.UpdateAll(Machine.master.workClass.GetLatestLotAndProductSerial, Machine.master.workClass.GetPanelsDataByMachineAndLot);
         }
 
-        public void ClearProduct(int code = 0)
-        {
-            try
-            {
-                uph_timer.Stop();
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error("Error", ex);
-            }
-        }
 
         //public CvDisplay[] DispWin1 = null;
         public CvDisplay[] DispWin2 = null;
