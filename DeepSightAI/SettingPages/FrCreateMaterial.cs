@@ -11,6 +11,7 @@ using Sunny.UI;
 using System.IO;
 using HalconDotNet;
 using System.Drawing;
+using System.Drawing.Imaging; // 添加以使用编码器
 
 namespace DeepSightAI.SettingPages
 {
@@ -94,9 +95,6 @@ namespace DeepSightAI.SettingPages
                 himage.GetImageSize(out width, out height);
                 //准备料号JSON
                 JObject jsonObject = CreateJsonObject(width, height);
-                //string fileName = Path.GetFileNameWithoutExtension(Bpath) + ".json";
-                //string filePath = Path.Combine(Path.GetDirectoryName(Bpath), fileName);
-                //File.WriteAllText(filePath, jsonObject.ToString());
                 string converted = Path.GetFileNameWithoutExtension(Bpath).Replace("[", "_").Replace("]", "");
                 string jsonfileName = converted + ".json";
                 string imagefileName = converted + ".bmp";
@@ -173,6 +171,101 @@ namespace DeepSightAI.SettingPages
 
             mainObject["single_pcs_list"] = singlePcsList;
             return mainObject;
+        }
+
+        // 获取相对路径（.NET Framework 无 Path.GetRelativePath）
+        private static string GetRelativePath(string basePath, string fullPath)
+        {
+            if (!basePath.EndsWith(Path.DirectorySeparatorChar.ToString()))
+                basePath += Path.DirectorySeparatorChar;
+            if (fullPath.StartsWith(basePath, StringComparison.OrdinalIgnoreCase))
+                return fullPath.Substring(basePath.Length);
+            return fullPath; // fallback
+        }
+
+        private void btnZipPic_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                int quality = 75; // 默认 JPEG 质量
+                string sourceFolderPath = SelectFolder();
+                if (string.IsNullOrEmpty(sourceFolderPath)) return;
+
+                string parentPath = Path.GetDirectoryName(sourceFolderPath);
+                string sourceFolderName = Path.GetFileName(sourceFolderPath);
+                string destinationFolderName = sourceFolderName + "_compressed";
+                string destinationFolderPath = Path.Combine(parentPath, destinationFolderName);
+                if (!Directory.Exists(destinationFolderPath)) Directory.CreateDirectory(destinationFolderPath);
+
+                string[] imageExtensions = { ".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tiff", ".webp" };
+                // 递归获取所有文件
+                var imageFiles = Directory.EnumerateFiles(sourceFolderPath, "*.*", SearchOption.AllDirectories)
+                    .Where(f => imageExtensions.Contains(Path.GetExtension(f).ToLower()))
+                    .ToList();
+
+                if (imageFiles.Count == 0)
+                {
+                    MessageBox.Show("所选文件夹及其子文件夹中没有找到图片文件。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                ImageCodecInfo jpegCodec = ImageCodecInfo.GetImageEncoders().FirstOrDefault(c => c.FormatID == ImageFormat.Jpeg.Guid);
+                if (jpegCodec == null)
+                {
+                    MessageBox.Show("未找到 JPEG 编码器，无法压缩。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                using (var encoderParams = new EncoderParameters(1))
+                {
+                    encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, quality);
+                    int success = 0, failed = 0;
+                    foreach (var imagePath in imageFiles)
+                    {
+                        try
+                        {
+                            using (Image img = Image.FromFile(imagePath))
+                            {
+                                string relative = GetRelativePath(sourceFolderPath, imagePath);
+                                string relDir = Path.GetDirectoryName(relative) ?? string.Empty;
+                                string targetDir = Path.Combine(destinationFolderPath, relDir);
+                                if (!Directory.Exists(targetDir)) Directory.CreateDirectory(targetDir);
+
+                                string fileNameWithoutExt = Path.GetFileNameWithoutExtension(imagePath);
+                                string newFileName = fileNameWithoutExt + ".jpg";
+                                string newFilePath = Path.Combine(targetDir, newFileName);
+                                img.Save(newFilePath, jpegCodec, encoderParams);
+                                success++;
+                            }
+                        }
+                        catch (Exception exImg)
+                        {
+                            failed++;
+                            LogTextHelper.Error($"压缩失败: {imagePath} -> {exImg.Message}");
+                        }
+                    }
+
+                    MessageBox.Show($"图片压缩完成！成功:{success} 失败:{failed}", "完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error(ex.ToString());
+                MessageBox.Show("处理过程中发生错误: " + ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private string SelectFolder()
+        {
+            using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
+            {
+                folderDialog.Description = "请选择图片所在的文件夹";
+                if (folderDialog.ShowDialog() == DialogResult.OK)
+                {
+                    return folderDialog.SelectedPath;
+                }
+            }
+            return null;
         }
     }
 }

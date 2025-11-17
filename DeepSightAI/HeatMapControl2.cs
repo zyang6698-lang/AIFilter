@@ -53,6 +53,7 @@ namespace DeepSightAI
         private const int PageSize = 50;
         private Button _loadMoreButton = null;
         private const int mockPointsCount = 30;
+        private string[,] _arrayConfig = null;
 
         #endregion
 
@@ -274,7 +275,15 @@ namespace DeepSightAI
                 }
                 int row = Convert.ToInt32(this.txt_Row.Text);
                 int column = Convert.ToInt32(this.txt_Column.Text);
-                await UpdatePanelGrid(row, column);
+
+                using (var dialog = new ArrayConfigDialog(row, column))
+                {
+                    if (dialog.ShowDialog() == DialogResult.OK)
+                    {
+                        _arrayConfig = dialog.GridData;
+                        await UpdatePanelGrid(row, column);
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -764,13 +773,33 @@ namespace DeepSightAI
         {
             row = 0;
             col = 0;
-            if (rbn_Array.Checked) return true;
-            
             if (string.IsNullOrEmpty(sn) || sn.Length < 2)
             {
                 return false;
             }
 
+            if (rbn_Array.Checked)
+            {
+                if (_arrayConfig != null)
+                {
+                    string snSuffix = sn.Substring(sn.Length - 2);
+                    for (int i = 0; i < _arrayConfig.GetLength(0); i++)
+                    {
+                        for (int j = 0; j < _arrayConfig.GetLength(1); j++)
+                        {
+                            if (_arrayConfig[i, j] == snSuffix)
+                            {
+                                row = i;
+                                col = j;
+                                return true;
+                            }
+                        }
+                    }
+                }
+                // If we are in array mode but have no config, or SN not found, we can't position it.
+                return false;
+            }
+            
             char rowChar = sn[sn.Length - 2];
             char colChar = sn[sn.Length - 1];
 

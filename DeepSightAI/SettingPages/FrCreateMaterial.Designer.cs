@@ -31,8 +31,9 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrCreateMaterial));
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.uiGroupBox1 = new Sunny.UI.UIGroupBox();
-            this.btn_selectB = new System.Windows.Forms.Button();
             this.btn_selectA = new System.Windows.Forms.Button();
+            this.btn_selectB = new System.Windows.Forms.Button();
+            this.btnZipPic = new System.Windows.Forms.Button();
             this.tableLayoutPanel1.SuspendLayout();
             this.uiGroupBox1.SuspendLayout();
             this.SuspendLayout();
@@ -45,6 +46,7 @@
             // 
             // uiGroupBox1
             // 
+            this.uiGroupBox1.Controls.Add(this.btnZipPic);
             this.uiGroupBox1.Controls.Add(this.btn_selectA);
             this.uiGroupBox1.Controls.Add(this.btn_selectB);
             resources.ApplyResources(this.uiGroupBox1, "uiGroupBox1");
@@ -55,6 +57,18 @@
             this.uiGroupBox1.RectColor = System.Drawing.Color.FromArgb(((int)(((byte)(110)))), ((int)(((byte)(190)))), ((int)(((byte)(40)))));
             this.uiGroupBox1.Style = Sunny.UI.UIStyle.Custom;
             this.uiGroupBox1.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // btn_selectA
+            // 
+            this.btn_selectA.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
+            this.btn_selectA.FlatAppearance.BorderSize = 0;
+            this.btn_selectA.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
+            this.btn_selectA.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
+            this.btn_selectA.ForeColor = System.Drawing.Color.White;
+            resources.ApplyResources(this.btn_selectA, "btn_selectA");
+            this.btn_selectA.Name = "btn_selectA";
+            this.btn_selectA.UseVisualStyleBackColor = false;
+            this.btn_selectA.Click += new System.EventHandler(this.btn_selectA_Click);
             // 
             // btn_selectB
             // 
@@ -68,17 +82,17 @@
             this.btn_selectB.UseVisualStyleBackColor = false;
             this.btn_selectB.Click += new System.EventHandler(this.btn_selectB_Click);
             // 
-            // btn_selectA
+            // btnZipPic
             // 
-            this.btn_selectA.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
-            this.btn_selectA.FlatAppearance.BorderSize = 0;
-            this.btn_selectA.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
-            this.btn_selectA.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
-            this.btn_selectA.ForeColor = System.Drawing.Color.White;
-            resources.ApplyResources(this.btn_selectA, "btn_selectA");
-            this.btn_selectA.Name = "btn_selectA";
-            this.btn_selectA.UseVisualStyleBackColor = false;
-            this.btn_selectA.Click += new System.EventHandler(this.btn_selectA_Click);
+            this.btnZipPic.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
+            this.btnZipPic.FlatAppearance.BorderSize = 0;
+            this.btnZipPic.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
+            this.btnZipPic.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
+            this.btnZipPic.ForeColor = System.Drawing.Color.White;
+            resources.ApplyResources(this.btnZipPic, "btnZipPic");
+            this.btnZipPic.Name = "btnZipPic";
+            this.btnZipPic.UseVisualStyleBackColor = false;
+            this.btnZipPic.Click += new System.EventHandler(this.btnZipPic_Click);
             // 
             // FrCreateMaterial
             // 
@@ -101,5 +115,6 @@
         private Sunny.UI.UIGroupBox uiGroupBox1;
         public System.Windows.Forms.Button btn_selectA;
         public System.Windows.Forms.Button btn_selectB;
+        public System.Windows.Forms.Button btnZipPic;
     }
 }

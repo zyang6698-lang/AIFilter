@@ -269,8 +269,11 @@
     <Compile Include="AnalyticsControl.Designer.cs">
       <DependentUpon>AnalyticsControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="DataFlowAnimation.cs">
-      <SubType>UserControl</SubType>
+    <Compile Include="ArrayConfigDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ArrayConfigDialog.Designer.cs">
+      <DependentUpon>ArrayConfigDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="FrAlarm.cs">
       <SubType>Form</SubType>

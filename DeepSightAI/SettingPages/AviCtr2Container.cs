@@ -16,37 +16,82 @@ namespace DeepSightAI.SettingPages
     public partial class AviCtr2Container : UserControl
     {
         private List<AviCtr2> aviCtr2Controls = new List<AviCtr2>();
+        // 缓存处理过的背景，避免每次 OnPaint 重新应用 ColorMatrix 和缩放
+        private Bitmap _cachedBackground;
+        private readonly object _bgLock = new object();
 
         public AviCtr2Container()
         {
             InitializeComponent();
             flowLayoutPanel1.BackColor = Color.Transparent;
             typeof(FlowLayoutPanel).GetProperty("DoubleBuffered", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-    .SetValue(flowLayoutPanel1, true, null);
+                .SetValue(flowLayoutPanel1, true, null);
             this.SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer, true);
             this.UpdateStyles();
         }
 
+        // 使用组合双缓冲（注意：可能影响层级控件显示，若有问题可移除）
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                var cp = base.CreateParams;
+                cp.ExStyle |= 0x02000000; // WS_EX_COMPOSITED
+                return cp;
+            }
+        }
+
         /// <summary>
-        /// 根据配置列表创建并添加 AviCtr2 控件
+        /// 根据配置列表增量创建/更新 AviCtr2 控件（避免每次全清导致重绘开销）
         /// </summary>
         /// <param name="watchPaths">配置列表</param>
         public void CreateMachinePanels(List<WatchPathConfig> watchPaths)
         {
-            // 清除旧控件
-            flowLayoutPanel1.Controls.Clear();
-            aviCtr2Controls.Clear();
+            if (watchPaths == null) return;
 
-            foreach (var config in watchPaths)
+            // 现有映射
+            var existingMap = aviCtr2Controls.ToDictionary(c => c.ctrConfig.AviName, c => c);
+            var incomingNames = new HashSet<string>(watchPaths.Select(w => w.AviName));
+
+            flowLayoutPanel1.SuspendLayout();
+            try
             {
-                AddAviControl(config);
+                // 移除不存在的
+                for (int i = aviCtr2Controls.Count - 1; i >= 0; i--)
+                {
+                    var ctr = aviCtr2Controls[i];
+                    if (!incomingNames.Contains(ctr.ctrConfig.AviName))
+                    {
+                        flowLayoutPanel1.Controls.Remove(ctr);
+                        aviCtr2Controls.RemoveAt(i);
+                        ctr.Dispose();
+                    }
+                }
+
+                // 添加或更新现有
+                foreach (var cfg in watchPaths)
+                {
+                    if (existingMap.TryGetValue(cfg.AviName, out var ctr))
+                    {
+                        // 更新配置引用（假设属性用于显示）
+                        ctr.ctrConfig = cfg;
+                        ctr.UpdateDisplay();
+                    }
+                    else
+                    {
+                        AddAviControl(cfg);
+                    }
+                }
+            }
+            finally
+            {
+                flowLayoutPanel1.ResumeLayout(true);
             }
         }
 
         /// <summary>
         /// 添加单个 AviCtr2 控件
         /// </summary>
-        /// <param name="watchPath">配置信息</param>
         private void AddAviControl(WatchPathConfig watchPath)
         {
             try
@@ -57,24 +102,21 @@ namespace DeepSightAI.SettingPages
             }
             catch (Exception ex)
             {
-                // 可以在这里记录异常
                 Console.WriteLine($"Failed to create AviCtr2: {ex.Message}");
             }
         }
+
         /// <summary>
         /// 获取所有 AviCtr2 控件的配置列表
         /// </summary>
-        /// <returns>WatchPathConfig 列表</returns>
         public List<WatchPathConfig> GetAllConfigs()
         {
             return aviCtr2Controls.Select(ctr => ctr.ctrConfig).ToList();
         }
+
         /// <summary>
         /// 更新指定名称的 AviCtr2 控件的统计信息
         /// </summary>
-        /// <param name="aviName">AVI 名称</param>
-        /// <param name="totalImages">图片总数</param>
-        /// <param name="aiOkImages">AI OK 图片数</param>
         public void UpdateAviCtrStats(string aviName, int totalImages, int aiOkImages)
         {
             var ctr = aviCtr2Controls.FirstOrDefault(c => c.ctrConfig.AviName == aviName);
@@ -88,7 +130,6 @@ namespace DeepSightAI.SettingPages
         /// <summary>
         /// 更新所有 AviCtr2 控件的信息
         /// </summary>
-        /// <param name="getLatestPanelInfo">用于获取最新信息的委托</param>
         public void UpdateAllAviCtrsInfo(Func<string, (string LotNumber, string SerialNumber, string ProductSerial, string PathIndex, double Utilization)> getLatestPanelInfo)
         {
             if (this.IsHandleCreated)
@@ -123,20 +164,71 @@ namespace DeepSightAI.SettingPages
                 }
             }
         }
+
         readonly ColorMatrix colorMatrix = new ColorMatrix(new float[][]
-                   {
-                        new float[] {1, 0, 0, 0, 0},
-                        new float[] {0, 1, 0, 0, 0},
-                        new float[] {0, 0, 1, 0, 0},
-                        new float[] {0, 0, 0, 0.725f, 0},
-                        new float[] {0, 0, 0, 0, 1}
-                   });
+        {
+            new float[] {1, 0, 0, 0, 0},
+            new float[] {0, 1, 0, 0, 0},
+            new float[] {0, 0, 1, 0, 0},
+            new float[] {0, 0, 0, 0.725f, 0},
+            new float[] {0, 0, 0, 0, 1}
+        });
+
+        // 减少背景重复绘制开销
+        private void RebuildBackgroundCache()
+        {
+            lock (_bgLock)
+            {
+                _cachedBackground?.Dispose();
+                _cachedBackground = null;
+                var source = Resources.background;
+                if (source == null || Width <= 0 || Height <= 0) return;
+                var bmp = new Bitmap(Width, Height);
+                using (var g = Graphics.FromImage(bmp))
+                using (var attr = new ImageAttributes())
+                {
+                    attr.SetColorMatrix(colorMatrix, ColorMatrixFlag.Default, ColorAdjustType.Bitmap);
+                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                    g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+                    g.DrawImage(source, new Rectangle(0, 0, Width, Height), 0, 0, source.Width, source.Height, GraphicsUnit.Pixel, attr);
+                }
+                _cachedBackground = bmp;
+            }
+            Invalidate(); // 刷新显示
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            RebuildBackgroundCache();
+        }
+
+        protected override void OnSizeChanged(EventArgs e)
+        {
+            base.OnSizeChanged(e);
+            RebuildBackgroundCache();
+        }
+
+        // 避免默认背景擦除导致闪烁
+        protected override void OnPaintBackground(PaintEventArgs pevent)
+        {
+            // 不调用 base，改由 OnPaint 使用缓存图
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
-            base.OnPaint(e);
+            base.OnPaint(e); // 保留子控件等绘制
             try
             {
-                // 使用资源中的背景图片
+                lock (_bgLock)
+                {
+                    if (_cachedBackground != null)
+                    {
+                        e.Graphics.DrawImageUnscaled(_cachedBackground, 0, 0);
+                        return;
+                    }
+                }
+                // 兜底路径（首次或资源为空）
                 Image backgroundImage = Resources.background;
                 if (backgroundImage != null)
                 {
@@ -150,28 +242,31 @@ namespace DeepSightAI.SettingPages
             }
             catch (Exception ex)
             {
-                // 可以记录异常，但在OnPaint中最好不要抛出异常
                 Console.WriteLine("Failed to draw background image: " + ex.Message);
             }
         }
 
-        public void UpdateAllAviCtrLotSn(Func<string,Task< (string SerialNumber, string LotNumber, string ProductSerial, string PathIndex)>> getLatestPanelInfo)
+        public void UpdateAllAviCtrLotSn(Func<string, Task<(string SerialNumber, string LotNumber, string ProductSerial, string PathIndex)>> getLatestPanelInfo)
         {
             if (this.IsHandleCreated)
             {
                 this.BeginInvoke(new Action(async () =>
                 {
-                    foreach (var ctr in aviCtr2Controls)
+                    // 并行获取减少多次 UI 刷新
+                    var tasks = aviCtr2Controls
+                        .Where(c => c.ctrConfig.IsEnable)
+                        .Select(async c => (c, info: await getLatestPanelInfo(c.ctrConfig.AviName)))
+                        .ToList();
+                    var results = await Task.WhenAll(tasks);
+                    foreach (var tuple in results)
                     {
-                        if (ctr.ctrConfig.IsEnable)
+                        var ctr = tuple.c;
+                        var tmp = tuple.info;
+                        if (tmp.LotNumber != null && tmp.SerialNumber != null)
                         {
-                            var tmp =await getLatestPanelInfo(ctr.ctrConfig.AviName);
-                            if (tmp.LotNumber != null && tmp.SerialNumber != null)
-                            {
-                                ctr.LotId = tmp.LotNumber;
-                                ctr.ProductSerial = tmp.ProductSerial;
-                                ctr.PathIndex = tmp.PathIndex;
-                            }
+                            ctr.LotId = tmp.LotNumber;
+                            ctr.ProductSerial = tmp.ProductSerial;
+                            ctr.PathIndex = tmp.PathIndex;
                         }
                     }
                 }));
@@ -180,31 +275,47 @@ namespace DeepSightAI.SettingPages
 
         public async Task UpdateAll(Func<string, Task<(string, string)>> GetLatestLotAndProductSerial, Func<string, string, Task<List<PanelDataRecord>>> getLatestPanelData)
         {
-            //根据机器名获取最新lot的列表
             if (this.IsHandleCreated)
             {
                 this.BeginInvoke(new Action(async () =>
                 {
-                    foreach (var ctr in aviCtr2Controls)
+                    // 并行收集所有需要的数据，减少 UI 线程切换
+                    var lotTasks = aviCtr2Controls
+                        .Where(c => c.ctrConfig.IsEnable)
+                        .Select(async c => (c, lotAndSerial: await GetLatestLotAndProductSerial(c.ctrConfig.AviName)))
+                        .ToList();
+                    var lotResults = await Task.WhenAll(lotTasks);
+
+                    // 获取 panel 数据
+                    var panelTasks = lotResults.Select(async r => (r.c, r.lotAndSerial, data: await getLatestPanelData(r.c.ctrConfig.AviName, r.lotAndSerial.Item1))).ToList();
+                    var panelResults = await Task.WhenAll(panelTasks);
+
+                    foreach (var r in panelResults)
                     {
-                        if (ctr.ctrConfig.IsEnable)
-                        {
-                            var tmp=await GetLatestLotAndProductSerial(ctr.ctrConfig.AviName);
-                            var data=await getLatestPanelData(ctr.ctrConfig.AviName, tmp.Item1);
-
-                            ctr.LotId = tmp.Item1;
-                            ctr.ProductSerial = tmp.Item2;
-                            var boardStat=PanelDataRecord.GetBoardStat(data);
-
-                            ctr.AiOkImages= boardStat.aiFilterOKCount;
-                            ctr.AiFilterCount= boardStat.aiFilterCount;
-                            ctr.AviPassRate= boardStat.aviPanelCount == 0 ? 0 : (double)boardStat.aviPanelOKCount / boardStat.aviPanelCount * 100;
-
-                        }
+                        var ctr = r.c;
+                        var tmp = r.lotAndSerial;
+                        ctr.LotId = tmp.Item1;
+                        ctr.ProductSerial = tmp.Item2;
+                        var boardStat = PanelDataRecord.GetBoardStat(r.data);
+                        ctr.AiOkImages = boardStat.aiFilterOKCount;
+                        ctr.AiFilterCount = boardStat.aiFilterCount;
+                        ctr.AviPassRate = boardStat.aviPanelCount == 0 ? 0 : (double)boardStat.aviPanelOKCount / boardStat.aviPanelCount * 100;
                     }
                 }));
             }
         }
 
+        //protected override void Dispose(bool disposing)
+        //{
+        //    if (disposing)
+        //    {
+        //        lock (_bgLock)
+        //        {
+        //            _cachedBackground?.Dispose();
+        //            _cachedBackground = null;
+        //        }
+        //    }
+        //    base.Dispose(disposing);
+        //}
     }
 }
