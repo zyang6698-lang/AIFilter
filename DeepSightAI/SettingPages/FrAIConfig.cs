@@ -301,7 +301,7 @@ namespace DeepSightAI.SettingPages
                 solConfig.CurrentFlow = this.lbl_flow.Text.ToString();
                 solConfig.CurrentisSwitch = isSCH;
                 Machine.solconfig = solConfig;
-
+                result=Machine.sol_class.Save(solConfig);
 
 
                 // 保存 ProductModeConfig
