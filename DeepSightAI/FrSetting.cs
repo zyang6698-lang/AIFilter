@@ -443,6 +443,10 @@ namespace DeepSightAI
 
                     }
                 }
+                if (tvw_setting.SelectedNode.Text == "算法方案配置")
+                {
+                    FrAIConfig.Instance.SaveParam();
+                }
             }
             catch (Exception)
             {

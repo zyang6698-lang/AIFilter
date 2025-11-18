@@ -35,6 +35,7 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.btnAutoAdd = new System.Windows.Forms.Button();
             this.lbl_Bflow = new System.Windows.Forms.Label();
             this.lbl_Bsolution = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
@@ -48,7 +49,6 @@
             this.lbl_solution = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            this.btn_SavePam = new System.Windows.Forms.Button();
             this.btn_GetAgain = new System.Windows.Forms.Button();
             this.panel3 = new System.Windows.Forms.Panel();
             this.dataPost = new System.Windows.Forms.DataGridView();
@@ -58,7 +58,7 @@
             this.B_solution = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.B_flow = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.isSwitch = new System.Windows.Forms.DataGridViewCheckBoxColumn();
-            this.btnAutoAdd = new System.Windows.Forms.Button();
+            this.Mode = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.panel1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.panel2.SuspendLayout();
@@ -98,10 +98,20 @@
             this.panel2.Controls.Add(this.lbl_solution);
             this.panel2.Controls.Add(this.label1);
             this.panel2.Controls.Add(this.label4);
-            this.panel2.Controls.Add(this.btn_SavePam);
             this.panel2.Controls.Add(this.btn_GetAgain);
             resources.ApplyResources(this.panel2, "panel2");
             this.panel2.Name = "panel2";
+            // 
+            // btnAutoAdd
+            // 
+            resources.ApplyResources(this.btnAutoAdd, "btnAutoAdd");
+            this.btnAutoAdd.FlatAppearance.BorderSize = 0;
+            this.btnAutoAdd.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
+            this.btnAutoAdd.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
+            this.btnAutoAdd.ForeColor = System.Drawing.Color.White;
+            this.btnAutoAdd.Name = "btnAutoAdd";
+            this.btnAutoAdd.UseVisualStyleBackColor = true;
+            this.btnAutoAdd.Click += new System.EventHandler(this.btnAutoAdd_Click);
             // 
             // lbl_Bflow
             // 
@@ -186,17 +196,6 @@
             resources.ApplyResources(this.label4, "label4");
             this.label4.Name = "label4";
             // 
-            // btn_SavePam
-            // 
-            resources.ApplyResources(this.btn_SavePam, "btn_SavePam");
-            this.btn_SavePam.FlatAppearance.BorderSize = 0;
-            this.btn_SavePam.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
-            this.btn_SavePam.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
-            this.btn_SavePam.ForeColor = System.Drawing.Color.White;
-            this.btn_SavePam.Name = "btn_SavePam";
-            this.btn_SavePam.UseVisualStyleBackColor = true;
-            this.btn_SavePam.Click += new System.EventHandler(this.btn_SavePam_Click);
-            // 
             // btn_GetAgain
             // 
             resources.ApplyResources(this.btn_GetAgain, "btn_GetAgain");
@@ -236,7 +235,8 @@
             this.A_flow,
             this.B_solution,
             this.B_flow,
-            this.isSwitch});
+            this.isSwitch,
+            this.Mode});
             dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             dataGridViewCellStyle2.Font = new System.Drawing.Font("微软雅黑", 9F);
@@ -306,16 +306,16 @@
             resources.ApplyResources(this.isSwitch, "isSwitch");
             this.isSwitch.Name = "isSwitch";
             // 
-            // btnAutoAdd
+            // Mode
             // 
-            resources.ApplyResources(this.btnAutoAdd, "btnAutoAdd");
-            this.btnAutoAdd.FlatAppearance.BorderSize = 0;
-            this.btnAutoAdd.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
-            this.btnAutoAdd.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
-            this.btnAutoAdd.ForeColor = System.Drawing.Color.White;
-            this.btnAutoAdd.Name = "btnAutoAdd";
-            this.btnAutoAdd.UseVisualStyleBackColor = true;
-            this.btnAutoAdd.Click += new System.EventHandler(this.btnAutoAdd_Click);
+            this.Mode.DataSource = new string[] {
+        "ByMachine",
+        "Copy",
+        "Cut"};
+            this.Mode.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
+            resources.ApplyResources(this.Mode, "Mode");
+            this.Mode.Name = "Mode";
+            this.Mode.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
             // FrAIConfig
             // 
@@ -355,7 +355,6 @@
         internal System.Windows.Forms.Label lbl_solution;
         internal System.Windows.Forms.Label label1;
         internal System.Windows.Forms.Label label4;
-        internal System.Windows.Forms.Button btn_SavePam;
         internal System.Windows.Forms.Button btn_GetAgain;
         private System.Windows.Forms.Panel panel3;
         public System.Windows.Forms.DataGridView dataPost;
@@ -365,6 +364,7 @@
         private System.Windows.Forms.DataGridViewComboBoxColumn B_solution;
         private System.Windows.Forms.DataGridViewComboBoxColumn B_flow;
         private System.Windows.Forms.DataGridViewCheckBoxColumn isSwitch;
+        private System.Windows.Forms.DataGridViewComboBoxColumn Mode;
         internal System.Windows.Forms.Button btnAutoAdd;
     }
 }

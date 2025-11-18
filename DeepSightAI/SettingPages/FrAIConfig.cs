@@ -17,16 +17,18 @@ namespace DeepSightAI.SettingPages
     public partial class FrAIConfig : Form
     {
         // 可下拉
-        public enum AIRunningMode
+        public enum PicOptMode
         {
-            Copy=0,
-            Cut=1,
-            ByMachine=2
+            ByMachine = 0,
+            Copy =1,
+            Cut=2,
         }
+        DeepSight_ProductMode_class ProductModeConfig ;
 
         public FrAIConfig()
         {
             InitializeComponent();
+            InitParNumberConfig();
             Control.CheckForIllegalCrossThreadCalls = false;
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.AllPaintingInWmPaint, true); // 禁止擦除背景.
@@ -61,66 +63,88 @@ namespace DeepSightAI.SettingPages
         public void GetSolutionFlow(bool isInface = false)
         {
             dataPost.Rows.Clear();
-            var json = JsonConvert.SerializeObject(new
+            try
             {
-                message_type = "visionbuilder_solution_flow_list"
-            });
-            //JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };//去掉空值NULL
-            //string res = JsonConvert.SerializeObject(json, Formatting.None, jsonSetting);
-            IntPtr input = Marshal.StringToHGlobalAnsi(json);//JsonConvert.SerializeObject(json, Formatting.None, jsonSetting));
-            Machine.master.workClass.defect.ai_Defect.Vision_runMethod(input, out IntPtr intPtr);
-            string solutionandflow_List = Marshal.PtrToStringAnsi(intPtr);
-
-            var jsonObj = JObject.Parse(solutionandflow_List);
-            var solutions = jsonObj["solution_flow_list"]
-                .Select(item => new
+                var json = JsonConvert.SerializeObject(new
                 {
-                    Solution = item["solution"].ToString(),
-                    FlowList = item["flow_list"].Select(flow => flow.ToString()).ToList()
+                    message_type = "visionbuilder_solution_flow_list"
                 });
-            //if (isInface)
-            {
+                IntPtr input = Marshal.StringToHGlobalAnsi(json);
+                Machine.master.workClass.defect.ai_Defect.Vision_runMethod(input, out IntPtr intPtr);
+                string solutionandflow_List = Marshal.PtrToStringAnsi(intPtr);
+
+                if (string.IsNullOrEmpty(solutionandflow_List))
+                {
+                    throw new Exception("获取的方案流程列表为空。");
+                }
+
+                var jsonObj = JObject.Parse(solutionandflow_List);
+                var solutions = jsonObj["solution_flow_list"]
+                    .Select(item => new
+                    {
+                        Solution = item["solution"].ToString(),
+                        FlowList = item["flow_list"].Select(flow => flow.ToString()).ToList()
+                    });
+                
                 dic_solutionAndFlow.Clear();
                 foreach (var sol in solutions)
                 {
-                    //如果是空flow
                     if (sol.FlowList.Count == 0)
                     {
-                        dataPost.Rows.Add("A", sol.Solution, "(空流程)", false);
+                        dataPost.Rows.Add(
+                            "A",                 // liaohao
+                            sol.Solution,        // A_solution
+                            "(空流程)",           // A_flow
+                            sol.Solution,        // B_solution(可按需求决定是否同 A)
+                            "(空流程)",           // B_flow
+                            false,               // isSwitch
+                            PicOptMode.ByMachine.ToString() // Mode
+                        );
                     }
 
                     if (!dic_solutionAndFlow.ContainsKey(sol.Solution))
                     {
                         dic_solutionAndFlow.Add(sol.Solution, sol.FlowList);
                     }
-
-                    //foreach (var flow in sol.FlowList)
-                    //{
-                    //    SolutionAndFlow item = new SolutionAndFlow()
-                    //    {
-                    //        ProductSerial= "A123",
-                    //        //ASide= "A",
-                    //        Asolution = sol.Solution,
-                    //        Aflow = flow,
-                    //        Bsolution = sol.Solution,
-                    //        Bflow = flow,
-                    //    };
-                    //    //这个item里面有个默认的false
-
-                    //    if (!Machine.solconfig.solus.Contains(item))
-                    //    //if (!Machine.solconfig.solus.Exists(O=>O.solution==item.solution))
-                    //    {
-                    //        dataPost.Rows.Add("A123", sol.Solution, flow, sol.Solution, flow, false);
-                    //    }
-                    //}
                 }
                 ((DataGridViewComboBoxColumn)dataPost.Columns["A_solution"]).DataSource = dic_solutionAndFlow.Keys.ToList();
                 ((DataGridViewComboBoxColumn)dataPost.Columns["A_flow"]).DataSource = dic_solutionAndFlow.Values.SelectMany(list => list).Distinct().ToList();
                 ((DataGridViewComboBoxColumn)dataPost.Columns["B_solution"]).DataSource = dic_solutionAndFlow.Keys.ToList();
                 ((DataGridViewComboBoxColumn)dataPost.Columns["B_flow"]).DataSource = dic_solutionAndFlow.Values.SelectMany(list => list).Distinct().ToList();
             }
-            //默认文件获取
-            InitMethod();
+            catch (Exception ex)
+            {
+                LogTextHelper.Error("获取方案流程失败: " + ex.ToString());
+                dic_solutionAndFlow.Clear();
+                // 添加默认空行
+                dataPost.Rows.Add(
+                    "Default",
+                    "DefaultSolution",
+                    "(空流程)",
+                    "DefaultSolution",
+                    "(空流程)",
+                    false,
+                    PicOptMode.ByMachine.ToString()
+                );
+                // 更新ComboBox数据源
+                var defaultKeys = new List<string> { "DefaultSolution" };
+                var defaultValues = new List<string> { "(空流程)" };
+                ((DataGridViewComboBoxColumn)dataPost.Columns["A_solution"]).DataSource = defaultKeys;
+                ((DataGridViewComboBoxColumn)dataPost.Columns["A_flow"]).DataSource = defaultValues;
+                ((DataGridViewComboBoxColumn)dataPost.Columns["B_solution"]).DataSource = defaultKeys;
+                ((DataGridViewComboBoxColumn)dataPost.Columns["B_flow"]).DataSource = defaultValues;
+            }
+            finally
+            {
+                //默认文件获取
+                InitMethod();
+            }
+        }
+
+        private void InitParNumberConfig()
+        {
+            ProductModeConfig = new DeepSight_ProductMode_class();
+
         }
         /// <summary>
         /// 绑定数据
@@ -140,28 +164,50 @@ namespace DeepSightAI.SettingPages
                         dataPost.Rows[i].Cells[3].Value = Machine.solconfig.solus[i].Bsolution;
                         dataPost.Rows[i].Cells[4].Value = Machine.solconfig.solus[i].Bflow;
                         dataPost.Rows[i].Cells[5].Value = Machine.solconfig.solus[i].IsSwitch;
-
-
-                        // 获取设计器创建的列
-                        //var sideColumn1 = (DataGridViewComboBoxColumn)dataPost.Columns["A_solution"];
-                        //var sideColumn2 = (DataGridViewComboBoxColumn)dataPost.Columns["A_flow"];
-                        //var sideColumn3 = (DataGridViewComboBoxColumn)dataPost.Columns["B_solution"];
-                        //var sideColumn4 = (DataGridViewComboBoxColumn)dataPost.Columns["B_flow"];
-
-                        //// 修改数据源
-                        //sideColumn1.DataSource = new List<string> { "X", "Y", "Z" };
-                        //sideColumn2.DataSource = new List<string> { "X", "Y", "Z" };
-                        //sideColumn3.DataSource = new List<string> { "X", "Y", "Z" };
-                        //sideColumn4.DataSource = new List<string> { "X", "Y", "Z" };
-
-                        //// 刷新显示
-                        //dataPost.Refresh();
+                        if (dataPost.Columns.Contains("Mode"))
+                        {
+                            // 默认值
+                            dataPost.Rows[i].Cells["Mode"].Value = PicOptMode.ByMachine.ToString();
+                        }
                     }
                 }
+                // 从配置文件加载Mode
+                LoadProductModes();
             }
             catch (Exception ex)
             {
                 LogTextHelper.Error("异常" + ex.ToString());
+            }
+        }
+
+        private void LoadProductModes()
+        {
+            if (ProductModeConfig.Read(out ProductModeConfig config))
+            {
+                foreach (DataGridViewRow row in dataPost.Rows)
+                {
+                    if (row.IsNewRow || row.Cells[0].Value == null) continue;
+
+                    string materialCode = row.Cells[0].Value.ToString();
+                    var productItem = ProductModeConfig.GetProduct(materialCode, config);
+
+                    if (productItem != null && !string.IsNullOrEmpty(productItem.CopyCutMode))
+                    {
+                        // 检查值是否在ComboBox的项中
+                        var comboBoxCell = row.Cells["Mode"] as DataGridViewComboBoxCell;
+                        if (comboBoxCell != null)
+                        {
+                            if (comboBoxCell.Items.Contains(productItem.CopyCutMode))
+                            {
+                                row.Cells["Mode"].Value = productItem.CopyCutMode;
+                            }
+                            else
+                            {
+                                // 如果需要，可以记录一个警告，说明该值无效
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -207,25 +253,26 @@ namespace DeepSightAI.SettingPages
             Machine.master.workClass.isSwitch = Machine.isSwitch = isSCH;
             Machine.master.workClass.ProductSerial = Machine.productSerial = productSerial;
             FrmMain.Instance.solutionAndflow.Text = $"当前方案:{solutionName}_当前流程:{flowName}_当前Switch:{isSCH}";
-            btn_SavePam_Click(null, null);
+            SaveParam();
             MessageBox.Show("方案及流程设置成功", "设置成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        private void btn_SavePam_Click(object sender, EventArgs e)
+        public void SaveParam()
         {
             try
             {
+                // 保存 SolutionConfig
                 SolutionConfig solConfig = new SolutionConfig()
                 {
                     solus = new List<SolutionAndFlow>(),
                 };
                 for (int i = 0; i < dataPost.Rows.Count; i++)
                 {
+                    if (dataPost.Rows[i].IsNewRow) continue;
                     SolutionAndFlow item = new SolutionAndFlow();
                     if (dataPost.Rows[i].Cells[0].Value != null)
                     {
                         item.ProductSerial = dataPost.Rows[i].Cells[0].Value.ToString();
-                        //item.Side= dataPost.Rows[i].Cells[1].Value.ToString();
                         item.Asolution = dataPost.Rows[i].Cells[1].Value.ToString();
                         item.Aflow = dataPost.Rows[i].Cells[2].Value.ToString();
                         item.Bsolution = dataPost.Rows[i].Cells[3].Value.ToString();
@@ -239,7 +286,7 @@ namespace DeepSightAI.SettingPages
                 solConfig.CurrentFlow = this.lbl_flow.Text.ToString();
                 solConfig.CurrentisSwitch = isSCH;
                 Machine.solconfig = solConfig;
-                //保存到文件夹
+
                 if (Machine.sol_class.Save(solConfig))
                 {
                     MessageBox.Show("方案及流程配置保存成功", "保存成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -248,8 +295,42 @@ namespace DeepSightAI.SettingPages
                 {
                     MessageBox.Show("方案及流程配置保存失败", "保存失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
-                dataPost.Refresh();
                 Machine.master.workClass.solconfig = Machine.solconfig;
+
+                // 保存 ProductModeConfig
+                try
+                {
+                    ProductModeConfig newProductConfig = new ProductModeConfig { Products = new List<ProductModeItem>() };
+                    for (int i = 0; i < dataPost.Rows.Count; i++)
+                    {
+                        if (dataPost.Rows[i].IsNewRow || dataPost.Rows[i].Cells[0].Value == null) continue;
+
+                        var productSerial = dataPost.Rows[i].Cells[0].Value.ToString();
+                        var modeValue = dataPost.Columns.Contains("Mode") ? dataPost.Rows[i].Cells["Mode"].Value?.ToString() : PicOptMode.ByMachine.ToString();
+
+                        newProductConfig.Products.Add(new ProductModeItem
+                        {
+                            Name = productSerial,
+                            CopyCutMode = modeValue
+                        });
+                    }
+
+                    if (ProductModeConfig.Save(newProductConfig))
+                    {
+                        // 可以选择性地显示成功消息，但为避免过多弹窗，此处省略
+                    }
+                    else
+                    {
+                        MessageBox.Show("料号模式配置保存失败", "保存失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error("保存料号模式配置异常: " + ex.ToString());
+                    MessageBox.Show("保存料号模式配置时发生错误。", "异常", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+
+                dataPost.Refresh();
             }
             catch (Exception ex)
             {
@@ -258,13 +339,38 @@ namespace DeepSightAI.SettingPages
         }
         private void btn_Add_Click(object sender, EventArgs e)
         {
+            if (dic_solutionAndFlow.Count == 0)
+            {
+                MessageBox.Show("当前无可用方案/流程数据，无法添加。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var existingCodes = new HashSet<string>(
+                dataPost.Rows
+                        .Cast<DataGridViewRow>()
+                        .Where(r => !r.IsNewRow && r.Cells[0].Value != null)
+                        .Select(r => r.Cells[0].Value.ToString()),
+                StringComparer.OrdinalIgnoreCase);
+
+            string newMaterialCode = "NewItem1";
+            int counter = 2;
+            while (existingCodes.Contains(newMaterialCode))
+            {
+                newMaterialCode = $"NewItem{counter++}";
+            }
+
             int index = this.dataPost.Rows.Add();
-            dataPost.Rows[index].Cells[0].Value = "A";
-            dataPost.Rows[index].Cells[1].Value = dic_solutionAndFlow.FirstOrDefault().Key;
-            dataPost.Rows[index].Cells[2].Value = dic_solutionAndFlow.FirstOrDefault().Value[0];
-            dataPost.Rows[index].Cells[3].Value = dic_solutionAndFlow.FirstOrDefault().Key;
-            dataPost.Rows[index].Cells[4].Value = dic_solutionAndFlow.FirstOrDefault().Value[0];
+            dataPost.Rows[index].Cells[0].Value = newMaterialCode;
+            var firstSolution = dic_solutionAndFlow.First();
+            dataPost.Rows[index].Cells[1].Value = firstSolution.Key;
+            dataPost.Rows[index].Cells[2].Value = firstSolution.Value.FirstOrDefault() ?? "(空流程)";
+            dataPost.Rows[index].Cells[3].Value = firstSolution.Key;
+            dataPost.Rows[index].Cells[4].Value = firstSolution.Value.FirstOrDefault() ?? "(空流程)";
             dataPost.Rows[index].Cells[5].Value = false;
+            if (dataPost.Columns.Contains("Mode"))
+            {
+                dataPost.Rows[index].Cells["Mode"].Value = PicOptMode.ByMachine.ToString();
+            }
             dataPost.Refresh();
         }
 
@@ -288,7 +394,6 @@ namespace DeepSightAI.SettingPages
                 string selectedValue = dataPost.Rows[e.RowIndex].Cells["A_solution"].Value?.ToString();
                 if (dic_solutionAndFlow.TryGetValue(selectedValue, out List<string> flowList))
                 {
-                    //(DataGridViewComboBoxColumn)dataPost.Columns["A_flow"]). DataSource = flowList;
                     ((DataGridViewComboBoxCell)dataPost.Rows[e.RowIndex].Cells["A_flow"]).DataSource = flowList;
                     ((DataGridViewComboBoxCell)dataPost.Rows[e.RowIndex].Cells["A_flow"]).Value = flowList[0];
                 }
@@ -300,11 +405,9 @@ namespace DeepSightAI.SettingPages
             }
             if (e.ColumnIndex == dataPost.Columns["B_solution"].Index&& e.RowIndex >= 0)
             {
-                // 获取选择的值将flow数据重新绑定
                 string selectedValue = dataPost.Rows[e.RowIndex].Cells["B_solution"].Value?.ToString();
                 if (dic_solutionAndFlow.TryGetValue(selectedValue, out List<string> flowList))
                 {
-                    //((DataGridViewComboBoxColumn)dataPost.Columns["B_flow"]).DataSource = flowList;
                     ((DataGridViewComboBoxCell)dataPost.Rows[e.RowIndex].Cells["B_flow"]).DataSource = flowList;
                     ((DataGridViewComboBoxCell)dataPost.Rows[e.RowIndex].Cells["B_flow"]).Value = flowList[0];
                 }
@@ -315,6 +418,7 @@ namespace DeepSightAI.SettingPages
                 }
 
             }
+            // Mode 列变更暂不处理，如需事件可在此扩展
         }
         // 新增：根据料号位置自动读取料号（目录或文件名），用于 AutoAdd
         private List<string> GetMaterialCodes(string rootPath)
@@ -399,6 +503,10 @@ namespace DeepSightAI.SettingPages
                 dataPost.Rows[index].Cells[3].Value = solKey;
                 dataPost.Rows[index].Cells[4].Value = firstFlow;
                 dataPost.Rows[index].Cells[5].Value = false;
+                if (dataPost.Columns.Contains("Mode"))
+                {
+                    dataPost.Rows[index].Cells["Mode"].Value = PicOptMode.ByMachine.ToString();
+                }
 
                 existingCodes.Add(code);
                 added++;

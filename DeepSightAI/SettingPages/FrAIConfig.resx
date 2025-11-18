@@ -638,7 +638,7 @@
     <value>NoControl</value>
   </data>
   <data name="btn_setSolution.Location" type="System.Drawing.Point, System.Drawing">
-    <value>229, 340</value>
+    <value>26, 337</value>
   </data>
   <data name="btn_setSolution.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 4, 4, 4</value>
@@ -796,91 +796,6 @@
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
     <value>13</value>
   </data>
-  <data name="btn_SavePam.BackgroundImage" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        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
-        QmCC
-</value>
-  </data>
-  <data name="btn_SavePam.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
-    <value>Stretch</value>
-  </data>
-  <data name="btn_SavePam.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
-    <value>Flat</value>
-  </data>
-  <data name="btn_SavePam.Font" type="System.Drawing.Font, System.Drawing">
-    <value>微软雅黑, 9pt</value>
-  </data>
-  <data name="btn_SavePam.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btn_SavePam.Location" type="System.Drawing.Point, System.Drawing">
-    <value>229, 246</value>
-  </data>
-  <data name="btn_SavePam.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
-  </data>
-  <data name="btn_SavePam.Size" type="System.Drawing.Size, System.Drawing">
-    <value>148, 42</value>
-  </data>
-  <data name="btn_SavePam.TabIndex" type="System.Int32, mscorlib">
-    <value>60</value>
-  </data>
-  <data name="btn_SavePam.Text" xml:space="preserve">
-    <value>保存参数</value>
-  </data>
-  <data name="&gt;&gt;btn_SavePam.Name" xml:space="preserve">
-    <value>btn_SavePam</value>
-  </data>
-  <data name="&gt;&gt;btn_SavePam.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btn_SavePam.Parent" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;btn_SavePam.ZOrder" xml:space="preserve">
-    <value>14</value>
-  </data>
   <data name="btn_GetAgain.BackgroundImage" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAAZAAAADICAYAAADGFbfiAAAABGdBTUEAALGPC/xhBQAACVZJREFUeF7t
@@ -940,7 +855,7 @@
     <value>NoControl</value>
   </data>
   <data name="btn_GetAgain.Location" type="System.Drawing.Point, System.Drawing">
-    <value>23, 340</value>
+    <value>229, 246</value>
   </data>
   <data name="btn_GetAgain.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 4, 4, 4</value>
@@ -964,19 +879,19 @@
     <value>panel2</value>
   </data>
   <data name="&gt;&gt;btn_GetAgain.ZOrder" xml:space="preserve">
-    <value>15</value>
+    <value>14</value>
   </data>
   <data name="panel2.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
   <data name="panel2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>648, 4</value>
+    <value>667, 4</value>
   </data>
   <data name="panel2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 4, 4, 4</value>
   </data>
   <data name="panel2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>432, 658</value>
+    <value>413, 658</value>
   </data>
   <data name="panel2.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1065,6 +980,15 @@
   <data name="isSwitch.Width" type="System.Int32, mscorlib">
     <value>125</value>
   </data>
+  <data name="Mode.HeaderText" xml:space="preserve">
+    <value>模式</value>
+  </data>
+  <data name="Mode.MinimumWidth" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="Mode.Width" type="System.Int32, mscorlib">
+    <value>125</value>
+  </data>
   <data name="dataPost.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
@@ -1078,7 +1002,7 @@
     <value>51</value>
   </data>
   <data name="dataPost.Size" type="System.Drawing.Size, System.Drawing">
-    <value>636, 658</value>
+    <value>655, 658</value>
   </data>
   <data name="dataPost.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -1105,7 +1029,7 @@
     <value>4, 4, 4, 4</value>
   </data>
   <data name="panel3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>636, 658</value>
+    <value>655, 658</value>
   </data>
   <data name="panel3.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1153,7 +1077,7 @@
     <value>0</value>
   </data>
   <data name="tableLayoutPanel1.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="panel2" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="panel3" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,59.49821,Percent,40.50179" /&gt;&lt;Rows Styles="Percent,100" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="panel2" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="panel3" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,61.16236,Percent,38.83764" /&gt;&lt;Rows Styles="Percent,100" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <data name="panel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -1238,6 +1162,12 @@
   </data>
   <data name="&gt;&gt;isSwitch.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewCheckBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;Mode.Name" xml:space="preserve">
+    <value>Mode</value>
+  </data>
+  <data name="&gt;&gt;Mode.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewComboBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>FrAIConfig</value>
