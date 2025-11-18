@@ -52,6 +52,7 @@
             this.btn_GetAgain = new System.Windows.Forms.Button();
             this.panel3 = new System.Windows.Forms.Panel();
             this.dataPost = new System.Windows.Forms.DataGridView();
+            this.Index = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.liaohao = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.A_solution = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.A_flow = new System.Windows.Forms.DataGridViewComboBoxColumn();
@@ -230,6 +231,7 @@
             this.dataPost.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.dataPost.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataPost.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.Index,
             this.liaohao,
             this.A_solution,
             this.A_flow,
@@ -258,19 +260,25 @@
             dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.dataPost.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.dataPost.RowHeadersVisible = false;
-            this.dataPost.RowTemplate.Height = 27;
-            this.dataPost.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dataPost.ShowCellErrors = false;
-            this.dataPost.ShowCellToolTips = false;
-            this.dataPost.ShowEditingIcon = false;
-            this.dataPost.ShowRowErrors = false;
+            this.dataPost.RowTemplate.Height = 23;
+            this.dataPost.Size = new System.Drawing.Size(1184, 549);
+            this.dataPost.TabIndex = 0;
             this.dataPost.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataPost_CellClick);
+            this.dataPost.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataPost_CellValueChanged);
+            // 
+            // Index
+            // 
+            this.Index.HeaderText = "Index";
+            this.Index.Name = "Index";
+            this.Index.ReadOnly = true;
+            this.Index.Width = 60;
             // 
             // liaohao
             // 
-            this.liaohao.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            resources.ApplyResources(this.liaohao, "liaohao");
+            this.liaohao.HeaderText = "PartNumber";
             this.liaohao.Name = "liaohao";
+            this.liaohao.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.liaohao.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
             // A_solution
             // 
@@ -337,7 +345,7 @@
         }
 
         #endregion
-
+        private System.Windows.Forms.DataGridViewTextBoxColumn Index;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.DataGridViewComboBoxColumn Code;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;

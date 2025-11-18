@@ -445,7 +445,12 @@ namespace DeepSightAI
                 }
                 if (tvw_setting.SelectedNode.Text == "算法方案配置")
                 {
-                    FrAIConfig.Instance.SaveParam();
+                    if (FrAIConfig.Instance.SaveParam())
+                    {
+                        Machine.master.workClass.solconfig = Machine.solconfig;
+                        MessageBox.Show("方案及流程配置保存成功", "保存成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+
                 }
             }
             catch (Exception)

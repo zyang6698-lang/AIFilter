@@ -37,7 +37,16 @@ namespace DeepSightAI.SettingPages
             dataPost.CellValueChanged -= dataPost_CellValueChanged;
             GetSolutionFlow();
             dataPost.CellValueChanged += dataPost_CellValueChanged;
-
+            dataPost.RowsAdded += (s, e) => UpdateRowIndices();
+            dataPost.RowsRemoved += (s, e) => UpdateRowIndices();
+        }
+        private void UpdateRowIndices()
+        {
+            for (int i = 0; i < dataPost.Rows.Count; i++)
+            {
+                if (dataPost.Rows[i].IsNewRow) continue;
+                dataPost.Rows[i].Cells["Index"].Value = i + 1;
+            }
         }
         private Dictionary<string, List<string>> dic_solutionAndFlow = new Dictionary<string, List<string>>();
         /// <summary>
@@ -92,6 +101,7 @@ namespace DeepSightAI.SettingPages
                     if (sol.FlowList.Count == 0)
                     {
                         dataPost.Rows.Add(
+                            dataPost.Rows.Count, // Index placeholder
                             "A",                 // liaohao
                             sol.Solution,        // A_solution
                             "(空流程)",           // A_flow
@@ -118,6 +128,7 @@ namespace DeepSightAI.SettingPages
                 dic_solutionAndFlow.Clear();
                 // 添加默认空行
                 dataPost.Rows.Add(
+                    1, // Index placeholder
                     "Default",
                     "DefaultSolution",
                     "(空流程)",
@@ -138,6 +149,7 @@ namespace DeepSightAI.SettingPages
             {
                 //默认文件获取
                 InitMethod();
+                UpdateRowIndices();
             }
         }
 
@@ -158,12 +170,13 @@ namespace DeepSightAI.SettingPages
                     for (int i = 0; i < Machine.solconfig.solus.Count; i++)
                     {
                         dataPost.Rows.Add();
-                        dataPost.Rows[i].Cells[0].Value = Machine.solconfig.solus[i].ProductSerial;
-                        dataPost.Rows[i].Cells[1].Value = Machine.solconfig.solus[i].Asolution;
-                        dataPost.Rows[i].Cells[2].Value = Machine.solconfig.solus[i].Aflow;
-                        dataPost.Rows[i].Cells[3].Value = Machine.solconfig.solus[i].Bsolution;
-                        dataPost.Rows[i].Cells[4].Value = Machine.solconfig.solus[i].Bflow;
-                        dataPost.Rows[i].Cells[5].Value = Machine.solconfig.solus[i].IsSwitch;
+                        dataPost.Rows[i].Cells["Index"].Value = i + 1;
+                        dataPost.Rows[i].Cells[1].Value = Machine.solconfig.solus[i].ProductSerial;
+                        dataPost.Rows[i].Cells[2].Value = Machine.solconfig.solus[i].Asolution;
+                        dataPost.Rows[i].Cells[3].Value = Machine.solconfig.solus[i].Aflow;
+                        dataPost.Rows[i].Cells[4].Value = Machine.solconfig.solus[i].Bsolution;
+                        dataPost.Rows[i].Cells[5].Value = Machine.solconfig.solus[i].Bflow;
+                        dataPost.Rows[i].Cells[6].Value = Machine.solconfig.solus[i].IsSwitch;
                         if (dataPost.Columns.Contains("Mode"))
                         {
                             // 默认值
@@ -173,6 +186,7 @@ namespace DeepSightAI.SettingPages
                 }
                 // 从配置文件加载Mode
                 LoadProductModes();
+                UpdateRowIndices();
             }
             catch (Exception ex)
             {
@@ -186,9 +200,9 @@ namespace DeepSightAI.SettingPages
             {
                 foreach (DataGridViewRow row in dataPost.Rows)
                 {
-                    if (row.IsNewRow || row.Cells[0].Value == null) continue;
+                    if (row.IsNewRow || row.Cells[1].Value == null) continue;
 
-                    string materialCode = row.Cells[0].Value.ToString();
+                    string materialCode = row.Cells[1].Value.ToString();
                     var productItem = ProductModeConfig.GetProduct(materialCode, config);
 
                     if (productItem != null && !string.IsNullOrEmpty(productItem.CopyCutMode))
@@ -224,7 +238,7 @@ namespace DeepSightAI.SettingPages
         {
             if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
             //判断是否是第二列
-            if (e.ColumnIndex == 2 && dataPost.Columns[e.ColumnIndex] is DataGridViewCheckBoxColumn)
+            if (e.ColumnIndex == 3 && dataPost.Columns[e.ColumnIndex] is DataGridViewCheckBoxColumn)
             {
                 var cell = dataPost.Rows[e.RowIndex].Cells[e.ColumnIndex];
                 cell.Value = !(cell.Value is bool isChecked && isChecked);
@@ -233,17 +247,17 @@ namespace DeepSightAI.SettingPages
             }
             int rowIndex = e.RowIndex;
             //int columnIndex = e.ColumnIndex;
-            productSerial = dataPost.Rows[rowIndex].Cells[0].Value?.ToString() ?? "空值";
-            solutionName = dataPost.Rows[rowIndex].Cells[1].Value?.ToString() ?? "空值";
-            flowName = dataPost.Rows[rowIndex].Cells[2].Value?.ToString() ?? "空值";
+            productSerial = dataPost.Rows[rowIndex].Cells[1].Value?.ToString() ?? "空值";
+            solutionName = dataPost.Rows[rowIndex].Cells[2].Value?.ToString() ?? "空值";
+            flowName = dataPost.Rows[rowIndex].Cells[3].Value?.ToString() ?? "空值";
 
             //isSCH = Convert.ToBoolean(dataPost.Rows[rowIndex].Cells[2].Value);
             // isSCH = false;
             this.lbl_solution.Text = solutionName;
             this.lbl_flow.Text = flowName;
             this.lbl_ProductSerial.Text = productSerial;
-            this.lbl_Bsolution.Text = dataPost.Rows[rowIndex].Cells[3].Value?.ToString() ?? "空值"; ;
-            this.lbl_Bflow.Text = dataPost.Rows[rowIndex].Cells[4].Value?.ToString() ?? "空值"; ;
+            this.lbl_Bsolution.Text = dataPost.Rows[rowIndex].Cells[4].Value?.ToString() ?? "空值"; ;
+            this.lbl_Bflow.Text = dataPost.Rows[rowIndex].Cells[5].Value?.ToString() ?? "空值"; ;
         }
 
         private void btn_setSolution_Click(object sender, EventArgs e)
@@ -257,8 +271,9 @@ namespace DeepSightAI.SettingPages
             MessageBox.Show("方案及流程设置成功", "设置成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        public void SaveParam()
+        public bool SaveParam()
         {
+            bool result = true;
             try
             {
                 // 保存 SolutionConfig
@@ -270,14 +285,14 @@ namespace DeepSightAI.SettingPages
                 {
                     if (dataPost.Rows[i].IsNewRow) continue;
                     SolutionAndFlow item = new SolutionAndFlow();
-                    if (dataPost.Rows[i].Cells[0].Value != null)
+                    if (dataPost.Rows[i].Cells[1].Value != null)
                     {
-                        item.ProductSerial = dataPost.Rows[i].Cells[0].Value.ToString();
-                        item.Asolution = dataPost.Rows[i].Cells[1].Value.ToString();
-                        item.Aflow = dataPost.Rows[i].Cells[2].Value.ToString();
-                        item.Bsolution = dataPost.Rows[i].Cells[3].Value.ToString();
-                        item.Bflow = dataPost.Rows[i].Cells[4].Value.ToString();
-                        item.IsSwitch = Convert.ToBoolean(dataPost.Rows[i].Cells[5].Value);
+                        item.ProductSerial = dataPost.Rows[i].Cells[1].Value.ToString();
+                        item.Asolution = dataPost.Rows[i].Cells[2].Value.ToString();
+                        item.Aflow = dataPost.Rows[i].Cells[3].Value.ToString();
+                        item.Bsolution = dataPost.Rows[i].Cells[4].Value.ToString();
+                        item.Bflow = dataPost.Rows[i].Cells[5].Value.ToString();
+                        item.IsSwitch = Convert.ToBoolean(dataPost.Rows[i].Cells[6].Value);
                     }
                     solConfig.solus.Add(item);
                 }
@@ -287,15 +302,7 @@ namespace DeepSightAI.SettingPages
                 solConfig.CurrentisSwitch = isSCH;
                 Machine.solconfig = solConfig;
 
-                if (Machine.sol_class.Save(solConfig))
-                {
-                    MessageBox.Show("方案及流程配置保存成功", "保存成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                else
-                {
-                    MessageBox.Show("方案及流程配置保存失败", "保存失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
-                Machine.master.workClass.solconfig = Machine.solconfig;
+
 
                 // 保存 ProductModeConfig
                 try
@@ -303,9 +310,9 @@ namespace DeepSightAI.SettingPages
                     ProductModeConfig newProductConfig = new ProductModeConfig { Products = new List<ProductModeItem>() };
                     for (int i = 0; i < dataPost.Rows.Count; i++)
                     {
-                        if (dataPost.Rows[i].IsNewRow || dataPost.Rows[i].Cells[0].Value == null) continue;
+                        if (dataPost.Rows[i].IsNewRow || dataPost.Rows[i].Cells[1].Value == null) continue;
 
-                        var productSerial = dataPost.Rows[i].Cells[0].Value.ToString();
+                        var productSerial = dataPost.Rows[i].Cells[1].Value.ToString();
                         var modeValue = dataPost.Columns.Contains("Mode") ? dataPost.Rows[i].Cells["Mode"].Value?.ToString() : PicOptMode.ByMachine.ToString();
 
                         newProductConfig.Products.Add(new ProductModeItem
@@ -321,21 +328,24 @@ namespace DeepSightAI.SettingPages
                     }
                     else
                     {
+                        result = false;
                         MessageBox.Show("料号模式配置保存失败", "保存失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
                 }
                 catch (Exception ex)
                 {
+                    result = false;
                     LogTextHelper.Error("保存料号模式配置异常: " + ex.ToString());
                     MessageBox.Show("保存料号模式配置时发生错误。", "异常", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-
                 dataPost.Refresh();
             }
             catch (Exception ex)
             {
+                result = false;
                 LogTextHelper.Error("异常" + ex.ToString());
             }
+            return result;
         }
         private void btn_Add_Click(object sender, EventArgs e)
         {
@@ -348,8 +358,8 @@ namespace DeepSightAI.SettingPages
             var existingCodes = new HashSet<string>(
                 dataPost.Rows
                         .Cast<DataGridViewRow>()
-                        .Where(r => !r.IsNewRow && r.Cells[0].Value != null)
-                        .Select(r => r.Cells[0].Value.ToString()),
+                        .Where(r => !r.IsNewRow && r.Cells[1].Value != null)
+                        .Select(r => r.Cells[1].Value.ToString()),
                 StringComparer.OrdinalIgnoreCase);
 
             string newMaterialCode = "NewItem1";
@@ -360,13 +370,14 @@ namespace DeepSightAI.SettingPages
             }
 
             int index = this.dataPost.Rows.Add();
-            dataPost.Rows[index].Cells[0].Value = newMaterialCode;
+            dataPost.Rows[index].Cells["Index"].Value = index + 1;
+            dataPost.Rows[index].Cells[1].Value = newMaterialCode;
             var firstSolution = dic_solutionAndFlow.First();
-            dataPost.Rows[index].Cells[1].Value = firstSolution.Key;
-            dataPost.Rows[index].Cells[2].Value = firstSolution.Value.FirstOrDefault() ?? "(空流程)";
-            dataPost.Rows[index].Cells[3].Value = firstSolution.Key;
-            dataPost.Rows[index].Cells[4].Value = firstSolution.Value.FirstOrDefault() ?? "(空流程)";
-            dataPost.Rows[index].Cells[5].Value = false;
+            dataPost.Rows[index].Cells[2].Value = firstSolution.Key;
+            dataPost.Rows[index].Cells[3].Value = firstSolution.Value.FirstOrDefault() ?? "(空流程)";
+            dataPost.Rows[index].Cells[4].Value = firstSolution.Key;
+            dataPost.Rows[index].Cells[5].Value = firstSolution.Value.FirstOrDefault() ?? "(空流程)";
+            dataPost.Rows[index].Cells[6].Value = false;
             if (dataPost.Columns.Contains("Mode"))
             {
                 dataPost.Rows[index].Cells["Mode"].Value = PicOptMode.ByMachine.ToString();
@@ -379,9 +390,9 @@ namespace DeepSightAI.SettingPages
             DialogResult res = MessageBox.Show(" 你 真 的 要 删 了 我 吗？\r\n", "删除提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
             if (res == DialogResult.OK)
             {
-                if (dataPost.Rows.Count >= 1)
+                if (dataPost.CurrentRow != null && !dataPost.CurrentRow.IsNewRow)
                 {
-                    dataPost.Rows.Remove(dataPost.SelectedRows[0]);
+                    dataPost.Rows.Remove(dataPost.CurrentRow);
                     dataPost.Refresh(); //刷新显示
                 }
             }
@@ -389,7 +400,7 @@ namespace DeepSightAI.SettingPages
 
         private void dataPost_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.ColumnIndex == dataPost.Columns["A_solution"].Index  && e.RowIndex >= 0)
+            if (   e.RowIndex >= 0&& e.ColumnIndex == dataPost.Columns["A_solution"].Index)
             {
                 string selectedValue = dataPost.Rows[e.RowIndex].Cells["A_solution"].Value?.ToString();
                 if (dic_solutionAndFlow.TryGetValue(selectedValue, out List<string> flowList))
@@ -403,7 +414,7 @@ namespace DeepSightAI.SettingPages
                     return;
                 }
             }
-            if (e.ColumnIndex == dataPost.Columns["B_solution"].Index&& e.RowIndex >= 0)
+            if (e.RowIndex >= 0&&e.ColumnIndex == dataPost.Columns["B_solution"].Index)
             {
                 string selectedValue = dataPost.Rows[e.RowIndex].Cells["B_solution"].Value?.ToString();
                 if (dic_solutionAndFlow.TryGetValue(selectedValue, out List<string> flowList))
@@ -464,8 +475,8 @@ namespace DeepSightAI.SettingPages
             var existingCodes = new HashSet<string>(
                 dataPost.Rows
                         .Cast<DataGridViewRow>()
-                        .Where(r => !r.IsNewRow && r.Cells[0].Value != null)
-                        .Select(r => r.Cells[0].Value.ToString()),
+                        .Where(r => !r.IsNewRow && r.Cells[1].Value != null)
+                        .Select(r => r.Cells[1].Value.ToString()),
                 StringComparer.OrdinalIgnoreCase);
 
             if (dic_solutionAndFlow.Count == 0)
@@ -497,12 +508,13 @@ namespace DeepSightAI.SettingPages
                 }
 
                 int index = dataPost.Rows.Add();
-                dataPost.Rows[index].Cells[0].Value = code;      // 料号
-                dataPost.Rows[index].Cells[1].Value = solKey;
-                dataPost.Rows[index].Cells[2].Value = firstFlow;
-                dataPost.Rows[index].Cells[3].Value = solKey;
-                dataPost.Rows[index].Cells[4].Value = firstFlow;
-                dataPost.Rows[index].Cells[5].Value = false;
+                dataPost.Rows[index].Cells["Index"].Value = index + 1;
+                dataPost.Rows[index].Cells[1].Value = code;      // 料号
+                dataPost.Rows[index].Cells[2].Value = solKey;
+                dataPost.Rows[index].Cells[3].Value = firstFlow;
+                dataPost.Rows[index].Cells[4].Value = solKey;
+                dataPost.Rows[index].Cells[5].Value = firstFlow;
+                dataPost.Rows[index].Cells[6].Value = false;
                 if (dataPost.Columns.Contains("Mode"))
                 {
                     dataPost.Rows[index].Cells["Mode"].Value = PicOptMode.ByMachine.ToString();
