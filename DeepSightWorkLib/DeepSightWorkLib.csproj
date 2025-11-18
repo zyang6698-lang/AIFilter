@@ -189,10 +189,6 @@
       <Project>{c3032123-71af-4b9f-aaf1-5fdbb73274b0}</Project>
       <Name>DeepSightModel</Name>
     </ProjectReference>
-    <ProjectReference Include="..\DeepsightSqlite\DeepsightSqlite.csproj">
-      <Project>{18245813-BFDF-4CF7-BA6E-458AEA54775B}</Project>
-      <Name>DeepsightSqlite</Name>
-    </ProjectReference>
     <ProjectReference Include="..\DeepSightTool\DeepSightTool.csproj">
       <Project>{57ca0c29-06a8-4acc-b6eb-7bf1bf6cf1b3}</Project>
       <Name>DeepSightTool</Name>

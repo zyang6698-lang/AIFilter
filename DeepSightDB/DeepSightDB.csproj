@@ -39,6 +39,10 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data.SQLite, Version=2.0.2.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Data.SQLite.2.0.2\lib\net471\System.Data.SQLite.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Transactions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -48,11 +52,23 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AIResult.cs" />
+    <Compile Include="DatabaseHelper.cs" />
     <Compile Include="DbInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DeepSightModel\DeepSightModel.csproj">
+      <Project>{C3032123-71AF-4B9F-AAF1-5FDBB73274B0}</Project>
+      <Name>DeepSightModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DeepSightTool\DeepSightTool.csproj">
+      <Project>{57CA0C29-06A8-4ACC-B6EB-7BF1BF6CF1B3}</Project>
+      <Name>DeepSightTool</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
