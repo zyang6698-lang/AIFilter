@@ -10,12 +10,20 @@ using System.Collections.Generic;
 using Sunny.UI;
 
 namespace DeepSightAI.SettingPages
-{
+{ 
     /// <summary>
     /// 基础参数
     /// </summary>
     public partial class FrAIConfig : Form
     {
+        // 可下拉
+        public enum AIRunningMode
+        {
+            Copy=0,
+            Cut=1,
+            ByMachine=2
+        }
+
         public FrAIConfig()
         {
             InitializeComponent();
@@ -307,6 +315,99 @@ namespace DeepSightAI.SettingPages
                 }
 
             }
+        }
+        // 新增：根据料号位置自动读取料号（目录或文件名），用于 AutoAdd
+        private List<string> GetMaterialCodes(string rootPath)
+        {
+            var list = new List<string>();
+            try
+            {
+                if (string.IsNullOrEmpty(rootPath) || !System.IO.Directory.Exists(rootPath))
+                    return list;
+
+                // 例：每个子目录即一个料号
+                foreach (var dir in System.IO.Directory.GetDirectories(rootPath))
+                {
+                    list.Add(System.IO.Path.GetFileName(dir));
+                }
+                // 如果希望从文件获取：可以再加文件名逻辑
+                // foreach (var file in System.IO.Directory.GetFiles(rootPath, "*.json")) { ... }
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error("读取料号目录失败:" + ex.Message);
+            }
+            return list;
+        }
+        private void btnAutoAdd_Click(object sender, EventArgs e)
+        {
+            // 原逻辑改造：按料号位置批量生成，跳过已存在的料号
+            string loc = Machine.solconfig?.MaterialLocation;
+            if (string.IsNullOrEmpty(loc))
+            {
+                MessageBox.Show("料号位置未配置，请先设置并保存。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var materials = GetMaterialCodes(loc);
+            if (materials.Count == 0)
+            {
+                MessageBox.Show("料号位置无有效料号目录。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            // 当前表格已有的料号集合（首列 liaohao）
+            var existingCodes = new HashSet<string>(
+                dataPost.Rows
+                        .Cast<DataGridViewRow>()
+                        .Where(r => !r.IsNewRow && r.Cells[0].Value != null)
+                        .Select(r => r.Cells[0].Value.ToString()),
+                StringComparer.OrdinalIgnoreCase);
+
+            if (dic_solutionAndFlow.Count == 0)
+            {
+                MessageBox.Show("当前无可用方案/流程数据，无法添加。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var firstSolutionPair = dic_solutionAndFlow.First();
+            string solKey = firstSolutionPair.Key;
+            string firstFlow = firstSolutionPair.Value.FirstOrDefault() ?? "(空流程)";
+
+            int added = 0;
+            int skipped = 0;
+
+            foreach (var code in materials)
+            {
+                if (string.IsNullOrWhiteSpace(code))
+                {
+                    skipped++;
+                    continue;
+                }
+
+                if (existingCodes.Contains(code))
+                {
+                    // 已存在，跳过
+                    skipped++;
+                    continue;
+                }
+
+                int index = dataPost.Rows.Add();
+                dataPost.Rows[index].Cells[0].Value = code;      // 料号
+                dataPost.Rows[index].Cells[1].Value = solKey;
+                dataPost.Rows[index].Cells[2].Value = firstFlow;
+                dataPost.Rows[index].Cells[3].Value = solKey;
+                dataPost.Rows[index].Cells[4].Value = firstFlow;
+                dataPost.Rows[index].Cells[5].Value = false;
+
+                existingCodes.Add(code);
+                added++;
+            }
+
+            dataPost.Refresh();
+
+            MessageBox.Show($"批量添加完成，新增: {added}，跳过重复/空值: {skipped}", "结果", MessageBoxButtons.OK,
+                added > 0 ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
         }
     }
 }

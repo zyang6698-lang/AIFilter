@@ -58,6 +58,7 @@
             this.B_solution = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.B_flow = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.isSwitch = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            this.btnAutoAdd = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.panel2.SuspendLayout();
@@ -83,6 +84,7 @@
             // panel2
             // 
             this.panel2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.panel2.Controls.Add(this.btnAutoAdd);
             this.panel2.Controls.Add(this.lbl_Bflow);
             this.panel2.Controls.Add(this.lbl_Bsolution);
             this.panel2.Controls.Add(this.label6);
@@ -304,6 +306,17 @@
             resources.ApplyResources(this.isSwitch, "isSwitch");
             this.isSwitch.Name = "isSwitch";
             // 
+            // btnAutoAdd
+            // 
+            resources.ApplyResources(this.btnAutoAdd, "btnAutoAdd");
+            this.btnAutoAdd.FlatAppearance.BorderSize = 0;
+            this.btnAutoAdd.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
+            this.btnAutoAdd.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
+            this.btnAutoAdd.ForeColor = System.Drawing.Color.White;
+            this.btnAutoAdd.Name = "btnAutoAdd";
+            this.btnAutoAdd.UseVisualStyleBackColor = true;
+            this.btnAutoAdd.Click += new System.EventHandler(this.btnAutoAdd_Click);
+            // 
             // FrAIConfig
             // 
             resources.ApplyResources(this, "$this");
@@ -352,5 +365,6 @@
         private System.Windows.Forms.DataGridViewComboBoxColumn B_solution;
         private System.Windows.Forms.DataGridViewComboBoxColumn B_flow;
         private System.Windows.Forms.DataGridViewCheckBoxColumn isSwitch;
+        internal System.Windows.Forms.Button btnAutoAdd;
     }
 }
