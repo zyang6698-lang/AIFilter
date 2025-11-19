@@ -329,6 +329,12 @@
     <Compile Include="HeatMapControl2.Designer.cs">
       <DependentUpon>HeatMapControl2.cs</DependentUpon>
     </Compile>
+    <Compile Include="HeatMapQueryControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="HeatMapQueryControl.Designer.cs">
+      <DependentUpon>HeatMapQueryControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Machine.cs" />
     <Compile Include="MachinePanel.cs">
       <SubType>Component</SubType>
@@ -413,6 +419,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="HeatMapControl2.resx">
       <DependentUpon>HeatMapControl2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="HeatMapQueryControl.resx">
+      <DependentUpon>HeatMapQueryControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

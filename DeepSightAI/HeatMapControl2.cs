@@ -63,7 +63,15 @@ namespace DeepSightAI
         {
             InitializeComponent();
             InitializeLayout();
+            InitializeQueryControl();
             this.VisibleChanged += HeatMapControl2_VisibleChanged;
+        }
+
+        private void InitializeQueryControl()
+        {
+            // 订阅查询控件的事件
+            heatMapQueryControl.QueryClicked += HeatMapQueryControl_QueryClicked;
+            heatMapQueryControl.SideSelectionChanged += HeatMapQueryControl_SideSelectionChanged;
         }
 
         private void HeatMapControl2_VisibleChanged(object sender, EventArgs e)
@@ -150,45 +158,55 @@ namespace DeepSightAI
 
         #region UI Event Handlers
 
-        private async void btn_queryHeatPoint_Click(object sender, EventArgs e)
+        private async void HeatMapQueryControl_QueryClicked(object sender, EventArgs e)
+        {
+            await btn_queryHeatPoint_Click(sender, e);
+        }
+
+        private async void HeatMapQueryControl_SideSelectionChanged(object sender, EventArgs e)
+        {
+            await UpdateHeatMapPointsAsync();
+        }
+
+        private async Task btn_queryHeatPoint_Click(object sender, EventArgs e)
         {
             try
             {
 #if TEST_ENV
                 await ProcessSnListAndUpdateHeatMapAsync(new List<string> { "test_sn11", "test_sn22", "test_sn03" });
 #else
-                if (!txt_Lot.Text.IsNullOrEmpty())
+                if (!heatMapQueryControl.LotNumber.IsNullOrEmpty())
                 {
-                    List<string> sn_list = GetSnListByLot(this.txt_Lot.Text.ToString());
+                    List<string> sn_list = GetSnListByLot(heatMapQueryControl.LotNumber);
                     await ProcessSnListAndUpdateHeatMapAsync(sn_list);
                 }
-                else if (timePicker.Checked)
+                else if (heatMapQueryControl.IsDateChecked)
                 {
-                    if (cmb_PartNumber.Items.Count == 0)
+                    if (heatMapQueryControl.PartNumberItems.Count == 0)
                     {
-                        GetSnByPnTime(timePicker.Value);
-                        cmb_PartNumber.Items.Clear();
+                        GetSnByPnTime(heatMapQueryControl.SelectedDate);
+                        heatMapQueryControl.PartNumberItems.Clear();
                         foreach (var pn in dic_PN_SNList.Keys.Distinct())
                         {
-                            cmb_PartNumber.Items.Add(pn);
+                            heatMapQueryControl.PartNumberItems.Add(pn);
                         }
-                        if (cmb_PartNumber.Items.Count > 0)
+                        if (heatMapQueryControl.PartNumberItems.Count > 0)
                         {
-                            cmb_PartNumber.SelectedIndex = 0;
+                            heatMapQueryControl.PartNumberComboBox.SelectedIndex = 0;
                         }
                         MessageBox.Show($"已加载当天料号列表，请选择或输入一个料号后再次查询。");
                         return;
                     }
 
-                    if (!string.IsNullOrEmpty(cmb_PartNumber.Text) && dic_PN_SNList.Count > 0)
+                    if (!string.IsNullOrEmpty(heatMapQueryControl.PartNumber) && dic_PN_SNList.Count > 0)
                     {
-                        if (dic_PN_SNList.TryGetValue(this.cmb_PartNumber.Text, out List<string> sn_list))
+                        if (dic_PN_SNList.TryGetValue(heatMapQueryControl.PartNumber, out List<string> sn_list))
                         {
                             await ProcessSnListAndUpdateHeatMapAsync(sn_list);
                         }
                         else
                         {
-                            MessageBox.Show($"未找到料号 {cmb_PartNumber.Text} 在该日期下的 SN 数据。");
+                            MessageBox.Show($"未找到料号 {heatMapQueryControl.PartNumber} 在该日期下的 SN 数据。");
                         }
                     }
                     else
@@ -294,6 +312,8 @@ namespace DeepSightAI
 
         private async void rbn_Front_CheckedChanged(object sender, EventArgs e)
         {
+            // This method is now handled by HeatMapQueryControl_SideSelectionChanged
+            // Keep it for backward compatibility if directly called
             await UpdateHeatMapPointsAsync();
         }
 
@@ -471,7 +491,7 @@ namespace DeepSightAI
                 return;
             }
 
-            string sideFilter = rbn_Front.Checked ? "A" : "B";
+            string sideFilter = heatMapQueryControl.SelectedSide;
 
             var selectedDefectNames = new List<string>();
             this.Invoke(new Action(() =>
@@ -998,7 +1018,7 @@ namespace DeepSightAI
             var aviHeatPoints = new AVI_HeatPoints
             {
                 SN = sn,
-                Side = rbn_Front.Checked ? "A" : "B",
+                Side = heatMapQueryControl.SelectedSide,
                 pointsInfos = pointsInfos
             };
 
@@ -1155,7 +1175,7 @@ namespace DeepSightAI
                 // 异步查询所有符合条件的点
                 _pointsInSelection = await Task.Run(() =>
                 {
-                    string sideFilter = rbn_Front.Checked ? "A" : "B";
+                    string sideFilter = heatMapQueryControl.SelectedSide;
                     var selectedDefectNames = new HashSet<string>(
                         flowLayoutPanel_Defects.Controls.OfType<CheckBox>()
                                                 .Where(cb => cb.Checked)
@@ -1343,9 +1363,6 @@ namespace DeepSightAI
 
            // this.Enabled = true;
         }
-        #endregion
-
-        #region Test Environment
         #endregion
     }
 }
