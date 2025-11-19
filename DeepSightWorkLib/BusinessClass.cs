@@ -1039,9 +1039,7 @@ namespace DeepSightWorkLib
                     string time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
                     //热力点对象
-                    AVI_HeatPoints avi_HeatInfo = new AVI_HeatPoints();
-                    avi_HeatInfo.SN = panelInfo.SerialNumber;
-                    avi_HeatInfo.Side = panelInfo.SideIndex;
+                    List<HeatPoint> avi_HeatInfo = new List<HeatPoint>();
 
                     //这个有几个  就是几个报点图各自的结果，
                     for (int i = 0; i < obj.Data.InferWholeData.InferResults.Count; i++)
@@ -1124,10 +1122,10 @@ namespace DeepSightWorkLib
                             //热力点
                             if (j == 0)
                             {
-                                PointsInfo heatInfo = new PointsInfo();
+                                HeatPoint heatInfo = new HeatPoint();
                                 heatInfo.DefectName = sub_defectName;
-                                heatInfo.X = CenterPointX;
-                                heatInfo.Y = CenterPointY;
+                                heatInfo.RoiX = CenterPointX;
+                                heatInfo.RoiY = CenterPointY;
                                 int index = panelInfo.LocalDescribeDir.IndexOf("deepiresults", StringComparison.OrdinalIgnoreCase);
                                 if (index == -1)
                                 {
@@ -1140,7 +1138,7 @@ namespace DeepSightWorkLib
                                 // 合并路径
                                 string mergedPath = Path.Combine(basePath, relativePath);
                                 heatInfo.ImagePath = mergedPath;
-                                avi_HeatInfo.pointsInfos.Add(heatInfo);
+                                avi_HeatInfo.Add(heatInfo);
                                 //这里在生产时根据缺陷名称将缺陷形态赋值,（点状与线状）
                                 if (sub_defectName == "AU10" || sub_defectName == "CU10" || sub_defectName == "CU41"
                                     || sub_defectName == "HO01" || sub_defectName == "SM10")
@@ -1194,22 +1192,6 @@ namespace DeepSightWorkLib
                         pcsResult.vb_List.Add(vBRcv);
                     }
 
-                    if (avi_HeatInfo.pointsInfos.Count > 0)
-                    {
-                        RootDbInfo Info = new RootDbInfo();
-                        Info.db_name = "AVI_HeatPoints";
-                        Info.operation = "put";
-                        Info.op_mode = "all_ow";
-                        //snInfo.key = key;
-                        //snInfo.value = serialNumber.Split('_').ToArray()[0];
-                        Info.key = $"{panelInfo.SerialNumber}_{panelInfo.SideIndex}";//.Split('_').ToArray()[0];
-                        Info.value = JsonConvert.SerializeObject(avi_HeatInfo, Formatting.None, jsonSetting);
-                        string Result;
-                        //Task.Factory.StartNew(() =>
-                        //{
-                        http_DB.HttpPostMethod(URL, Info, 1, out Result);
-                        LogTextHelper.Info($"HeatPoints:{avi_HeatInfo.pointsInfos.Count},SN:{avi_HeatInfo.SN},KEY:{Info.key}");
-                    }
                     DateTime detectionDate;
                     if (!DateTime.TryParse(panelInfo.AviCreateTime, out detectionDate))
                     {
@@ -1223,15 +1205,7 @@ namespace DeepSightWorkLib
                     {
                         Data = new SideData()
                         {
-                            HeatPoints = avi_HeatInfo.pointsInfos.Select(o => new HeatPoint()
-                            {
-                                DefectName = o.DefectName,
-                                RoiX = o.X,
-                                RoiY = o.Y,
-                                DefectType = o.DefectName,
-                                ImagePath = o.ImagePath,
-
-                            }).ToList(),
+                            HeatPoints = avi_HeatInfo,
                             State  = resList.Count==0? 0: resList.Contains("2") ? 3 : resList.Contains( "1") ? 2 : 1,
                             RemainingDefectsCount = resList.Where(t => t == "1").Count(),
                             TotalDefectsCount = resList.Where(t => t == "1" || t == "0").Count()
@@ -1613,7 +1587,8 @@ namespace DeepSightWorkLib
 
         public Task<List<PanelDataRecord>> GetPanelsDataByMachineAndLot(string machineId, string lotNumber)=>
             databaseHelper.GetPanelsDataByMachineAndLot(machineId, lotNumber);
-
+        public Task<List<string>> GetSerialNumbersByLot(string lotNumber) =>
+            databaseHelper.GetSerialNumbersByLot(lotNumber);
         #endregion
         /// <summary>
         /// 开始线程

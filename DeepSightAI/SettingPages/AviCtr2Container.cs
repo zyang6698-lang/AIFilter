@@ -299,7 +299,7 @@ namespace DeepSightAI.SettingPages
                         var boardStat = PanelDataRecord.GetBoardStat(r.data);
                         ctr.AiOkImages = boardStat.aiFilterOKCount;
                         ctr.AiFilterCount = boardStat.aiFilterCount;
-                        ctr.AviPassRate = boardStat.aviPanelCount == 0 ? 0 : (double)boardStat.aviPanelOKCount / boardStat.aviPanelCount * 100;
+                        ctr.AviPassRate = boardStat.aviPanelCount == 0 ? 0 : (double)boardStat.aviPanelOKCount / boardStat.aviPanelCount ;
                     }
                 }));
             }

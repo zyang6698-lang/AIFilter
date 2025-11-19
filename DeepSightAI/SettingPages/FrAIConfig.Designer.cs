@@ -317,9 +317,9 @@
             // Mode
             // 
             this.Mode.DataSource = new string[] {
-        "ByMachine",
-        "Copy",
-        "Cut"};
+        "by_machine",
+        "copy",
+        "cut"};
             this.Mode.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
             resources.ApplyResources(this.Mode, "Mode");
             this.Mode.Name = "Mode";

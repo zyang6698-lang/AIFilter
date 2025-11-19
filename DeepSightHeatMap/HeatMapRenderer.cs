@@ -143,7 +143,7 @@ namespace DeepSightHeatMap
             }
         }
         // 生成热力分布图（作为透明覆盖层）
-        public Bitmap GenerateHeatMapOverlay(List<HeatPoint> points, Size imageSize)
+        public Bitmap GenerateHeatMapOverlay(List<HeatPointRenderer> points, Size imageSize)
         {
             if (points == null || points.Count == 0)
                 return CreateTransparentBitmap(imageSize);
@@ -172,7 +172,7 @@ namespace DeepSightHeatMap
                 _heatPalette = colors;
         }
        
-        public Bitmap GenerateHeatMap(List<HeatPoint> points, Size imageSize)
+        public Bitmap GenerateHeatMap(List<HeatPointRenderer> points, Size imageSize)
         {
             if (points == null || points.Count == 0)
                 return _backgroundImage != null ? new Bitmap(_backgroundImage) : new Bitmap(imageSize.Width, imageSize.Height);
@@ -191,7 +191,7 @@ namespace DeepSightHeatMap
             return result;
         }
 
-        private void AddHeatPoint(float[,] heatData, HeatPoint point, Size imageSize)
+        private void AddHeatPoint(float[,] heatData, HeatPointRenderer point, Size imageSize)
         {
             int centerX = (int)point.Location.X;
             int centerY = (int)point.Location.Y;
@@ -324,13 +324,13 @@ namespace DeepSightHeatMap
             return (float)Math.Sqrt(dx * dx + dy * dy);
         }
     }
-    public class HeatPoint
+    public class HeatPointRenderer
     {
         public PointF Location { get; set; }
         public float Intensity { get; set; } // 0-1之间的强度值
         public float Radius { get; set; }    // 影响半径
 
-        public HeatPoint(PointF location, float intensity, float radius = 50)
+        public HeatPointRenderer(PointF location, float intensity, float radius = 50)
         {
             Location = location;
             Intensity = Math.Max(0, Math.Min(1, intensity));

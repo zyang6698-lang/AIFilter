@@ -13,7 +13,7 @@ namespace DeepSightHeatMap
         public Bitmap _backgroundImage;
         public Bitmap _heatMapOverlay;
 
-        private List<HeatPoint> _heatPoints;
+        private List<HeatPointRenderer> _heatPoints;
         private HeatMapRenderer _renderer;
         private Bitmap _currentHeatMap;
         private Timer _refreshTimer;
@@ -26,7 +26,7 @@ namespace DeepSightHeatMap
                      ControlStyles.DoubleBuffer |
                      ControlStyles.ResizeRedraw, true);
 
-            _heatPoints = new List<HeatPoint>();
+            _heatPoints = new List<HeatPointRenderer>();
             _renderer = new HeatMapRenderer();
 
             // 使用定时器延迟渲染，避免频繁重绘
@@ -94,13 +94,13 @@ namespace DeepSightHeatMap
                 e.Graphics.DrawRectangle(pen, 0, 0, Width - 1, Height - 1);
         }
 
-        public void AddHeatPoint(HeatPoint point)
+        public void AddHeatPoint(HeatPointRenderer point)
         {
             _heatPoints.Add(point);
             ScheduleRefresh();
         }
 
-        public void AddHeatPoints(IEnumerable<HeatPoint> points)
+        public void AddHeatPoints(IEnumerable<HeatPointRenderer> points)
         {
             _heatPoints.AddRange(points);
             ScheduleRefresh();
@@ -112,9 +112,9 @@ namespace DeepSightHeatMap
             ScheduleRefresh();
         }
 
-        public void SetHeatPoints(List<HeatPoint> points)
+        public void SetHeatPoints(List<HeatPointRenderer> points)
         {
-            _heatPoints = points ?? new List<HeatPoint>();
+            _heatPoints = points ?? new List<HeatPointRenderer>();
             ScheduleRefresh();
         }
 

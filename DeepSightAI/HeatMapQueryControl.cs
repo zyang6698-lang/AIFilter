@@ -2,6 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Drawing;
+using DeepSightModel;
+using DeepsightSqlite;
+using System.Threading.Tasks;
+using System.Linq;
+using DeepSightTool;
 
 namespace DeepSightAI
 {
@@ -11,7 +16,7 @@ namespace DeepSightAI
     public partial class HeatMapQueryControl : UserControl
     {
         #region Events
-        
+
         /// <summary>
         /// 查询按钮点击事件
         /// </summary>
@@ -101,9 +106,54 @@ namespace DeepSightAI
             }
         }
 
+        /// <summary>
+        /// 获取或设置查询结果
+        /// </summary>
+        private List<PanelDataRecord> QueryResult { get;  set; }
+
+        public List<PanelDataRecord> GetQueryResult()
+        {
+            List<PanelDataRecord> filteredByPartNumber = QueryResult;
+
+            // 首先根据料号进行筛选
+            if (!string.IsNullOrEmpty(PartNumber))
+            {
+                filteredByPartNumber = QueryResult.Where(t => t.ProductSerial == PartNumber).ToList();
+            }
+
+            if (filteredByPartNumber == null)
+            {
+                return new List<PanelDataRecord>();
+            }
+
+            // 然后根据选择的面筛选每个记录的Sides列表
+            var finalResult = new List<PanelDataRecord>();
+            foreach (var record in filteredByPartNumber)
+            {
+                var newRecord = new PanelDataRecord
+                {
+                    Id = record.Id,
+                    MachineId = record.MachineId,
+                    DetectionDate = record.DetectionDate,
+                    SerialNumber = record.SerialNumber,
+                    LotNumber = record.LotNumber,
+                    ProductSerial = record.ProductSerial,
+                    IsAIOk = record.IsAIOk,
+                    PathIndex = record.PathIndex,
+                    AviCreationTime = record.AviCreationTime,
+                    // 根据UI选择的面来筛选Sides
+                    Sides = record.Sides.Where(s => s.Side == this.SelectedSide).ToList()
+                };
+                finalResult.Add(newRecord);
+            }
+
+            return finalResult;
+        }
+
         #endregion
 
         #region Constructor
+
 
         public HeatMapQueryControl()
         {
@@ -122,8 +172,9 @@ namespace DeepSightAI
 
         #region Event Handlers
 
-        private void Btn_queryHeatPoint_Click(object sender, EventArgs e)
+        private async void Btn_queryHeatPoint_Click(object sender, EventArgs e)
         {
+            await QueryDataAsync();
             QueryClicked?.Invoke(this, EventArgs.Empty);
         }
 
@@ -146,6 +197,60 @@ namespace DeepSightAI
         #endregion
 
         #region Public Methods
+
+        /// <summary>
+        /// 异步查询数据
+        /// </summary>
+        public async Task QueryDataAsync()
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(txt_Lot.Text) && !timePicker.Checked)
+                {
+                    // 根据验证逻辑，两者至少要有一个
+                    QueryResult = new List<PanelDataRecord>();
+                    return;
+                }
+
+                if (!string.IsNullOrWhiteSpace(txt_Lot.Text))
+                {
+                    // 优先使用 Lot 号查询
+                    QueryResult = await Machine.master.workClass.GetPanelsDataByMachineAndLot(null, txt_Lot.Text);
+                }
+
+                else if (timePicker.Checked)
+                {
+                    if (PartNumberItems.Count == 0)
+                    {
+                        // 使用日期查询
+                        DateTime selectedDate = timePicker.Value.Date;
+                        DateTime startDate = selectedDate;
+                        DateTime endDate = selectedDate.AddDays(1).AddTicks(-1);
+                        QueryResult = await Machine.master.workClass.GetPanelsData(startDate, endDate);
+                        PartNumberItems.Clear();
+                        foreach (var pn in QueryResult)
+                        {
+                            PartNumberItems.Add(pn.ProductSerial);
+                        }
+                        if (PartNumberItems.Count > 0)
+                        {
+                            PartNumberComboBox.SelectedIndex = 0;
+                        }
+                        MessageBox.Show($"已加载当天料号列表，请选择或输入一个料号后再次查询。");
+                    }
+                }
+                else
+                {
+                    QueryResult = new List<PanelDataRecord>();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("请输入Lot号，或勾选日期并选择一个料号。");
+                LogTextHelper.Error($"查询数据时发生异常：{ex.Message}");
+                QueryResult = new List<PanelDataRecord>();
+            }
+        }
 
         /// <summary>
         /// 清空所有输入

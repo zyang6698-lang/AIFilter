@@ -19,9 +19,9 @@ namespace DeepSightAI.SettingPages
         // 可下拉
         public enum PicOptMode
         {
-            ByMachine = 0,
-            Copy =1,
-            Cut=2,
+            by_machine = 0,
+            copy =1,
+            cut=2,
         }
         DeepSight_ProductMode_class ProductModeConfig ;
 
@@ -108,7 +108,7 @@ namespace DeepSightAI.SettingPages
                             sol.Solution,        // B_solution(可按需求决定是否同 A)
                             "(空流程)",           // B_flow
                             false,               // isSwitch
-                            PicOptMode.ByMachine.ToString() // Mode
+                            PicOptMode.by_machine.ToString() // Mode
                         );
                     }
 
@@ -135,7 +135,7 @@ namespace DeepSightAI.SettingPages
                     "DefaultSolution",
                     "(空流程)",
                     false,
-                    PicOptMode.ByMachine.ToString()
+                    PicOptMode.by_machine.ToString()
                 );
                 // 更新ComboBox数据源
                 var defaultKeys = new List<string> { "DefaultSolution" };
@@ -180,7 +180,7 @@ namespace DeepSightAI.SettingPages
                         if (dataPost.Columns.Contains("Mode"))
                         {
                             // 默认值
-                            dataPost.Rows[i].Cells["Mode"].Value = PicOptMode.ByMachine.ToString();
+                            dataPost.Rows[i].Cells["Mode"].Value = PicOptMode.by_machine.ToString();
                         }
                     }
                 }
@@ -313,7 +313,7 @@ namespace DeepSightAI.SettingPages
                         if (dataPost.Rows[i].IsNewRow || dataPost.Rows[i].Cells[1].Value == null) continue;
 
                         var productSerial = dataPost.Rows[i].Cells[1].Value.ToString();
-                        var modeValue = dataPost.Columns.Contains("Mode") ? dataPost.Rows[i].Cells["Mode"].Value?.ToString() : PicOptMode.ByMachine.ToString();
+                        var modeValue = dataPost.Columns.Contains("Mode") ? dataPost.Rows[i].Cells["Mode"].Value?.ToString() : PicOptMode.by_machine.ToString();
 
                         newProductConfig.Products.Add(new ProductModeItem
                         {
@@ -380,7 +380,7 @@ namespace DeepSightAI.SettingPages
             dataPost.Rows[index].Cells[6].Value = false;
             if (dataPost.Columns.Contains("Mode"))
             {
-                dataPost.Rows[index].Cells["Mode"].Value = PicOptMode.ByMachine.ToString();
+                dataPost.Rows[index].Cells["Mode"].Value = PicOptMode.by_machine.ToString();
             }
             dataPost.Refresh();
         }
@@ -517,7 +517,7 @@ namespace DeepSightAI.SettingPages
                 dataPost.Rows[index].Cells[6].Value = false;
                 if (dataPost.Columns.Contains("Mode"))
                 {
-                    dataPost.Rows[index].Cells["Mode"].Value = PicOptMode.ByMachine.ToString();
+                    dataPost.Rows[index].Cells["Mode"].Value = PicOptMode.by_machine.ToString();
                 }
 
                 existingCodes.Add(code);

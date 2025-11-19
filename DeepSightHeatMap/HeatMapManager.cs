@@ -17,7 +17,7 @@ namespace DeepSightHeatMap
     public class HeatMapManager
     {
         public HeatMapControl HeatMapControl { get; private set; }
-        private readonly List<HeatPoint> _heatPoints = new List<HeatPoint>();
+        private readonly List<HeatPointRenderer> _heatPoints = new List<HeatPointRenderer>();
         public int OffsetX { get; set; }
         public int OffsetY { get; set; }
 
@@ -41,8 +41,7 @@ namespace DeepSightHeatMap
         }
 
         public async Task UpdateHeatMapPointsAsync(
-            ConcurrentDictionary<string, List<AVI_HeatPoints>> dicHeatPints,
-            string sideFilter,
+            ConcurrentDictionary<string, List<HeatPoint>> dicHeatPints,
             List<string> selectedDefectNames,
             Func<string,  int,  int, bool> tryParseSnPosition,
             Mat sourceImage,
@@ -63,7 +62,7 @@ namespace DeepSightHeatMap
                     int row=0, col=0;
                     if (!tryParseSnPosition(sn,  row,  col))
                     {
-                        return Enumerable.Empty<HeatPoint>();
+                        return Enumerable.Empty<HeatPointRenderer>();
                     }
 
                     float productWidth = sourceImage?.Width ?? 0;
@@ -71,13 +70,11 @@ namespace DeepSightHeatMap
                     float colOffset = col * productWidth;
                     float rowOffset = row * productHeight;
 
-                    return kvp.Value
-                        .Where(p => p.Side == sideFilter && p?.pointsInfos != null)
-                        .SelectMany(avi_points => avi_points.pointsInfos.Where(p => selectedDefectNames.Contains(p.DefectName)))
-                        .Select(pointInfo => new HeatPoint(
+                    return kvp.Value.Where(p => selectedDefectNames.Contains(p.DefectName))
+                        .Select(pointInfo => new HeatPointRenderer(
                             location: new PointF(
-                                (pointInfo.X * 0.1f - OffsetX) + colOffset,
-                                (pointInfo.Y * 0.1f - OffsetY) + rowOffset
+                                (pointInfo.RoiX * 0.1f - OffsetX) + colOffset,
+                                (pointInfo.RoiY * 0.1f - OffsetY) + rowOffset
                             ),
                             intensity: 0.25f,
                             radius: 25

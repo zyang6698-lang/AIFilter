@@ -64,6 +64,7 @@ namespace DeepSightModel
         public DateTime DetectionDate { get; set; }
         public string SerialNumber { get; set; }
         public string LotNumber { get; set; }
+        //¡œ∫≈
         public string ProductSerial { get; set; }
         public bool IsAIOk { get; set; }
         public string PathIndex { get; set; }

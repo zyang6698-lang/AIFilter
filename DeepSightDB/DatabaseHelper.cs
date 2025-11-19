@@ -492,25 +492,6 @@ namespace DeepsightSqlite
         }
 
         /// <summary>
-        /// 获取每个机台在时间段内的板数统计
-        /// </summary>
-        public async Task<Dictionary<string, (int TotalBoards, int AIOkBoards)>> GetBoardCountsPerMachine(DateTime start, DateTime end)
-        {
-            var results = new Dictionary<string, (int TotalBoards, int AIOkBoards)>();
-            var machineIds = await GetAllMachineIds();
-
-            foreach (var machineId in machineIds)
-            {
-                var counts = await GetBoardCounts(start, end, machineId);
-                if (counts.TotalBoards > 0) // 只添加有数据的机台
-                {
-                    results[machineId] = counts;
-                }
-            }
-            return results;
-        }
-
-        /// <summary>
         /// 获取每个机台在时间段内的报点数统计
         /// </summary>
         public async Task<Dictionary<string, (long TotalDefects, long AIOkDefects)>> GetDefectCountsPerMachine(DateTime start, DateTime end)
@@ -986,11 +967,21 @@ namespace DeepsightSqlite
                 try
                 {
                     var panelRecords = new List<PanelDataRecord>();
-                    var sql = "SELECT Id, MachineId, SerialNumber, LotNumber, ProductSerial, DetectionDate, IsAIOk, PathIndex, AviCreationTime FROM Panels WHERE MachineId = @MachineId AND LotNumber = @LotNumber";
-                    using (var cmd = new SQLiteCommand(sql, connection))
+                    var sqlBuilder = new System.Text.StringBuilder("SELECT Id, MachineId, SerialNumber, LotNumber, ProductSerial, DetectionDate, IsAIOk, PathIndex, AviCreationTime FROM Panels WHERE LotNumber = @LotNumber");
+
+                    if (!string.IsNullOrWhiteSpace(machineId))
                     {
-                        cmd.Parameters.AddWithValue("@MachineId", machineId);
+                        sqlBuilder.Append(" AND MachineId = @MachineId");
+                    }
+
+                    using (var cmd = new SQLiteCommand(sqlBuilder.ToString(), connection))
+                    {
                         cmd.Parameters.AddWithValue("@LotNumber", lotNumber);
+                        if (!string.IsNullOrWhiteSpace(machineId))
+                        {
+                            cmd.Parameters.AddWithValue("@MachineId", machineId);
+                        }
+
                         using (var reader = cmd.ExecuteReader())
                         {
                             while (reader.Read())

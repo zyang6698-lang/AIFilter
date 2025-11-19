@@ -1,4 +1,4 @@
-﻿#define TEST_ENV
+﻿//#define TEST_ENV
 using DeepSightDB;
 using DeepSightDisplay;
 using DeepSightHeatMap;
@@ -28,7 +28,7 @@ namespace DeepSightAI
     {
         #region Fields and Properties
 
-        private readonly ConcurrentDictionary<string, List<AVI_HeatPoints>> dic_heatPints = new ConcurrentDictionary<string, List<AVI_HeatPoints>>();
+        private readonly ConcurrentDictionary<string, List<HeatPoint>> dic_heatPints = new ConcurrentDictionary<string, List<HeatPoint>>();
         private readonly HeatMapManager _heatMapManager = new HeatMapManager();
         private Mat SourceImage = null;
         private ConcurrentDictionary<string, List<string>> dic_PN_SNList = new ConcurrentDictionary<string, List<string>>();
@@ -139,18 +139,18 @@ namespace DeepSightAI
                     }
                     else
                     {
-                        MessageBox.Show("热力图自动加载背景图失败，图片为空，请手动加载。");
+                        //MessageBox.Show("热力图自动加载背景图失败，图片为空，请手动加载。");
                     }
                 }
                 catch (Exception ex)
                 {
                     LogTextHelper.Error($"热力图自动加载背景图失败: {ex.Message}");
-                    MessageBox.Show("热力图自动加载背景图失败，请手动加载。");
+                  //  MessageBox.Show("热力图自动加载背景图失败，请手动加载。");
                 }
             }
             else
             {
-                MessageBox.Show("未找到可自动加载的背景图，请手动加载。");
+               // MessageBox.Show("未找到可自动加载的背景图，请手动加载。");
             }
         }
 
@@ -170,60 +170,36 @@ namespace DeepSightAI
 
         private async Task btn_queryHeatPoint_Click(object sender, EventArgs e)
         {
-            try
-            {
 #if TEST_ENV
-                await ProcessSnListAndUpdateHeatMapAsync(new List<string> { "test_sn11", "test_sn22", "test_sn03" });
+           List<string> sn_list=  new List<string> { "test_sn11", "test_sn22", "test_sn03" };
 #else
-                if (!heatMapQueryControl.LotNumber.IsNullOrEmpty())
-                {
-                    List<string> sn_list = GetSnListByLot(heatMapQueryControl.LotNumber);
-                    await ProcessSnListAndUpdateHeatMapAsync(sn_list);
-                }
-                else if (heatMapQueryControl.IsDateChecked)
-                {
-                    if (heatMapQueryControl.PartNumberItems.Count == 0)
-                    {
-                        GetSnByPnTime(heatMapQueryControl.SelectedDate);
-                        heatMapQueryControl.PartNumberItems.Clear();
-                        foreach (var pn in dic_PN_SNList.Keys.Distinct())
-                        {
-                            heatMapQueryControl.PartNumberItems.Add(pn);
-                        }
-                        if (heatMapQueryControl.PartNumberItems.Count > 0)
-                        {
-                            heatMapQueryControl.PartNumberComboBox.SelectedIndex = 0;
-                        }
-                        MessageBox.Show($"已加载当天料号列表，请选择或输入一个料号后再次查询。");
-                        return;
-                    }
-
-                    if (!string.IsNullOrEmpty(heatMapQueryControl.PartNumber) && dic_PN_SNList.Count > 0)
-                    {
-                        if (dic_PN_SNList.TryGetValue(heatMapQueryControl.PartNumber, out List<string> sn_list))
-                        {
-                            await ProcessSnListAndUpdateHeatMapAsync(sn_list);
-                        }
-                        else
-                        {
-                            MessageBox.Show($"未找到料号 {heatMapQueryControl.PartNumber} 在该日期下的 SN 数据。");
-                        }
-                    }
-                    else
-                    {
-                        MessageBox.Show("请先选择或输入一个料号。");
-                    }
-                }
-                else
-                {
-                    MessageBox.Show("请输入Lot号，或勾选日期并选择一个料号。");
-                }
+            List<string>sn_list=new List<string>();
 #endif
-            }
-            catch (Exception ex)
+
+            dic_heatPints.Clear();
+            _heatMapManager.ClearHeatPoints();
+
+#if TEST_ENV
+            sn_list.ForEach(sn => GenerateMockHeatPoints(sn));
+#else
+
+            foreach (var res in heatMapQueryControl.GetQueryResult())
             {
-                LogTextHelper.Error(ex.ToString());
-            }
+                if (!dic_heatPints.ContainsKey(res.SerialNumber))
+                {
+                    dic_heatPints[res.SerialNumber] = res.Sides[0].HeatPoints;
+                }
+            } 
+#endif
+
+            int maxRow = 0;
+            int maxCol = 0;
+
+            await UpdatePanelGrid(maxRow + 1, maxCol + 1);
+
+            UpdateDefectCheckboxes();
+            await UpdateHeatMapPointsAsync();
+
         }
 
         private async void btn_loadArryImage_Click(object sender, EventArgs e)
@@ -359,87 +335,6 @@ namespace DeepSightAI
 
         #region Core Logic
 
-        private async Task ProcessSnListAndUpdateHeatMapAsync(List<string> sn_list)
-        {
-            if (sn_list.Count == 0) return;
-
-            dic_heatPints.Clear();
-            _heatMapManager.ClearHeatPoints();
-
-#if TEST_ENV
-            sn_list.ForEach(sn => GenerateMockHeatPoints(sn));
-#else
-            var stopwatch = Stopwatch.StartNew();
-
-            // 1. 设置合理的并发限制，例如 64。这个值可以根据目标服务器的承受能力进行调整。
-            int degreeOfParallelism = 20;
-            var results = new ConcurrentBag<AVI_HeatPoints>();
-
-            using (var semaphore = new SemaphoreSlim(degreeOfParallelism))
-            {
-                var tasks = new List<Task>();
-                foreach (var sn in sn_list)
-                {
-                    await semaphore.WaitAsync(); // 等待一个可用的并发槽位
-
-                    tasks.Add(Task.Run(async () =>
-                    {
-                        try
-                        {
-                            // 2. 并行查询 A/B 面，并将结果添加到线程安全的集合中
-                            var taskA = queryHeatDataBySnSideAsync(sn, "A");
-                            var taskB = queryHeatDataBySnSideAsync(sn, "B");
-                            var heatPoints = await Task.WhenAll(taskA, taskB);
-
-                            foreach (var point in heatPoints)
-                            {
-                                if (point != null)
-                                {
-                                    results.Add(point);
-                                }
-                            }
-                        }
-                        finally
-                        {
-                            semaphore.Release(); // 释放槽位
-                        }
-                    }));
-                }
-                await Task.WhenAll(tasks);
-            }
-
-            // 3. 将收集到的结果统一整理到字典中
-            foreach (var result in results)
-            {
-                if (!dic_heatPints.ContainsKey(result.SN))
-                {
-                    dic_heatPints[result.SN] = new List<AVI_HeatPoints>();
-                }
-                dic_heatPints[result.SN].Add(result);
-            }
-
-            stopwatch.Stop();
-            LogTextHelper.Info($"查询所有SN的热力点数据总耗时: {stopwatch.ElapsedMilliseconds} ms，并发度: {degreeOfParallelism}");
-#endif
-
-
-            int maxRow = 0;
-            int maxCol = 0;
-            foreach (var sn in sn_list)
-            {
-                if (TryParseSnPosition(sn, out int row, out int col))
-                {
-                    if (row > maxRow) maxRow = row;
-                    if (col > maxCol) maxCol = col;
-                }
-            }
-            this.txt_Row.Text = (maxRow + 1).ToString();
-            this.txt_Column.Text = (maxCol + 1).ToString();
-            await UpdatePanelGrid(maxRow + 1, maxCol + 1);
-
-            UpdateDefectCheckboxes();
-            await UpdateHeatMapPointsAsync();
-        }
         private async Task UpdatePanelGrid(int rows, int columns)
         {
             if (SourceImage.Empty())
@@ -491,7 +386,6 @@ namespace DeepSightAI
                 return;
             }
 
-            string sideFilter = heatMapQueryControl.SelectedSide;
 
             var selectedDefectNames = new List<string>();
             this.Invoke(new Action(() =>
@@ -504,7 +398,6 @@ namespace DeepSightAI
 
             await _heatMapManager.UpdateHeatMapPointsAsync(
                 dic_heatPints,
-                sideFilter,
                 selectedDefectNames,
                 (sn, row, col) => TryParseSnPosition(sn, out row, out col),
                 SourceImage,
@@ -517,7 +410,6 @@ namespace DeepSightAI
         {
             var defectNames = dic_heatPints.Values
                 .SelectMany(list => list)
-                .SelectMany(points => points.pointsInfos)
                 .Select(info => info.DefectName)
                 .Distinct()
                 .ToList();
@@ -590,46 +482,6 @@ namespace DeepSightAI
 
         #region Data Access
 
-        private List<string> GetSnListByLot(string Lot)
-        {
-            var stopwatch = Stopwatch.StartNew();
-            try
-            {
-                List<string> rtn_list = new List<string>();
-                RootDbInfo info = new RootDbInfo
-                {
-                    db_name = "panel_list",
-                    key = Lot,
-                    op_mode = "all",
-                    uniqueKey = Guid.NewGuid().ToString(),
-                    operation = "get"
-                };
-                string outInfo = null;
-                Machine.master.workClass.http_DB.HttpPostMethod(Machine.master.workClass.URL, info, 0, out outInfo);
-                if (outInfo != null)
-                {
-                    var json = JObject.Parse(outInfo);
-                    string res = json["value"].ToString();
-                    if (outInfo.Contains("err_key_found") || res == "")
-                    {
-                        return new List<string>();
-                    }
-                    rtn_list.AddRange(res.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries));
-                }
-                return rtn_list;
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error("GetSnListByLot 异常: " + ex.ToString());
-                return new List<string>();
-            }
-            finally
-            {
-                stopwatch.Stop();
-                LogTextHelper.Info($"GetSnListByLot(Lot: {Lot}) 耗时: {stopwatch.ElapsedMilliseconds} ms");
-            }
-        }
-
         private List<string> GetSnByPnTime(DateTime date)
         {
             var stopwatch = Stopwatch.StartNew();
@@ -690,101 +542,7 @@ namespace DeepSightAI
             }
         }
 
-        private bool queryHeatDataBySn(string sn)
-        {
-            try
-            {
-                // 为了与新的并行模型兼容，此方法可以保持原样或标记为过时
-                // 实际的查询逻辑已移至 queryHeatDataBySnSideAsync
-                var taskA = Task.Run(() => QueryAndStoreHeatPoints(sn, "A"));
-                var taskB = Task.Run(() => QueryAndStoreHeatPoints(sn, "B"));
-                Task.WhenAll(taskA, taskB).Wait();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error($"queryHeatDataBySn for {sn} 异常: {ex.ToString()}");
-                return false;
-            }
-        }
 
-        private async Task<AVI_HeatPoints> queryHeatDataBySnSideAsync(string sn, string side)
-        {
-            var stopwatch = Stopwatch.StartNew();
-            try
-            {
-                RootDbInfo Info = new RootDbInfo
-                {
-                    db_name = "AVI_HeatPoints",
-                    operation = "get",
-                    op_mode = "last",
-                    key = $"{sn}_{side}"
-                };
-                string Result=null;
-                // 假设 HttpPostMethod 是同步的，我们在 Task.Run 中运行它
-                await Task.Run(() => Machine.master.workClass.http_DB.HttpPostMethod(Machine.master.workClass.URL, Info, 1, out Result));
-
-                if (string.IsNullOrEmpty(Result)) return null;
-
-                var jsonStr = JObject.Parse(Result);
-                string str = jsonStr["value"].ToString();
-
-                if (!string.IsNullOrWhiteSpace(str) && !str.Contains("err_key_found"))
-                {
-                    return JsonConvert.DeserializeObject<AVI_HeatPoints>(str);
-                }
-                return null;
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error($"queryHeatDataBySnSideAsync for {sn}_{side} 异常: {ex.Message}");
-                return null;
-            }
-            finally
-            {
-                stopwatch.Stop();
-                LogTextHelper.Info($"QueryAndStoreHeatPoints(SN: {sn}, Side: {side}) 耗时: {stopwatch.ElapsedMilliseconds} ms");
-            }
-        }
-
-        private void QueryAndStoreHeatPoints(string sn, string side)
-        {
-            var stopwatch = Stopwatch.StartNew();
-            try
-            {
-                RootDbInfo Info = new RootDbInfo
-                {
-                    db_name = "AVI_HeatPoints",
-                    operation = "get",
-                    op_mode = "last",
-                    key = $"{sn}_{side}"
-                };
-                string Result;
-                Machine.master.workClass.http_DB.HttpPostMethod(Machine.master.workClass.URL, Info, 1, out Result);
-                if (string.IsNullOrEmpty(Result)) return;
-
-                var jsonStr = JObject.Parse(Result);
-                string str = jsonStr["value"].ToString();
-
-                if (!string.IsNullOrWhiteSpace(str) && !str.Contains("err_key_found"))
-                {
-                    AVI_HeatPoints avi_HeatInfo = JsonConvert.DeserializeObject<AVI_HeatPoints>(str);
-                    if (avi_HeatInfo != null)
-                    {
-                        if (!dic_heatPints.ContainsKey(sn))
-                        {
-                            dic_heatPints[sn] = new List<AVI_HeatPoints>();
-                        }
-                        dic_heatPints[sn].Add(avi_HeatInfo);
-                    }
-                }
-            }
-            finally
-            {
-                stopwatch.Stop();
-                LogTextHelper.Info($"QueryAndStoreHeatPoints(SN: {sn}, Side: {side}) 耗时: {stopwatch.ElapsedMilliseconds} ms");
-            }
-        }
         #endregion
 
         #region Image Processing & Utilities
@@ -1195,18 +953,16 @@ namespace DeepSightAI
                             float rowOffset = row * productHeight;
 
                             return kvp.Value
-                                .Where(p => p.Side == sideFilter && p?.pointsInfos != null)
-                                .SelectMany(avi_points => avi_points.pointsInfos
                                     .Where(p => selectedDefectNames.Contains(p.DefectName))
                                     .Select(pointInfo => new
                                     {
                                         SN = sn,
                                         PointInfo = pointInfo,
                                         DisplayLocation = new PointF(
-                                            (pointInfo.X * 0.1f - offsetX) + colOffset,
-                                            (pointInfo.Y * 0.1f - offsetY) + rowOffset
+                                            (pointInfo.RoiX * 0.1f - offsetX) + colOffset,
+                                            (pointInfo.RoiY * 0.1f - offsetY) + rowOffset
                                         )
-                                    }));
+                                    });
                         })
                         .Where(p => selectionRect.Contains((int)p.DisplayLocation.X, (int)p.DisplayLocation.Y))
                         .ToList<dynamic>();

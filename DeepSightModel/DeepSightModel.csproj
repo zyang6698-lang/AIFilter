@@ -76,7 +76,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AnalyticsHelper.cs" />
-    <Compile Include="AVI_HeatPoints.cs" />
     <Compile Include="ConfigurationClass.cs" />
     <Compile Include="DisPlayInfo.cs" />
     <Compile Include="DsCenterInfo.cs" />
