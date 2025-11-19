@@ -161,17 +161,46 @@ namespace DeepsightSqlite
                         }
                     }
 
-                    // 2. 插入 SideData
-                    var insertSideCmd = new SQLiteCommand(
-                        "INSERT INTO PanelSides (PanelId, Side, TotalDefectsCount, RemainingDefectsCount, HeatPoints, State) VALUES (@PanelId, @Side, @Total, @Remaining, @HeatPoints, @State)",
-                        connection, transaction);
-                    insertSideCmd.Parameters.AddWithValue("@PanelId", panelId);
-                    insertSideCmd.Parameters.AddWithValue("@Side", record.Side);
-                    insertSideCmd.Parameters.AddWithValue("@Total", record.Data.TotalDefectsCount);
-                    insertSideCmd.Parameters.AddWithValue("@Remaining", record.Data.RemainingDefectsCount);
-                    insertSideCmd.Parameters.AddWithValue("@HeatPoints", JsonConvert.SerializeObject(record.Data.HeatPoints));
-                    insertSideCmd.Parameters.AddWithValue("@State", record.Data.State);
-                    insertSideCmd.ExecuteNonQuery();
+                    // 2. 检查该面数据是否已存在，如果存在则更新，否则插入
+                    long? existingSideId = null;
+                    using (var checkSideCmd = new SQLiteCommand("SELECT Id FROM PanelSides WHERE PanelId = @PanelId AND Side = @Side", connection, transaction))
+                    {
+                        checkSideCmd.Parameters.AddWithValue("@PanelId", panelId);
+                        checkSideCmd.Parameters.AddWithValue("@Side", record.Side);
+                        var sideResult = checkSideCmd.ExecuteScalar();
+                        if (sideResult != null)
+                        {
+                            existingSideId = (long)sideResult;
+                        }
+                    }
+
+                    if (existingSideId.HasValue)
+                    {
+                        // 更新现有的面数据
+                        var updateSideCmd = new SQLiteCommand(
+                            "UPDATE PanelSides SET TotalDefectsCount = @Total, RemainingDefectsCount = @Remaining, HeatPoints = @HeatPoints, State = @State WHERE Id = @Id",
+                            connection, transaction);
+                        updateSideCmd.Parameters.AddWithValue("@Total", record.Data.TotalDefectsCount);
+                        updateSideCmd.Parameters.AddWithValue("@Remaining", record.Data.RemainingDefectsCount);
+                        updateSideCmd.Parameters.AddWithValue("@HeatPoints", JsonConvert.SerializeObject(record.Data.HeatPoints));
+                        updateSideCmd.Parameters.AddWithValue("@State", record.Data.State);
+                        updateSideCmd.Parameters.AddWithValue("@Id", existingSideId.Value);
+                        updateSideCmd.ExecuteNonQuery();
+                    }
+                    else
+                    {
+                        // 插入新的面数据
+                        var insertSideCmd = new SQLiteCommand(
+                            "INSERT INTO PanelSides (PanelId, Side, TotalDefectsCount, RemainingDefectsCount, HeatPoints, State) VALUES (@PanelId, @Side, @Total, @Remaining, @HeatPoints, @State)",
+                            connection, transaction);
+                        insertSideCmd.Parameters.AddWithValue("@PanelId", panelId);
+                        insertSideCmd.Parameters.AddWithValue("@Side", record.Side);
+                        insertSideCmd.Parameters.AddWithValue("@Total", record.Data.TotalDefectsCount);
+                        insertSideCmd.Parameters.AddWithValue("@Remaining", record.Data.RemainingDefectsCount);
+                        insertSideCmd.Parameters.AddWithValue("@HeatPoints", JsonConvert.SerializeObject(record.Data.HeatPoints));
+                        insertSideCmd.Parameters.AddWithValue("@State", record.Data.State);
+                        insertSideCmd.ExecuteNonQuery();
+                    }
 
                     // 3. 检查是否双面数据都已存在，并更新 IsAIOk
                     var checkSidesCmd = new SQLiteCommand("SELECT Side, TotalDefectsCount, RemainingDefectsCount FROM PanelSides WHERE PanelId = @PanelId", connection, transaction);
