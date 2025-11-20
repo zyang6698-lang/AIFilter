@@ -13,7 +13,7 @@ namespace DeepSightAI
     /// <summary>
     /// 热力图查询条件控件
     /// </summary>
-    public partial class HeatMapQueryControl : UserControl
+    public partial class QueryControl : UserControl
     {
         #region Events
 
@@ -113,41 +113,34 @@ namespace DeepSightAI
 
         public List<PanelDataRecord> GetQueryResult()
         {
-            List<PanelDataRecord> filteredByPartNumber = QueryResult;
-
-            // 首先根据料号进行筛选
-            if (!string.IsNullOrEmpty(PartNumber))
-            {
-                filteredByPartNumber = QueryResult.Where(t => t.ProductSerial == PartNumber).ToList();
-            }
-
-            if (filteredByPartNumber == null)
+            if (QueryResult == null)
             {
                 return new List<PanelDataRecord>();
             }
 
-            // 然后根据选择的面筛选每个记录的Sides列表
-            var finalResult = new List<PanelDataRecord>();
-            foreach (var record in filteredByPartNumber)
+            var query = QueryResult.AsQueryable();
+
+            // 首先根据料号进行筛选
+            if (!string.IsNullOrEmpty(PartNumber))
             {
-                var newRecord = new PanelDataRecord
-                {
-                    Id = record.Id,
-                    MachineId = record.MachineId,
-                    DetectionDate = record.DetectionDate,
-                    SerialNumber = record.SerialNumber,
-                    LotNumber = record.LotNumber,
-                    ProductSerial = record.ProductSerial,
-                    IsAIOk = record.IsAIOk,
-                    PathIndex = record.PathIndex,
-                    AviCreationTime = record.AviCreationTime,
-                    // 根据UI选择的面来筛选Sides
-                    Sides = record.Sides.Where(s => s.Side == this.SelectedSide).ToList()
-                };
-                finalResult.Add(newRecord);
+                query = query.Where(t => t.ProductSerial == PartNumber);
             }
 
-            return finalResult;
+            // 然后根据选择的面筛选每个记录的Sides列表
+            return query.Select(record => new PanelDataRecord
+            {
+                Id = record.Id,
+                MachineId = record.MachineId,
+                DetectionDate = record.DetectionDate,
+                SerialNumber = record.SerialNumber,
+                LotNumber = record.LotNumber,
+                ProductSerial = record.ProductSerial,
+                IsAIOk = record.IsAIOk,
+                PathIndex = record.PathIndex,
+                AviCreationTime = record.AviCreationTime,
+                // 根据UI选择的面来筛选Sides
+                Sides = record.Sides.Where(s => s.Side == this.SelectedSide).ToList()
+            }).ToList();
         }
 
         #endregion
@@ -155,7 +148,7 @@ namespace DeepSightAI
         #region Constructor
 
 
-        public HeatMapQueryControl()
+        public QueryControl()
         {
             InitializeComponent();
             InitializeEvents();
@@ -217,20 +210,27 @@ namespace DeepSightAI
                     // 优先使用 Lot 号查询
                     QueryResult = await Machine.master.workClass.GetPanelsDataByMachineAndLot(null, txt_Lot.Text);
                 }
-
                 else if (timePicker.Checked)
                 {
-                    if (PartNumberItems.Count == 0)
+                    DateTime selectedDate = timePicker.Value.Date;
+                    DateTime startDate = selectedDate;
+                    DateTime endDate = selectedDate.AddDays(1).AddTicks(-1);
+
+                    // 如果已经选择了料号，则直接按日期和料号查询
+                    if (!string.IsNullOrEmpty(PartNumber))
                     {
-                        // 使用日期查询
-                        DateTime selectedDate = timePicker.Value.Date;
-                        DateTime startDate = selectedDate;
-                        DateTime endDate = selectedDate.AddDays(1).AddTicks(-1);
+                        QueryResult = await Machine.master.workClass.GetPanelsData(startDate, endDate, PartNumber);
+                    }
+                    // 如果未选择料号，则加载当天的料号列表供用户选择
+                    else
+                    {
                         QueryResult = await Machine.master.workClass.GetPanelsData(startDate, endDate);
                         PartNumberItems.Clear();
-                        foreach (var pn in QueryResult)
+                        // 从查询结果中提取唯一的料号
+                        var partNumbers = QueryResult.Select(pn => pn.ProductSerial).Distinct();
+                        foreach (var pn in partNumbers)
                         {
-                            PartNumberItems.Add(pn.ProductSerial);
+                            PartNumberItems.Add(pn);
                         }
                         if (PartNumberItems.Count > 0)
                         {

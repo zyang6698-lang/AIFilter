@@ -1049,8 +1049,9 @@ namespace DeepsightSqlite
         /// </summary>
         /// <param name="start"></param>
         /// <param name="end"></param>
+        /// <param name="partNumber">¡œ∫≈ (ø…—°)</param>
         /// <returns></returns>
-        public Task<List<PanelDataRecord>> GetPanelsData(DateTime start, DateTime end)
+        public Task<List<PanelDataRecord>> GetPanelsData(DateTime start, DateTime end, string partNumber = null)
         {
             var tcs = new TaskCompletionSource<List<PanelDataRecord>>();
             _dbQueue.Add(connection =>
@@ -1058,11 +1059,22 @@ namespace DeepsightSqlite
                 try
                 {
                     var panelRecords = new List<PanelDataRecord>();
-                    var sql = "SELECT Id, MachineId, SerialNumber, LotNumber, ProductSerial, DetectionDate, IsAIOk, PathIndex, avicreationtime FROM Panels WHERE DetectionDate BETWEEN @Start AND @End";
-                    using (var cmd = new SQLiteCommand(sql, connection))
+                    var sqlBuilder = new System.Text.StringBuilder("SELECT Id, MachineId, SerialNumber, LotNumber, ProductSerial, DetectionDate, IsAIOk, PathIndex, avicreationtime FROM Panels WHERE DetectionDate BETWEEN @Start AND @End");
+
+                    if (!string.IsNullOrWhiteSpace(partNumber))
+                    {
+                        sqlBuilder.Append(" AND ProductSerial = @ProductSerial");
+                    }
+
+                    using (var cmd = new SQLiteCommand(sqlBuilder.ToString(), connection))
                     {
                         cmd.Parameters.AddWithValue("@Start", start);
                         cmd.Parameters.AddWithValue("@End", end);
+                        if (!string.IsNullOrWhiteSpace(partNumber))
+                        {
+                            cmd.Parameters.AddWithValue("@ProductSerial", partNumber);
+                        }
+
                         using (var reader = cmd.ExecuteReader())
                         {
                             while (reader.Read())

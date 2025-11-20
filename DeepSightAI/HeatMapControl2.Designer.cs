@@ -42,7 +42,7 @@
             this.txt_Column = new System.Windows.Forms.TextBox();
             this.btn_setPanel = new System.Windows.Forms.Button();
             this.btn_loadArryImage = new System.Windows.Forms.Button();
-            this.heatMapQueryControl = new DeepSightAI.HeatMapQueryControl();
+            this.heatMapQueryControl = new DeepSightAI.QueryControl();
             this.flowLayoutPanel_Defects = new System.Windows.Forms.FlowLayoutPanel();
             this.tableLayoutPanel6.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -308,6 +308,6 @@
         private System.Windows.Forms.Button btn_Select;
         private System.Windows.Forms.Button btnClip;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel_Details;
-        private HeatMapQueryControl heatMapQueryControl;
+        private QueryControl heatMapQueryControl;
     }
 }

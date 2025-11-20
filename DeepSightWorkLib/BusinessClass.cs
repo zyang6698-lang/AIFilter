@@ -1579,8 +1579,8 @@ namespace DeepSightWorkLib
         public Task< (int totalSnCount, int uninspectedCount, int stillNgCount, int aviOkCount, int filteredOkCount)> GetSnStateCountsByLot(string lotNumber) =>
             databaseHelper.GetSnStateCountsByLot(lotNumber);
 
-        public Task< List<PanelDataRecord> >GetPanelsData(DateTime start, DateTime end)=>
-            databaseHelper.GetPanelsData(start, end);
+        public Task< List<PanelDataRecord> >GetPanelsData(DateTime start, DateTime end,string partnumber=null)=>
+            databaseHelper.GetPanelsData(start, end, partnumber);
 
         public Task<(string LotNumber, string ProductSerial)> GetLatestLotAndProductSerial(string machineId)=>
              databaseHelper.GetLatestLotAndProductSerial(machineId);

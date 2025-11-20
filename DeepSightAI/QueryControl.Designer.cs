@@ -1,6 +1,6 @@
 namespace DeepSightAI
 {
-    partial class HeatMapQueryControl
+    partial class QueryControl
     {
         /// <summary> 
         /// 必需的设计器变量。

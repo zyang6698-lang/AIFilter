@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.splitContainer_Main = new System.Windows.Forms.SplitContainer();
-            this.heatMapQueryControl = new DeepSightAI.HeatMapQueryControl();
+            this.heatMapQueryControl = new DeepSightAI.QueryControl();
             this.splitContainer_Right = new System.Windows.Forms.SplitContainer();
             this.dataGridView_Defects = new System.Windows.Forms.DataGridView();
             this.col_SerialNumber = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -324,7 +324,7 @@
         #endregion
 
         private System.Windows.Forms.SplitContainer splitContainer_Main;
-        private HeatMapQueryControl heatMapQueryControl;
+        private QueryControl heatMapQueryControl;
         private System.Windows.Forms.SplitContainer splitContainer_Right;
         private System.Windows.Forms.DataGridView dataGridView_Defects;
         private System.Windows.Forms.Panel panel_Details;
