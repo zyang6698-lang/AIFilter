@@ -15,6 +15,8 @@ namespace DeepSightModel
         public int RoiX { get; set; }
         public int RoiY { get; set; }
         public string ImagePath { get; set; }
+        public string AIStatus { get; set; }
+        public string VVSStatus { get; set; } = "";
     }
 
     /// <summary>

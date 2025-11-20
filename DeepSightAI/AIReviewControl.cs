@@ -32,23 +32,22 @@ namespace DeepSightAI
 
         private void InitializeControl()
         {
-            
+
             // 订阅查询控件事件
             heatMapQueryControl.QueryClicked += HeatMapQueryControl_QueryClicked;
-            heatMapQueryControl.SideSelectionChanged += HeatMapQueryControl_SideSelectionChanged;
-            
+
             // 订阅DataGridView事件
             dataGridView_Defects.SelectionChanged += DataGridView_Defects_SelectionChanged;
             dataGridView_Defects.CellValueChanged += DataGridView_Defects_CellValueChanged;
-            
+
             // 订阅按钮事件
             btn_Save.Click += Btn_Save_Click;
             btn_Export.Click += Btn_Export_Click;
-            
+
             // 初始化绑定列表
             _bindingList = new BindingList<DefectReviewItem>(_defectItems);
             dataGridView_Defects.DataSource = _bindingList;
-            
+
             // 设置DataGridView样式
             SetupDataGridViewStyle();
         }
@@ -86,6 +85,7 @@ namespace DeepSightAI
 
                 this.Enabled = false;
                 _defectItems.Clear();
+                defectDetailControl1.ClearDetails();
 
                 // 根据查询条件获取数据
                 if (!string.IsNullOrWhiteSpace(heatMapQueryControl.LotNumber))
@@ -97,17 +97,17 @@ namespace DeepSightAI
                 {
                     // 按日期和料号查询
                     await QueryByDateAndPartNumber(
-                        heatMapQueryControl.SelectedDate, 
+                        heatMapQueryControl.SelectedDate,
                         heatMapQueryControl.PartNumber);
                 }
 
                 // 按面次筛选
                 FilterBySide();
-                
+
                 // 更新绑定
                 _bindingList.ResetBindings();
-                
-                MessageBox.Show($"查询完成，共找到 {_defectItems.Count} 条记录。", "查询结果", 
+
+                MessageBox.Show($"查询完成，共找到 {_defectItems.Count} 条记录。", "查询结果",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
@@ -121,24 +121,19 @@ namespace DeepSightAI
             }
         }
 
-        private void HeatMapQueryControl_SideSelectionChanged(object sender, EventArgs e)
-        {
-            FilterBySide();
-            _bindingList.ResetBindings();
-        }
-
-        private async void DataGridView_Defects_SelectionChanged(object sender, EventArgs e)
+        private void DataGridView_Defects_SelectionChanged(object sender, EventArgs e)
         {
             if (dataGridView_Defects.SelectedRows.Count == 0)
             {
-                flowLayoutPanel_DefectImages.Controls.Clear();
+                defectDetailControl1.ClearDetails();
                 return;
             }
 
             var selectedItem = dataGridView_Defects.SelectedRows[0].DataBoundItem as DefectReviewItem;
             if (selectedItem != null)
             {
-                await LoadDefectDetails(selectedItem);
+                defectDetailControl1.DisplayDefectDetails(selectedItem);
+                tabControl_Main.SelectedTab = tabPage_Details;
             }
         }
 
@@ -160,7 +155,7 @@ namespace DeepSightAI
             try
             {
                 var modifiedItems = _defectItems.Where(x => x.IsModified).ToList();
-                
+
                 if (modifiedItems.Count == 0)
                 {
                     MessageBox.Show("没有需要保存的修改。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -168,13 +163,13 @@ namespace DeepSightAI
                 }
 
                 this.Enabled = false;
-                
+
                 // 保存到数据库
                 await SaveManualReviewResults(modifiedItems);
-                
-                MessageBox.Show($"成功保存 {modifiedItems.Count} 条人工判定结果。", "保存成功", 
+
+                MessageBox.Show($"成功保存 {modifiedItems.Count} 条人工判定结果。", "保存成功",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
-                
+
                 // 清除修改标记
                 modifiedItems.ForEach(x => x.IsModified = false);
             }
@@ -197,7 +192,7 @@ namespace DeepSightAI
                 {
                     dialog.Filter = "CSV文件|*.csv|Excel文件|*.xlsx";
                     dialog.FileName = $"缺陷复审_{DateTime.Now:yyyyMMddHHmmss}";
-                    
+
                     if (dialog.ShowDialog() == DialogResult.OK)
                     {
                         this.Enabled = false;
@@ -214,6 +209,35 @@ namespace DeepSightAI
             finally
             {
                 this.Enabled = true;
+            }
+        }
+
+        private async void Btn_LoadImages_Click(object sender, EventArgs e)
+        {
+            using (var folderBrowserDialog = new FolderBrowserDialog())
+            {
+                if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
+                {
+                    var imagePaths = Directory.GetFiles(folderBrowserDialog.SelectedPath, "*.*", SearchOption.AllDirectories)
+                        .Where(s => s.EndsWith(".jpg") || s.EndsWith(".png") || s.EndsWith(".bmp"))
+                        .ToList();
+
+                    if (imagePaths.Count > 0)
+                    {
+                        _defectItems.Clear();
+                        var defectItem = new DefectReviewItem
+                        {
+                            SerialNumber = "LOCAL_FILES",
+                            Side = "A",
+                            HeatPoints = imagePaths.Select(p => new HeatPoint { ImagePath = p }).ToList()
+                        };
+                        _defectItems.Add(defectItem);
+                        _bindingList.ResetBindings();
+                        dataGridView_Defects.Rows[0].Selected = true;
+                        defectDetailControl1.DisplayDefectDetails(defectItem);
+                        tabControl_Main.SelectedTab = tabPage_Details;
+                    }
+                }
             }
         }
 
@@ -241,15 +265,15 @@ namespace DeepSightAI
             {
                 DateTime startDate = date.Date;
                 DateTime endDate = date.Date.AddDays(1).AddSeconds(-1);
-                
+
                 var panels = await Machine.master.workClass.GetPanelsData(startDate, endDate);
-                
+
                 // 如果指定了料号，进行过滤
                 if (!string.IsNullOrWhiteSpace(partNumber))
                 {
                     panels = panels.Where(p => p.ProductSerial == partNumber).ToList();
                 }
-                
+
                 await ProcessPanelData(panels);
             }
             catch (Exception ex)
@@ -269,7 +293,7 @@ namespace DeepSightAI
                 {
                     _defectItems.Add(CreateDefectReviewItem(panel, sideA, "A"));
                 }
-                
+
                 // 获取B面数据
                 var sideB = await GetPanelSideData(panel.SerialNumber, panel.DetectionDate, "B");
                 if (sideB != null)
@@ -299,11 +323,11 @@ namespace DeepSightAI
                     TotalDefectsCount = heatPoints.Count,
                     RemainingDefectsCount = heatPoints.Count
                 };
-                
+
                 // 判断状态
                 // 这里需要根据实际业务逻辑判断
                 sideData.State = DetermineState(heatPoints.Count);
-                
+
                 return sideData;
             }
             catch (Exception ex)
@@ -355,109 +379,11 @@ namespace DeepSightAI
         private void FilterBySide()
         {
             string selectedSide = heatMapQueryControl.SelectedSide;
-            
-            foreach (DataGridViewRow row in dataGridView_Defects.Rows)
-            {
-                var item = row.DataBoundItem as DefectReviewItem;
-                if (item != null)
-                {
-                    row.Visible = item.Side == selectedSide;
-                }
-            }
-        }
 
-        private async Task LoadDefectDetails(DefectReviewItem item)
-        {
-            flowLayoutPanel_DefectImages.Controls.Clear();
-            label_DetailTitle.Text = $"缺陷详情 - SN: {item.SerialNumber} ({item.Side}面)";
-
-            if (item.HeatPoints == null || item.HeatPoints.Count == 0)
-            {
-                var noDataLabel = new Label
-                {
-                    Text = "该记录无缺陷图片",
-                    AutoSize = true,
-                    ForeColor = Color.White,
-                    Font = new Font("微软雅黑", 10F),
-                    Margin = new Padding(10)
-                };
-                flowLayoutPanel_DefectImages.Controls.Add(noDataLabel);
-                return;
-            }
-
-            await Task.Run(() =>
-            {
-                foreach (var heatPoint in item.HeatPoints)
-                {
-                    this.Invoke(new Action(() =>
-                    {
-                        var panel = CreateDefectImagePanel(heatPoint);
-                        flowLayoutPanel_DefectImages.Controls.Add(panel);
-                    }));
-                }
-            });
-        }
-
-        private Panel CreateDefectImagePanel(HeatPoint heatPoint)
-        {
-            var panel = new TableLayoutPanel
-            {
-                ColumnCount = 2,
-                RowCount = 1,
-                AutoSize = true,
-                AutoSizeMode = AutoSizeMode.GrowAndShrink,
-                Width = flowLayoutPanel_DefectImages.ClientSize.Width - 25,
-                Margin = new Padding(3),
-                BackColor = Color.FromArgb(37, 37, 38)
-            };
-            
-            panel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 300F));
-            panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-
-            // 图片显示
-            var pictureBox = new PictureBox
-            {
-                Size = new Size(300, 300),
-                SizeMode = PictureBoxSizeMode.Zoom,
-                BackColor = Color.FromArgb(45, 45, 48),
-                Dock = DockStyle.Fill,
-                Margin = new Padding(5)
-            };
-
-            if (!string.IsNullOrEmpty(heatPoint.ImagePath) && File.Exists(heatPoint.ImagePath))
-            {
-                try
-                {
-                    using (var img = Image.FromFile(heatPoint.ImagePath))
-                    {
-                        pictureBox.Image = new Bitmap(img);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    LogTextHelper.Error($"加载图片失败: {heatPoint.ImagePath}, {ex.Message}");
-                }
-            }
-
-            panel.Controls.Add(pictureBox, 0, 0);
-
-            // 信息显示
-            var infoLabel = new Label
-            {
-                Text = $"缺陷类型: {heatPoint.DefectName}\n" +
-                       $"缺陷形态: {heatPoint.DefectShape}\n" +
-                       $"坐标: ({heatPoint.RoiX}, {heatPoint.RoiY})",
-                AutoSize = true,
-                ForeColor = Color.White,
-                Font = new Font("微软雅黑", 9F),
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleLeft,
-                Margin = new Padding(10, 5, 5, 5)
-            };
-            
-            panel.Controls.Add(infoLabel, 1, 0);
-
-            return panel;
+            var filteredList = _defectItems.Where(item => item.Side == selectedSide).ToList();
+            _bindingList = new BindingList<DefectReviewItem>(filteredList);
+            dataGridView_Defects.DataSource = _bindingList;
+            _bindingList.ResetBindings();
         }
 
         private async Task SaveManualReviewResults(List<DefectReviewItem> items)
@@ -468,11 +394,11 @@ namespace DeepSightAI
             {
                 LogTextHelper.Info($"保存人工判定结果: SN={item.SerialNumber}, Side={item.Side}, " +
                     $"ManualStatus={item.ManualStatus}");
-                
+
                 // TODO: 实现实际的数据库更新逻辑
                 // await _databaseHelper.UpdateManualReviewResult(item);
             }
-            
+
             await Task.CompletedTask;
         }
 
@@ -481,10 +407,10 @@ namespace DeepSightAI
             await Task.Run(() =>
             {
                 var lines = new List<string>();
-                
+
                 // 添加表头
                 lines.Add("序列号,Lot号,面次,AVI状态,AI状态,人工判定,缺陷数,检测日期");
-                
+
                 // 添加数据
                 foreach (var item in _defectItems)
                 {
@@ -492,7 +418,7 @@ namespace DeepSightAI
                         $"{item.AviStatus},{item.AiStatus},{item.ManualStatus}," +
                         $"{item.DefectCount},{item.DetectionDate:yyyy-MM-dd HH:mm:ss}");
                 }
-                
+
                 File.WriteAllLines(filePath, lines, System.Text.Encoding.UTF8);
             });
         }

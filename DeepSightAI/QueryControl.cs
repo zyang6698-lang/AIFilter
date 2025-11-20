@@ -22,11 +22,6 @@ namespace DeepSightAI
         /// </summary>
         public event EventHandler QueryClicked;
 
-        /// <summary>
-        /// 正反面选择改变事件
-        /// </summary>
-        public event EventHandler SideSelectionChanged;
-
         #endregion
 
         #region Properties
@@ -157,8 +152,6 @@ namespace DeepSightAI
         private void InitializeEvents()
         {
             btn_queryHeatPoint.Click += Btn_queryHeatPoint_Click;
-            rbn_Front.CheckedChanged += Rbn_Front_CheckedChanged;
-            rbn_Back.CheckedChanged += Rbn_Back_CheckedChanged;
         }
 
         #endregion
@@ -171,21 +164,6 @@ namespace DeepSightAI
             QueryClicked?.Invoke(this, EventArgs.Empty);
         }
 
-        private void Rbn_Front_CheckedChanged(object sender, EventArgs e)
-        {
-            if (rbn_Front.Checked)
-            {
-                SideSelectionChanged?.Invoke(this, EventArgs.Empty);
-            }
-        }
-
-        private void Rbn_Back_CheckedChanged(object sender, EventArgs e)
-        {
-            if (rbn_Back.Checked)
-            {
-                SideSelectionChanged?.Invoke(this, EventArgs.Empty);
-            }
-        }
 
         #endregion
 

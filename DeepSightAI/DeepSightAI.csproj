@@ -281,6 +281,12 @@
     <Compile Include="ArrayConfigDialog.Designer.cs">
       <DependentUpon>ArrayConfigDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="DefectDetailControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="DefectDetailControl.Designer.cs">
+      <DependentUpon>DefectDetailControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="FrAlarm.cs">
       <SubType>Form</SubType>
     </Compile>

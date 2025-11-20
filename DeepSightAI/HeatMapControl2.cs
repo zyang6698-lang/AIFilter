@@ -71,7 +71,6 @@ namespace DeepSightAI
         {
             // 订阅查询控件的事件
             heatMapQueryControl.QueryClicked += HeatMapQueryControl_QueryClicked;
-            heatMapQueryControl.SideSelectionChanged += HeatMapQueryControl_SideSelectionChanged;
         }
 
         private void HeatMapControl2_VisibleChanged(object sender, EventArgs e)
