@@ -206,14 +206,6 @@ namespace DeepSightAI.SettingPages
                 FrHWConfig.Instance.txt_get_infer_result_interval.Text = Machine.aviconfig.GetInferResultInterval.ToString();
                 FrHWConfig.Instance.txt_infer_request_timeout.Text = Machine.aviconfig.InferRequestTimeout.ToString();
                 FrHWConfig.Instance.txt_get_infer_result_timeout.Text = Machine.aviconfig.GetInferResultTimeout.ToString();
-                if (Machine.aviconfig.CopyOrCutMode == "copy")
-                {
-                    FrHWConfig.Instance.radiomode1.Checked = true;
-                }
-                else
-                {
-                    FrHWConfig.Instance.radiomode2.Checked = true;
-                }
                 //FrHWConfig.Instance.txt_copy_or_cut_mode.Text = Machine.aviconfig.CopyOrCutMode;
                 //FrHWConfig.Instance.txt_deepsight_agent_data_workspace.Text = Machine.aviconfig.DeepsightAgentDataWorkspace;
                 //FrHWConfig.Instance.txt_temporary_file_storage_area_A.Text = Machine.aviconfig.TemporaryFileStorageArea_A;
@@ -321,14 +313,6 @@ namespace DeepSightAI.SettingPages
                 Machine.aviconfig.GetInferResultInterval = Convert.ToInt32(FrHWConfig.Instance.txt_get_infer_result_interval.Text);
                 Machine.aviconfig.InferRequestTimeout = Convert.ToInt32(FrHWConfig.Instance.txt_infer_request_timeout.Text);
                 Machine.aviconfig.GetInferResultTimeout = Convert.ToInt32(FrHWConfig.Instance.txt_get_infer_result_timeout.Text);
-                if (radiomode2.Checked)
-                {
-                    Machine.aviconfig.CopyOrCutMode = "cut";
-                }
-                if (radiomode1.Checked)
-                {
-                    Machine.aviconfig.CopyOrCutMode = "copy";
-                }
                 //Machine.aviconfig.CopyOrCutMode = FrHWConfig.Instance.txt_copy_or_cut_mode.Text;
                 //Machine.aviconfig.DeepsightAgentDataWorkspace = FrHWConfig.Instance.txt_deepsight_agent_data_workspace.Text;
                 //Machine.aviconfig.TemporaryFileStorageArea_A = FrHWConfig.Instance.txt_temporary_file_storage_area_A.Text;
@@ -375,29 +359,6 @@ namespace DeepSightAI.SettingPages
                 //        }
                 //    }
                 //}
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error("Error", ex);
-            }
-        }
-
-        private void radiomode1_CheckedChanged(object sender, EventArgs e)
-        {
-            try
-            {
-                RadioButton radioButton = sender as RadioButton;
-                if (radioButton.Checked)
-                {
-                    if (radioButton.Text == radiomode1.Text)
-                    {
-                        radiomode2.Checked = false;
-                    }
-                    if (radioButton.Text == radiomode2.Text)
-                    {
-                        radiomode1.Checked = false;
-                    }
-                }
             }
             catch (Exception ex)
             {

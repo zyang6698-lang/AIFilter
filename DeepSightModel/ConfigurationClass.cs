@@ -267,6 +267,14 @@ namespace DeepSightModel
 
         [JsonProperty("deepsight_agent_data_workspace")]
         public string DeepsightAgentDataWorkspace { get; set; }
+        [JsonProperty("copy_or_cut_mode")]
+        public string CopyOrCutMode { get; set; }
+        [JsonProperty("B_path_index_timestamp")]
+        public string BPathIndexTimestamp { get; set; }
+        [JsonProperty("B_lot_timestamp")]
+        public string BLotTimestamp { get; set; }
+        [JsonProperty("B_panel_index_timestamp")]
+        public string BPanelIndexTimestamp { get; set; }
     }
 
     public class AVIConfig
@@ -303,8 +311,6 @@ namespace DeepSightModel
         public int GetInferResultInterval { get; set; }
         [JsonProperty("get_infer_result_timeout")]
         public int GetInferResultTimeout { get; set; }
-        [JsonProperty("copy_or_cut_mode")]
-        public string CopyOrCutMode { get; set; }
         [JsonProperty("deepsight_agent_data_workspace")]
         public string DeepsightAgentDataWorkspace { get; set; }
         [JsonProperty("temporary_file_storage_area_A")]
@@ -353,7 +359,6 @@ namespace DeepSightModel
                 aviConfig.LDBEndpoint = "192.168.77.126:9877";
                 aviConfig.GetInferResultInterval = 5;
                 aviConfig.GetInferResultTimeout = 300;
-                aviConfig.CopyOrCutMode = "copy";
                 aviConfig.DeepsightAgentDataWorkspace = "C:\\minio\\deepiresults\\real_ats_data";
                 aviConfig.TemporaryFileStorageArea_A = "C:\\workspace\\ats\\ats_data\\temporary_file_storage_area_A";
                 aviConfig.TemporaryFileStorageArea_B = "C:\\workspace\\ats\\ats_data\\temporary_file_storage_area_B";

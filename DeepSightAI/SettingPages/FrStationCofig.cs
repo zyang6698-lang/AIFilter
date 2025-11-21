@@ -1,5 +1,4 @@
-﻿
-using DeepSightModel;
+﻿using DeepSightModel;
 using DeepSightTool;
 using System;
 using System.Windows.Forms;
@@ -54,14 +53,17 @@ namespace DeepSightAI.SettingPages
             //0822新加字段
             stationConfig.MinioConfig = this.txt_A_minio_config.Text;
             stationConfig.DeepsightAgentDataWorkspace = this.txt_deepsight_agent_data_workspace.Text;
-            //if (radiomode2.Checked)
-            //{
-            //    stationConfig.CopyOrCutMode = "cut";
-            //}
-            //if (radiomode1.Checked)
-            //{
-            //    stationConfig.CopyOrCutMode = "copy";
-            //}
+            if (radiomode2.Checked)
+            {
+                stationConfig.CopyOrCutMode = "cut";
+            }
+            if (radiomode1.Checked)
+            {
+                stationConfig.CopyOrCutMode = "copy";
+            }
+            stationConfig.BPathIndexTimestamp = this.txt_B_path_index_timestamp.Text;
+            stationConfig.BLotTimestamp = this.txt_B_lot_timestamp.Text;
+            stationConfig.BPanelIndexTimestamp = this.txt_B_panel_index_timestamp.Text;
             this.DialogResult = DialogResult.OK;
         }
 
@@ -71,25 +73,7 @@ namespace DeepSightAI.SettingPages
         }
         private void radiotcp1_CheckedChanged(object sender, EventArgs e)
         {
-            try
-            {
-                RadioButton radioButton = sender as RadioButton;
-                if (radioButton.Checked)
-                {
-                    if (radioButton.Text == radiotcp1.Text)
-                    {
-                        radiotcp2.Checked = false;
-                    }
-                    if (radioButton.Text == radiotcp2.Text)
-                    {
-                        radiotcp1.Checked = false;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error("Error", ex);
-            }
+
         }
         private void FrStationCofig_Shown(object sender, EventArgs e)
         {
@@ -99,14 +83,14 @@ namespace DeepSightAI.SettingPages
             this.txt_Depth.Text = stationConfig.Depth.ToString();
             this.txt_temporary_file_storage_area_A.Text = stationConfig.FileA;
             this.txt_temporary_file_storage_area_B.Text = stationConfig.FileB;
-            //if (stationConfig.CopyOrCutMode=="copy")
-            //{
-            //    this.radiomode1.Checked = true;
-            //}
-            //else
-            //{
-            //    this.radiomode2.Checked = true;
-            //}
+            if (stationConfig.CopyOrCutMode=="copy")
+            {
+                this.radiomode1.Checked = true;
+            }
+            else
+            {
+                this.radiomode2.Checked = true;
+            }
 
             if (stationConfig.IsEnable)
             {
@@ -121,7 +105,9 @@ namespace DeepSightAI.SettingPages
             //0822新加字段
             this.txt_A_minio_config.Text = stationConfig.MinioConfig;
             this.txt_deepsight_agent_data_workspace.Text = stationConfig.DeepsightAgentDataWorkspace;
+            this.txt_B_path_index_timestamp.Text = stationConfig.BPathIndexTimestamp;
+            this.txt_B_lot_timestamp.Text = stationConfig.BLotTimestamp;
+            this.txt_B_panel_index_timestamp.Text = stationConfig.BPanelIndexTimestamp;
         }
-
     }
 }

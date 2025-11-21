@@ -280,7 +280,7 @@
             this.btn_LoadImages.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btn_LoadImages.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.btn_LoadImages.ForeColor = System.Drawing.Color.White;
-            this.btn_LoadImages.Location = new System.Drawing.Point(350, 12);
+            this.btn_LoadImages.Location = new System.Drawing.Point(14, 15);
             this.btn_LoadImages.Margin = new System.Windows.Forms.Padding(4);
             this.btn_LoadImages.Name = "btn_LoadImages";
             this.btn_LoadImages.Size = new System.Drawing.Size(107, 38);
