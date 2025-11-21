@@ -76,7 +76,7 @@
             this.lblOperatingRate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lblOperatingRate.Font = new System.Drawing.Font("Calibri", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblOperatingRate.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(199)))), ((int)(((byte)(220)))));
-            this.lblOperatingRate.Location = new System.Drawing.Point(195, 70);
+            this.lblOperatingRate.Location = new System.Drawing.Point(203, 70);
             this.lblOperatingRate.Name = "lblOperatingRate";
             this.lblOperatingRate.Size = new System.Drawing.Size(118, 18);
             this.lblOperatingRate.TabIndex = 15;
@@ -89,7 +89,7 @@
             this.lblAiPassRate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lblAiPassRate.Font = new System.Drawing.Font("Calibri", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblAiPassRate.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(199)))), ((int)(((byte)(220)))));
-            this.lblAiPassRate.Location = new System.Drawing.Point(183, 42);
+            this.lblAiPassRate.Location = new System.Drawing.Point(191, 42);
             this.lblAiPassRate.Name = "lblAiPassRate";
             this.lblAiPassRate.Size = new System.Drawing.Size(130, 18);
             this.lblAiPassRate.TabIndex = 18;
@@ -101,7 +101,7 @@
             this.lblAviPassRate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lblAviPassRate.Font = new System.Drawing.Font("Calibri", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblAviPassRate.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(199)))), ((int)(((byte)(220)))));
-            this.lblAviPassRate.Location = new System.Drawing.Point(175, 15);
+            this.lblAviPassRate.Location = new System.Drawing.Point(183, 15);
             this.lblAviPassRate.Name = "lblAviPassRate";
             this.lblAviPassRate.Size = new System.Drawing.Size(138, 18);
             this.lblAviPassRate.TabIndex = 20;
@@ -129,10 +129,11 @@
             this.Controls.Add(this.pictureBoxStatus);
             this.Controls.Add(this.labelLineName);
             this.Name = "AviCtr2";
-            this.Size = new System.Drawing.Size(326, 109);
+            this.Size = new System.Drawing.Size(370, 109);
             this.DoubleClick += new System.EventHandler(this.AviCtr2_DoubleClick);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxStatus)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
