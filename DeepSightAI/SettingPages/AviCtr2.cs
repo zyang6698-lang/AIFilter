@@ -290,7 +290,7 @@ namespace DeepSightAI.SettingPages
             info.AppendLine($"图片总数: {AiFilterCount}");
             double ratio = AiFilterCount > 0 ? (double)AiOkImages / AiFilterCount : 0;
             //SetAiPassRate($"{ratio:P2}");
-            SetOperatingRate($"{Utilization:P1}");
+            SetOperatingRate($"Utilization: {Utilization:P1}");
 
             lblAiPassRate.Text = $"AI Pass Rate:{ratio:P1}";
             lblAviPassRate.Text = $"AVI Pass Rate:{AviPassRate:P1}";

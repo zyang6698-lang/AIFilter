@@ -47,6 +47,7 @@
             this.btnShowLog = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.avi_panel = new System.Windows.Forms.Panel();
+            this.aviCtr2Container = new DeepSightAI.SettingPages.AviCtr2Container();
             this.splitContainer3 = new System.Windows.Forms.SplitContainer();
             this.splitContainer5 = new System.Windows.Forms.SplitContainer();
             this.table_Small = new System.Windows.Forms.TableLayoutPanel();
@@ -63,7 +64,6 @@
             this.lbl_aiFilterOKCount = new System.Windows.Forms.Label();
             this.lbl_aviPassRateCount = new System.Windows.Forms.Label();
             this.lbl_filteredOkCount = new System.Windows.Forms.Label();
-            this.aviCtr2Container = new DeepSightAI.SettingPages.AviCtr2Container();
             this.table_main.SuspendLayout();
             this.panel_show.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -310,6 +310,15 @@
             this.avi_panel.Size = new System.Drawing.Size(1331, 564);
             this.avi_panel.TabIndex = 0;
             // 
+            // aviCtr2Container
+            // 
+            this.aviCtr2Container.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.aviCtr2Container.Location = new System.Drawing.Point(0, 0);
+            this.aviCtr2Container.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.aviCtr2Container.Name = "aviCtr2Container";
+            this.aviCtr2Container.Size = new System.Drawing.Size(1331, 564);
+            this.aviCtr2Container.TabIndex = 0;
+            // 
             // splitContainer3
             // 
             this.splitContainer3.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -427,7 +436,7 @@
             this.lbl_CountPerPanel.ForeColor = System.Drawing.Color.FloralWhite;
             this.lbl_CountPerPanel.Location = new System.Drawing.Point(469, 16);
             this.lbl_CountPerPanel.Name = "lbl_CountPerPanel";
-            this.lbl_CountPerPanel.Size = new System.Drawing.Size(206, 74);
+            this.lbl_CountPerPanel.Size = new System.Drawing.Size(218, 77);
             this.lbl_CountPerPanel.TabIndex = 9;
             this.lbl_CountPerPanel.Text = "平均报点数\n-";
             this.lbl_CountPerPanel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -440,7 +449,7 @@
             this.lbl_utilizationRate.ForeColor = System.Drawing.Color.FloralWhite;
             this.lbl_utilizationRate.Location = new System.Drawing.Point(469, 197);
             this.lbl_utilizationRate.Name = "lbl_utilizationRate";
-            this.lbl_utilizationRate.Size = new System.Drawing.Size(206, 74);
+            this.lbl_utilizationRate.Size = new System.Drawing.Size(218, 77);
             this.lbl_utilizationRate.TabIndex = 8;
             this.lbl_utilizationRate.Text = "稼动率\n-";
             this.lbl_utilizationRate.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -453,7 +462,7 @@
             this.lbl_boardAiPassRate.ForeColor = System.Drawing.Color.FloralWhite;
             this.lbl_boardAiPassRate.Location = new System.Drawing.Point(242, 197);
             this.lbl_boardAiPassRate.Name = "lbl_boardAiPassRate";
-            this.lbl_boardAiPassRate.Size = new System.Drawing.Size(206, 74);
+            this.lbl_boardAiPassRate.Size = new System.Drawing.Size(218, 77);
             this.lbl_boardAiPassRate.TabIndex = 7;
             this.lbl_boardAiPassRate.Text = "AVI Pass Rate_AI后\n-";
             this.lbl_boardAiPassRate.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -466,7 +475,7 @@
             this.lbl_SnTotalCount.ForeColor = System.Drawing.Color.FloralWhite;
             this.lbl_SnTotalCount.Location = new System.Drawing.Point(17, 16);
             this.lbl_SnTotalCount.Name = "lbl_SnTotalCount";
-            this.lbl_SnTotalCount.Size = new System.Drawing.Size(206, 74);
+            this.lbl_SnTotalCount.Size = new System.Drawing.Size(218, 77);
             this.lbl_SnTotalCount.TabIndex = 5;
             this.lbl_SnTotalCount.Text = "-";
             this.lbl_SnTotalCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -479,7 +488,7 @@
             this.lbl_totalDefectCount.ForeColor = System.Drawing.Color.FloralWhite;
             this.lbl_totalDefectCount.Location = new System.Drawing.Point(242, 16);
             this.lbl_totalDefectCount.Name = "lbl_totalDefectCount";
-            this.lbl_totalDefectCount.Size = new System.Drawing.Size(206, 74);
+            this.lbl_totalDefectCount.Size = new System.Drawing.Size(218, 77);
             this.lbl_totalDefectCount.TabIndex = 0;
             this.lbl_totalDefectCount.Text = "-";
             this.lbl_totalDefectCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -492,7 +501,7 @@
             this.lbl_AiAllCount.ForeColor = System.Drawing.Color.FloralWhite;
             this.lbl_AiAllCount.Location = new System.Drawing.Point(17, 107);
             this.lbl_AiAllCount.Name = "lbl_AiAllCount";
-            this.lbl_AiAllCount.Size = new System.Drawing.Size(206, 74);
+            this.lbl_AiAllCount.Size = new System.Drawing.Size(218, 77);
             this.lbl_AiAllCount.TabIndex = 1;
             this.lbl_AiAllCount.Text = "-";
             this.lbl_AiAllCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -505,7 +514,7 @@
             this.lbl_aiFilterOKCount.ForeColor = System.Drawing.Color.FloralWhite;
             this.lbl_aiFilterOKCount.Location = new System.Drawing.Point(242, 107);
             this.lbl_aiFilterOKCount.Name = "lbl_aiFilterOKCount";
-            this.lbl_aiFilterOKCount.Size = new System.Drawing.Size(206, 74);
+            this.lbl_aiFilterOKCount.Size = new System.Drawing.Size(218, 77);
             this.lbl_aiFilterOKCount.TabIndex = 2;
             this.lbl_aiFilterOKCount.Text = "-";
             this.lbl_aiFilterOKCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -518,7 +527,7 @@
             this.lbl_aviPassRateCount.ForeColor = System.Drawing.Color.FloralWhite;
             this.lbl_aviPassRateCount.Location = new System.Drawing.Point(17, 197);
             this.lbl_aviPassRateCount.Name = "lbl_aviPassRateCount";
-            this.lbl_aviPassRateCount.Size = new System.Drawing.Size(206, 74);
+            this.lbl_aviPassRateCount.Size = new System.Drawing.Size(218, 77);
             this.lbl_aviPassRateCount.TabIndex = 3;
             this.lbl_aviPassRateCount.Text = "AVI Pass Rate_AI前";
             this.lbl_aviPassRateCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -531,19 +540,10 @@
             this.lbl_filteredOkCount.ForeColor = System.Drawing.Color.FloralWhite;
             this.lbl_filteredOkCount.Location = new System.Drawing.Point(469, 107);
             this.lbl_filteredOkCount.Name = "lbl_filteredOkCount";
-            this.lbl_filteredOkCount.Size = new System.Drawing.Size(206, 74);
+            this.lbl_filteredOkCount.Size = new System.Drawing.Size(218, 77);
             this.lbl_filteredOkCount.TabIndex = 4;
             this.lbl_filteredOkCount.Text = "-";
             this.lbl_filteredOkCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // aviCtr2Container
-            // 
-            this.aviCtr2Container.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.aviCtr2Container.Location = new System.Drawing.Point(0, 0);
-            this.aviCtr2Container.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.aviCtr2Container.Name = "aviCtr2Container";
-            this.aviCtr2Container.Size = new System.Drawing.Size(1331, 564);
-            this.aviCtr2Container.TabIndex = 0;
             // 
             // FrHome
             // 

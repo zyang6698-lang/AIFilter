@@ -1,4 +1,4 @@
-using DeepSightModel;
+ï»¿using DeepSightModel;
 using DeepSightTool;
 using System;
 using System.Drawing;
@@ -13,19 +13,70 @@ namespace DeepSightAI
     {
         private int _selectedIndex = -1;
         private List<HeatPoint> _allHeatPoints;
+        private List<HeatPoint> _filteredHeatPoints; // For filtered data
         private int _currentPage = 1;
-        private const int PageSize = 50; // Ã¿Ò³ÏÔÊ¾µÄÍ¼Æ¬ÊýÁ¿
+        private const int PageSize = 50; // Ã¿Ò³Ê¾Í¼Æ¬
         private int _totalPages;
+        private string _aiFilter = "All";
+        private string _vvsFilter = "All";
 
         public DefectDetailControl()
         {
             InitializeComponent();
+            InitializeFilterControls();
             InitializePaginationControls();
+        }
+
+        private void InitializeFilterControls()
+        {
+            // AI Filter
+            this.comboBox_FilterAI.Items.AddRange(new object[] { "All", "AI_OK", "AI_NG" });
+            this.comboBox_FilterAI.SelectedIndex = 0;
+            this.comboBox_FilterAI.SelectedIndexChanged += (s, e) =>
+            {
+                _aiFilter = this.comboBox_FilterAI.SelectedItem.ToString();
+                ApplyFiltersAndReload();
+            };
+
+            // VVS Filter
+            this.comboBox_FilterVVS.Items.AddRange(new object[] { "All", "VVS_OK", "VVS_NG", "NotSet" });
+            this.comboBox_FilterVVS.SelectedIndex = 0;
+            this.comboBox_FilterVVS.SelectedIndexChanged += (s, e) =>
+            {
+                _vvsFilter = this.comboBox_FilterVVS.SelectedItem.ToString();
+                ApplyFiltersAndReload();
+            };
+        }
+
+        private void ApplyFiltersAndReload()
+        {
+            _filteredHeatPoints = _allHeatPoints;
+
+            if (_aiFilter != "All")
+            {
+                _filteredHeatPoints = _filteredHeatPoints.Where(p => p.AIStatus == _aiFilter).ToList();
+            }
+
+            if (_vvsFilter != "All")
+            {
+                if (_vvsFilter == "NotSet")
+                {
+                    _filteredHeatPoints = _filteredHeatPoints.Where(p => string.IsNullOrEmpty(p.VVSStatus)).ToList();
+                }
+                else
+                {
+                    _filteredHeatPoints = _filteredHeatPoints.Where(p => p.VVSStatus == _vvsFilter).ToList();
+                }
+            }
+
+            _totalPages = (int)Math.Ceiling((double)_filteredHeatPoints.Count / PageSize);
+            _currentPage = 1;
+            LoadDefectsPage(_currentPage);
         }
 
         private void InitializePaginationControls()
         {
-            // ¿Ø¼þÒÑÔÚ Designer ÖÐ´´½¨£¬´Ë´¦½ö°ó¶¨ÊÂ¼þºÍ³õÊ¼ÉèÖÃ
+            // æŽ§ä»¶å·²åœ¨ Designer ä¸­åˆ›å»ºï¼Œæ­¤å¤„ä»…ç»‘å®šäº‹ä»¶å’Œåˆå§‹è®¾ç½®
             this.btnPrevPage.Click += (s, e) =>
             {
                 if (_currentPage > 1)
@@ -44,13 +95,13 @@ namespace DeepSightAI
                 }
             };
 
-            // Ìí¼Ó¶¥²¿±ß¿òÏß
+            // æ·»åŠ é¡¶éƒ¨è¾¹æ¡†çº¿
             this.panel_Pagination.Paint += (s, e) =>
             {
                 e.Graphics.DrawLine(new Pen(Color.FromArgb(60, 60, 60)), 0, 0, this.panel_Pagination.Width, 0);
             };
 
-            // ¾ÓÖÐ¶ÔÆë
+            // å±…ä¸­å¯¹é½
             this.panel_Pagination.Resize += (s, e) =>
             {
                 var centeredFlowPanel = this.panel_Pagination.Controls.OfType<FlowLayoutPanel>().FirstOrDefault();
@@ -125,10 +176,17 @@ namespace DeepSightAI
         public void DisplayDefectDetails(DefectReviewItem item)
         {
             _allHeatPoints = item.HeatPoints ?? new List<HeatPoint>();
-            _totalPages = (int)Math.Ceiling((double)_allHeatPoints.Count / PageSize);
+            _filteredHeatPoints = new List<HeatPoint>(_allHeatPoints); // Initialize filtered list
+            _totalPages = (int)Math.Ceiling((double)_filteredHeatPoints.Count / PageSize);
             _currentPage = 1;
 
-            label_DetailTitle.Text = $"È±ÏÝÏêÇé - SN: {item.SerialNumber} ({item.Side}Ãæ)";
+            label_DetailTitle.Text = $"È± - SN: {item.SerialNumber} ({item.Side})";
+
+            // Reset filters
+            _aiFilter = "All";
+            _vvsFilter = "All";
+            comboBox_FilterAI.SelectedIndex = 0;
+            comboBox_FilterVVS.SelectedIndex = 0;
 
             LoadDefectsPage(_currentPage);
         }
@@ -138,25 +196,25 @@ namespace DeepSightAI
             flowLayoutPanel_DefectImages.Controls.Clear();
             _selectedIndex = -1;
 
-            if (_allHeatPoints.Count == 0)
+            if (_filteredHeatPoints.Count == 0)
             {
                 var noDataLabel = new Label
                 {
-                    Text = "¸Ã¼ÇÂ¼ÎÞÈ±ÏÝÍ¼Æ¬",
+                    Text = "è¯¥è®°å½•æ— ç¼ºé™·å›¾ç‰‡",
                     AutoSize = true,
                     ForeColor = Color.White,
-                    Font = new Font("Î¢ÈíÑÅºÚ", 10F),
+                    Font = new Font("å¾®è½¯é›…é»‘", 10F),
                     Margin = new Padding(10)
                 };
                 flowLayoutPanel_DefectImages.Controls.Add(noDataLabel);
-                lblPageInfo.Text = "µÚ 0/0 Ò³";
+                lblPageInfo.Text = "ç¬¬ 0/0 é¡µ";
                 btnPrevPage.Enabled = false;
                 btnNextPage.Enabled = false;
                 return;
             }
 
             _currentPage = page;
-            var heatPointsToShow = _allHeatPoints.Skip((_currentPage - 1) * PageSize).Take(PageSize).ToList();
+            var heatPointsToShow = _filteredHeatPoints.Skip((_currentPage - 1) * PageSize).Take(PageSize).ToList();
 
             for (int i = 0; i < heatPointsToShow.Count; i++)
             {
@@ -174,7 +232,7 @@ namespace DeepSightAI
 
         private void UpdatePaginationButtons()
         {
-            lblPageInfo.Text = $"µÚ {_currentPage}/{_totalPages} Ò³";
+            lblPageInfo.Text = $"ç¬¬ {_currentPage}/{_totalPages} é¡µ";
             btnPrevPage.Enabled = _currentPage > 1;
             btnNextPage.Enabled = _currentPage < _totalPages;
         }
@@ -232,10 +290,10 @@ namespace DeepSightAI
 
         private void SelectNextImage()
         {
-            if (_allHeatPoints == null || _allHeatPoints.Count == 0) return;
+            if (_filteredHeatPoints == null || _filteredHeatPoints.Count == 0) return;
 
             int globalIndex = ((_currentPage - 1) * PageSize) + _selectedIndex;
-            int nextGlobalIndex = (globalIndex + 1) % _allHeatPoints.Count;
+            int nextGlobalIndex = (globalIndex + 1) % _filteredHeatPoints.Count;
 
             int nextPage = (nextGlobalIndex / PageSize) + 1;
             int nextLocalIndex = nextGlobalIndex % PageSize;
@@ -257,7 +315,7 @@ namespace DeepSightAI
                 BackColor = Color.FromArgb(37, 37, 38)
             };
 
-            // Í¼Æ¬ÏÔÊ¾
+            // å›¾ç‰‡æ˜¾ç¤º
             var pictureBox = new PictureBox
             {
                 Dock = DockStyle.Fill,
@@ -277,13 +335,13 @@ namespace DeepSightAI
                 }
                 catch (Exception ex)
                 {
-                    LogTextHelper.Error($"¼ÓÔØÍ¼Æ¬Ê§°Ü: {heatPoint.ImagePath}, {ex.Message}");
+                    LogTextHelper.Error($"åŠ è½½å›¾ç‰‡å¤±è´¥: {heatPoint.ImagePath}, {ex.Message}");
                 }
             }
 
             panel.Controls.Add(pictureBox);
 
-            // ÐÅÏ¢ÏÔÊ¾
+            // ä¿¡æ¯æ˜¾ç¤º
             var infoLabel = new Label
             {
                 Text = $"AI: {heatPoint.AIStatus}\n" +
@@ -293,7 +351,7 @@ namespace DeepSightAI
                 Height = 40,
                 ForeColor = Color.White,
                 BackColor = Color.FromArgb(128, 0, 0, 0),
-                Font = new Font("Î¢ÈíÑÅºÚ", 9F),
+                Font = new Font("å¾®è½¯é›…é»‘", 9F),
                 TextAlign = ContentAlignment.MiddleRight,
                 Padding = new Padding(0, 0, 5, 0)
             };
@@ -310,9 +368,10 @@ namespace DeepSightAI
         public void ClearDetails()
         {
             flowLayoutPanel_DefectImages.Controls.Clear();
-            label_DetailTitle.Text = "È±ÏÝÏêÇé";
+            label_DetailTitle.Text = "È±";
             _selectedIndex = -1;
             _allHeatPoints?.Clear();
+            _filteredHeatPoints?.Clear();
             _currentPage = 1;
             _totalPages = 0;
             if(lblPageInfo != null)

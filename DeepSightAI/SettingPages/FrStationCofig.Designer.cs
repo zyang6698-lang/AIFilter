@@ -102,12 +102,12 @@
             this.grpAxisOfSelection.Font = new System.Drawing.Font("微软雅黑", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.grpAxisOfSelection.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.grpAxisOfSelection.Location = new System.Drawing.Point(0, 0);
-            this.grpAxisOfSelection.Margin = new System.Windows.Forms.Padding(100, 60, 100, 60);
-            this.grpAxisOfSelection.MinimumSize = new System.Drawing.Size(20, 10);
+            this.grpAxisOfSelection.Margin = new System.Windows.Forms.Padding(80, 48, 80, 48);
+            this.grpAxisOfSelection.MinimumSize = new System.Drawing.Size(16, 8);
             this.grpAxisOfSelection.Name = "grpAxisOfSelection";
-            this.grpAxisOfSelection.Padding = new System.Windows.Forms.Padding(540, 250, 540, 250);
+            this.grpAxisOfSelection.Padding = new System.Windows.Forms.Padding(432, 200, 432, 200);
             this.grpAxisOfSelection.RectColor = System.Drawing.Color.FromArgb(((int)(((byte)(110)))), ((int)(((byte)(190)))), ((int)(((byte)(40)))));
-            this.grpAxisOfSelection.Size = new System.Drawing.Size(842, 554);
+            this.grpAxisOfSelection.Size = new System.Drawing.Size(836, 548);
             this.grpAxisOfSelection.Style = Sunny.UI.UIStyle.Custom;
             this.grpAxisOfSelection.TabIndex = 30;
             this.grpAxisOfSelection.Text = "机台配置";
@@ -118,7 +118,7 @@
             this.panel3.BackColor = System.Drawing.Color.Transparent;
             this.panel3.Controls.Add(this.radiomode1);
             this.panel3.Controls.Add(this.radiomode2);
-            this.panel3.Location = new System.Drawing.Point(216, 411);
+            this.panel3.Location = new System.Drawing.Point(216, 441);
             this.panel3.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.panel3.Name = "panel3";
             this.panel3.Size = new System.Drawing.Size(287, 29);
@@ -133,7 +133,7 @@
             this.radiomode1.Location = new System.Drawing.Point(0, 0);
             this.radiomode1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.radiomode1.Name = "radiomode1";
-            this.radiomode1.Size = new System.Drawing.Size(73, 28);
+            this.radiomode1.Size = new System.Drawing.Size(59, 24);
             this.radiomode1.TabIndex = 19;
             this.radiomode1.TabStop = true;
             this.radiomode1.Text = "copy";
@@ -147,7 +147,7 @@
             this.radiomode2.Location = new System.Drawing.Point(157, 0);
             this.radiomode2.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.radiomode2.Name = "radiomode2";
-            this.radiomode2.Size = new System.Drawing.Size(58, 28);
+            this.radiomode2.Size = new System.Drawing.Size(48, 24);
             this.radiomode2.TabIndex = 20;
             this.radiomode2.Text = "cut";
             this.radiomode2.UseVisualStyleBackColor = true;
@@ -157,7 +157,7 @@
             this.label16.BackColor = System.Drawing.Color.Transparent;
             this.label16.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.label16.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label16.Location = new System.Drawing.Point(42, 416);
+            this.label16.Location = new System.Drawing.Point(42, 446);
             this.label16.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label16.Name = "label16";
             this.label16.Size = new System.Drawing.Size(168, 19);
@@ -167,10 +167,10 @@
             // 
             // txt_deepsight_agent_data_workspace
             // 
-            this.txt_deepsight_agent_data_workspace.Location = new System.Drawing.Point(215, 344);
+            this.txt_deepsight_agent_data_workspace.Location = new System.Drawing.Point(215, 367);
             this.txt_deepsight_agent_data_workspace.Margin = new System.Windows.Forms.Padding(2);
             this.txt_deepsight_agent_data_workspace.Name = "txt_deepsight_agent_data_workspace";
-            this.txt_deepsight_agent_data_workspace.Size = new System.Drawing.Size(573, 31);
+            this.txt_deepsight_agent_data_workspace.Size = new System.Drawing.Size(573, 26);
             this.txt_deepsight_agent_data_workspace.TabIndex = 262;
             // 
             // label15
@@ -178,7 +178,7 @@
             this.label15.BackColor = System.Drawing.Color.Transparent;
             this.label15.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.label15.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label15.Location = new System.Drawing.Point(23, 345);
+            this.label15.Location = new System.Drawing.Point(22, 370);
             this.label15.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label15.Name = "label15";
             this.label15.Size = new System.Drawing.Size(188, 19);
@@ -188,10 +188,10 @@
             // 
             // txt_A_minio_config
             // 
-            this.txt_A_minio_config.Location = new System.Drawing.Point(215, 245);
+            this.txt_A_minio_config.Location = new System.Drawing.Point(215, 239);
             this.txt_A_minio_config.Margin = new System.Windows.Forms.Padding(2);
             this.txt_A_minio_config.Name = "txt_A_minio_config";
-            this.txt_A_minio_config.Size = new System.Drawing.Size(573, 31);
+            this.txt_A_minio_config.Size = new System.Drawing.Size(573, 26);
             this.txt_A_minio_config.TabIndex = 258;
             // 
             // label7
@@ -199,7 +199,7 @@
             this.label7.BackColor = System.Drawing.Color.Transparent;
             this.label7.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.label7.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label7.Location = new System.Drawing.Point(98, 246);
+            this.label7.Location = new System.Drawing.Point(97, 242);
             this.label7.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(113, 19);
@@ -209,10 +209,10 @@
             // 
             // txt_temporary_file_storage_area_B
             // 
-            this.txt_temporary_file_storage_area_B.Location = new System.Drawing.Point(215, 311);
+            this.txt_temporary_file_storage_area_B.Location = new System.Drawing.Point(215, 335);
             this.txt_temporary_file_storage_area_B.Margin = new System.Windows.Forms.Padding(2);
             this.txt_temporary_file_storage_area_B.Name = "txt_temporary_file_storage_area_B";
-            this.txt_temporary_file_storage_area_B.Size = new System.Drawing.Size(573, 31);
+            this.txt_temporary_file_storage_area_B.Size = new System.Drawing.Size(573, 26);
             this.txt_temporary_file_storage_area_B.TabIndex = 256;
             // 
             // label13
@@ -220,7 +220,7 @@
             this.label13.BackColor = System.Drawing.Color.Transparent;
             this.label13.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.label13.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label13.Location = new System.Drawing.Point(11, 311);
+            this.label13.Location = new System.Drawing.Point(11, 338);
             this.label13.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(199, 19);
@@ -230,10 +230,10 @@
             // 
             // txt_temporary_file_storage_area_A
             // 
-            this.txt_temporary_file_storage_area_A.Location = new System.Drawing.Point(215, 278);
+            this.txt_temporary_file_storage_area_A.Location = new System.Drawing.Point(215, 303);
             this.txt_temporary_file_storage_area_A.Margin = new System.Windows.Forms.Padding(2);
             this.txt_temporary_file_storage_area_A.Name = "txt_temporary_file_storage_area_A";
-            this.txt_temporary_file_storage_area_A.Size = new System.Drawing.Size(573, 31);
+            this.txt_temporary_file_storage_area_A.Size = new System.Drawing.Size(573, 26);
             this.txt_temporary_file_storage_area_A.TabIndex = 254;
             // 
             // label14
@@ -241,7 +241,7 @@
             this.label14.BackColor = System.Drawing.Color.Transparent;
             this.label14.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.label14.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label14.Location = new System.Drawing.Point(11, 278);
+            this.label14.Location = new System.Drawing.Point(11, 306);
             this.label14.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label14.Name = "label14";
             this.label14.Size = new System.Drawing.Size(199, 19);
@@ -294,7 +294,7 @@
             this.txt_stationName.Location = new System.Drawing.Point(215, 47);
             this.txt_stationName.Margin = new System.Windows.Forms.Padding(2);
             this.txt_stationName.Name = "txt_stationName";
-            this.txt_stationName.Size = new System.Drawing.Size(573, 31);
+            this.txt_stationName.Size = new System.Drawing.Size(573, 26);
             this.txt_stationName.TabIndex = 38;
             // 
             // label1
@@ -302,7 +302,7 @@
             this.label1.BackColor = System.Drawing.Color.Transparent;
             this.label1.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.label1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label1.Location = new System.Drawing.Point(69, 48);
+            this.label1.Location = new System.Drawing.Point(68, 50);
             this.label1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(142, 19);
@@ -312,18 +312,18 @@
             // 
             // txt_Depth
             // 
-            this.txt_Depth.Location = new System.Drawing.Point(215, 146);
+            this.txt_Depth.Location = new System.Drawing.Point(215, 143);
             this.txt_Depth.Margin = new System.Windows.Forms.Padding(2);
             this.txt_Depth.Name = "txt_Depth";
-            this.txt_Depth.Size = new System.Drawing.Size(573, 31);
+            this.txt_Depth.Size = new System.Drawing.Size(573, 26);
             this.txt_Depth.TabIndex = 36;
             // 
             // txt_APath
             // 
-            this.txt_APath.Location = new System.Drawing.Point(215, 80);
+            this.txt_APath.Location = new System.Drawing.Point(215, 79);
             this.txt_APath.Margin = new System.Windows.Forms.Padding(2);
             this.txt_APath.Name = "txt_APath";
-            this.txt_APath.Size = new System.Drawing.Size(573, 31);
+            this.txt_APath.Size = new System.Drawing.Size(573, 26);
             this.txt_APath.TabIndex = 32;
             // 
             // label2
@@ -331,7 +331,7 @@
             this.label2.BackColor = System.Drawing.Color.Transparent;
             this.label2.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.label2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label2.Location = new System.Drawing.Point(69, 81);
+            this.label2.Location = new System.Drawing.Point(68, 82);
             this.label2.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(142, 19);
@@ -345,10 +345,10 @@
             this.radiotcp2.BackColor = System.Drawing.Color.Transparent;
             this.radiotcp2.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.radiotcp2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.radiotcp2.Location = new System.Drawing.Point(373, 377);
+            this.radiotcp2.Location = new System.Drawing.Point(373, 407);
             this.radiotcp2.Margin = new System.Windows.Forms.Padding(2);
             this.radiotcp2.Name = "radiotcp2";
-            this.radiotcp2.Size = new System.Drawing.Size(60, 24);
+            this.radiotcp2.Size = new System.Drawing.Size(50, 21);
             this.radiotcp2.TabIndex = 35;
             this.radiotcp2.Text = "禁用";
             this.radiotcp2.UseVisualStyleBackColor = false;
@@ -360,10 +360,10 @@
             this.radiotcp1.Checked = true;
             this.radiotcp1.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.radiotcp1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.radiotcp1.Location = new System.Drawing.Point(219, 377);
+            this.radiotcp1.Location = new System.Drawing.Point(219, 407);
             this.radiotcp1.Margin = new System.Windows.Forms.Padding(2);
             this.radiotcp1.Name = "radiotcp1";
-            this.radiotcp1.Size = new System.Drawing.Size(60, 24);
+            this.radiotcp1.Size = new System.Drawing.Size(50, 21);
             this.radiotcp1.TabIndex = 34;
             this.radiotcp1.TabStop = true;
             this.radiotcp1.Text = "启用";
@@ -374,7 +374,7 @@
             this.label3.BackColor = System.Drawing.Color.Transparent;
             this.label3.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.label3.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label3.Location = new System.Drawing.Point(69, 114);
+            this.label3.Location = new System.Drawing.Point(68, 114);
             this.label3.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(142, 19);
@@ -387,7 +387,7 @@
             this.label4.BackColor = System.Drawing.Color.Transparent;
             this.label4.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.label4.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label4.Location = new System.Drawing.Point(69, 147);
+            this.label4.Location = new System.Drawing.Point(68, 146);
             this.label4.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(142, 19);
@@ -400,7 +400,7 @@
             this.label5.BackColor = System.Drawing.Color.Transparent;
             this.label5.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.label5.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label5.Location = new System.Drawing.Point(68, 379);
+            this.label5.Location = new System.Drawing.Point(68, 409);
             this.label5.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(142, 19);
@@ -410,10 +410,10 @@
             // 
             // txt_BPath
             // 
-            this.txt_BPath.Location = new System.Drawing.Point(215, 113);
+            this.txt_BPath.Location = new System.Drawing.Point(215, 111);
             this.txt_BPath.Margin = new System.Windows.Forms.Padding(2);
             this.txt_BPath.Name = "txt_BPath";
-            this.txt_BPath.Size = new System.Drawing.Size(573, 31);
+            this.txt_BPath.Size = new System.Drawing.Size(573, 26);
             this.txt_BPath.TabIndex = 33;
             // 
             // label11
@@ -421,7 +421,7 @@
             this.label11.BackColor = System.Drawing.Color.Transparent;
             this.label11.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.label11.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label11.Location = new System.Drawing.Point(69, 180);
+            this.label11.Location = new System.Drawing.Point(68, 178);
             this.label11.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(142, 19);
@@ -431,10 +431,10 @@
             // 
             // txt_B_path_index_timestamp
             // 
-            this.txt_B_path_index_timestamp.Location = new System.Drawing.Point(215, 179);
+            this.txt_B_path_index_timestamp.Location = new System.Drawing.Point(215, 175);
             this.txt_B_path_index_timestamp.Margin = new System.Windows.Forms.Padding(2);
             this.txt_B_path_index_timestamp.Name = "txt_B_path_index_timestamp";
-            this.txt_B_path_index_timestamp.Size = new System.Drawing.Size(573, 31);
+            this.txt_B_path_index_timestamp.Size = new System.Drawing.Size(573, 26);
             this.txt_B_path_index_timestamp.TabIndex = 40;
             // 
             // label12
@@ -442,7 +442,7 @@
             this.label12.BackColor = System.Drawing.Color.Transparent;
             this.label12.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.label12.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label12.Location = new System.Drawing.Point(42, 212);
+            this.label12.Location = new System.Drawing.Point(41, 210);
             this.label12.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(169, 19);
@@ -452,10 +452,10 @@
             // 
             // txt_B_lot_timestamp
             // 
-            this.txt_B_lot_timestamp.Location = new System.Drawing.Point(215, 212);
+            this.txt_B_lot_timestamp.Location = new System.Drawing.Point(215, 207);
             this.txt_B_lot_timestamp.Margin = new System.Windows.Forms.Padding(2);
             this.txt_B_lot_timestamp.Name = "txt_B_lot_timestamp";
-            this.txt_B_lot_timestamp.Size = new System.Drawing.Size(573, 31);
+            this.txt_B_lot_timestamp.Size = new System.Drawing.Size(573, 26);
             this.txt_B_lot_timestamp.TabIndex = 42;
             // 
             // label17
@@ -463,7 +463,7 @@
             this.label17.BackColor = System.Drawing.Color.Transparent;
             this.label17.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.label17.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label17.Location = new System.Drawing.Point(69, 246);
+            this.label17.Location = new System.Drawing.Point(68, 274);
             this.label17.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label17.Name = "label17";
             this.label17.Size = new System.Drawing.Size(142, 19);
@@ -473,23 +473,23 @@
             // 
             // txt_B_panel_index_timestamp
             // 
-            this.txt_B_panel_index_timestamp.Location = new System.Drawing.Point(215, 245);
+            this.txt_B_panel_index_timestamp.Location = new System.Drawing.Point(215, 271);
             this.txt_B_panel_index_timestamp.Margin = new System.Windows.Forms.Padding(2);
             this.txt_B_panel_index_timestamp.Name = "txt_B_panel_index_timestamp";
-            this.txt_B_panel_index_timestamp.Size = new System.Drawing.Size(573, 31);
+            this.txt_B_panel_index_timestamp.Size = new System.Drawing.Size(573, 26);
             this.txt_B_panel_index_timestamp.TabIndex = 44;
             // 
             // FrStationCofig
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(120F, 120F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.BackColor = System.Drawing.SystemColors.Control;
-            this.ClientSize = new System.Drawing.Size(842, 554);
+            this.ClientSize = new System.Drawing.Size(836, 548);
             this.Controls.Add(this.grpAxisOfSelection);
             this.DoubleBuffered = true;
             this.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
-            this.Margin = new System.Windows.Forms.Padding(60, 20, 60, 20);
+            this.Margin = new System.Windows.Forms.Padding(48, 16, 48, 16);
             this.Name = "FrStationCofig";
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;

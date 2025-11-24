@@ -14,7 +14,7 @@ namespace DeepSightModel
         [JsonProperty("name")]
         public string Name { get; set; }
 
-        [JsonProperty("copy_cut_mode")]
+        [JsonProperty("copy_or_cut_mode")]
         public string CopyCutMode { get; set; } // "copy" | "cut" | ∆‰À˚¿©’π
 
         [JsonProperty("x_offset")]

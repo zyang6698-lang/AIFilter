@@ -1005,12 +1005,13 @@ namespace DeepSightWorkLib
 
                 defect.DefectMethod(info, out msg);
 
-                //LogTextHelper.Info("算法返回推理结果：" + msg);
+                LogTextHelper.Info($"算法返回原始结果 for Side {panelInfo.SideIndex}: {msg}"); // <-- 增加此行日志
                 //将RootVBOutInfo结果msg处理
                 var obj = JsonConvert.DeserializeObject<RootVBOutInfo>(msg);
                 string code = obj.Code.ToString();
                 if (code != "200")
                 {
+                    LogTextHelper.Warn($"算法调用失败 for Side {panelInfo.SideIndex}，返回码: {code}"); // <-- 增加此行日志
                     return false;
                 }
                 JObject root = JObject.Parse(msg);

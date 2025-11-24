@@ -408,6 +408,9 @@
     <EmbeddedResource Include="AnalyticsControl.resx">
       <DependentUpon>AnalyticsControl.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="DefectDetailControl.resx">
+      <DependentUpon>DefectDetailControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FrAlarm.resx">
       <DependentUpon>FrAlarm.cs</DependentUpon>
     </EmbeddedResource>

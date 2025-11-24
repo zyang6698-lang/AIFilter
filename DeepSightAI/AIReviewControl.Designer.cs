@@ -28,9 +28,11 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.panel_Main = new System.Windows.Forms.Panel();
             this.splitContainer_Main = new System.Windows.Forms.SplitContainer();
+            this.btn_Export = new System.Windows.Forms.Button();
+            this.btn_LoadImages = new System.Windows.Forms.Button();
             this.heatMapQueryControl = new DeepSightAI.QueryControl();
             this.tabControl_Main = new System.Windows.Forms.TabControl();
             this.tabPage_Grid = new System.Windows.Forms.TabPage();
@@ -46,8 +48,6 @@
             this.col_PathIndex = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.col_DetectionDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.panel_Buttons = new System.Windows.Forms.Panel();
-            this.btn_LoadImages = new System.Windows.Forms.Button();
-            this.btn_Export = new System.Windows.Forms.Button();
             this.btn_Save = new System.Windows.Forms.Button();
             this.tabPage_Details = new System.Windows.Forms.TabPage();
             this.defectDetailControl1 = new DeepSightAI.DefectDetailControl();
@@ -71,7 +71,7 @@
             this.panel_Main.Location = new System.Drawing.Point(0, 0);
             this.panel_Main.Margin = new System.Windows.Forms.Padding(5);
             this.panel_Main.Name = "panel_Main";
-            this.panel_Main.Size = new System.Drawing.Size(1799, 755);
+            this.panel_Main.Size = new System.Drawing.Size(1604, 906);
             this.panel_Main.TabIndex = 0;
             // 
             // splitContainer_Main
@@ -89,10 +89,44 @@
             // splitContainer_Main.Panel2
             // 
             this.splitContainer_Main.Panel2.Controls.Add(this.tabControl_Main);
-            this.splitContainer_Main.Size = new System.Drawing.Size(1799, 755);
+            this.splitContainer_Main.Size = new System.Drawing.Size(1604, 906);
             this.splitContainer_Main.SplitterDistance = 350;
             this.splitContainer_Main.SplitterWidth = 7;
             this.splitContainer_Main.TabIndex = 3;
+            // 
+            // btn_Export
+            // 
+            this.btn_Export.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btn_Export.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(122)))), ((int)(((byte)(204)))));
+            this.btn_Export.FlatAppearance.BorderSize = 0;
+            this.btn_Export.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btn_Export.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btn_Export.ForeColor = System.Drawing.Color.White;
+            this.btn_Export.Location = new System.Drawing.Point(161, 22);
+            this.btn_Export.Margin = new System.Windows.Forms.Padding(5);
+            this.btn_Export.Name = "btn_Export";
+            this.btn_Export.Size = new System.Drawing.Size(107, 38);
+            this.btn_Export.TabIndex = 1;
+            this.btn_Export.Text = "导出";
+            this.btn_Export.UseVisualStyleBackColor = false;
+            this.btn_Export.Click += new System.EventHandler(this.Btn_Export_Click);
+            // 
+            // btn_LoadImages
+            // 
+            this.btn_LoadImages.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btn_LoadImages.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(122)))), ((int)(((byte)(204)))));
+            this.btn_LoadImages.FlatAppearance.BorderSize = 0;
+            this.btn_LoadImages.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btn_LoadImages.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btn_LoadImages.ForeColor = System.Drawing.Color.White;
+            this.btn_LoadImages.Location = new System.Drawing.Point(28, 22);
+            this.btn_LoadImages.Margin = new System.Windows.Forms.Padding(4);
+            this.btn_LoadImages.Name = "btn_LoadImages";
+            this.btn_LoadImages.Size = new System.Drawing.Size(107, 38);
+            this.btn_LoadImages.TabIndex = 2;
+            this.btn_LoadImages.Text = "读图";
+            this.btn_LoadImages.UseVisualStyleBackColor = false;
+            this.btn_LoadImages.Click += new System.EventHandler(this.Btn_LoadImages_Click);
             // 
             // heatMapQueryControl
             // 
@@ -106,7 +140,7 @@
             this.heatMapQueryControl.PartNumber = "";
             this.heatMapQueryControl.SelectedDate = new System.DateTime(2024, 5, 21, 10, 3, 1, 917);
             this.heatMapQueryControl.SelectedSide = "A";
-            this.heatMapQueryControl.Size = new System.Drawing.Size(350, 755);
+            this.heatMapQueryControl.Size = new System.Drawing.Size(350, 906);
             this.heatMapQueryControl.TabIndex = 0;
             // 
             // tabControl_Main
@@ -118,7 +152,7 @@
             this.tabControl_Main.Margin = new System.Windows.Forms.Padding(5);
             this.tabControl_Main.Name = "tabControl_Main";
             this.tabControl_Main.SelectedIndex = 0;
-            this.tabControl_Main.Size = new System.Drawing.Size(1442, 755);
+            this.tabControl_Main.Size = new System.Drawing.Size(1247, 906);
             this.tabControl_Main.TabIndex = 2;
             // 
             // tabPage_Grid
@@ -128,7 +162,7 @@
             this.tabPage_Grid.Margin = new System.Windows.Forms.Padding(5);
             this.tabPage_Grid.Name = "tabPage_Grid";
             this.tabPage_Grid.Padding = new System.Windows.Forms.Padding(5);
-            this.tabPage_Grid.Size = new System.Drawing.Size(1434, 726);
+            this.tabPage_Grid.Size = new System.Drawing.Size(1239, 877);
             this.tabPage_Grid.TabIndex = 0;
             this.tabPage_Grid.Text = "缺陷列表";
             this.tabPage_Grid.UseVisualStyleBackColor = true;
@@ -141,7 +175,7 @@
             this.panel_Grid.Location = new System.Drawing.Point(5, 5);
             this.panel_Grid.Margin = new System.Windows.Forms.Padding(5);
             this.panel_Grid.Name = "panel_Grid";
-            this.panel_Grid.Size = new System.Drawing.Size(1424, 716);
+            this.panel_Grid.Size = new System.Drawing.Size(1229, 867);
             this.panel_Grid.TabIndex = 1;
             // 
             // dataGridView_Defects
@@ -161,14 +195,14 @@
             this.col_DefectCount,
             this.col_PathIndex,
             this.col_DetectionDate});
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dataGridView_Defects.DefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dataGridView_Defects.DefaultCellStyle = dataGridViewCellStyle2;
             this.dataGridView_Defects.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView_Defects.Location = new System.Drawing.Point(0, 0);
             this.dataGridView_Defects.Margin = new System.Windows.Forms.Padding(5);
@@ -178,7 +212,7 @@
             this.dataGridView_Defects.RowHeadersWidth = 51;
             this.dataGridView_Defects.RowTemplate.Height = 23;
             this.dataGridView_Defects.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dataGridView_Defects.Size = new System.Drawing.Size(1424, 638);
+            this.dataGridView_Defects.Size = new System.Drawing.Size(1229, 789);
             this.dataGridView_Defects.TabIndex = 0;
             // 
             // col_SN
@@ -262,48 +296,15 @@
             // panel_Buttons
             // 
             this.panel_Buttons.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
+            this.panel_Buttons.Controls.Add(this.btn_Save);
             this.panel_Buttons.Controls.Add(this.btn_LoadImages);
             this.panel_Buttons.Controls.Add(this.btn_Export);
-            this.panel_Buttons.Controls.Add(this.btn_Save);
             this.panel_Buttons.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panel_Buttons.Location = new System.Drawing.Point(0, 638);
+            this.panel_Buttons.Location = new System.Drawing.Point(0, 789);
             this.panel_Buttons.Margin = new System.Windows.Forms.Padding(5);
             this.panel_Buttons.Name = "panel_Buttons";
-            this.panel_Buttons.Size = new System.Drawing.Size(1424, 78);
+            this.panel_Buttons.Size = new System.Drawing.Size(1229, 78);
             this.panel_Buttons.TabIndex = 1;
-            // 
-            // btn_LoadImages
-            // 
-            this.btn_LoadImages.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btn_LoadImages.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(122)))), ((int)(((byte)(204)))));
-            this.btn_LoadImages.FlatAppearance.BorderSize = 0;
-            this.btn_LoadImages.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btn_LoadImages.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.btn_LoadImages.ForeColor = System.Drawing.Color.White;
-            this.btn_LoadImages.Location = new System.Drawing.Point(14, 15);
-            this.btn_LoadImages.Margin = new System.Windows.Forms.Padding(4);
-            this.btn_LoadImages.Name = "btn_LoadImages";
-            this.btn_LoadImages.Size = new System.Drawing.Size(107, 38);
-            this.btn_LoadImages.TabIndex = 2;
-            this.btn_LoadImages.Text = "读图";
-            this.btn_LoadImages.UseVisualStyleBackColor = false;
-            this.btn_LoadImages.Click += new System.EventHandler(this.Btn_LoadImages_Click);
-            // 
-            // btn_Export
-            // 
-            this.btn_Export.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btn_Export.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(122)))), ((int)(((byte)(204)))));
-            this.btn_Export.FlatAppearance.BorderSize = 0;
-            this.btn_Export.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btn_Export.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.btn_Export.ForeColor = System.Drawing.Color.White;
-            this.btn_Export.Location = new System.Drawing.Point(1107, 15);
-            this.btn_Export.Margin = new System.Windows.Forms.Padding(5);
-            this.btn_Export.Name = "btn_Export";
-            this.btn_Export.Size = new System.Drawing.Size(115, 38);
-            this.btn_Export.TabIndex = 1;
-            this.btn_Export.Text = "导出";
-            this.btn_Export.UseVisualStyleBackColor = false;
             // 
             // btn_Save
             // 
@@ -313,7 +314,7 @@
             this.btn_Save.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btn_Save.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.btn_Save.ForeColor = System.Drawing.Color.White;
-            this.btn_Save.Location = new System.Drawing.Point(1282, 15);
+            this.btn_Save.Location = new System.Drawing.Point(293, 22);
             this.btn_Save.Margin = new System.Windows.Forms.Padding(5);
             this.btn_Save.Name = "btn_Save";
             this.btn_Save.Size = new System.Drawing.Size(107, 38);
@@ -328,7 +329,7 @@
             this.tabPage_Details.Margin = new System.Windows.Forms.Padding(5);
             this.tabPage_Details.Name = "tabPage_Details";
             this.tabPage_Details.Padding = new System.Windows.Forms.Padding(5);
-            this.tabPage_Details.Size = new System.Drawing.Size(1434, 726);
+            this.tabPage_Details.Size = new System.Drawing.Size(1239, 877);
             this.tabPage_Details.TabIndex = 1;
             this.tabPage_Details.Text = "缺陷详情";
             this.tabPage_Details.UseVisualStyleBackColor = true;
@@ -336,10 +337,11 @@
             // defectDetailControl1
             // 
             this.defectDetailControl1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.defectDetailControl1.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.defectDetailControl1.Location = new System.Drawing.Point(5, 5);
             this.defectDetailControl1.Margin = new System.Windows.Forms.Padding(7, 6, 7, 6);
             this.defectDetailControl1.Name = "defectDetailControl1";
-            this.defectDetailControl1.Size = new System.Drawing.Size(1424, 716);
+            this.defectDetailControl1.Size = new System.Drawing.Size(1229, 867);
             this.defectDetailControl1.TabIndex = 0;
             // 
             // AIReviewControl
@@ -349,7 +351,7 @@
             this.Controls.Add(this.panel_Main);
             this.Margin = new System.Windows.Forms.Padding(5);
             this.Name = "AIReviewControl";
-            this.Size = new System.Drawing.Size(1799, 755);
+            this.Size = new System.Drawing.Size(1604, 906);
             this.panel_Main.ResumeLayout(false);
             this.splitContainer_Main.Panel1.ResumeLayout(false);
             this.splitContainer_Main.Panel2.ResumeLayout(false);

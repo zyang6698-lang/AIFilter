@@ -72,15 +72,6 @@ namespace DeepSightAI
         /// </summary>
         public ComboBox PartNumberComboBox => cmb_PartNumber;
 
-        /// <summary>
-        /// 获取是否选择正面
-        /// </summary>
-        public bool IsFrontSideSelected => rbn_Front.Checked;
-
-        /// <summary>
-        /// 获取是否选择反面
-        /// </summary>
-        public bool IsBackSideSelected => rbn_Back.Checked;
 
         /// <summary>
         /// 设置选择的面（A：正面，B：反面）
