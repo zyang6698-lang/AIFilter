@@ -167,20 +167,74 @@ namespace DeepSightAI.SettingPages
             {
                 if (Machine.solconfig != null)
                 {
+                    // 获取 ComboBox 列的数据源以供后续验证
+                    var aSolutionItems = ((DataGridViewComboBoxColumn)dataPost.Columns["A_solution"]).DataSource as List<string> ?? new List<string>();
+                    var bSolutionItems = ((DataGridViewComboBoxColumn)dataPost.Columns["B_solution"]).DataSource as List<string> ?? new List<string>();
+                    // 注意：Flow 的数据源是动态的，这里先获取全局列表
+                    var allFlowItems = ((DataGridViewComboBoxColumn)dataPost.Columns["A_flow"]).DataSource as List<string> ?? new List<string>();
+
                     for (int i = 0; i < Machine.solconfig.solus.Count; i++)
                     {
                         dataPost.Rows.Add();
-                        dataPost.Rows[i].Cells["Index"].Value = i + 1;
-                        dataPost.Rows[i].Cells[1].Value = Machine.solconfig.solus[i].ProductSerial;
-                        dataPost.Rows[i].Cells[2].Value = Machine.solconfig.solus[i].Asolution;
-                        dataPost.Rows[i].Cells[3].Value = Machine.solconfig.solus[i].Aflow;
-                        dataPost.Rows[i].Cells[4].Value = Machine.solconfig.solus[i].Bsolution;
-                        dataPost.Rows[i].Cells[5].Value = Machine.solconfig.solus[i].Bflow;
-                        dataPost.Rows[i].Cells[6].Value = Machine.solconfig.solus[i].IsSwitch;
+                        var row = dataPost.Rows[i];
+                        var savedSolu = Machine.solconfig.solus[i];
+
+                        row.Cells["Index"].Value = i + 1;
+                        row.Cells[1].Value = savedSolu.ProductSerial;
+
+                        // --- START: 修改部分 ---
+
+                        // 验证并设置 A_solution
+                        if (aSolutionItems.Contains(savedSolu.Asolution))
+                        {
+                            row.Cells["A_solution"].Value = savedSolu.Asolution;
+                        }
+                        else if (aSolutionItems.Count > 0)
+                        {
+                            row.Cells["A_solution"].Value = aSolutionItems[0]; // 使用第一个可用的方案作为默认值
+                        }
+
+                        // 验证并设置 A_flow
+                        if (dic_solutionAndFlow.TryGetValue(row.Cells["A_solution"].Value.ToString(), out var aFlowList) && aFlowList.Contains(savedSolu.Aflow))
+                        {
+                            ((DataGridViewComboBoxCell)row.Cells["A_flow"]).DataSource = aFlowList;
+                            row.Cells["A_flow"].Value = savedSolu.Aflow;
+                        }
+                        else if (aFlowList != null && aFlowList.Count > 0)
+                        {
+                            ((DataGridViewComboBoxCell)row.Cells["A_flow"]).DataSource = aFlowList;
+                            row.Cells["A_flow"].Value = aFlowList[0]; // 使用方案下的第一个流程
+                        }
+
+                        // 验证并设置 B_solution
+                        if (bSolutionItems.Contains(savedSolu.Bsolution))
+                        {
+                            row.Cells["B_solution"].Value = savedSolu.Bsolution;
+                        }
+                        else if (bSolutionItems.Count > 0)
+                        {
+                            row.Cells["B_solution"].Value = bSolutionItems[0]; // 使用第一个可用的方案作为默认值
+                        }
+
+                        // 验证并设置 B_flow
+                        if (dic_solutionAndFlow.TryGetValue(row.Cells["B_solution"].Value.ToString(), out var bFlowList) && bFlowList.Contains(savedSolu.Bflow))
+                        {
+                            ((DataGridViewComboBoxCell)row.Cells["B_flow"]).DataSource = bFlowList;
+                            row.Cells["B_flow"].Value = savedSolu.Bflow;
+                        }
+                        else if (bFlowList != null && bFlowList.Count > 0)
+                        {
+                            ((DataGridViewComboBoxCell)row.Cells["B_flow"]).DataSource = bFlowList;
+                            row.Cells["B_flow"].Value = bFlowList[0]; // 使用方案下的第一个流程
+                        }
+
+                        // --- END: 修改部分 ---
+
+                        row.Cells[6].Value = savedSolu.IsSwitch;
                         if (dataPost.Columns.Contains("Mode"))
                         {
                             // 默认值
-                            dataPost.Rows[i].Cells["Mode"].Value = PicOptMode.by_machine.ToString();
+                            row.Cells["Mode"].Value = PicOptMode.by_machine.ToString();
                         }
                     }
                 }
@@ -339,6 +393,7 @@ namespace DeepSightAI.SettingPages
                     MessageBox.Show("保存料号模式配置时发生错误。", "异常", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 dataPost.Refresh();
+               
             }
             catch (Exception ex)
             {

@@ -14,6 +14,8 @@ namespace DeepSightModel
     {
         [JsonProperty("code")]
         public string Code { get; set; }
+        [JsonProperty("msg")]
+        public string Message { get; set; }
 
         [JsonProperty("data")]
         public VBOutData Data { get; set; }

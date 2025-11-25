@@ -74,7 +74,7 @@ namespace DeepSightAI
             Load += FrHome_Load;
             FormClosing += FrHome_FormClosing;
 
-            uph_timer.Interval = 1000 * 4;
+            uph_timer.Interval = 1000 * 10;
             uph_timer.Enabled = true;
             uph_timer.Elapsed += Uph_timer_Elapsed;
         }
@@ -956,7 +956,7 @@ namespace DeepSightAI
                             {
                                 vbValue = pcsResult.vb_List[index2];
                             }
-                            Machine.master.workClass.showImage(item.Path, (item.Index + 1) * 2 - 2, labelText, vbValue);
+                            //Machine.master.workClass.showImage(item.Path, (item.Index + 1) * 2 - 2, labelText, vbValue);
                         });
                     });
                     await Task.Factory.StartNew(() =>
@@ -981,7 +981,7 @@ namespace DeepSightAI
                             {
                                 vbValue = pcsResult.vb_List[index2];
                             }
-                            Machine.master.workClass.showImage(item.Path, (item.Index + 1) * 2 - 1, labelText, vbValue);
+                            //Machine.master.workClass.showImage(item.Path, (item.Index + 1) * 2 - 1, labelText, vbValue);
                         });
                     });
                 }
@@ -992,14 +992,14 @@ namespace DeepSightAI
                         Parallel.ForEach(defect_indexPaths, parallelOptions, item =>
                         {
                             //Machine.master.workClass.showImage(item.Path, item.Index*2-1);
-                            Machine.master.workClass.showImage(item.Path, (item.Index + 1) * 2 - 2, "未处理");
+                            //Machine.master.workClass.showImage(item.Path, (item.Index + 1) * 2 - 2, "未处理");
                         });
                     });
                     await Task.Factory.StartNew(() =>
                     {
                         Parallel.ForEach(gerberOrtemp_indexPaths, parallelOptions, item =>
                         {
-                            Machine.master.workClass.showImage(item.Path, (item.Index + 1) * 2 - 1, "未处理");
+                            //Machine.master.workClass.showImage(item.Path, (item.Index + 1) * 2 - 1, "未处理");
                         });
                     });
                 }
@@ -1013,14 +1013,14 @@ namespace DeepSightAI
                     {
                         Parallel.For(defect_pagedData.Count, 5, item =>
                         {
-                            Machine.master.workClass.showImage("", (item + 1) * 2 - 2);
+                            //Machine.master.workClass.showImage("", (item + 1) * 2 - 2);
                         });
                     });
                     await Task.Factory.StartNew(() =>
                     {
                         Parallel.For(gerberOrtemp_pagedData.Count, 5, item =>
                         {
-                            Machine.master.workClass.showImage("", (item + 1) * 2 - 1);
+                            //Machine.master.workClass.showImage("", (item + 1) * 2 - 1);
                         });
                     });
                 }

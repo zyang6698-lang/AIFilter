@@ -89,6 +89,20 @@ namespace DeepSightAI.SettingPages
             }
         }
 
+        public void UpdateAllMachinePanels(List<WatchPathConfig> watchPaths)
+        {
+            if (watchPaths == null) return;
+            var configMap = watchPaths.ToDictionary(w => w.AviName);
+            foreach (var ctr in aviCtr2Controls)
+            {
+                if (configMap.TryGetValue(ctr.ctrConfig.AviName, out var cfg))
+                {
+                    ctr.ctrConfig = cfg;
+                    ctr.UpdateDisplay();
+                }
+            }
+        }
+
         /// <summary>
         /// 添加单个 AviCtr2 控件
         /// </summary>

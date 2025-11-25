@@ -1001,7 +1001,7 @@ namespace DeepSightWorkLib
                 string msg = "";
                 JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };//去掉空值NULL
                 string infoJson = JsonConvert.SerializeObject(info, Formatting.None, jsonSetting);
-                //LogTextHelper.Info("准备调用算法,参数为：" + infoJson);
+                LogTextHelper.Info("准备调用算法,参数为：" + infoJson);
 
                 defect.DefectMethod(info, out msg);
 
@@ -1009,9 +1009,10 @@ namespace DeepSightWorkLib
                 //将RootVBOutInfo结果msg处理
                 var obj = JsonConvert.DeserializeObject<RootVBOutInfo>(msg);
                 string code = obj.Code.ToString();
+                string message = obj.Message.ToString();
                 if (code != "200")
                 {
-                    LogTextHelper.Warn($"算法调用失败 for Side {panelInfo.SideIndex}，返回码: {code}"); // <-- 增加此行日志
+                    LogTextHelper.Warn($"算法调用失败 for Side {panelInfo.SideIndex}，返回码: {code}，返回信息：{message}"); // <-- 增加此行日志
                     return false;
                 }
                 JObject root = JObject.Parse(msg);
@@ -1256,96 +1257,19 @@ namespace DeepSightWorkLib
             return result;
         }
 
-        public async void showImage(string path, int index, string result = "", VBRcvInfp box = null)
+        public void showImage(string path, int index, string result = "", VBRcvInfp box = null)
         {
-            try
+            Task.Run(() =>
             {
-                if (string.IsNullOrEmpty(path))
+                try
                 {
-                    DisplaysList[index].Image = null;
-                    DisplaysList[index].Clear();
-                    return;
-                }
-                string[] str = path.Split(':').ToArray();
-                using (var stream = minio.GetImageStreamSync("deepiresults", str[0], str[1]))
-                {
-                    if (stream.Length == 0)
+                    if (string.IsNullOrEmpty(path))
                     {
-                        Console.WriteLine("图片数据为空");
+                        DisplaysList[index].Image = null;
+                        DisplaysList[index].Clear();
                         return;
                     }
-                    Mat mt = Cv2.ImDecode(stream.ToArray(), ImreadModes.Color);
-
-                    long len = mt.Total() * mt.ElemSize();
-                    byte[] buf = new byte[len];
-                    Marshal.Copy(mt.Data, buf, 0, (int)len);
-
-                    if (isShowBox)
-                    {
-                        if (box != null)
-                        {
-                            List<string> content = new List<string>();
-                            List<System.Drawing.Point> location = new List<System.Drawing.Point>();
-                            for (int i = 0; i < box.bbox.Count(); i++)
-                            {
-                                Rect rect = new Rect((int)box.bbox[i][0], (int)box.bbox[i][1], (int)box.bbox[i][2], (int)box.bbox[i][3]);
-                                location.Add(new System.Drawing.Point((int)box.bbox[i][0] + 10, (int)box.bbox[i][1] + 30));
-                                mt.Rectangle(rect, Scalar.Red, 2);
-                            }
-                            content.AddRange(box.sub_DefectNames);
-                            PutTextAll(ref mt, content.ToArray(), location.ToArray(), Color.Yellow, 24);
-                        }
-                    }
-                    DisplaysList[index].Image = mt;
-                    if (!string.IsNullOrEmpty(result))
-                    {
-                        int res;
-                        if (int.TryParse(result, out res))
-                        {
-                            switch (res)
-                            {
-                                case 0:
-                                    result = "OK";
-                                    break;
-                                case 1:
-                                    result = "NG";
-                                    break;
-                                case 2:
-                                    result = "ByPass";
-                                    break;      
-                                default:
-                                    break;
-                            }
-                        }
-                        DisplaysList[index].DrawStatus($"AI结果:{result}");
-                    }
-                    else
-                    {
-                        DisplaysList[index].DrawStatus("");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error("异常(可能未找到Minio路径图像),Index为" + index.ToString()+"\n"+ex.ToString());
-            }
-        }
-
-
-        public async void showImage2(int index, List<string> paths, string result = "", VBRcvInfp box = null)
-        {
-            Mat[] mats = new Mat[paths.Count];
-            try
-            {
-                if (paths.Count <= 0)
-                {
-                    DisplaysList2[index].Image = null;
-                    DisplaysList2[index].Clear();
-                    return;
-                }
-                if (paths.Count == 1)
-                {
-                    string[] str = paths[0].Split(':').ToArray();
+                    string[] str = path.Split(':').ToArray();
                     using (var stream = minio.GetImageStreamSync("deepiresults", str[0], str[1]))
                     {
                         if (stream.Length == 0)
@@ -1355,21 +1279,157 @@ namespace DeepSightWorkLib
                         }
                         Mat mt = Cv2.ImDecode(stream.ToArray(), ImreadModes.Color);
 
-                        long len = mt.Total() * mt.ElemSize();
-                        byte[] buf = new byte[len];
-                        Marshal.Copy(mt.Data, buf, 0, (int)len);
-                        //20250821 奥特斯在查询时显示结果
-                        if (box != null)
+                        if (isShowBox)
                         {
-                            List<string> content = new List<string>();
-                            List<System.Drawing.Point> location = new List<System.Drawing.Point>();
-                            for (int i = 0; i < box.bbox.Count(); i++)
+                            if (box != null)
                             {
-                                Rect rect = new Rect((int)box.bbox[i][0], (int)box.bbox[i][1], (int)box.bbox[i][2], (int)box.bbox[i][3]);
-                                mt.Rectangle(rect, Scalar.Red, 2);
+                                List<string> content = new List<string>();
+                                List<System.Drawing.Point> location = new List<System.Drawing.Point>();
+                                for (int i = 0; i < box.bbox.Count(); i++)
+                                {
+                                    Rect rect = new Rect((int)box.bbox[i][0], (int)box.bbox[i][1], (int)box.bbox[i][2], (int)box.bbox[i][3]);
+                                    location.Add(new System.Drawing.Point((int)box.bbox[i][0] + 10, (int)box.bbox[i][1] + 30));
+                                    mt.Rectangle(rect, Scalar.Red, 2);
+                                }
+                                content.AddRange(box.sub_DefectNames);
+                                PutTextAll(ref mt, content.ToArray(), location.ToArray(), Color.Yellow, 24);
                             }
-                            PutTextAll(ref mt, content.ToArray(), location.ToArray(), Color.Yellow, 30);
                         }
+                        DisplaysList[index].Image = mt;
+                        if (!string.IsNullOrEmpty(result))
+                        {
+                            int res;
+                            if (int.TryParse(result, out res))
+                            {
+                                switch (res)
+                                {
+                                    case 0:
+                                        result = "OK";
+                                        break;
+                                    case 1:
+                                        result = "NG";
+                                        break;
+                                    case 2:
+                                        result = "ByPass";
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }
+                            DisplaysList[index].DrawStatus($"AI结果:{result}");
+                        }
+                        else
+                        {
+                            DisplaysList[index].DrawStatus("");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error("异常(可能未找到Minio路径图像),Index为" + index.ToString() + "\n" + ex.ToString());
+                }
+            });
+        }
+
+
+        public void showImage2(int index, List<string> paths, string result = "", VBRcvInfp box = null)
+        {
+            Task.Run(() =>
+            {
+                Mat[] mats = new Mat[paths.Count];
+                try
+                {
+                    if (paths.Count <= 0)
+                    {
+                        DisplaysList2[index].Image = null;
+                        DisplaysList2[index].Clear();
+                        return;
+                    }
+                    if (paths.Count == 1)
+                    {
+                        string[] str = paths[0].Split(':').ToArray();
+                        using (var stream = minio.GetImageStreamSync("deepiresults", str[0], str[1]))
+                        {
+                            if (stream.Length == 0)
+                            {
+                                Console.WriteLine("图片数据为空");
+                                return;
+                            }
+                            Mat mt = Cv2.ImDecode(stream.ToArray(), ImreadModes.Color);
+
+                            //20250821 奥特斯在查询时显示结果
+                            if (box != null)
+                            {
+                                List<string> content = new List<string>();
+                                List<System.Drawing.Point> location = new List<System.Drawing.Point>();
+                                for (int i = 0; i < box.bbox.Count(); i++)
+                                {
+                                    Rect rect = new Rect((int)box.bbox[i][0], (int)box.bbox[i][1], (int)box.bbox[i][2], (int)box.bbox[i][3]);
+                                    mt.Rectangle(rect, Scalar.Red, 2);
+                                }
+                                PutTextAll(ref mt, content.ToArray(), location.ToArray(), Color.Yellow, 30);
+                            }
+                            DisplaysList2[index].Image = mt;
+                            if (!string.IsNullOrEmpty(result))
+                            {
+                                int res;
+                                if (int.TryParse(result, out res))
+                                {
+                                    switch (res)
+                                    {
+                                        case 0:
+                                            result = "OK";
+                                            break;
+                                        case 1:
+                                            result = "NG";
+                                            break;
+                                        case 2:
+                                            result = "ByPass";
+                                            break;
+                                        default:
+                                            break;
+                                    }
+                                }
+                                DisplaysList2[index].DrawStatus($"AI结果:{result}");
+                            }
+                            else
+                            {
+                                DisplaysList2[index].DrawStatus("");
+                            }
+                        }
+                    }
+                    if (paths.Count > 1)//拼接显示
+                    {
+                        for (int i = 0; i < paths.Count; i++)
+                        {
+                            string[] str = paths[i].Split(':').ToArray();
+                            using (var stream = minio.GetImageStreamSync("deepiresults", str[0], str[1]))
+                            {
+
+                                if (stream.Length == 0)
+                                {
+                                    Console.WriteLine("图片数据为空");
+                                    return;
+                                }
+                                mats[i] = Cv2.ImDecode(stream.ToArray(), ImreadModes.Color);
+                                if (i == 0)
+                                {
+                                    if (box != null)
+                                    {
+                                        List<string> content = new List<string>();
+                                        List<System.Drawing.Point> location = new List<System.Drawing.Point>();
+                                        for (int j = 0; j < box.bbox.Count(); j++)
+                                        {
+                                            Rect rect = new Rect((int)box.bbox[j][0], (int)box.bbox[j][1], (int)box.bbox[j][2], (int)box.bbox[j][3]);
+                                            mats[i].Rectangle(rect, Scalar.Red, 2);
+                                        }
+                                        PutTextAll(ref mats[i], content.ToArray(), location.ToArray(), Color.Yellow, 30);
+                                    }
+                                }
+                            }
+                        }
+                        Mat mt = new Mat();
+                        Cv2.HConcat(mats, mt);
                         DisplaysList2[index].Image = mt;
                         if (!string.IsNullOrEmpty(result))
                         {
@@ -1398,87 +1458,24 @@ namespace DeepSightWorkLib
                             DisplaysList2[index].DrawStatus("");
                         }
                     }
-                }
-                if (paths.Count > 1)//拼接显示
-                {
-                    for (int i = 0; i < paths.Count; i++)
-                    {
-                        string[] str = paths[i].Split(':').ToArray();
-                        using (var stream = minio.GetImageStreamSync("deepiresults", str[0], str[1]))
-                        {
 
-                            if (stream.Length == 0)
-                            {
-                                Console.WriteLine("图片数据为空");
-                                return;
-                            }
-                            mats[i] = Cv2.ImDecode(stream.ToArray(), ImreadModes.Color);
-                            long len = mats[i].Total() * mats[i].ElemSize();
-                            byte[] buf = new byte[len];
-                            Marshal.Copy(mats[i].Data, buf, 0, (int)len);
-                            if (i == 0)
-                            {
-                                if (box != null)
-                                {
-                                    List<string> content = new List<string>();
-                                    List<System.Drawing.Point> location = new List<System.Drawing.Point>();
-                                    for (int j = 0; j < box.bbox.Count(); j++)
-                                    {
-                                        Rect rect = new Rect((int)box.bbox[j][0], (int)box.bbox[j][1], (int)box.bbox[j][2], (int)box.bbox[j][3]);
-                                        mats[i].Rectangle(rect, Scalar.Red, 2);
-                                    }
-                                    PutTextAll(ref mats[i], content.ToArray(), location.ToArray(), Color.Yellow, 30);
-                                }
-                            }
-                        }
-                    }
+                }
+                catch (Exception ex)
+                {
                     Mat mt = new Mat();
-                    Cv2.HConcat(mats, mt);
-                    DisplaysList2[index].Image = mt;
-                    if (!string.IsNullOrEmpty(result))
+                    List<Mat> mts_list = new List<Mat>();
+                    for (int i = 0; i < mats.Count(); i++)
                     {
-                        int res;
-                        if (int.TryParse(result, out res))
+                        if (mats[i] != null)
                         {
-                            switch (res)
-                            {
-                                case 0:
-                                    result = "OK";
-                                    break;
-                                case 1:
-                                    result = "NG";
-                                    break;
-                                case 2:
-                                    result = "ByPass";
-                                    break;
-                                default:
-                                    break;
-                            }
+                            mts_list.Add(mats[i]);
                         }
-                        DisplaysList2[index].DrawStatus($"AI结果:{result}");
                     }
-                    else
-                    {
-                        DisplaysList2[index].DrawStatus("");
-                    }
+                    Cv2.HConcat(mts_list.ToArray(), mt);
+                    DisplaysList2[index].Image = mt;
+                    LogTextHelper.Error("异常(可能未找到Minio路径图像),Index为" + index.ToString() + "\n" + ex.ToString());
                 }
-
-            }
-            catch (Exception ex)
-            {
-                Mat mt = new Mat();
-                List<Mat> mts_list = new List<Mat>();
-                for (int i = 0; i < mats.Count(); i++)
-                {
-                    if (mats[i] != null)
-                    {
-                        mts_list.Add(mats[i]);
-                    }
-                }
-                Cv2.HConcat(mts_list.ToArray(), mt);
-                DisplaysList2[index].Image = mt;
-                LogTextHelper.Error("异常(可能未找到Minio路径图像),Index为" + index.ToString() + "\n" + ex.ToString());
-            }
+            });
         }
         public void PutTextAll(ref Mat mat, string[] content, System.Drawing.Point[] location,
         Color color, float fontSzie = 8, string familyName = "宋体")
