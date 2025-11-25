@@ -25,17 +25,20 @@ namespace DeepSightModel
     public class SideData
     {
         public List<HeatPoint> HeatPoints { get; set; } = new List<HeatPoint>();
-        //总报点数量
+        // 总报点数量 (AVI 检测出的缺陷数)
         public int TotalDefectsCount { get; set; }
-        //过滤后报点信息
+        // 过滤后保留的缺陷数 (AI / 复判后仍存在的缺陷)
         public int RemainingDefectsCount { get; set; }
         public string SerialNumber { get; set; }
         public string Side { get; set; }
-        // 0: AVI OK
-        // 1: AVI NG 但过滤后OK
-        // 2: AVI NG 过滤后仍NG
-        // 3: AVI NG 未过滤/过滤异常
-        public int State { get; set; }
+
+        // 分阶段状态：0 未运行 / 1 OK / 2 NG / 3 异常
+        public int AviState { get; set; }      // AVI 阶段
+        public int AiState { get; set; }       // AI 过滤阶段
+        public int VvsState { get; set; }      // VVS 复判阶段
+        public int VrsState { get; set; }      // VRS 终判阶段
+        // 最终状态：0 待处理 / 1 最终OK / 2 最终NG
+        public int FinalState { get; set; }
     }
 
     /// <summary>
@@ -52,7 +55,6 @@ namespace DeepSightModel
         public SideData Data { get; set; } = new SideData();
         public string PathIndex { get; set; }
         public DateTime? AviCreationTime { get; set; }
-
     }
 
 
@@ -66,7 +68,7 @@ namespace DeepSightModel
         public DateTime DetectionDate { get; set; }
         public string SerialNumber { get; set; }
         public string LotNumber { get; set; }
-        //料号
+        // 料号
         public string ProductSerial { get; set; }
         public bool IsAIOk { get; set; }
         public string PathIndex { get; set; }
@@ -75,70 +77,63 @@ namespace DeepSightModel
 
         public static BoardStat GetBoardStat(List<PanelDataRecord> records)
         {
-            // 使用 PLINQ 并行处理记录
             return records.AsParallel()
                 .Select(record =>
                 {
                     var stat = new BoardStat();
-                    stat.aviPanelCount = 1; // 每个记录计为1
+                    stat.aviPanelCount = 1;
 
-                    if (record.Sides.Count == 2)
+                    if (record.Sides != null && record.Sides.Count == 2)
                     {
                         var sideA = record.Sides[0];
                         var sideB = record.Sides[1];
-                        var stateA = sideA.State;
-                        var stateB = sideB.State;
 
+                        // AVI 面板 OK：两面 AVI OK
+                        if (sideA.AviState == 1 && sideB.AviState == 1)
+                            stat.aviPanelOKCount = 1;
+
+                        // AI 面板 OK：两面 AI OK (且均经过 AVI 检测)
+                        if (sideA.AviState > 0 && sideB.AviState > 0 && sideA.AiState == 1 && sideB.AiState == 1)
+                            stat.aiPanelOKCount = 1;
+
+                        // 报点总数 (以 AVI 提取的缺陷数为基础)
                         stat.aiFilterCount = sideA.TotalDefectsCount + sideB.TotalDefectsCount;
+
+                        // AI 过滤 OK 的报点数 (被过滤掉的缺陷数)
                         stat.aiFilterOKCount = (sideA.TotalDefectsCount + sideB.TotalDefectsCount) - (sideA.RemainingDefectsCount + sideB.RemainingDefectsCount);
 
-                        if (stateA == 0 && stateB == 0)
-                            stat.aviPanelOKCount = 1;
-                        else if (stateA == 3 || stateB == 3)
-                            stat.aiFilterUninspectedCount = sideA.TotalDefectsCount + sideB.TotalDefectsCount;
-
-                        if ((sideA.TotalDefectsCount + sideB.TotalDefectsCount)>0&& (sideA.RemainingDefectsCount + sideB.RemainingDefectsCount)==0)
+                        // 未检测报点：任一面 AI 未运行 (AiState == 0 且 AviState != 0)
+                        if ((sideA.AiState == 0 && sideA.AviState != 0) || (sideB.AiState == 0 && sideB.AviState != 0))
                         {
-                            stat.aiPanelOKCount = 1;
+                            stat.aiFilterUninspectedCount = sideA.TotalDefectsCount + sideB.TotalDefectsCount;
                         }
                     }
                     return stat;
                 })
-                .Aggregate(
-                    new BoardStat(), // 初始累加器
-                    (total, current) => // 聚合函数
-                    {
-                        total.aviPanelCount += current.aviPanelCount;
-                        total.aviPanelOKCount += current.aviPanelOKCount;
-                        total.aiFilterCount += current.aiFilterCount;
-                        total.aiPanelOKCount += current.aiPanelOKCount;
-                        total.aiFilterOKCount += current.aiFilterOKCount;
-                        total.aiFilterUninspectedCount += current.aiFilterUninspectedCount;
-                        return total;
-                    });
+                .Aggregate(new BoardStat(), (total, current) =>
+                {
+                    total.aviPanelCount += current.aviPanelCount;
+                    total.aviPanelOKCount += current.aviPanelOKCount;
+                    total.aiPanelOKCount += current.aiPanelOKCount;
+                    total.aiFilterCount += current.aiFilterCount;
+                    total.aiFilterOKCount += current.aiFilterOKCount;
+                    total.aiFilterUninspectedCount += current.aiFilterUninspectedCount;
+                    return total;
+                });
         }
     }
 
     public class BoardStat
     {
-        //  面板维度
-
-        // AVI检测面板总数
+        // 面板维度
         public int aviPanelCount { get; set; }
-        // AVI检测面板OK数
         public int aviPanelOKCount { get; set; }
-        //  AI检测面板OK总数
         public int aiPanelOKCount { get; set; }
-        //  报点维度
-
-        // AI检测报点总数
+        // 报点维度
         public int aiFilterCount { get; set; }
-        // AI检测报点OK数
         public int aiFilterOKCount { get; set; }
-        // AI检测未检测报点数
         public int aiFilterUninspectedCount { get; set; }
     }
-
 
     /// <summary>
     /// 用于统计查询的每日数据摘要
@@ -150,5 +145,4 @@ namespace DeepSightModel
         public int TotalBoards { get; set; }
         public int AIOkBoards { get; set; }
     }
-    
 }

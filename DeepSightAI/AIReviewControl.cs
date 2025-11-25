@@ -254,7 +254,7 @@ namespace DeepSightAI
                 SerialNumber = panel.SerialNumber,
                 LotNumber = panel.LotNumber,
                 Side = sideData.Side,
-                AviStatus = sideData.State == 0 ? "OK" : "NG",
+                AviStatus = sideData.AviState == 0 ? "OK" : "NG",
                 AiStatus = DetermineAiStatus(sideData),
                 ManualStatus = "未判定",
                 DefectCount = sideData.TotalDefectsCount,
@@ -268,7 +268,7 @@ namespace DeepSightAI
         private string DetermineAiStatus(SideData sideData)
         {
             // 根据State判断AI状态
-            switch (sideData.State)
+            switch (sideData.AviState)
             {
                 case 0: return "OK"; // AVI OK
                 case 1: return "OK"; // 复判后OK

@@ -104,7 +104,7 @@ namespace DeepSightAI
                 this.treeNode1.Text = "常规配置";
                 this.treeNode2.Text = "算法方案配置";
                 this.treeNode3.Text = "机台配置";
-                this.treeNode4.Text = "Failure Mapping Layout";
+                this.treeNode4.Text = "工具配置";
             }
             else
             {
@@ -112,7 +112,7 @@ namespace DeepSightAI
                 this.treeNode1.Text = "conventional";
                 this.treeNode2.Text = "AVI";
                 this.treeNode3.Text = "AI";
-                this.treeNode4.Text = "Failure Mapping Layout";
+                this.treeNode4.Text = "工具配置";
             }
 
             FrBaseConfig.Instance.Language(language);
@@ -253,7 +253,7 @@ namespace DeepSightAI
 
                         break;
 
-                    case "Failure Mapping Layout":
+                    case "工具配置":
                         panel4.Dock = DockStyle.Fill;
 
                         panel1.Visible = false;

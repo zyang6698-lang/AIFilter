@@ -81,7 +81,6 @@ namespace DeepsightSqlite
                     LotNumber TEXT NOT NULL,
                     ProductSerial TEXT,
                     DetectionDate DATETIME NOT NULL,
-                    IsAIOk BOOLEAN NOT NULL,
                     PathIndex TEXT,
                     AviCreationTime DATETIME
                 );";
@@ -94,7 +93,11 @@ namespace DeepsightSqlite
                     TotalDefectsCount INTEGER NOT NULL,
                     RemainingDefectsCount INTEGER NOT NULL,
                     HeatPoints TEXT, -- 存储 HeatPoint 列表的 JSON 字符串
-                    State INTEGER,
+                    AviState INTEGER DEFAULT 0, -- 0: 未运行, 1: OK, 2: NG
+                    AiState INTEGER DEFAULT 0,  -- 0: 未运行, 1: OK, 2: NG
+                    VvsState INTEGER DEFAULT 0, -- 0: 未运行, 1: OK, 2: NG
+                    VrsState INTEGER DEFAULT 0, -- 0: 未运行, 1: OK, 2: NG
+                    FinalState INTEGER DEFAULT 0, -- 0: 待处理, 1: 最终OK, 2: 最终NG
                     FOREIGN KEY (PanelId) REFERENCES Panels(Id) ON DELETE CASCADE
                 );";
 
@@ -147,13 +150,12 @@ namespace DeepsightSqlite
                         else
                         {
                             var insertPanelCmd = new SQLiteCommand(
-                                "INSERT INTO Panels (MachineId, SerialNumber, LotNumber, DetectionDate, IsAIOk, ProductSerial, PathIndex, AviCreationTime) VALUES (@MachineId, @SN, @Lot, @Date, @IsAIOk, @ProductSerial, @PathIndex, @AviCreationTime); SELECT last_insert_rowid();",
+                                "INSERT INTO Panels (MachineId, SerialNumber, LotNumber, DetectionDate, ProductSerial, PathIndex, AviCreationTime) VALUES (@MachineId, @SN, @Lot, @Date, @ProductSerial, @PathIndex, @AviCreationTime); SELECT last_insert_rowid();",
                                 connection, transaction);
                             insertPanelCmd.Parameters.AddWithValue("@MachineId", record.MachineId);
                             insertPanelCmd.Parameters.AddWithValue("@SN", record.SerialNumber);
                             insertPanelCmd.Parameters.AddWithValue("@Lot", record.LotNumber);
                             insertPanelCmd.Parameters.AddWithValue("@Date", record.DetectionDate);
-                            insertPanelCmd.Parameters.AddWithValue("@IsAIOk", false); // 初始默认为 false
                             insertPanelCmd.Parameters.AddWithValue("@ProductSerial", record.ProductSerial);
                             insertPanelCmd.Parameters.AddWithValue("@PathIndex", record.PathIndex);
                             insertPanelCmd.Parameters.AddWithValue("@AviCreationTime", record.AviCreationTime);
@@ -178,12 +180,16 @@ namespace DeepsightSqlite
                     {
                         // 更新现有的面数据
                         var updateSideCmd = new SQLiteCommand(
-                            "UPDATE PanelSides SET TotalDefectsCount = @Total, RemainingDefectsCount = @Remaining, HeatPoints = @HeatPoints, State = @State WHERE Id = @Id",
+                            "UPDATE PanelSides SET TotalDefectsCount = @Total, RemainingDefectsCount = @Remaining, HeatPoints = @HeatPoints, AviState = @AviState, AiState = @AiState, VvsState = @VvsState, VrsState = @VrsState, FinalState = @FinalState WHERE Id = @Id",
                             connection, transaction);
                         updateSideCmd.Parameters.AddWithValue("@Total", record.Data.TotalDefectsCount);
                         updateSideCmd.Parameters.AddWithValue("@Remaining", record.Data.RemainingDefectsCount);
                         updateSideCmd.Parameters.AddWithValue("@HeatPoints", JsonConvert.SerializeObject(record.Data.HeatPoints));
-                        updateSideCmd.Parameters.AddWithValue("@State", record.Data.State);
+                        updateSideCmd.Parameters.AddWithValue("@AviState", record.Data.AviState);
+                        updateSideCmd.Parameters.AddWithValue("@AiState", record.Data.AiState);
+                        updateSideCmd.Parameters.AddWithValue("@VvsState", record.Data.VvsState);
+                        updateSideCmd.Parameters.AddWithValue("@VrsState", record.Data.VrsState);
+                        updateSideCmd.Parameters.AddWithValue("@FinalState", record.Data.FinalState);
                         updateSideCmd.Parameters.AddWithValue("@Id", existingSideId.Value);
                         updateSideCmd.ExecuteNonQuery();
                     }
@@ -191,40 +197,22 @@ namespace DeepsightSqlite
                     {
                         // 插入新的面数据
                         var insertSideCmd = new SQLiteCommand(
-                            "INSERT INTO PanelSides (PanelId, Side, TotalDefectsCount, RemainingDefectsCount, HeatPoints, State) VALUES (@PanelId, @Side, @Total, @Remaining, @HeatPoints, @State)",
+                            "INSERT INTO PanelSides (PanelId, Side, TotalDefectsCount, RemainingDefectsCount, HeatPoints, AviState, AiState, VvsState, VrsState, FinalState) VALUES (@PanelId, @Side, @Total, @Remaining, @HeatPoints, @AviState, @AiState, @VvsState, @VrsState, @FinalState)",
                             connection, transaction);
                         insertSideCmd.Parameters.AddWithValue("@PanelId", panelId);
                         insertSideCmd.Parameters.AddWithValue("@Side", record.Side);
                         insertSideCmd.Parameters.AddWithValue("@Total", record.Data.TotalDefectsCount);
                         insertSideCmd.Parameters.AddWithValue("@Remaining", record.Data.RemainingDefectsCount);
                         insertSideCmd.Parameters.AddWithValue("@HeatPoints", JsonConvert.SerializeObject(record.Data.HeatPoints));
-                        insertSideCmd.Parameters.AddWithValue("@State", record.Data.State);
+                        insertSideCmd.Parameters.AddWithValue("@AviState", record.Data.AviState);
+                        insertSideCmd.Parameters.AddWithValue("@AiState", record.Data.AiState);
+                        insertSideCmd.Parameters.AddWithValue("@VvsState", record.Data.VvsState);
+                        insertSideCmd.Parameters.AddWithValue("@VrsState", record.Data.VrsState);
+                        insertSideCmd.Parameters.AddWithValue("@FinalState", record.Data.FinalState);
                         insertSideCmd.ExecuteNonQuery();
                     }
 
-                    // 3. 检查是否双面数据都已存在，并更新 IsAIOk
-                    var checkSidesCmd = new SQLiteCommand("SELECT Side, TotalDefectsCount, RemainingDefectsCount FROM PanelSides WHERE PanelId = @PanelId", connection, transaction);
-                    checkSidesCmd.Parameters.AddWithValue("@PanelId", panelId);
-                    var sides = new List<(string Side, int Total, int Remaining)>();
-                    using (var reader = checkSidesCmd.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            sides.Add((reader.GetString(0), reader.GetInt32(1), reader.GetInt32(2)));
-                        }
-                    }
-
-                    if (sides.Count == 2)
-                    {
-                        bool isSideAOk = sides.Any(s => s.Side == "A" && s.Total > 0 && s.Remaining == 0);
-                        bool isSideBOk = sides.Any(s => s.Side == "B" && s.Total > 0 && s.Remaining == 0);
-                        bool isPanelAIOk = isSideAOk && isSideBOk;
-
-                        var updatePanelCmd = new SQLiteCommand("UPDATE Panels SET IsAIOk = @IsAIOk WHERE Id = @PanelId", connection, transaction);
-                        updatePanelCmd.Parameters.AddWithValue("@IsAIOk", isPanelAIOk);
-                        updatePanelCmd.Parameters.AddWithValue("@PanelId", panelId);
-                        updatePanelCmd.ExecuteNonQuery();
-                    }
+                    // 3. (移除 IsAIOk 列逻辑) 不再更新 Panels.IsAIOk，统计时动态计算
 
                     transaction.Commit();
                 }
@@ -311,35 +299,35 @@ namespace DeepsightSqlite
             {
                 try
                 {
-                    var sql = "SELECT COUNT(*), SUM(CASE WHEN IsAIOk = 1 THEN 1 ELSE 0 END) FROM Panels WHERE DetectionDate BETWEEN @Start AND @End";
-                    if (!string.IsNullOrEmpty(machineId))
+                    // 总板数按 Panels 计数；AI OK 板数为两面 AiState 都为 1 的 Panel
+                    var totalSql = "SELECT COUNT(*) FROM Panels WHERE DetectionDate BETWEEN @Start AND @End" + (string.IsNullOrEmpty(machineId) ? string.Empty : " AND MachineId = @MachineId");
+                    int totalBoards = 0;
+                    using (var totalCmd = new SQLiteCommand(totalSql, connection))
                     {
-                        sql += " AND MachineId = @MachineId";
+                        totalCmd.Parameters.AddWithValue("@Start", start);
+                        totalCmd.Parameters.AddWithValue("@End", end);
+                        if (!string.IsNullOrEmpty(machineId)) totalCmd.Parameters.AddWithValue("@MachineId", machineId);
+                        totalBoards = Convert.ToInt32(totalCmd.ExecuteScalar() ?? 0);
                     }
 
-                    using (var cmd = new SQLiteCommand(sql, connection))
+                    var aiOkSql = @"
+                        SELECT COUNT(*) FROM (
+                          SELECT p.Id
+                          FROM Panels p
+                          JOIN PanelSides ps ON p.Id = ps.PanelId
+                          WHERE p.DetectionDate BETWEEN @Start AND @End" + (string.IsNullOrEmpty(machineId) ? string.Empty : " AND p.MachineId = @MachineId") + @"
+                          GROUP BY p.Id
+                          HAVING COUNT(ps.Id) = 2 AND SUM(CASE WHEN ps.AiState = 1 THEN 1 ELSE 0 END) = 2
+                        ) t";
+                    int aiOkBoards = 0;
+                    using (var aiOkCmd = new SQLiteCommand(aiOkSql, connection))
                     {
-                        cmd.Parameters.AddWithValue("@Start", start);
-                        cmd.Parameters.AddWithValue("@End", end);
-                        if (!string.IsNullOrEmpty(machineId))
-                        {
-                            cmd.Parameters.AddWithValue("@MachineId", machineId);
-                        }
-
-                        using (var reader = cmd.ExecuteReader())
-                        {
-                            if (reader.Read())
-                            {
-                                int totalBoards = reader.GetInt32(0);
-                                int aiOkBoards = reader.IsDBNull(1) ? 0 : reader.GetInt32(1);
-                                tcs.SetResult((totalBoards, aiOkBoards));
-                            }
-                            else
-                            {
-                                tcs.SetResult((0, 0));
-                            }
-                        }
+                        aiOkCmd.Parameters.AddWithValue("@Start", start);
+                        aiOkCmd.Parameters.AddWithValue("@End", end);
+                        if (!string.IsNullOrEmpty(machineId)) aiOkCmd.Parameters.AddWithValue("@MachineId", machineId);
+                        aiOkBoards = Convert.ToInt32(aiOkCmd.ExecuteScalar() ?? 0);
                     }
+                    tcs.SetResult((totalBoards, aiOkBoards));
                 }
                 catch (Exception ex)
                 {
@@ -358,27 +346,24 @@ namespace DeepsightSqlite
                 try
                 {
                     var sql = @"
-                SELECT 
-                    SUM(ps.TotalDefectsCount),
-                    SUM(CASE WHEN p.IsAIOk = 1 THEN ps.TotalDefectsCount ELSE 0 END)
-                FROM PanelSides ps
-                JOIN Panels p ON ps.PanelId = p.Id
-                WHERE p.DetectionDate BETWEEN @Start AND @End";
-
-                    if (!string.IsNullOrEmpty(machineId))
-                    {
-                        sql += " AND p.MachineId = @MachineId";
-                    }
+                        SELECT 
+                          SUM(ps.TotalDefectsCount) AS TotalDefects,
+                          SUM(CASE WHEN both.AiOkBothSides = 1 THEN ps.TotalDefectsCount ELSE 0 END) AS AIOkDefects
+                        FROM PanelSides ps
+                        JOIN Panels p ON ps.PanelId = p.Id
+                        LEFT JOIN (
+                          SELECT PanelId,
+                                 CASE WHEN COUNT(*) = 2 AND SUM(CASE WHEN AiState = 1 THEN 1 ELSE 0 END) = 2 THEN 1 ELSE 0 END AS AiOkBothSides
+                          FROM PanelSides
+                          GROUP BY PanelId
+                        ) both ON ps.PanelId = both.PanelId
+                        WHERE p.DetectionDate BETWEEN @Start AND @End" + (string.IsNullOrEmpty(machineId) ? string.Empty : " AND p.MachineId = @MachineId");
 
                     using (var cmd = new SQLiteCommand(sql, connection))
                     {
                         cmd.Parameters.AddWithValue("@Start", start);
                         cmd.Parameters.AddWithValue("@End", end);
-                        if (!string.IsNullOrEmpty(machineId))
-                        {
-                            cmd.Parameters.AddWithValue("@MachineId", machineId);
-                        }
-
+                        if (!string.IsNullOrEmpty(machineId)) cmd.Parameters.AddWithValue("@MachineId", machineId);
                         using (var reader = cmd.ExecuteReader())
                         {
                             if (reader.Read())
@@ -619,17 +604,38 @@ namespace DeepsightSqlite
                     // 根据缺陷数生成 State
                     if (sideAData.TotalDefectsCount == 0)
                     {
-                        sideAData.State = 0; // AVI OK
-                    }
-                    else if (sideAData.RemainingDefectsCount == 0)
-                    {
-                        sideAData.State = 1; // AVI NG, AI OK
+                        sideAData.AviState = 1; // AVI OK
+                        sideAData.AiState = 1; // AI 默认也 OK
+                        sideAData.FinalState = 1; // 最终 OK
                     }
                     else
                     {
-                        // 随机分配 2 (仍NG) 或 3 (未检测)
-                        sideAData.State = random.Next(2, 4);
+                        sideAData.AviState = 2; // AVI NG
+                        // 模拟AI处理
+                        if (sideAData.RemainingDefectsCount == 0)
+                        {
+                            sideAData.AiState = 1; // AI OK
+                            sideAData.FinalState = 1; // 最终 OK
+                        }
+                        else
+                        {
+                            sideAData.AiState = 2; // AI NG
+                            // 模拟VVS/VRS
+                            if (random.Next(0, 2) == 0) // 50% 概率 VVS/VRS OK
+                            {
+                                sideAData.VvsState = 1;
+                                sideAData.VrsState = 1;
+                                sideAData.FinalState = 1; // 最终 OK
+                            }
+                            else
+                            {
+                                sideAData.VvsState = 2;
+                                sideAData.VrsState = 2;
+                                sideAData.FinalState = 2; // 最终 NG
+                            }
+                        }
                     }
+
 
                     for (int j = 0; j < sideAData.TotalDefectsCount; j++)
                     {
@@ -661,15 +667,36 @@ namespace DeepsightSqlite
                     // 根据缺陷数生成 State
                     if (sideBData.TotalDefectsCount == 0)
                     {
-                        sideBData.State = 0; // AVI OK
-                    }
-                    else if (sideBData.RemainingDefectsCount == 0)
-                    {
-                        sideBData.State = 1; // AVI NG, AI OK
+                        sideBData.AviState = 1; // AVI OK
+                        sideBData.AiState = 1; // AI 默认也 OK
+                        sideBData.FinalState = 1; // 最终 OK
                     }
                     else
                     {
-                        sideBData.State = random.Next(2, 4); // 随机分配 2 (仍NG) 或 3 (未检测)
+                        sideBData.AviState = 2; // AVI NG
+                        // 模拟AI处理
+                        if (sideBData.RemainingDefectsCount == 0)
+                        {
+                            sideBData.AiState = 1; // AI OK
+                            sideBData.FinalState = 1; // 最终 OK
+                        }
+                        else
+                        {
+                            sideBData.AiState = 2; // AI NG
+                            // 模拟VVS/VRS
+                            if (random.Next(0, 2) == 0) // 50% 概率 VVS/VRS OK
+                            {
+                                sideBData.VvsState = 1;
+                                sideBData.VrsState = 1;
+                                sideBData.FinalState = 1; // 最终 OK
+                            }
+                            else
+                            {
+                                sideBData.VvsState = 2;
+                                sideBData.VrsState = 2;
+                                sideBData.FinalState = 2; // 最终 NG
+                            }
+                        }
                     }
 
                     for (int j = 0; j < sideBData.TotalDefectsCount; j++)
@@ -853,19 +880,19 @@ namespace DeepsightSqlite
             return tcs.Task;
         }
 
-        public Task<(int totalSnCount, int uninspectedCount, int stillNgCount, int aviOkCount, int filteredOkCount)> GetSnStateCountsByTime(DateTime start, DateTime end)
+        public Task<(int totalSnCount, int aviOkCount, int aiOkCount, int aiNgCount, int uninspectedCount)> GetSnStateCountsByTime(DateTime start, DateTime end)
         {
             var tcs = new TaskCompletionSource<(int, int, int, int, int)>();
             _dbQueue.Add(connection =>
             {
                 try
                 {
-                    var snStates = new Dictionary<string, List<int?>>();
+                    var snStates = new Dictionary<string, List<(int AviState, int FinalState)>>();
                     var sql = @"
-            SELECT p.SerialNumber, ps.State
-            FROM Panels p
-            JOIN PanelSides ps ON p.Id = ps.PanelId
-            WHERE p.DetectionDate BETWEEN @Start AND @End";
+                    SELECT p.SerialNumber, ps.AviState, ps.FinalState
+                    FROM Panels p
+                    JOIN PanelSides ps ON p.Id = ps.PanelId
+                    WHERE p.DetectionDate BETWEEN @Start AND @End";
 
                     using (var cmd = new SQLiteCommand(sql, connection))
                     {
@@ -876,45 +903,53 @@ namespace DeepsightSqlite
                             while (reader.Read())
                             {
                                 string sn = reader.GetString(0);
-                                int? state = reader.IsDBNull(1) ? (int?)null : reader.GetInt32(1);
+                                int aviState = reader.IsDBNull(1) ? 0 : reader.GetInt32(1);
+                                int finalState = reader.IsDBNull(2) ? 0 : reader.GetInt32(2);
 
                                 if (!snStates.ContainsKey(sn))
                                 {
-                                    snStates[sn] = new List<int?>();
+                                    snStates[sn] = new List<(int, int)>();
                                 }
-                                snStates[sn].Add(state);
+                                snStates[sn].Add((aviState, finalState));
                             }
                         }
                     }
 
                     int totalSnCount = snStates.Count;
-                    int uninspectedCount = 0;
-                    int stillNgCount = 0;
                     int aviOkCount = 0;
+                    int aiOkCount = 0;
+                    int aiNgCount = 0;
+                    int uninspectedCount = 0;
 
                     foreach (var states in snStates.Values)
                     {
-                        // 1. 如果有一个state为3，则添加到未检测结果数
-                        if (states.Any(s => s == 3))
+                        // 检查未检测: 只要有一个面的 AviState 是 0 (未运行)
+                        if (states.Any(s => s.AviState == 0))
                         {
                             uninspectedCount++;
+                            continue;
                         }
-                        // 2. 如果有一个state为2，则添加到过滤后仍NG结果数
-                        else if (states.Any(s => s == 2))
-                        {
-                            stillNgCount++;
-                        }
-                        // 3. 如果有两个state为0，则添加到AVI OK的结果数
-                        else if (states.Count(s => s == 0) == 2)
+
+                        // 检查AVI OK: 两面都必须是 AVI OK (AviState = 1)
+                        if (states.Count == 2 && states.All(s => s.AviState == 1))
                         {
                             aviOkCount++;
+                            continue;
+                        }
+
+                        // 剩下的都是 AVI NG 的板
+                        // 检查最终状态: 只要有一个面最终是 NG (FinalState = 2)，整个板就是 NG
+                        if (states.Any(s => s.FinalState == 2))
+                        {
+                            aiNgCount++;
+                        }
+                        else // 否则，所有面最终都是 OK
+                        {
+                            aiOkCount++;
                         }
                     }
 
-                    // 4. 剩余情况，添加到过滤后OK的数
-                    int filteredOkCount = totalSnCount - uninspectedCount - stillNgCount - aviOkCount;
-
-                    tcs.SetResult((totalSnCount, uninspectedCount, stillNgCount, aviOkCount, filteredOkCount));
+                    tcs.SetResult((totalSnCount, aviOkCount, aiOkCount, aiNgCount, uninspectedCount));
                 }
                 catch (Exception ex)
                 {
@@ -967,7 +1002,7 @@ namespace DeepsightSqlite
                 try
                 {
                     var panelRecords = new List<PanelDataRecord>();
-                    var sqlBuilder = new System.Text.StringBuilder("SELECT Id, MachineId, SerialNumber, LotNumber, ProductSerial, DetectionDate, IsAIOk, PathIndex, AviCreationTime FROM Panels WHERE LotNumber = @LotNumber");
+                    var sqlBuilder = new System.Text.StringBuilder("SELECT Id, MachineId, SerialNumber, LotNumber, ProductSerial, DetectionDate, PathIndex, AviCreationTime FROM Panels WHERE LotNumber = @LotNumber");
 
                     if (!string.IsNullOrWhiteSpace(machineId))
                     {
@@ -994,9 +1029,8 @@ namespace DeepsightSqlite
                                     LotNumber = reader.GetString(3),
                                     ProductSerial = reader.IsDBNull(4) ? null : reader.GetString(4),
                                     DetectionDate = reader.GetDateTime(5),
-                                    IsAIOk = reader.GetBoolean(6),
-                                    PathIndex = reader.IsDBNull(7) ? null : reader.GetString(7),
-                                    AviCreationTime = reader.IsDBNull(8) ? (DateTime?)null : reader.GetDateTime(8),
+                                    PathIndex = reader.IsDBNull(6) ? null : reader.GetString(6),
+                                    AviCreationTime = reader.IsDBNull(7) ? (DateTime?)null : reader.GetDateTime(7),
                                     Sides = new List<SideData>()
                                 });
                             }
@@ -1005,7 +1039,8 @@ namespace DeepsightSqlite
 
                     foreach (var record in panelRecords)
                     {
-                        var sidesSql = "SELECT Side, TotalDefectsCount, RemainingDefectsCount, HeatPoints, State FROM PanelSides WHERE PanelId = @PanelId";
+                        // 填充 sides
+                        var sidesSql = "SELECT Side, TotalDefectsCount, RemainingDefectsCount, HeatPoints, AviState, AiState, VvsState, VrsState, FinalState FROM PanelSides WHERE PanelId = @PanelId";
                         using (var sidesCmd = new SQLiteCommand(sidesSql, connection))
                         {
                             sidesCmd.Parameters.AddWithValue("@PanelId", record.Id);
@@ -1018,7 +1053,11 @@ namespace DeepsightSqlite
                                         Side = sidesReader.GetString(0),
                                         TotalDefectsCount = sidesReader.GetInt32(1),
                                         RemainingDefectsCount = sidesReader.GetInt32(2),
-                                        State = sidesReader.IsDBNull(4) ? 0 : sidesReader.GetInt32(4)
+                                        AviState = sidesReader.IsDBNull(4) ? 0 : sidesReader.GetInt32(4),
+                                        AiState = sidesReader.IsDBNull(5) ? 0 : sidesReader.GetInt32(5),
+                                        VvsState = sidesReader.IsDBNull(6) ? 0 : sidesReader.GetInt32(6),
+                                        VrsState = sidesReader.IsDBNull(7) ? 0 : sidesReader.GetInt32(7),
+                                        FinalState = sidesReader.IsDBNull(8) ? 0 : sidesReader.GetInt32(8)
                                     };
 
                                     if (!sidesReader.IsDBNull(3))
@@ -1033,6 +1072,9 @@ namespace DeepsightSqlite
                                 }
                             }
                         }
+
+                        // 衍生 IsAIOk
+                        record.IsAIOk = record.Sides.Count == 2 && record.Sides.All(s => s.AiState == 1);
                     }
                     tcs.SetResult(panelRecords);
                 }
@@ -1059,7 +1101,7 @@ namespace DeepsightSqlite
                 try
                 {
                     var panelRecords = new List<PanelDataRecord>();
-                    var sqlBuilder = new System.Text.StringBuilder("SELECT Id, MachineId, SerialNumber, LotNumber, ProductSerial, DetectionDate, IsAIOk, PathIndex, avicreationtime FROM Panels WHERE DetectionDate BETWEEN @Start AND @End");
+                    var sqlBuilder = new System.Text.StringBuilder("SELECT Id, MachineId, SerialNumber, LotNumber, ProductSerial, DetectionDate, PathIndex, avicreationtime FROM Panels WHERE DetectionDate BETWEEN @Start AND @End");
 
                     if (!string.IsNullOrWhiteSpace(partNumber))
                     {
@@ -1087,9 +1129,8 @@ namespace DeepsightSqlite
                                     LotNumber = reader.GetString(3),
                                     ProductSerial = reader.IsDBNull(4) ? null : reader.GetString(4),
                                     DetectionDate = reader.GetDateTime(5),
-                                    IsAIOk = reader.GetBoolean(6),
-                                    PathIndex = reader.IsDBNull(7) ? null : reader.GetString(7),
-                                    AviCreationTime = reader.IsDBNull(8) ? (DateTime?)null : reader.GetDateTime(8),
+                                    PathIndex = reader.IsDBNull(6) ? null : reader.GetString(6),
+                                    AviCreationTime = reader.IsDBNull(7) ? (DateTime?)null : reader.GetDateTime(7),
                                     Sides = new List<SideData>()
                                 });
                             }
@@ -1098,7 +1139,7 @@ namespace DeepsightSqlite
 
                     foreach (var record in panelRecords)
                     {
-                        var sidesSql = "SELECT Side, TotalDefectsCount, RemainingDefectsCount, HeatPoints, State FROM PanelSides WHERE PanelId = @PanelId";
+                        var sidesSql = "SELECT Side, TotalDefectsCount, RemainingDefectsCount, HeatPoints, AviState, AiState, VvsState, VrsState, FinalState FROM PanelSides WHERE PanelId = @PanelId";
                         using (var sidesCmd = new SQLiteCommand(sidesSql, connection))
                         {
                             sidesCmd.Parameters.AddWithValue("@PanelId", record.Id);
@@ -1111,7 +1152,11 @@ namespace DeepsightSqlite
                                         Side = sidesReader.GetString(0),
                                         TotalDefectsCount = sidesReader.GetInt32(1),
                                         RemainingDefectsCount = sidesReader.GetInt32(2),
-                                        State = sidesReader.IsDBNull(4) ? 0 : sidesReader.GetInt32(4)
+                                        AviState = sidesReader.IsDBNull(4) ? 0 : sidesReader.GetInt32(4),
+                                        AiState = sidesReader.IsDBNull(5) ? 0 : sidesReader.GetInt32(5),
+                                        VvsState = sidesReader.IsDBNull(6) ? 0 : sidesReader.GetInt32(6),
+                                        VrsState = sidesReader.IsDBNull(7) ? 0 : sidesReader.GetInt32(7),
+                                        FinalState = sidesReader.IsDBNull(8) ? 0 : sidesReader.GetInt32(8)
                                     };
 
                                     if (!sidesReader.IsDBNull(3))
@@ -1126,6 +1171,9 @@ namespace DeepsightSqlite
                                 }
                             }
                         }
+
+                        // 衍生 IsAIOk
+                        record.IsAIOk = record.Sides.Count == 2 && record.Sides.All(s => s.AiState == 1);
                     }
                     tcs.SetResult(panelRecords);
                 }

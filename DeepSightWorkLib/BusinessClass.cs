@@ -1194,13 +1194,14 @@ namespace DeepSightWorkLib
                         Data = new SideData()
                         {
                             HeatPoints = avi_HeatInfo,
-                            State  = resList.Count==0? 0: resList.Contains("2") ? 3 : resList.Contains( "1") ? 2 : 1,
+                            AviState = resList.Count == 0 ? 1 : 2,
+                            AiState=resList.Contains("2")?3: resList.Contains("1")?2:1,
                             RemainingDefectsCount = resList.Where(t => t == "1").Count(),
                             TotalDefectsCount = resList.Where(t => t == "1" || t == "0").Count()
                         },
                         ProductSerial = panelInfo.ProductSerial,
                         DetectionDate = DateTime.Now,
-                        AviCreationTime=detectionDate,
+                        AviCreationTime = detectionDate,
                         LotNumber = panelInfo.LotId,
                         SerialNumber = panelInfo.SerialNumber,
                         MachineId = panelInfo.StationName,
