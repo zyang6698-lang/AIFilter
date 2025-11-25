@@ -2,7 +2,7 @@
 $currentDir = $PSScriptRoot
 
 # 定义源路径和目标路径
-$binPath = Join-Path $currentDir "Bin"
+$binPath = Join-Path $currentDir "DeepsightAI"
 $logSourcePath = Join-Path $binPath "Log"
 $dbSourcePath = Join-Path $binPath "deepsight.db"
 $destinationPath = Join-Path $currentDir "LogInfo"

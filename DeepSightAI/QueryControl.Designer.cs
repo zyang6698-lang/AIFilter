@@ -70,6 +70,7 @@ namespace DeepSightAI
             this.timePicker.ShowCheckBox = true;
             this.timePicker.Size = new System.Drawing.Size(252, 25);
             this.timePicker.TabIndex = 2;
+            this.timePicker.Value = new System.DateTime(2025, 11, 19, 10, 53, 0, 0);
             // 
             // label81
             // 
@@ -166,8 +167,9 @@ namespace DeepSightAI
             this.btn_queryHeatPoint.TabIndex = 11;
             this.btn_queryHeatPoint.Text = "≤È—Ø";
             this.btn_queryHeatPoint.UseVisualStyleBackColor = false;
+            this.btn_queryHeatPoint.Click += new System.EventHandler(this.Btn_queryHeatPoint_Click);
             // 
-            // HeatMapQueryControl
+            // QueryControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -185,7 +187,7 @@ namespace DeepSightAI
             this.Controls.Add(this.label82);
             this.Controls.Add(this.label79);
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.Name = "HeatMapQueryControl";
+            this.Name = "QueryControl";
             this.Size = new System.Drawing.Size(350, 290);
             this.ResumeLayout(false);
             this.PerformLayout();

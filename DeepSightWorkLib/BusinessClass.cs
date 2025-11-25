@@ -311,23 +311,10 @@ namespace DeepSightWorkLib
                                 continue;
                             }
                             string result_path = info1["result_path"].ToString();
-                            LogTextHelper.Info($"SN:{serialNumber}PATH:{result_path}");
-                            string path = string.Empty;
-                            string result = string.Empty;
-                            ParseMinioPath(result_path, out path, out result);
-                            //测试
-                            //path = @"20250508152421059165/20250508152421059165-panel.json";
-                            //ReadJsonByPath(key, serialNumber, side, path);
-                            //if (side == "A")
-                            //{
-                            //    minio_ip = "192.168.77.165";
-                            //}
-                            //else
-                            //{
-                            //    continue;
-                            //    minio_ip = "192.168.77.5";
-                            //}
+                            ParseMinioPath(result_path, out string path, out string result);
+                            LogTextHelper.Info($"SN:{serialNumber} 解析Minio路径完成");
                             ReadJsonByMinio(minio_ip, minio_port, key, result, serialNumber, side, path);
+                            LogTextHelper.Info($"SN:{serialNumber} 通过Minio读取Json完成");
                         }
 
                         //在这里存储 SN & KEY 关系
@@ -515,10 +502,10 @@ namespace DeepSightWorkLib
                             string vbJson = null;
 
                             //test
-                            if (true)
-                            {
-                                UpdateProductPanel(info);
-                            }
+                            //if (true)
+                            //{
+                            //    UpdateProductPanel(info);
+                            //}
 
                             if (DefectMethod(info, out msg, out details, out pcsResult, out vbJson))
                             {
@@ -718,37 +705,37 @@ namespace DeepSightWorkLib
             {
                 LogTextHelper.Info("ProcuctSerial:" + info.ProductSerial);
                 //20250811 奥特斯项目将料号与solution/flow绑定，实时根据配置档传进的进行匹配
-                List<SolutionAndFlow> listSolutionFlow = solconfig.solus.FindAll(o => o.ProductSerial == info.ProductSerial).ToList();
-                if (listSolutionFlow.Count > 0)
+                var solutionFlow = solconfig.solus.FirstOrDefault(o => o.ProductSerial == info.ProductSerial);
+                if (solutionFlow != null)
                 {
                     if (info.SideIndex == "A")
                     {
-                        solution = listSolutionFlow[0].Asolution;
-                        flow = listSolutionFlow[0].Aflow;
+                        solution = solutionFlow.Asolution;
+                        flow = solutionFlow.Aflow;
                     }
                     else
                     {
-                        solution = listSolutionFlow[0].Bsolution;
-                        flow = listSolutionFlow[0].Bflow;
+                        solution = solutionFlow.Bsolution;
+                        flow = solutionFlow.Bflow;
                     }
-                    isSwitch = listSolutionFlow[0].IsSwitch;
+                    isSwitch = solutionFlow.IsSwitch;
                 }
                 else
                 {
-                    List<SolutionAndFlow> defaultSolutionFlow = solconfig.solus.FindAll(o => o.ProductSerial.ToUpper() == "DEFAULT").ToList();
-                    if (defaultSolutionFlow.Count > 0)
+                    var defaultSolutionFlow = solconfig.solus.FirstOrDefault(o => o.ProductSerial.ToUpper() == "DEFAULT");
+                    if (defaultSolutionFlow != null)
                     {
                         if (info.SideIndex == "A")
                         {
-                            solution = defaultSolutionFlow[0].Asolution;
-                            flow = defaultSolutionFlow[0].Aflow;
+                            solution = defaultSolutionFlow.Asolution;
+                            flow = defaultSolutionFlow.Aflow;
                         }
                         else
                         {
-                            solution = defaultSolutionFlow[0].Bsolution;
-                            flow = defaultSolutionFlow[0].Bflow;
+                            solution = defaultSolutionFlow.Bsolution;
+                            flow = defaultSolutionFlow.Bflow;
                         }
-                        isSwitch = defaultSolutionFlow[0].IsSwitch;
+                        isSwitch = defaultSolutionFlow.IsSwitch;
                     }
                     else
                     {
@@ -760,7 +747,6 @@ namespace DeepSightWorkLib
 
                 //奥特斯项目增加上传中台
                 DsCenterInfo dsInfo = new DsCenterInfo();
-                dsInfo.Project = sysConfig.ProjectName;
                 PanelData panelData = new PanelData();
                 panelData.Project = sysConfig.ProjectName;
                 if (info.SideIndex == "A")

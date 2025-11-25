@@ -1,15 +1,15 @@
-﻿using System;
+﻿using DeepSightModel;
+using DeepsightSqlite;
+using DeepSightTool;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using DeepSightModel;
-using DeepSightTool;
-using DeepsightSqlite;
-using System.IO;
 
 namespace DeepSightAI
 {
@@ -34,7 +34,7 @@ namespace DeepSightAI
         {
 
             // 订阅查询控件事件
-            heatMapQueryControl.QueryClicked += HeatMapQueryControl_QueryClicked;
+            QueryControl.QueryClicked += HeatMapQueryControl_QueryClicked;
 
             // 订阅DataGridView事件
             dataGridView_Defects.SelectionChanged += DataGridView_Defects_SelectionChanged;
@@ -77,7 +77,7 @@ namespace DeepSightAI
             try
             {
                 // 验证输入
-                if (!heatMapQueryControl.ValidateInputs(out string errorMessage))
+                if (!QueryControl.ValidateInputs(out string errorMessage))
                 {
                     MessageBox.Show(errorMessage, "输入验证", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
@@ -87,22 +87,15 @@ namespace DeepSightAI
                 _defectItems.Clear();
                 defectDetailControl1.ClearDetails();
 
-                // 根据查询条件获取数据
-                if (!string.IsNullOrWhiteSpace(heatMapQueryControl.LotNumber))
+                foreach (var panel in QueryControl.GetQueryResult())
                 {
-                    // 按Lot号查询
-                    await QueryByLotNumber(heatMapQueryControl.LotNumber);
-                }
-                else if (heatMapQueryControl.IsDateChecked)
-                {
-                    // 按日期和料号查询
-                    await QueryByDateAndPartNumber(
-                        heatMapQueryControl.SelectedDate,
-                        heatMapQueryControl.PartNumber);
+                    _defectItems.Add(CreateDefectReviewItem(panel, panel.Sides[0]));
                 }
 
-                // 按面次筛选
-                FilterBySide();
+                _bindingList = new BindingList<DefectReviewItem>(_defectItems);
+                dataGridView_Defects.DataSource = _bindingList;
+                _bindingList.ResetBindings();
+
 
                 // 更新绑定
                 _bindingList.ResetBindings();
@@ -245,97 +238,6 @@ namespace DeepSightAI
 
         #region Data Operations
 
-        private async Task QueryByLotNumber(string lotNumber)
-        {
-            try
-            {
-                var panels = await Machine.master.workClass.GetPanelsDataByMachineAndLot(null, lotNumber);
-                await ProcessPanelData(panels);
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error($"按Lot号查询异常: {ex}");
-                throw;
-            }
-        }
-
-        private async Task QueryByDateAndPartNumber(DateTime date, string partNumber)
-        {
-            try
-            {
-                DateTime startDate = date.Date;
-                DateTime endDate = date.Date.AddDays(1).AddSeconds(-1);
-
-                var panels = await Machine.master.workClass.GetPanelsData(startDate, endDate);
-
-                // 如果指定了料号，进行过滤
-                if (!string.IsNullOrWhiteSpace(partNumber))
-                {
-                    panels = panels.Where(p => p.ProductSerial == partNumber).ToList();
-                }
-
-                await ProcessPanelData(panels);
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error($"按日期和料号查询异常: {ex}");
-                throw;
-            }
-        }
-
-        private async Task ProcessPanelData(List<PanelDataRecord> panels)
-        {
-            foreach (var panel in panels)
-            {
-                // 获取A面数据
-                var sideA = await GetPanelSideData(panel.SerialNumber, panel.DetectionDate, "A");
-                if (sideA != null)
-                {
-                    _defectItems.Add(CreateDefectReviewItem(panel, sideA, "A"));
-                }
-
-                // 获取B面数据
-                var sideB = await GetPanelSideData(panel.SerialNumber, panel.DetectionDate, "B");
-                if (sideB != null)
-                {
-                    _defectItems.Add(CreateDefectReviewItem(panel, sideB, "B"));
-                }
-            }
-        }
-
-        private async Task<SideData> GetPanelSideData(string serialNumber, DateTime detectionDate, string side)
-        {
-            try
-            {
-                // 这里需要实现获取指定SN和面次的详细数据
-                // 由于DatabaseHelper中没有直接的方法，我们需要通过HeatPoints来判断
-                var heatPoints = new List<HeatPoint>();
-                //TODO var heatPoints = await Machine.master.workClass.GetHeatPoints(serialNumber, detectionDate);
-
-                if (heatPoints == null || heatPoints.Count == 0)
-                    return null;
-
-                var sideData = new SideData
-                {
-                    SerialNumber = serialNumber,
-                    Side = side,
-                    HeatPoints = heatPoints,
-                    TotalDefectsCount = heatPoints.Count,
-                    RemainingDefectsCount = heatPoints.Count
-                };
-
-                // 判断状态
-                // 这里需要根据实际业务逻辑判断
-                sideData.State = DetermineState(heatPoints.Count);
-
-                return sideData;
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error($"获取面次数据异常 (SN:{serialNumber}, Side:{side}): {ex}");
-                return null;
-            }
-        }
 
         private int DetermineState(int defectCount)
         {
@@ -345,13 +247,13 @@ namespace DeepSightAI
                 return 3; // AVI NG 未判定
         }
 
-        private DefectReviewItem CreateDefectReviewItem(PanelDataRecord panel, SideData sideData, string side)
+        private DefectReviewItem CreateDefectReviewItem(PanelDataRecord panel, SideData sideData)
         {
             return new DefectReviewItem
             {
                 SerialNumber = panel.SerialNumber,
                 LotNumber = panel.LotNumber,
-                Side = side,
+                Side = sideData.Side,
                 AviStatus = sideData.State == 0 ? "OK" : "NG",
                 AiStatus = DetermineAiStatus(sideData),
                 ManualStatus = "未判定",
@@ -376,15 +278,6 @@ namespace DeepSightAI
             }
         }
 
-        private void FilterBySide()
-        {
-            string selectedSide = heatMapQueryControl.SelectedSide;
-
-            var filteredList = _defectItems.Where(item => item.Side == selectedSide).ToList();
-            _bindingList = new BindingList<DefectReviewItem>(filteredList);
-            dataGridView_Defects.DataSource = _bindingList;
-            _bindingList.ResetBindings();
-        }
 
         private async Task SaveManualReviewResults(List<DefectReviewItem> items)
         {

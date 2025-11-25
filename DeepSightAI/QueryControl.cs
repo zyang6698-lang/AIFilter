@@ -137,13 +137,8 @@ namespace DeepSightAI
         public QueryControl()
         {
             InitializeComponent();
-            InitializeEvents();
         }
 
-        private void InitializeEvents()
-        {
-            btn_queryHeatPoint.Click += Btn_queryHeatPoint_Click;
-        }
 
         #endregion
 
