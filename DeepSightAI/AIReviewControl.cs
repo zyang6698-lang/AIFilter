@@ -40,10 +40,6 @@ namespace DeepSightAI
             dataGridView_Defects.SelectionChanged += DataGridView_Defects_SelectionChanged;
             dataGridView_Defects.CellValueChanged += DataGridView_Defects_CellValueChanged;
 
-            // 订阅按钮事件
-            btn_Save.Click += Btn_Save_Click;
-            btn_Export.Click += Btn_Export_Click;
-
             // 初始化绑定列表
             _bindingList = new BindingList<DefectReviewItem>(_defectItems);
             dataGridView_Defects.DataSource = _bindingList;
@@ -181,25 +177,66 @@ namespace DeepSightAI
         {
             try
             {
-                using (var dialog = new SaveFileDialog())
+                if (tabControl_Main.SelectedTab == tabPage_Details)
                 {
-                    dialog.Filter = "CSV文件|*.csv|Excel文件|*.xlsx";
-                    dialog.FileName = $"缺陷复审_{DateTime.Now:yyyyMMddHHmmss}";
-
-                    if (dialog.ShowDialog() == DialogResult.OK)
+                    using (var dialog = new FolderBrowserDialog())
                     {
-                        this.Enabled = false;
+                        dialog.Description = "请选择要导出图片的文件夹";
+                        if (dialog.ShowDialog() == DialogResult.OK)
+                        {
+                            this.Enabled = false;
+                            var filteredHeatPoints = defectDetailControl1.GetFilteredHeatPoints();
+                            var (aiFilter, vvsFilter) = defectDetailControl1.GetFilters();
 
-                        // 获取导出目录并创建子文件夹
-                        var exportDirectory = Path.GetDirectoryName(dialog.FileName);
-                        var aiOkVvsNgDir = Path.Combine(exportDirectory, "AI_OK_VVS_NG");
-                        var aiNgVvsOkDir = Path.Combine(exportDirectory, "AI_NG_VVS_OK");
+                            string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
+                            string folderName = $"{timestamp}_{aiFilter}_{vvsFilter}";
+                            string exportPath = Path.Combine(dialog.SelectedPath, folderName);
+                            Directory.CreateDirectory(exportPath);
 
-                        Directory.CreateDirectory(aiOkVvsNgDir);
-                        Directory.CreateDirectory(aiNgVvsOkDir);
+                            await Task.Run(() =>
+                            {
+                                foreach (var heatPoint in filteredHeatPoints)
+                                {
+                                    if (!string.IsNullOrEmpty(heatPoint.ImagePath) && File.Exists(heatPoint.ImagePath))
+                                    {
+                                        try
+                                        {
+                                            var destFileName = Path.GetFileName(heatPoint.ImagePath);
+                                            File.Copy(heatPoint.ImagePath, Path.Combine(exportPath, destFileName), true);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            LogTextHelper.Error($"复制图片失败: {heatPoint.ImagePath}, {ex.Message}");
+                                        }
+                                    }
+                                }
+                            });
+                            MessageBox.Show($"成功导出 {filteredHeatPoints.Count} 张图片到 '{folderName}' 文件夹。", "导出成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                    }
+                }
+                else
+                {
+                    using (var dialog = new SaveFileDialog())
+                    {
+                        dialog.Filter = "CSV文件|*.csv|Excel文件|*.xlsx";
+                        dialog.FileName = $"缺陷复审_{DateTime.Now:yyyyMMddHHmmss}";
 
-                        await ExportToFile(dialog.FileName, aiOkVvsNgDir, aiNgVvsOkDir);
-                        MessageBox.Show("导出成功！", "导出", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        if (dialog.ShowDialog() == DialogResult.OK)
+                        {
+                            this.Enabled = false;
+
+                            // 获取导出目录并创建子文件夹
+                            var exportDirectory = Path.GetDirectoryName(dialog.FileName);
+                            var aiOkVvsNgDir = Path.Combine(exportDirectory, "AI_OK_VVS_NG");
+                            var aiNgVvsOkDir = Path.Combine(exportDirectory, "AI_NG_VVS_OK");
+
+                            Directory.CreateDirectory(aiOkVvsNgDir);
+                            Directory.CreateDirectory(aiNgVvsOkDir);
+
+                            await ExportToFile(dialog.FileName, aiOkVvsNgDir, aiNgVvsOkDir);
+                            MessageBox.Show("导出成功！", "导出", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
                     }
                 }
             }

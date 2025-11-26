@@ -414,5 +414,15 @@ namespace DeepSightAI
         {
             return _allHeatPoints ?? new List<HeatPoint>();
         }
+
+        public List<HeatPoint> GetFilteredHeatPoints()
+        {
+            return _filteredHeatPoints ?? new List<HeatPoint>();
+        }
+
+        public (string aiFilter, string vvsFilter) GetFilters()
+        {
+            return (_aiFilter, _vvsFilter);
+        }
     }
 }

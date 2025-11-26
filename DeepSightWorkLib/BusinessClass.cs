@@ -556,7 +556,7 @@ namespace DeepSightWorkLib
                                     http_DB.HttpPostMethod("http://127.0.0.1:9877", dbInfo, 1, out _);
                                     //机台
                                     dbInfo.db_name = "machine_panel";
-                                    dbInfo.key = $"{info.panelInfo.MachineName}";
+                                    dbInfo.key = $"{info.panelInfo.StationName}";
                                     http_DB.HttpPostMethod("http://127.0.0.1:9877", dbInfo, 1, out _);
                                     //料号
                                     UpdateProductPanel(info);
@@ -842,7 +842,7 @@ namespace DeepSightWorkLib
                             InferImageGroup group = new InferImageGroup();
                             group.MachineTemplateInfo = new MachineTemplateInfo()
                             {
-                                MachineName = info.MachineName,
+                                MachineName = info.StationName,
                                 product = info.ProductSerial,
                                 Side = info.SideIndex,
                             };
@@ -883,7 +883,7 @@ namespace DeepSightWorkLib
                             }
                             else
                             {
-                                LogTextHelper.Error($"{pcsInfo.PcsSerialNumber}:panel的machineID:{info.MachineName} 未找到对应机台的machineID");
+                                LogTextHelper.Error($"{pcsInfo.PcsSerialNumber}:panel的machineID:{info.StationName} 未找到对应机台的machineID");
                             }
 
 
