@@ -508,6 +508,9 @@ namespace DeepSightAI
                 vBInfo.paramsData.InferWholeData.ImageData.DataValue.InferImageGroup = new List<InferImageGroup>();
 
                 InferImageGroup group = new InferImageGroup();
+                group.MachineTemplateInfo = new MachineTemplateInfo()
+                {
+                };
                 group.GroupUuid = Guid.NewGuid().ToString();
                 group.GroupInfos = new List<GroupInfo>();
                 group.DefectCode = "";

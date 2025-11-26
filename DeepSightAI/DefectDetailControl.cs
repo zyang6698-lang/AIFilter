@@ -300,7 +300,7 @@ namespace DeepSightAI
             {
                 Width = 300,
                 // Adjust height to fit the container, accounting for margins
-               // Height = flowLayoutPanel_DefectImages.ClientSize.Height - flowLayoutPanel_DefectImages.Padding.Vertical - 10, // 6 for top/bottom margin
+                Height = flowLayoutPanel_DefectImages.ClientSize.Height - flowLayoutPanel_DefectImages.Padding.Vertical - 6, // 6 for top/bottom margin
                 Margin = new Padding(3),
                 BackColor = Color.FromArgb(37, 37, 38)
             };

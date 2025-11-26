@@ -822,38 +822,6 @@ namespace DeepSightWorkLib
                     if (info.PcsInfo.TryGetValue((i + 1).ToString(), out pcsInfo))
                     {
                         LogTextHelper.Info($"SN:{info.SerialNumber}_{info.SideIndex}面报点数据为:{pcsInfo.DefectInfo.Count}");  
-                        //AVI OK信息存储
-                        if (pcsInfo.DefectInfo.Count==0)
-                        {
-
-                            //DateTime detectionDate;
-                            //if (!DateTime.TryParse(info.AviCreateTime, out detectionDate))
-                            //{
-                            //    detectionDate = DateTime.Now;
-                            //    LogTextHelper.Info($"无法解析 AviCreateTime '{info.AviCreateTime}'。将使用当前时间 '{detectionDate}' 作为备用。");
-                            //}
-
-                            //LogTextHelper.Info($"{info.SerialNumber}存储PanelSide的AVI OK数据到数据库...");
-
-                            //databaseHelper.SavePanelSide(new PanelSideRecord()
-                            //{
-                            //    Data = new SideData()
-                            //    {
-                            //        HeatPoints = new List<HeatPoint>(),
-                            //        State = 0,
-                            //        RemainingDefectsCount = 0,
-                            //        TotalDefectsCount = 0
-                            //    },
-                            //    ProductSerial = info.ProductSerial,
-                            //    DetectionDate = DateTime.Now,
-                            //    AviCreationTime=detectionDate,
-                            //    LotNumber = info.LotId,
-                            //    SerialNumber = info.SerialNumber,
-                            //    MachineId = info.StationName,
-                            //    Side = info.SideIndex,
-                            //    PathIndex = info.PathIndex
-                            //});
-                        }
 
                         for (int j = 0; j < pcsInfo.DefectInfo.Count; j++)
                         {
@@ -872,6 +840,12 @@ namespace DeepSightWorkLib
                             dsDefectinfo.DefectsRoi.Add(pcsInfo.DefectInfo[j].DefectRoi.Width);
 
                             InferImageGroup group = new InferImageGroup();
+                            group.MachineTemplateInfo = new MachineTemplateInfo()
+                            {
+                                MachineName = info.MachineName,
+                                product = info.ProductSerial,
+                                Side = info.SideIndex,
+                            };
                             group.GroupUuid = Guid.NewGuid().ToString();
                             group.GroupInfos = new List<GroupInfo>();
                             group.DefectCode = "";
@@ -886,53 +860,36 @@ namespace DeepSightWorkLib
                             {
                                 group.DefectCode = pcsInfo.DefectInfo[j].DefectCode;
                             }
-                            WatchPathConfig config = aviconfig.WatchPaths.Find(o => o.AviName == info.StationName);
-                            for (int k = 0; k < 3; k++)
+                            WatchPathConfig config = aviconfig.WatchPaths.FirstOrDefault(o => o.AviName == info.StationName);
+                            if (config!=null)
                             {
-                                switch (k)
+                                void AddGroupInfo(List<string> images, string imageType, Action<string> addUrlAction = null)
                                 {
-                                    case 0:
-                                        if (pcsInfo.DefectInfo[j].DefectVrsImages != null)
+                                    if (images != null && images.Count > 0)
+                                    {
+                                        var imagePath = $"{head}/{images[0]}";
+                                        group.GroupInfos.Add(new GroupInfo()
                                         {
-                                            group.GroupInfos.Add(new GroupInfo()
-                                            {
-                                                ImagePath = $"{head}/{pcsInfo.DefectInfo[j].DefectVrsImages[0].ToString()}",
-                                                ImageUuid = Guid.NewGuid().ToString(),
-                                                ImageType = "defect",
-                                            });
-
-                                            dsDefectinfo.DefectImages.Add($"http://{config.MinioConfig}/deepiresults/{head}/{pcsInfo.DefectInfo[j].DefectVrsImages[0].ToString()}");
-                                        }
-
-                                        break;
-                                    case 1:
-                                        if (pcsInfo.DefectInfo[j].DefectVrsOkImages != null)
-                                        {
-                                            group.GroupInfos.Add(new GroupInfo()
-                                            {
-                                                ImagePath = $"{head}/{pcsInfo.DefectInfo[j].DefectVrsOkImages[0].ToString()}",
-                                                ImageUuid = Guid.NewGuid().ToString(),
-                                                ImageType = "template",
-                                            });
-                                        }
-                                        break;
-                                    case 2:
-                                        if (pcsInfo.DefectInfo[j].DefectVrsGerberImages != null)
-                                        {
-                                            group.GroupInfos.Add(new GroupInfo()
-                                            {
-                                                ImagePath = $"{head}/{pcsInfo.DefectInfo[j].DefectVrsGerberImages[0].ToString()}",
-                                                ImageUuid = Guid.NewGuid().ToString(),
-                                                ImageType = "gerber",
-                                            });
-                                            //奥特斯
-                                            dsDefectinfo.DefectGerberImages.Add($"http://{config.MinioConfig}/deepiresults/{head}/{pcsInfo.DefectInfo[j].DefectVrsGerberImages[0].ToString()}");
-                                        }
-                                        break;
-                                    default:
-                                        break;
+                                            ImagePath = imagePath,
+                                            ImageUuid = Guid.NewGuid().ToString(),
+                                            ImageType = imageType,
+                                        });
+                                        addUrlAction?.Invoke($"http://{config.MinioConfig}/deepiresults/{imagePath}");
+                                    }
                                 }
+                                AddGroupInfo(pcsInfo.DefectInfo[j].DefectVrsImages, "defect", url => dsDefectinfo.DefectImages.Add(url));
+                                AddGroupInfo(pcsInfo.DefectInfo[j].DefectVrsOkImages, "template");
+                                AddGroupInfo(pcsInfo.DefectInfo[j].DefectVrsGerberImages, "gerber", url => dsDefectinfo.DefectGerberImages.Add(url));
                             }
+                            else
+                            {
+                                LogTextHelper.Error($"{pcsInfo.PcsSerialNumber}:panel的machineID:{info.MachineName} 未找到对应机台的machineID");
+                            }
+
+
+
+
+
                             vBInfo.paramsData.InferWholeData.ImageData.DataValue.InferImageGroup.Add(group);
                             group.inspectDetails = new InspectDetails();
                             group.inspectDetails.InferRois = new List<InferRoi>() { };

@@ -15,6 +15,11 @@ namespace DeepSightAI.SettingPages
         {
             if (disposing && (components != null))
             {
+                lock (_bgLock)
+                {
+                    _cachedBackground?.Dispose();
+                    _cachedBackground = null;
+                }
                 components.Dispose();
             }
             base.Dispose(disposing);

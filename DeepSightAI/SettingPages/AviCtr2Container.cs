@@ -314,22 +314,10 @@ namespace DeepSightAI.SettingPages
                         ctr.AiOkImages = boardStat.aiFilterOKCount;
                         ctr.AiFilterCount = boardStat.aiFilterCount;
                         ctr.AviPassRate = boardStat.aviPanelCount == 0 ? 0 : (double)boardStat.aviPanelOKCount / boardStat.aviPanelCount ;
+                        ctr.Utilization=r.data.Select(t=>t.AviCreationTime).Where(t=>t.Value.Date==DateTime.Now.Date).Count()/(double)(DateTime.Now.Date.AddDays(1)-DateTime.Now.Date).TotalMinutes;
                     }
                 }));
             }
         }
-
-        //protected override void Dispose(bool disposing)
-        //{
-        //    if (disposing)
-        //    {
-        //        lock (_bgLock)
-        //        {
-        //            _cachedBackground?.Dispose();
-        //            _cachedBackground = null;
-        //        }
-        //    }
-        //    base.Dispose(disposing);
-        //}
     }
 }

@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.panel_Main = new System.Windows.Forms.Panel();
             this.splitContainer_Main = new System.Windows.Forms.SplitContainer();
             this.QueryControl = new DeepSightAI.QueryControl();
@@ -94,7 +94,7 @@
             this.splitContainer_Main.SplitterWidth = 7;
             this.splitContainer_Main.TabIndex = 3;
             // 
-            // heatMapQueryControl
+            // QueryControl
             // 
             this.QueryControl.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.QueryControl.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -102,9 +102,9 @@
             this.QueryControl.Location = new System.Drawing.Point(0, 0);
             this.QueryControl.LotNumber = "";
             this.QueryControl.Margin = new System.Windows.Forms.Padding(5, 2, 5, 2);
-            this.QueryControl.Name = "heatMapQueryControl";
+            this.QueryControl.Name = "QueryControl";
             this.QueryControl.PartNumber = "";
-            this.QueryControl.SelectedDate = System.DateTime.Now;
+            this.QueryControl.SelectedDate = new System.DateTime(2025, 11, 26, 10, 54, 13, 49);
             this.QueryControl.SelectedSide = "A";
             this.QueryControl.Size = new System.Drawing.Size(350, 906);
             this.QueryControl.TabIndex = 0;
@@ -161,14 +161,14 @@
             this.col_DefectCount,
             this.col_PathIndex,
             this.col_DetectionDate});
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dataGridView_Defects.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dataGridView_Defects.DefaultCellStyle = dataGridViewCellStyle1;
             this.dataGridView_Defects.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView_Defects.Location = new System.Drawing.Point(0, 0);
             this.dataGridView_Defects.Margin = new System.Windows.Forms.Padding(5);
@@ -274,7 +274,6 @@
             // 
             // btn_Save
             // 
-            this.btn_Save.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btn_Save.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(122)))), ((int)(((byte)(204)))));
             this.btn_Save.FlatAppearance.BorderSize = 0;
             this.btn_Save.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
@@ -291,7 +290,6 @@
             // 
             // btn_LoadImages
             // 
-            this.btn_LoadImages.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btn_LoadImages.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(122)))), ((int)(((byte)(204)))));
             this.btn_LoadImages.FlatAppearance.BorderSize = 0;
             this.btn_LoadImages.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
@@ -308,7 +306,6 @@
             // 
             // btn_Export
             // 
-            this.btn_Export.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btn_Export.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(122)))), ((int)(((byte)(204)))));
             this.btn_Export.FlatAppearance.BorderSize = 0;
             this.btn_Export.FlatStyle = System.Windows.Forms.FlatStyle.Flat;

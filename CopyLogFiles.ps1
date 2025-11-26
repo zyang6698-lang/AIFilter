@@ -5,23 +5,30 @@ $currentDir = $PSScriptRoot
 $binPath = Join-Path $currentDir "DeepsightAI"
 $logSourcePath = Join-Path $binPath "Log"
 $dbSourcePath = Join-Path $binPath "deepsight.db"
-$destinationPath = Join-Path $currentDir "LogInfo"
+$baseDestinationPath = Join-Path $currentDir "LogInfo"
 
 # 获取当天的日期，格式为 yyyyMMdd
 $today = Get-Date -Format "yyyyMMdd"
+# 获取当前的时间戳，用于创建唯一的文件夹
+$timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
 
 # --- 开始执行 ---
 
-# 1. 如果目标文件夹 LogInfo 不存在，则创建它
-if (-not (Test-Path $destinationPath)) {
-    Write-Host "正在创建目标文件夹: $destinationPath"
-    New-Item -ItemType Directory -Path $destinationPath
+# 1. 如果基础目标文件夹 LogInfo 不存在，则创建它
+if (-not (Test-Path $baseDestinationPath)) {
+    Write-Host "正在创建基础目标文件夹: $baseDestinationPath"
+    New-Item -ItemType Directory -Path $baseDestinationPath
 }
 else {
-    Write-Host "目标文件夹 LogInfo 已存在。"
+    Write-Host "基础目标文件夹 LogInfo 已存在。"
 }
 
-# 2. 拷贝 deepsight.db 文件
+# 2. 创建本次执行的唯一目标文件夹
+$destinationPath = Join-Path $baseDestinationPath $timestamp
+Write-Host "正在创建本次执行的目标文件夹: $destinationPath"
+New-Item -ItemType Directory -Path $destinationPath
+
+# 3. 拷贝 deepsight.db 文件
 if (Test-Path $dbSourcePath) {
     Write-Host "正在拷贝 $dbSourcePath 到 $destinationPath"
     Copy-Item -Path $dbSourcePath -Destination $destinationPath -Force
@@ -30,7 +37,7 @@ else {
     Write-Warning "警告: 未找到数据库文件 $dbSourcePath"
 }
 
-# 3. 拷贝当天日期的日志文件
+# 4. 拷贝当天日期的日志文件
 if (Test-Path $logSourcePath) {
     Write-Host "正在从 $logSourcePath 查找以 '$today' 开头的日志文件..."
     $logFiles = Get-ChildItem -Path $logSourcePath -Filter "$($today)*.log"

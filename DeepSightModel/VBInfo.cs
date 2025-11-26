@@ -115,9 +115,19 @@ namespace DeepSightModel
         public string TempImgPath { get; set; }
         [JsonProperty("img_roi")]
         public List<int> ImgROI { get; set; }
-
+        [JsonProperty("machine_template_info")]
+        public MachineTemplateInfo MachineTemplateInfo { get; set; }
         [JsonProperty("inspect_details")]
         public  InspectDetails  inspectDetails{ get; set; }
+    }
+    public class MachineTemplateInfo
+    {
+        [JsonProperty("machine_name")]
+        public string MachineName { get; set; }
+        [JsonProperty("product")]
+        public string product { get; set; }
+        [JsonProperty("side")]
+        public string Side { get; set; }
     }
     public class InspectDetails
     {

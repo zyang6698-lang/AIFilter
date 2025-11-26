@@ -199,8 +199,8 @@ namespace DeepSightAI
                         if (PartNumberItems.Count > 0)
                         {
                             PartNumberComboBox.SelectedIndex = 0;
+                            MessageBox.Show($"已加载当天料号列表，请选择或输入一个料号后再次查询。");
                         }
-                        MessageBox.Show($"已加载当天料号列表，请选择或输入一个料号后再次查询。");
                     }
                 }
                 else
