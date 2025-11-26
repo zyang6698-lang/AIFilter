@@ -15,7 +15,7 @@ namespace DeepSightAI
         private List<HeatPoint> _allHeatPoints;
         private List<HeatPoint> _filteredHeatPoints; // For filtered data
         private int _currentPage = 1;
-        private const int PageSize = 50; // 
+        private const int PageSize = 5; // 
         private int _totalPages;
         private string _aiFilter = "All";
         private string _vvsFilter = "All";
@@ -94,6 +94,28 @@ namespace DeepSightAI
                     LoadDefectsPage(_currentPage);
                 }
             };
+
+            this.flowLayoutPanel_DefectImages.MouseWheel += FlowLayoutPanel_DefectImages_MouseWheel;
+        }
+
+        private void FlowLayoutPanel_DefectImages_MouseWheel(object sender, MouseEventArgs e)
+        {
+            if (e.Delta < 0) // Scroll down
+            {
+                if (_currentPage < _totalPages)
+                {
+                    _currentPage++;
+                    LoadDefectsPage(_currentPage);
+                }
+            }
+            else // Scroll up
+            {
+                if (_currentPage > 1)
+                {
+                    _currentPage--;
+                    LoadDefectsPage(_currentPage);
+                }
+            }
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)

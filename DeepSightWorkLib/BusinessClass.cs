@@ -38,12 +38,8 @@ namespace DeepSightWorkLib
         public MinioClass minio = null;
 
         private DatabaseHelper databaseHelper = null;
-        //图片路径
-        public string ImagePath { get; set; }
-        //处理索引
-        public int count_Index { get; set; } = 0;
+
         //读取AVI存储对象 <Key,SN,Side,DefectIndex,VBInfo>
-        //public ConcurrentQueue<Tuple<string, string, string,List<int>, RootVBInfo>> que_AVI = new ConcurrentQueue<Tuple<string, string,string, List<int>, RootVBInfo>>();
         public ConcurrentQueue<VBModel> que_AVI = new ConcurrentQueue<VBModel>();
         //算法处理结果存储对象<Key,SN,,DbInfo>
         public ConcurrentQueue<Tuple<string, string, string, RootAIResult>> que_AI = new ConcurrentQueue<Tuple<string, string, string, RootAIResult>>();
@@ -102,10 +98,12 @@ namespace DeepSightWorkLib
             this.URL = URL;
             this.Index = Index;
             this.isStart = false;
-            //工作线程
-            start_readAVI();
-            start_Defect();
-            start_ReturnAVI();
+            //工作线程 -> 使用Task管理
+            _cancellationTokenSource = new CancellationTokenSource();
+            var token = _cancellationTokenSource.Token;
+            _readAviTask = Task.Run(() => ThreadReadAVI(token), token);
+            _defectTask = Task.Run(() => ThreadDefect(token), token);
+            _returnAviTask = Task.Run(() => ThreadReturnAVI(token), token);
         }
         public void SetConfig(bool TestFlag, bool IsStart)
         {
@@ -181,8 +179,15 @@ namespace DeepSightWorkLib
         /// 线程标识
         /// </summary>
         private volatile bool _shouldStop_ReturnAVI = true;
+
+        // Task-based management
+        private CancellationTokenSource _cancellationTokenSource;
+        private Task _readAviTask;
+        private Task _defectTask;
+        private Task _returnAviTask;
+
         /// <summary>
-        /// 开始线程
+        /// 开始线程 (保留旧API但不再使用)
         /// </summary>
         private void start_readAVI()
         {
@@ -192,7 +197,7 @@ namespace DeepSightWorkLib
                 {
                     stop_readAVI();
                 }
-                th_ReadAVI = new Thread(new ThreadStart(ThreadReadAVI))
+                th_ReadAVI = new Thread(new ThreadStart(() => ThreadReadAVI(CancellationToken.None)))
                 {
                     IsBackground = true
                 };
@@ -206,7 +211,7 @@ namespace DeepSightWorkLib
         }
 
         /// <summary>
-        /// 停止线程
+        /// 停止线程 (保留旧API)
         /// </summary>
         private void stop_readAVI()
         {
@@ -230,13 +235,21 @@ namespace DeepSightWorkLib
         }
 
         /// <summary>
-        /// 线程处理
+        /// 线程处理 (Task循环)
         /// </summary>
-        private void ThreadReadAVI()
+        private void ThreadReadAVI(CancellationToken token)
         {
-            while (!_shouldStop_ReadAVI)
+            while (!token.IsCancellationRequested)
             {
-                Thread.Sleep(1000);
+                try
+                {
+                    Task.Delay(1000, token).Wait(token);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+
                 try
                 {
                     if (!isStart || TestFlag || !IsAllow)
@@ -244,15 +257,9 @@ namespace DeepSightWorkLib
                         continue;
                     }
                     //读取AVI数据
-                    string result = "";
-                    //URL = "http://192.168.77.243:9877";
-                    if (ReadAVI(URL, out result))
+                    if (ReadAVI(URL, out string result))
                     {
                         doAviJson(result);
-                        //que_AVI.Enqueue(result);
-                        //发送当前未完成任务队列至UI
-                        //SystemEvent.SendTaskMsg(que_AVI);
-
                     }
                 }
                 catch (Exception ex)
@@ -348,9 +355,6 @@ namespace DeepSightWorkLib
         /// <summary>
         /// 解析Minio路径
         /// </summary>
-        /// <param name="fullPath"></param>
-        /// <returns></returns>
-        //public (string path, string result) ParseMinioPath(string fullPath)
         public void ParseMinioPath(string fullPath, out string path, out string result)
         {
             try
@@ -381,8 +385,6 @@ namespace DeepSightWorkLib
                 result = "";
                 LogTextHelper.Error(ex.ToString());
             }
-
-            //return ($"{bucketName}/{objectKey}", str);
         }
 
 
@@ -402,11 +404,6 @@ namespace DeepSightWorkLib
         /// <summary>
         /// 同时日期范围读取料号对应的PN信息
         /// </summary>
-        /// <param name="url"></param>
-        /// <param name="productSerial"></param>
-        /// <param name="date"></param>
-        /// <param name="Result"></param>
-        /// <returns></returns>
         public bool ReadPNSNByTime(DateTime date, out string Result)
         {
             string a = Guid.NewGuid().ToString();
@@ -424,7 +421,7 @@ namespace DeepSightWorkLib
 
 
         /// <summary>
-        /// 开始线程
+        /// 开始线程 (保留旧API但不再使用)
         /// </summary>
         private void start_Defect()
         {
@@ -434,7 +431,7 @@ namespace DeepSightWorkLib
                 {
                     stop_Defect();
                 }
-                th_Defect = new Thread(new ThreadStart(ThreadDefect))
+                th_Defect = new Thread(new ThreadStart(() => ThreadDefect(CancellationToken.None)))
                 {
                     IsBackground = true
                 };
@@ -448,7 +445,7 @@ namespace DeepSightWorkLib
         }
 
         /// <summary>
-        /// 停止线程
+        /// 停止线程 (保留旧API)
         /// </summary>
         private void stop_Defect()
         {
@@ -473,13 +470,20 @@ namespace DeepSightWorkLib
 
         private int Acount = 0;
         /// <summary>
-        /// 线程处理
+        /// 线程处理 (Task循环)
         /// </summary>
-        private void ThreadDefect()
+        private void ThreadDefect(CancellationToken token)
         {
-            while (!_shouldStop_Defect)
+            while (!token.IsCancellationRequested)
             {
-                Thread.Sleep(15);
+                try
+                {
+                    Task.Delay(15, token).Wait(token);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
 
                 if (!isStart)
                 {
@@ -500,12 +504,6 @@ namespace DeepSightWorkLib
                             List<string> details;
                             PcsResult pcsResult;
                             string vbJson = null;
-
-                            //test
-                            //if (true)
-                            //{
-                            //    UpdateProductPanel(info);
-                            //}
 
                             if (DefectMethod(info, out msg, out details, out pcsResult, out vbJson))
                             {
@@ -561,7 +559,7 @@ namespace DeepSightWorkLib
                                     //料号
                                     UpdateProductPanel(info);
 
-                                    
+
                                     //databaseHelper.UpdateDailyStats(info.panelInfo.MachineName,info.panelInfo.StartTime,true);
 
                                     //中台
@@ -638,13 +636,6 @@ namespace DeepSightWorkLib
         /// <summary>
         /// 通过Minio读取Json文件
         /// </summary>
-        /// <param name="ip"></param>
-        /// <param name="port"></param>
-        /// <param name="key"></param>
-        /// <param name="head"></param>
-        /// <param name="sn"></param>
-        /// <param name="side"></param>
-        /// <param name="path"></param>
         public void ReadJsonByMinio(string ip, string port, string key, string head, string sn, string side, string path)
         {
             try
@@ -704,7 +695,6 @@ namespace DeepSightWorkLib
             try
             {
                 LogTextHelper.Info("ProcuctSerial:" + info.ProductSerial);
-                //20250811 奥特斯项目将料号与solution/flow绑定，实时根据配置档传进的进行匹配
                 var solutionFlow = solconfig.solus.FirstOrDefault(o => o.ProductSerial == info.ProductSerial);
                 if (solutionFlow != null)
                 {
@@ -745,7 +735,6 @@ namespace DeepSightWorkLib
                     }
                 }
 
-                //奥特斯项目增加上传中台
                 DsCenterInfo dsInfo = new DsCenterInfo();
                 PanelData panelData = new PanelData();
                 panelData.Project = sysConfig.ProjectName;
@@ -771,22 +760,20 @@ namespace DeepSightWorkLib
                 RootVBInfo vBInfo = new RootVBInfo();
                 vBInfo.MessageType = "visionbuilder_inference";
                 vBInfo.paramsData = new ParamsData();
-                //同一个任务的UUID是否要保持一致；
                 vBInfo.paramsData.InferResUuid = Guid.NewGuid().ToString();
                 vBInfo.paramsData.InferWholeData = new InferWholeData();
                 vBInfo.paramsData.InferWholeData.ImageInferParams = new ImageInferParams();
-                vBInfo.paramsData.InferWholeData.ImageInferParams.PipelineName = solution;//"test";
+                vBInfo.paramsData.InferWholeData.ImageInferParams.PipelineName = solution;
                 vBInfo.paramsData.InferWholeData.ImageInferParams.NodeParams = new List<NodeParam>();
                 vBInfo.paramsData.InferWholeData.ImageInferParams.NodeParams.Add(
                   new NodeParam()
                   {
-                      NodeName = flow,//"1",
+                      NodeName = flow,
                       height = 200,
                       width = 200,
                   });
 
                 vBInfo.paramsData.InferWholeData.ImageData = new ImageData();
-                //#使⽤minio获取 则固定字段"minio"
                 vBInfo.paramsData.InferWholeData.ImageData.DataType = "minio";
                 vBInfo.paramsData.InferWholeData.ImageData.DataValue = new DataValue();
                 vBInfo.paramsData.InferWholeData.ImageData.DataValue.InferImageGroup = new List<InferImageGroup>();
@@ -850,7 +837,6 @@ namespace DeepSightWorkLib
                             group.GroupInfos = new List<GroupInfo>();
                             group.DefectCode = "";
                             group.TempImgPath = $"D:\\ATS_AI_INSTALL\\TemplateImages\\{info.ProductSerial}\\{info.ProductSerial}[{info.SideIndex}].jpg";
-                            //group.TempImgPath = $"D:\\ATS_AI_INSTALL\\TemplateImages\\NYA1548\\NYA1548[{info.SideIndex}].jpg" ;
                             group.ImgROI = new List<int>();
                             group.ImgROI.Add(pcsInfo.DefectInfo[j].DefectRoi.X);
                             group.ImgROI.Add(pcsInfo.DefectInfo[j].DefectRoi.Y);
@@ -886,10 +872,6 @@ namespace DeepSightWorkLib
                                 LogTextHelper.Error($"{pcsInfo.PcsSerialNumber}:panel的machineID:{info.StationName} 未找到对应机台的machineID");
                             }
 
-
-
-
-
                             vBInfo.paramsData.InferWholeData.ImageData.DataValue.InferImageGroup.Add(group);
                             group.inspectDetails = new InspectDetails();
                             group.inspectDetails.InferRois = new List<InferRoi>() { };
@@ -907,9 +889,9 @@ namespace DeepSightWorkLib
                 vBInfo.paramsData.InferWholeData.OtherInfos.imageminio = new ImageMminio();
                 vBInfo.paramsData.InferWholeData.OtherInfos.imageminio.access_key_id = "deepiobjectdata";
                 vBInfo.paramsData.InferWholeData.OtherInfos.imageminio.bucket = "deepiresults";
-                vBInfo.paramsData.InferWholeData.OtherInfos.imageminio.endpoint_url = minioip; //"192.168.77.243";//"127.0.0.1";
+                vBInfo.paramsData.InferWholeData.OtherInfos.imageminio.endpoint_url = minioip;
                 vBInfo.paramsData.InferWholeData.OtherInfos.imageminio.secret_key = "deepiobject2019";
-                vBInfo.paramsData.InferWholeData.OtherInfos.imageminio.secret_port = minioport;//"9102";
+                vBInfo.paramsData.InferWholeData.OtherInfos.imageminio.secret_port = minioport;
 
                 if (info.SideIndex == "A")
                 {
@@ -1059,7 +1041,7 @@ namespace DeepSightWorkLib
                             subDefectInfo.SubDefectRoi.Add(subY);
                             subDefectInfo.SubDefectRoi.Add(subW);
                             subDefectInfo.SubDefectRoi.Add(subH);
-                            //热力图参数  
+                            //热力点参数  
                             int CenterPointX = defectX + subX / 2 + subW / 4;
                             int CenterPointY = defectY + subY / 2 + subH / 4;
                             subDefectInfo.CenterPoint.Add(CenterPointX);
@@ -1533,7 +1515,7 @@ namespace DeepSightWorkLib
             databaseHelper.GetSerialNumbersByLot(lotNumber);
         #endregion
         /// <summary>
-        /// 开始线程
+        /// 开始线程 (保留旧API但不再使用)
         /// </summary>
         private void start_ReturnAVI()
         {
@@ -1543,7 +1525,7 @@ namespace DeepSightWorkLib
                 {
                     stop_ReturnAVI();
                 }
-                th_ReturnAVI = new Thread(new ThreadStart(ThreadReturnAVI))
+                th_ReturnAVI = new Thread(new ThreadStart(() => ThreadReturnAVI(CancellationToken.None)))
                 {
                     IsBackground = true
                 };
@@ -1557,7 +1539,7 @@ namespace DeepSightWorkLib
         }
 
         /// <summary>
-        /// 停止线程
+        /// 停止线程 (保留旧API)
         /// </summary>
         private void stop_ReturnAVI()
         {
@@ -1581,13 +1563,21 @@ namespace DeepSightWorkLib
         }
 
         /// <summary>
-        /// 线程处理
+        /// 线程处理 (Task循环)
         /// </summary>
-        private void ThreadReturnAVI()
+        private void ThreadReturnAVI(CancellationToken token)
         {
-            while (!_shouldStop_ReturnAVI)
+            while (!token.IsCancellationRequested)
             {
-                Thread.Sleep(15);
+                try
+                {
+                    Task.Delay(15, token).Wait(token);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+
                 try
                 {
                     if (que_AI.Count > 0)
@@ -1632,22 +1622,37 @@ namespace DeepSightWorkLib
         {
             try
             {
-                if (th_ReadAVI.IsAlive)
+                if (_cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested)
+                {
+                    _cancellationTokenSource.Cancel();
+                    try
+                    {
+                        Task.WaitAll(new[] { _readAviTask, _defectTask, _returnAviTask }, 5000);
+                    }
+                    catch (AggregateException)
+                    {
+                        // 忽略因取消导致的任务异常
+                    }
+                    _cancellationTokenSource.Dispose();
+                }
+
+                // 兼容旧线程释放
+                if (th_ReadAVI != null && th_ReadAVI.IsAlive)
                 {
                     th_ReadAVI.Abort();
                 }
-                if (th_ReturnAVI.IsAlive)
+                if (th_ReturnAVI != null && th_ReturnAVI.IsAlive)
                 {
                     th_ReturnAVI.Abort();
                 }
-                if (th_Defect.IsAlive)
+                if (th_Defect != null && th_Defect.IsAlive)
                 {
                     th_Defect.Abort();
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                LogTextHelper.Error("Dispose an exception occurred during task cancellation:" + ex.ToString());
             }
 
         }
