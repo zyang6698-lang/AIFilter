@@ -81,7 +81,6 @@
     <Compile Include="DsCenterInfo.cs" />
     <Compile Include="PanelData.cs" />
     <Compile Include="PanelInfo.cs" />
-    <Compile Include="PassThroughtAviData.cs" />
     <Compile Include="ProductModeConfig.cs" />
     <Compile Include="ProductState.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -15,7 +15,7 @@ namespace DeepSightAI
         private List<HeatPoint> _allHeatPoints;
         private List<HeatPoint> _filteredHeatPoints; // For filtered data
         private int _currentPage = 1;
-        private const int PageSize = 50; // ÿҳʾͼƬ
+        private const int PageSize = 50; // 
         private int _totalPages;
         private string _aiFilter = "All";
         private string _vvsFilter = "All";
@@ -94,23 +94,6 @@ namespace DeepSightAI
                     LoadDefectsPage(_currentPage);
                 }
             };
-
-            // 添加顶部边框线
-            this.panel_Pagination.Paint += (s, e) =>
-            {
-                e.Graphics.DrawLine(new Pen(Color.FromArgb(60, 60, 60)), 0, 0, this.panel_Pagination.Width, 0);
-            };
-
-            // 居中对齐
-            this.panel_Pagination.Resize += (s, e) =>
-            {
-                var centeredFlowPanel = this.panel_Pagination.Controls.OfType<FlowLayoutPanel>().FirstOrDefault();
-                if (centeredFlowPanel != null)
-                {
-                    centeredFlowPanel.Left = (this.panel_Pagination.Width - centeredFlowPanel.Width) / 2;
-                    centeredFlowPanel.Top = (this.panel_Pagination.Height - centeredFlowPanel.Height) / 2;
-                }
-            };
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -144,10 +127,13 @@ namespace DeepSightAI
 
             if (control is Panel panel)
             {
-                var pictureBox = panel.Controls.OfType<PictureBox>().FirstOrDefault();
-                if (pictureBox != null)
+                var imageContainer = panel.Controls.OfType<Panel>().FirstOrDefault();
+                if (imageContainer == null) return;
+
+                var topPictureBox = imageContainer.Controls.OfType<PictureBox>().FirstOrDefault();
+                if (topPictureBox != null)
                 {
-                    var label = pictureBox.Controls.OfType<Label>().FirstOrDefault();
+                    var label = topPictureBox.Controls.OfType<Label>().FirstOrDefault();
                     if (label != null)
                     {
                         var heatPoint = label.Tag as HeatPoint;
@@ -180,7 +166,7 @@ namespace DeepSightAI
             _totalPages = (int)Math.Ceiling((double)_filteredHeatPoints.Count / PageSize);
             _currentPage = 1;
 
-            label_DetailTitle.Text = $"ȱ - SN: {item.SerialNumber} ({item.Side})";
+            label_DetailTitle.Text = $" SN: {item.SerialNumber} ({item.Side})";
 
             // Reset filters
             _aiFilter = "All";
@@ -263,10 +249,13 @@ namespace DeepSightAI
 
         private void UpdatePanelAppearance(Panel panel, bool isSelected)
         {
-            var pictureBox = panel.Controls.OfType<PictureBox>().FirstOrDefault();
-            if (pictureBox != null)
+            var imageContainer = panel.Controls.OfType<Panel>().FirstOrDefault();
+            if (imageContainer == null) return;
+
+            var topPictureBox = imageContainer.Controls.OfType<PictureBox>().FirstOrDefault();
+            if (topPictureBox != null)
             {
-                var label = pictureBox.Controls.OfType<Label>().FirstOrDefault();
+                var label = topPictureBox.Controls.OfType<Label>().FirstOrDefault();
                 if (label != null && label.Tag is HeatPoint heatPoint)
                 {
                     Color borderColor;
@@ -310,36 +299,75 @@ namespace DeepSightAI
             var panel = new Panel
             {
                 Width = 300,
-                Height = 300,
+                // Adjust height to fit the container, accounting for margins
+               // Height = flowLayoutPanel_DefectImages.ClientSize.Height - flowLayoutPanel_DefectImages.Padding.Vertical - 10, // 6 for top/bottom margin
                 Margin = new Padding(3),
                 BackColor = Color.FromArgb(37, 37, 38)
             };
+            panel.Click += (s, e) => SelectImage(index);
 
-            // 图片显示
-            var pictureBox = new PictureBox
+            // Main container for the two images
+            var imageContainer = new Panel { Dock = DockStyle.Fill };
+            panel.Controls.Add(imageContainer);
+
+            // Top PictureBox for the original image
+            var topPictureBox = new PictureBox
             {
-                Dock = DockStyle.Fill,
+                Dock = DockStyle.Top,
+                Height = imageContainer.Height / 2,
                 SizeMode = PictureBoxSizeMode.Zoom,
                 BackColor = Color.FromArgb(45, 45, 48)
             };
-            pictureBox.Click += (s, e) => SelectImage(index);
-            panel.Click += (s, e) => SelectImage(index);
+            topPictureBox.Click += (s, e) => SelectImage(index);
+            imageContainer.Controls.Add(topPictureBox);
+
+            // Bottom PictureBox for the template image
+            var bottomPictureBox = new PictureBox
+            {
+                Dock = DockStyle.Bottom,
+                Height = imageContainer.Height / 2,
+                SizeMode = PictureBoxSizeMode.Zoom,
+                BackColor = Color.FromArgb(45, 45, 48)
+            };
+            bottomPictureBox.Click += (s, e) => SelectImage(index);
+            imageContainer.Controls.Add(bottomPictureBox);
+
+            // Load original image
             if (!string.IsNullOrEmpty(heatPoint.ImagePath) && File.Exists(heatPoint.ImagePath))
             {
                 try
                 {
                     using (var img = Image.FromFile(heatPoint.ImagePath))
                     {
-                        pictureBox.Image = new Bitmap(img);
+                        topPictureBox.Image = new Bitmap(img);
                     }
                 }
                 catch (Exception ex)
                 {
                     LogTextHelper.Error($"加载图片失败: {heatPoint.ImagePath}, {ex.Message}");
                 }
-            }
 
-            panel.Controls.Add(pictureBox);
+                // Load template image
+                try
+                {
+                    string dir = Path.GetDirectoryName(heatPoint.ImagePath);
+                    string filename = Path.GetFileNameWithoutExtension(heatPoint.ImagePath);
+                    string ext = Path.GetExtension(heatPoint.ImagePath);
+                    string templatePath = Path.Combine(dir, $"{filename}Template{ext}");
+
+                    if (File.Exists(templatePath))
+                    {
+                        using (var img = Image.FromFile(templatePath))
+                        {
+                            bottomPictureBox.Image = new Bitmap(img);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error($"加载模板图片失败: {ex.Message}");
+                }
+            }
 
             // 信息显示
             var infoLabel = new Label
@@ -358,7 +386,7 @@ namespace DeepSightAI
             infoLabel.Tag = heatPoint;
             infoLabel.Click += (s, e) => SelectImage(index);
 
-            pictureBox.Controls.Add(infoLabel);
+            topPictureBox.Controls.Add(infoLabel);
 
             UpdatePanelAppearance(panel, false); // Set initial appearance
 

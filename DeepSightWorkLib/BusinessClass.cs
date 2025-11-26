@@ -1065,7 +1065,7 @@ namespace DeepSightWorkLib
                         {
                             LogTextHelper.Error("更新中台数据异常" + ex.ToString());
                         }
-
+                        
                         for (int j = 0; j < obj.Data.InferWholeData.InferResults[i].inferDetails.Location.Count; j++)
                         {
                             //奥特斯

@@ -189,7 +189,16 @@ namespace DeepSightAI
                     if (dialog.ShowDialog() == DialogResult.OK)
                     {
                         this.Enabled = false;
-                        await ExportToFile(dialog.FileName);
+
+                        // 获取导出目录并创建子文件夹
+                        var exportDirectory = Path.GetDirectoryName(dialog.FileName);
+                        var aiOkVvsNgDir = Path.Combine(exportDirectory, "AI_OK_VVS_NG");
+                        var aiNgVvsOkDir = Path.Combine(exportDirectory, "AI_NG_VVS_OK");
+
+                        Directory.CreateDirectory(aiOkVvsNgDir);
+                        Directory.CreateDirectory(aiNgVvsOkDir);
+
+                        await ExportToFile(dialog.FileName, aiOkVvsNgDir, aiNgVvsOkDir);
                         MessageBox.Show("导出成功！", "导出", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
@@ -239,14 +248,6 @@ namespace DeepSightAI
         #region Data Operations
 
 
-        private int DetermineState(int defectCount)
-        {
-            if (defectCount == 0)
-                return 0; // AVI OK
-            else
-                return 3; // AVI NG 未判定
-        }
-
         private DefectReviewItem CreateDefectReviewItem(PanelDataRecord panel, SideData sideData)
         {
             return new DefectReviewItem
@@ -254,8 +255,8 @@ namespace DeepSightAI
                 SerialNumber = panel.SerialNumber,
                 LotNumber = panel.LotNumber,
                 Side = sideData.Side,
-                AviStatus = sideData.AviState == 0 ? "OK" : "NG",
-                AiStatus = DetermineAiStatus(sideData),
+                AviStatus = sideData.AviState == 1 ? "OK" : "NG",
+                AiStatus =sideData.AiState==1?"OK":"NG",
                 ManualStatus = "未判定",
                 DefectCount = sideData.TotalDefectsCount,
                 PathIndex = panel.PathIndex,
@@ -263,19 +264,6 @@ namespace DeepSightAI
                 HeatPoints = sideData.HeatPoints,
                 IsModified = false
             };
-        }
-
-        private string DetermineAiStatus(SideData sideData)
-        {
-            // 根据State判断AI状态
-            switch (sideData.AviState)
-            {
-                case 0: return "OK"; // AVI OK
-                case 1: return "OK"; // 复判后OK
-                case 2: return "NG"; // 复判后NG
-                case 3: return "未判定"; // 未判定
-                default: return "未知";
-            }
         }
 
 
@@ -295,7 +283,7 @@ namespace DeepSightAI
             await Task.CompletedTask;
         }
 
-        private async Task ExportToFile(string filePath)
+        private async Task ExportToFile(string filePath, string aiOkVvsNgDir, string aiNgVvsOkDir)
         {
             await Task.Run(() =>
             {
@@ -304,12 +292,37 @@ namespace DeepSightAI
                 // 添加表头
                 lines.Add("序列号,Lot号,面次,AVI状态,AI状态,人工判定,缺陷数,检测日期");
 
-                // 添加数据
+                // 添加数据并复制图片
                 foreach (var item in _defectItems)
                 {
                     lines.Add($"{item.SerialNumber},{item.LotNumber},{item.Side}," +
                         $"{item.AviStatus},{item.AiStatus},{item.ManualStatus}," +
                         $"{item.DefectCount},{item.DetectionDate:yyyy-MM-dd HH:mm:ss}");
+
+                    // AI OK, VVS NG
+                    if (item.AiStatus == "OK" && item.AviStatus == "NG")
+                    {
+                        foreach (var heatPoint in item.HeatPoints)
+                        {
+                            if (File.Exists(heatPoint.ImagePath))
+                            {
+                                var destFileName = $"{item.SerialNumber}_{item.Side}_{Path.GetFileName(heatPoint.ImagePath)}";
+                                File.Copy(heatPoint.ImagePath, Path.Combine(aiOkVvsNgDir, destFileName), true);
+                            }
+                        }
+                    }
+                    // AI NG, VVS OK
+                    else if (item.AiStatus == "NG" && item.AviStatus == "OK")
+                    {
+                        foreach (var heatPoint in item.HeatPoints)
+                        {
+                            if (File.Exists(heatPoint.ImagePath))
+                            {
+                                var destFileName = $"{item.SerialNumber}_{item.Side}_{Path.GetFileName(heatPoint.ImagePath)}";
+                                File.Copy(heatPoint.ImagePath, Path.Combine(aiNgVvsOkDir, destFileName), true);
+                            }
+                        }
+                    }
                 }
 
                 File.WriteAllLines(filePath, lines, System.Text.Encoding.UTF8);

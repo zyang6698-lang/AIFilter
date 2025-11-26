@@ -31,7 +31,6 @@ namespace DeepSightAI
             this.flowLayoutPanel_DefectImages = new System.Windows.Forms.FlowLayoutPanel();
             this.panel_Top = new System.Windows.Forms.Panel();
             this.label_DetailTitle = new System.Windows.Forms.Label();
-            this.panel_Pagination = new System.Windows.Forms.Panel();
             this.flowLayoutPanel_Pagination = new System.Windows.Forms.FlowLayoutPanel();
             this.btnPrevPage = new System.Windows.Forms.Button();
             this.lblPageInfo = new System.Windows.Forms.Label();
@@ -42,7 +41,6 @@ namespace DeepSightAI
             this.comboBox_FilterVVS = new System.Windows.Forms.ComboBox();
             this.comboBox_FilterAI = new System.Windows.Forms.ComboBox();
             this.panel_Top.SuspendLayout();
-            this.panel_Pagination.SuspendLayout();
             this.flowLayoutPanel_Pagination.SuspendLayout();
             this.panel_Filter.SuspendLayout();
             this.SuspendLayout();
@@ -55,8 +53,9 @@ namespace DeepSightAI
             this.flowLayoutPanel_DefectImages.Location = new System.Drawing.Point(0, 88);
             this.flowLayoutPanel_DefectImages.Name = "flowLayoutPanel_DefectImages";
             this.flowLayoutPanel_DefectImages.Padding = new System.Windows.Forms.Padding(10);
-            this.flowLayoutPanel_DefectImages.Size = new System.Drawing.Size(1085, 507);
+            this.flowLayoutPanel_DefectImages.Size = new System.Drawing.Size(1085, 547);
             this.flowLayoutPanel_DefectImages.TabIndex = 1;
+            this.flowLayoutPanel_DefectImages.WrapContents = false;
             // 
             // panel_Top
             // 
@@ -81,16 +80,6 @@ namespace DeepSightAI
             this.label_DetailTitle.Text = "Defect Details";
             this.label_DetailTitle.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // panel_Pagination
-            // 
-            this.panel_Pagination.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
-            this.panel_Pagination.Controls.Add(this.flowLayoutPanel_Pagination);
-            this.panel_Pagination.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panel_Pagination.Location = new System.Drawing.Point(0, 595);
-            this.panel_Pagination.Name = "panel_Pagination";
-            this.panel_Pagination.Size = new System.Drawing.Size(1085, 40);
-            this.panel_Pagination.TabIndex = 3;
-            // 
             // flowLayoutPanel_Pagination
             // 
             this.flowLayoutPanel_Pagination.Anchor = System.Windows.Forms.AnchorStyles.None;
@@ -98,7 +87,7 @@ namespace DeepSightAI
             this.flowLayoutPanel_Pagination.Controls.Add(this.btnPrevPage);
             this.flowLayoutPanel_Pagination.Controls.Add(this.lblPageInfo);
             this.flowLayoutPanel_Pagination.Controls.Add(this.btnNextPage);
-            this.flowLayoutPanel_Pagination.Location = new System.Drawing.Point(458, 4);
+            this.flowLayoutPanel_Pagination.Location = new System.Drawing.Point(821, 6);
             this.flowLayoutPanel_Pagination.Name = "flowLayoutPanel_Pagination";
             this.flowLayoutPanel_Pagination.Size = new System.Drawing.Size(226, 36);
             this.flowLayoutPanel_Pagination.TabIndex = 3;
@@ -146,6 +135,7 @@ namespace DeepSightAI
             // panel_Filter
             // 
             this.panel_Filter.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
+            this.panel_Filter.Controls.Add(this.flowLayoutPanel_Pagination);
             this.panel_Filter.Controls.Add(this.label_FilterVVS);
             this.panel_Filter.Controls.Add(this.label_FilterAI);
             this.panel_Filter.Controls.Add(this.comboBox_FilterVVS);
@@ -202,15 +192,12 @@ namespace DeepSightAI
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.flowLayoutPanel_DefectImages);
             this.Controls.Add(this.panel_Filter);
-            this.Controls.Add(this.panel_Pagination);
             this.Controls.Add(this.panel_Top);
             this.Font = new System.Drawing.Font("Î¢ÈíÑÅºÚ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.Name = "DefectDetailControl";
             this.Size = new System.Drawing.Size(1085, 635);
             this.panel_Top.ResumeLayout(false);
-            this.panel_Pagination.ResumeLayout(false);
-            this.panel_Pagination.PerformLayout();
             this.flowLayoutPanel_Pagination.ResumeLayout(false);
             this.flowLayoutPanel_Pagination.PerformLayout();
             this.panel_Filter.ResumeLayout(false);
@@ -223,7 +210,6 @@ namespace DeepSightAI
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel_DefectImages;
         private System.Windows.Forms.Panel panel_Top;
         private System.Windows.Forms.Label label_DetailTitle;
-        private System.Windows.Forms.Panel panel_Pagination;
         private System.Windows.Forms.Label lblPageInfo;
         private System.Windows.Forms.Button btnNextPage;
         private System.Windows.Forms.Button btnPrevPage;

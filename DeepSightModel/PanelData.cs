@@ -102,8 +102,8 @@ namespace DeepSightModel
                         // AI 过滤 OK 的报点数 (被过滤掉的缺陷数)
                         stat.aiFilterOKCount = (sideA.TotalDefectsCount + sideB.TotalDefectsCount) - (sideA.RemainingDefectsCount + sideB.RemainingDefectsCount);
 
-                        // 未检测报点：任一面 AI 未运行 (AiState == 0 且 AviState != 0)
-                        if ((sideA.AiState == 0 && sideA.AviState != 0) || (sideB.AiState == 0 && sideB.AviState != 0))
+                        // 未检测报点
+                        if ((sideA.AiState != 1&& sideA.AiState != 2 && sideA.AviState != 0) || (sideB.AiState != 1 && sideB.AiState != 2 && sideB.AviState != 0))
                         {
                             stat.aiFilterUninspectedCount = sideA.TotalDefectsCount + sideB.TotalDefectsCount;
                         }

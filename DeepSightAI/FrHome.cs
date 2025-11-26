@@ -334,7 +334,7 @@ namespace DeepSightAI
                     lbl_filteredOkCount.Text = $"AI Pass Rate\n{(double)boardStat.aiFilterOKCount / (boardStat.aiFilterCount - boardStat.aiFilterUninspectedCount):P1}";
 
                     lbl_utilizationRate.Text= $"今日机台利用率\n-";
-                    lbl_boardAiPassRate.Text=$"AVI Pass Rate_AI后\n{(double)(boardStat.aviPanelOKCount+boardStat.aiPanelOKCount) / (boardStat.aviPanelCount):P1}";
+                    lbl_boardAiPassRate.Text=$"AVI Pass Rate_AI后\n{(double)(boardStat.aiPanelOKCount) / (boardStat.aviPanelCount):P1}";
                     lbl_CountPerPanel.Text=$"平均报点数\n{(double)boardStat.aiFilterCount/boardStat.aviPanelCount:0.0}";
                 }));
             }
