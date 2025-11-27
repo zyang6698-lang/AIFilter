@@ -117,9 +117,9 @@
             this.splitContainer1.Size = new System.Drawing.Size(402, 725);
             this.splitContainer1.SplitterDistance = 280;
             this.splitContainer1.TabIndex = 1;
-            // 
+            //
             // QueryControl
-            // 
+            //
             this.QueryControl.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.QueryControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.QueryControl.IsDateChecked = true;
@@ -128,9 +128,10 @@
             this.QueryControl.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
             this.QueryControl.Name = "QueryControl";
             this.QueryControl.PartNumber = "";
-            this.QueryControl.SelectedDate = new System.DateTime(2025, 11, 26, 10, 54, 13, 49);
+            this.QueryControl.StartDate = new System.DateTime(2025, 11, 26, 10, 54, 13, 49);
+            this.QueryControl.EndDate = new System.DateTime(2025, 11, 26, 10, 54, 13, 49);
             this.QueryControl.SelectedSide = "A";
-            this.QueryControl.Size = new System.Drawing.Size(402, 280);
+            this.QueryControl.Size = new System.Drawing.Size(402, 320);
             this.QueryControl.TabIndex = 0;
             // 
             // btn_Save

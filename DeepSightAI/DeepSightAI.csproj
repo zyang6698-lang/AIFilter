@@ -402,6 +402,7 @@
     <Compile Include="SettingPages\FrUserManagement.Designer.cs">
       <DependentUpon>FrUserManagement.cs</DependentUpon>
     </Compile>
+    <Compile Include="SortableBindingList.cs" />
     <EmbeddedResource Include="AIReviewControl.resx">
       <DependentUpon>AIReviewControl.cs</DependentUpon>
     </EmbeddedResource>

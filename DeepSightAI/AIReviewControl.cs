@@ -18,7 +18,7 @@ namespace DeepSightAI
         #region Fields
 
         private List<DefectReviewItem> _defectItems = new List<DefectReviewItem>();
-        private BindingList<DefectReviewItem> _bindingList;
+        private SortableBindingList<DefectReviewItem> _bindingList;
 
         #endregion
 
@@ -37,11 +37,11 @@ namespace DeepSightAI
             QueryControl.QueryClicked += HeatMapQueryControl_QueryClicked;
 
             // 订阅DataGridView事件
-            dataGridView_Defects.SelectionChanged += DataGridView_Defects_SelectionChanged;
+            dataGridView_Defects.CellDoubleClick += DataGridView_Defects_CellDoubleClick;
             dataGridView_Defects.CellValueChanged += DataGridView_Defects_CellValueChanged;
 
-            // 初始化绑定列表
-            _bindingList = new BindingList<DefectReviewItem>(_defectItems);
+            // 初始化绑定列表（使用支持排序的SortableBindingList）
+            _bindingList = new SortableBindingList<DefectReviewItem>(_defectItems);
             dataGridView_Defects.DataSource = _bindingList;
 
             // 设置DataGridView样式
@@ -95,7 +95,7 @@ namespace DeepSightAI
                     _defectItems.Add(CreateDefectReviewItem(panel, side));
                 }
 
-                _bindingList = new BindingList<DefectReviewItem>(_defectItems);
+                _bindingList = new SortableBindingList<DefectReviewItem>(_defectItems);
                 dataGridView_Defects.DataSource = _bindingList;
                 _bindingList.ResetBindings();
 
@@ -117,15 +117,13 @@ namespace DeepSightAI
             }
         }
 
-        private void DataGridView_Defects_SelectionChanged(object sender, EventArgs e)
+        private void DataGridView_Defects_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (dataGridView_Defects.SelectedRows.Count == 0)
-            {
-                defectDetailControl1.ClearDetails();
+            // 忽略双击列头
+            if (e.RowIndex < 0)
                 return;
-            }
 
-            var selectedItem = dataGridView_Defects.SelectedRows[0].DataBoundItem as DefectReviewItem;
+            var selectedItem = dataGridView_Defects.Rows[e.RowIndex].DataBoundItem as DefectReviewItem;
             if (selectedItem != null)
             {
                 defectDetailControl1.DisplayDefectDetails(selectedItem);

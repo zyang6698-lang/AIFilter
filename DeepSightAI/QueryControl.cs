@@ -11,14 +11,14 @@ using DeepSightTool;
 namespace DeepSightAI
 {
     /// <summary>
-    /// ÈÈÁ¦Í¼²éÑ¯Ìõ¼ş¿Ø¼ş
+    /// å›¾åƒæŸ¥è¯¢æ§ä»¶
     /// </summary>
     public partial class QueryControl : UserControl
     {
         #region Events
 
         /// <summary>
-        /// ²éÑ¯°´Å¥µã»÷ÊÂ¼ş
+        /// æŸ¥è¯¢æŒ‰é’®ç‚¹å‡»äº‹ä»¶
         /// </summary>
         public event EventHandler QueryClicked;
 
@@ -27,7 +27,7 @@ namespace DeepSightAI
         #region Properties
 
         /// <summary>
-        /// »ñÈ¡»òÉèÖÃLotºÅ
+        /// è·å–æˆ–è®¾ç½®Lotå·
         /// </summary>
         public string LotNumber
         {
@@ -36,16 +36,25 @@ namespace DeepSightAI
         }
 
         /// <summary>
-        /// »ñÈ¡»òÉèÖÃÑ¡ÔñµÄÈÕÆÚ
+        /// è·å–æˆ–è®¾ç½®èµ·å§‹æ—¥æœŸ
         /// </summary>
-        public DateTime SelectedDate
+        public DateTime StartDate
         {
             get => timePicker.Value;
             set => timePicker.Value = value;
         }
 
         /// <summary>
-        /// »ñÈ¡ÈÕÆÚÑ¡ÔñÆ÷ÊÇ·ñ¹´Ñ¡
+        /// è·å–æˆ–è®¾ç½®ç»“æŸæ—¥æœŸ
+        /// </summary>
+        public DateTime EndDate
+        {
+            get => timePickerEnd.Value;
+            set => timePickerEnd.Value = value;
+        }
+
+        /// <summary>
+        /// è·å–æ—¥æœŸé€‰æ‹©å™¨æ˜¯å¦å‹¾é€‰
         /// </summary>
         public bool IsDateChecked
         {
@@ -54,7 +63,7 @@ namespace DeepSightAI
         }
 
         /// <summary>
-        /// »ñÈ¡»òÉèÖÃÁÏºÅ
+        /// è·å–æˆ–è®¾ç½®æ–™å·
         /// </summary>
         public string PartNumber
         {
@@ -63,18 +72,18 @@ namespace DeepSightAI
         }
 
         /// <summary>
-        /// »ñÈ¡ÁÏºÅÁĞ±í
+        /// è·å–æ–™å·åˆ—è¡¨
         /// </summary>
         public ComboBox.ObjectCollection PartNumberItems => cmb_PartNumber.Items;
 
         /// <summary>
-        /// »ñÈ¡ÁÏºÅComboBox
+        /// è·å–æ–™å·ä¸‹æ‹‰æ¡†
         /// </summary>
         public ComboBox PartNumberComboBox => cmb_PartNumber;
 
 
         /// <summary>
-        /// ÉèÖÃÑ¡ÔñµÄÃæ£¨A£ºÕıÃæ£¬B£º·´Ãæ£©
+        /// ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½æ£¨Aï¿½ï¿½ï¿½ï¿½ï¿½æ£¬Bï¿½ï¿½ï¿½ï¿½ï¿½æ£©
         /// </summary>
         public string SelectedSide
         {
@@ -93,7 +102,7 @@ namespace DeepSightAI
         }
 
         /// <summary>
-        /// »ñÈ¡»òÉèÖÃ²éÑ¯½á¹û
+        /// è·å–æˆ–è®¾ç½®æŸ¥è¯¢ç»“æœ
         /// </summary>
         private List<PanelDataRecord> QueryResult { get;  set; }
 
@@ -106,13 +115,13 @@ namespace DeepSightAI
 
             var query = QueryResult.AsQueryable();
 
-            // Ê×ÏÈ¸ù¾İÁÏºÅ½øĞĞÉ¸Ñ¡
+            // é¦–å…ˆæ ¹æ®æ–™å·è¿›è¡Œç­›é€‰
             if (!string.IsNullOrEmpty(PartNumber))
             {
                 query = query.Where(t => t.ProductSerial == PartNumber);
             }
 
-            // È»ºó¸ù¾İÑ¡ÔñµÄÃæÉ¸Ñ¡Ã¿¸ö¼ÇÂ¼µÄSidesÁĞ±í
+            // ç„¶åæ ¹æ®é€‰æ‹©çš„é¢ç­›é€‰æ¯ä¸ªè®°å½•çš„Sidesåˆ—è¡¨
             return query.Select(record => new PanelDataRecord
             {
                 Id = record.Id,
@@ -124,7 +133,7 @@ namespace DeepSightAI
                 IsAIOk = record.IsAIOk,
                 PathIndex = record.PathIndex,
                 AviCreationTime = record.AviCreationTime,
-                // ¸ù¾İUIÑ¡ÔñµÄÃæÀ´É¸Ñ¡Sides
+                // æ ¹æ®UIé€‰æ‹©çš„é¢æ¥ç­›é€‰Sides
                 Sides = record.Sides.Where(s => s.Side == this.SelectedSide).ToList()
             }).ToList();
         }
@@ -156,7 +165,7 @@ namespace DeepSightAI
         #region Public Methods
 
         /// <summary>
-        /// Òì²½²éÑ¯Êı¾İ
+        /// å¼‚æ­¥æŸ¥è¯¢æ•°æ®
         /// </summary>
         public async Task QueryDataAsync()
         {
@@ -164,33 +173,41 @@ namespace DeepSightAI
             {
                 if (string.IsNullOrWhiteSpace(txt_Lot.Text) && !timePicker.Checked)
                 {
-                    // ¸ù¾İÑéÖ¤Âß¼­£¬Á½ÕßÖÁÉÙÒªÓĞÒ»¸ö
+                    // è¾“å…¥éªŒè¯é€»è¾‘ï¼Œå¦‚æœ‰å¿…è¦å¯è°ƒæ•´
                     QueryResult = new List<PanelDataRecord>();
                     return;
                 }
 
                 if (!string.IsNullOrWhiteSpace(txt_Lot.Text))
                 {
-                    // ÓÅÏÈÊ¹ÓÃ Lot ºÅ²éÑ¯
+                    // ä¼˜å…ˆä½¿ç”¨ Lot å·æŸ¥è¯¢
                     QueryResult = await Machine.master.workClass.GetPanelsDataByMachineAndLot(null, txt_Lot.Text);
                 }
                 else if (timePicker.Checked)
                 {
-                    DateTime selectedDate = timePicker.Value.Date;
-                    DateTime startDate = selectedDate;
-                    DateTime endDate = selectedDate.AddDays(1).AddTicks(-1);
+                    // ä½¿ç”¨èµ·æ­¢æ—¥æœŸèŒƒå›´æŸ¥è¯¢
+                    DateTime startDate = timePicker.Value.Date;
+                    DateTime endDate = timePickerEnd.Value.Date.AddDays(1).AddTicks(-1);
 
-                    // Èç¹ûÒÑ¾­Ñ¡ÔñÁËÁÏºÅ£¬ÔòÖ±½Ó°´ÈÕÆÚºÍÁÏºÅ²éÑ¯
+                    // éªŒè¯æ—¥æœŸèŒƒå›´
+                    if (endDate < startDate)
+                    {
+                        MessageBox.Show("ç»“æŸæ—¥æœŸä¸èƒ½æ—©äºèµ·å§‹æ—¥æœŸï¼");
+                        QueryResult = new List<PanelDataRecord>();
+                        return;
+                    }
+
+                    // å¦‚æœå·²ç»é€‰æ‹©äº†æ–™å·ï¼Œåˆ™ç›´æ¥æŒ‰æ—¥æœŸå’Œæ–™å·æŸ¥è¯¢
                     if (!string.IsNullOrEmpty(PartNumber))
                     {
                         QueryResult = await Machine.master.workClass.GetPanelsData(startDate, endDate, PartNumber);
                     }
-                    // Èç¹ûÎ´Ñ¡ÔñÁÏºÅ£¬Ôò¼ÓÔØµ±ÌìµÄÁÏºÅÁĞ±í¹©ÓÃ»§Ñ¡Ôñ
+                    // å¦‚æœæœªé€‰æ‹©æ–™å·ï¼Œåˆ™è¿”å›å½“å¤©æ–™å·åˆ—è¡¨ä¾›ç”¨æˆ·é€‰æ‹©
                     else
                     {
                         QueryResult = await Machine.master.workClass.GetPanelsData(startDate, endDate);
                         PartNumberItems.Clear();
-                        // ´Ó²éÑ¯½á¹ûÖĞÌáÈ¡Î¨Ò»µÄÁÏºÅ
+                        // ä»æŸ¥è¯¢ç»“æœä¸­æå–å”¯ä¸€çš„æ–™å·
                         var partNumbers = QueryResult.Select(pn => pn.ProductSerial).Distinct();
                         foreach (var pn in partNumbers)
                         {
@@ -199,7 +216,7 @@ namespace DeepSightAI
                         if (PartNumberItems.Count > 0)
                         {
                             PartNumberComboBox.SelectedIndex = 0;
-                            MessageBox.Show($"ÒÑ¼ÓÔØµ±ÌìÁÏºÅÁĞ±í£¬ÇëÑ¡Ôñ»òÊäÈëÒ»¸öÁÏºÅºóÔÙ´Î²éÑ¯¡£");
+                            MessageBox.Show($"å·²åŠ è½½å½“å¤©æ–™å·åˆ—è¡¨ï¼Œè¯·é€‰æ‹©è‡³å°‘ä¸€ä¸ªæ–™å·åå†æ¬¡æŸ¥è¯¢ï¼");
                         }
                     }
                 }
@@ -210,14 +227,14 @@ namespace DeepSightAI
             }
             catch (Exception ex)
             {
-                MessageBox.Show("ÇëÊäÈëLotºÅ£¬»ò¹´Ñ¡ÈÕÆÚ²¢Ñ¡ÔñÒ»¸öÁÏºÅ¡£");
-                LogTextHelper.Error($"²éÑ¯Êı¾İÊ±·¢ÉúÒì³££º{ex.Message}");
+                MessageBox.Show("è¯·è¾“å…¥Lotå·ï¼Œæˆ–é€‰æ‹©æ—¥æœŸå¹¶é€‰æ‹©ä¸€ä¸ªæ–™å·ã€‚");
+                LogTextHelper.Error($"æŸ¥è¯¢æ•°æ®æ—¶å‘ç”Ÿå¼‚å¸¸ï¼š{ex.Message}");
                 QueryResult = new List<PanelDataRecord>();
             }
         }
 
         /// <summary>
-        /// Çå¿ÕËùÓĞÊäÈë
+        /// æ¸…ç©ºè¾“å…¥å†…å®¹
         /// </summary>
         public void ClearInputs()
         {
@@ -225,11 +242,13 @@ namespace DeepSightAI
             cmb_PartNumber.Items.Clear();
             cmb_PartNumber.Text = string.Empty;
             timePicker.Checked = false;
+            timePickerEnd.Value = DateTime.Now;
+            timePicker.Value = DateTime.Now;
             rbn_Front.Checked = true;
         }
 
         /// <summary>
-        /// ÑéÖ¤ÊäÈë
+        /// éªŒè¯è¾“å…¥
         /// </summary>
         public bool ValidateInputs(out string errorMessage)
         {
@@ -237,13 +256,19 @@ namespace DeepSightAI
 
             if (string.IsNullOrWhiteSpace(txt_Lot.Text) && !timePicker.Checked)
             {
-                errorMessage = "ÇëÊäÈëLotºÅ£¬»ò¹´Ñ¡ÈÕÆÚ²¢Ñ¡ÔñÒ»¸öÁÏºÅ¡£";
+                errorMessage = "è¯·è¾“å…¥Lotå·ï¼Œæˆ–é€‰æ‹©æ—¥æœŸå¹¶é€‰æ‹©ä¸€ä¸ªæ–™å·ã€‚";
                 return false;
             }
 
             if (timePicker.Checked && string.IsNullOrEmpty(cmb_PartNumber.Text))
             {
-                errorMessage = "ÇëÏÈÑ¡Ôñ»òÊäÈëÒ»¸öÁÏºÅ¡£";
+                errorMessage = "è¯·é€‰æ‹©è‡³å°‘ä¸€ä¸ªæ–™å·ã€‚";
+                return false;
+            }
+
+            if (timePicker.Checked && timePickerEnd.Value.Date < timePicker.Value.Date)
+            {
+                errorMessage = "ç»“æŸæ—¥æœŸä¸èƒ½æ—©äºèµ·å§‹æ—¥æœŸï¼";
                 return false;
             }
 
