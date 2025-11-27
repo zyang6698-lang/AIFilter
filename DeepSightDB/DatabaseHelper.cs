@@ -127,7 +127,7 @@ namespace DeepsightSqlite
         }
 
         /// <summary>
-        /// 存储单面数据。如果另一面数据已存在，则更新IsAIOk状态。
+        /// 存储单面数据
         /// </summary>
         public void SavePanelSide(PanelSideRecord record)
         {

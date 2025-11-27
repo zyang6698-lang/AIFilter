@@ -83,11 +83,11 @@ namespace DeepSightAI
 
 
         /// <summary>
-        /// ����ѡ����棨A�����棬B�����棩
+        /// ����ѡ����棨A�����棬B�����棬空字符串为全选）
         /// </summary>
         public string SelectedSide
         {
-            get => rbn_Front.Checked ? "A" : "B";
+            get => rbn_Front.Checked ? "A" : (rbn_Back.Checked ? "B" : "");
             set
             {
                 if (value == "A")
@@ -97,6 +97,10 @@ namespace DeepSightAI
                 else if (value == "B")
                 {
                     rbn_Back.Checked = true;
+                }
+                else
+                {
+                    rbn_All.Checked = true;
                 }
             }
         }
@@ -122,6 +126,7 @@ namespace DeepSightAI
             }
 
             // 然后根据选择的面筛选每个记录的Sides列表
+            var selectedSide = this.SelectedSide;
             return query.Select(record => new PanelDataRecord
             {
                 Id = record.Id,
@@ -133,8 +138,10 @@ namespace DeepSightAI
                 IsAIOk = record.IsAIOk,
                 PathIndex = record.PathIndex,
                 AviCreationTime = record.AviCreationTime,
-                // 根据UI选择的面来筛选Sides
-                Sides = record.Sides.Where(s => s.Side == this.SelectedSide).ToList()
+                // 根据UI选择的面来筛选Sides（空字符串表示全选，不筛选）
+                Sides = string.IsNullOrEmpty(selectedSide)
+                    ? record.Sides.ToList()
+                    : record.Sides.Where(s => s.Side == selectedSide).ToList()
             }).ToList();
         }
 

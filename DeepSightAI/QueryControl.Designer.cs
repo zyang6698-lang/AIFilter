@@ -41,6 +41,7 @@ namespace DeepSightAI
             this.label83 = new System.Windows.Forms.Label();
             this.rbn_Front = new System.Windows.Forms.RadioButton();
             this.rbn_Back = new System.Windows.Forms.RadioButton();
+            this.rbn_All = new System.Windows.Forms.RadioButton();
             this.btn_queryHeatPoint = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
@@ -170,19 +171,31 @@ namespace DeepSightAI
             this.rbn_Front.Text = "正面";
             this.rbn_Front.TextAlign = System.Drawing.ContentAlignment.TopLeft;
             this.rbn_Front.UseVisualStyleBackColor = true;
-            // 
+            //
             // rbn_Back
-            // 
+            //
             this.rbn_Back.AutoSize = true;
             this.rbn_Back.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.rbn_Back.Location = new System.Drawing.Point(134, 188);
+            this.rbn_Back.Location = new System.Drawing.Point(119, 188);
             this.rbn_Back.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.rbn_Back.Name = "rbn_Back";
             this.rbn_Back.Size = new System.Drawing.Size(47, 16);
             this.rbn_Back.TabIndex = 10;
             this.rbn_Back.Text = "反面";
             this.rbn_Back.UseVisualStyleBackColor = true;
-            // 
+            //
+            // rbn_All
+            //
+            this.rbn_All.AutoSize = true;
+            this.rbn_All.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.rbn_All.Location = new System.Drawing.Point(170, 188);
+            this.rbn_All.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.rbn_All.Name = "rbn_All";
+            this.rbn_All.Size = new System.Drawing.Size(47, 16);
+            this.rbn_All.TabIndex = 13;
+            this.rbn_All.Text = "全选";
+            this.rbn_All.UseVisualStyleBackColor = true;
+            //
             // btn_queryHeatPoint
             // 
             this.btn_queryHeatPoint.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
@@ -204,6 +217,7 @@ namespace DeepSightAI
             this.Controls.Add(this.timePickerEnd);
             this.Controls.Add(this.labelEndDate);
             this.Controls.Add(this.btn_queryHeatPoint);
+            this.Controls.Add(this.rbn_All);
             this.Controls.Add(this.rbn_Back);
             this.Controls.Add(this.rbn_Front);
             this.Controls.Add(this.label83);
@@ -238,6 +252,7 @@ namespace DeepSightAI
         private System.Windows.Forms.Label label83;
         private System.Windows.Forms.RadioButton rbn_Front;
         private System.Windows.Forms.RadioButton rbn_Back;
+        private System.Windows.Forms.RadioButton rbn_All;
         private System.Windows.Forms.Button btn_queryHeatPoint;
     }
 }
