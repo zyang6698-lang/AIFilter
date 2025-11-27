@@ -157,20 +157,7 @@ namespace DeepSightWorkLib
             try
             {
                 handler = create_basehandler();
-                //if (vision_init(0) != 0)
-                //{
-                //    LogTextHelper.Warn("初始化视觉系统失败！");
-                //    SystemEvent.SendAlarmMsg("初始化视觉系统失败!");
-                //    return;
-                //}
 
-                //Task.Factory.StartNew(() =>
-                //{
-                //    vision_run();
-                //});
-                //vision_show_view(0);
-                //Thread.Sleep(100);
-                //basehandler_init(handler);
             }
             catch (Exception ex)
             {
