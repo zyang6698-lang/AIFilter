@@ -1051,6 +1051,7 @@ namespace DeepSightWorkLib
                             {
                                 HeatPoint heatInfo = new HeatPoint();
                                 heatInfo.DefectName = sub_defectName;
+                                heatInfo.AIStatus = "NG";
                                 heatInfo.RoiX = CenterPointX;
                                 heatInfo.RoiY = CenterPointY;
                                 int index = panelInfo.LocalDescribeDir.IndexOf("deepiresults", StringComparison.OrdinalIgnoreCase);

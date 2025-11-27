@@ -85,7 +85,14 @@ namespace DeepSightAI
 
                 foreach (var panel in QueryControl.GetQueryResult())
                 {
-                    _defectItems.Add(CreateDefectReviewItem(panel, panel.Sides[0]));
+                    // 可能不存在匹配的面，需防御处理
+                    var side = panel.Sides != null && panel.Sides.Count > 0 ? panel.Sides[0] : null;
+                    if (side == null)
+                    {
+                        // 无匹配面，跳过该panel
+                        continue;
+                    }
+                    _defectItems.Add(CreateDefectReviewItem(panel, side));
                 }
 
                 _bindingList = new BindingList<DefectReviewItem>(_defectItems);
@@ -182,6 +189,38 @@ namespace DeepSightAI
                     using (var dialog = new FolderBrowserDialog())
                     {
                         dialog.Description = "请选择要导出图片的文件夹";
+
+                        // 构造默认导出路径：以 MaterialLocation 为基础，去掉末尾的 TemplateImages，追加 AIReview
+                        try
+                        {
+                            var materialLocation = Machine.solconfig.MaterialLocation;
+                            if (!string.IsNullOrWhiteSpace(materialLocation))
+                            {
+                                string baseDir = materialLocation;
+                                // 如果路径存在并以 TemplateImages 结尾，使用其父目录
+                                if (materialLocation.EndsWith("TemplateImages", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    var parent = Path.GetDirectoryName(materialLocation);
+                                    if (!string.IsNullOrEmpty(parent))
+                                    {
+                                        baseDir = parent;
+                                    }
+                                }
+
+                                var defaultExportDir = Path.Combine(baseDir, "AIReview");
+                                // 确保目录存在，以便作为对话框默认选中路径
+                                if (!Directory.Exists(defaultExportDir))
+                                {
+                                    Directory.CreateDirectory(defaultExportDir);
+                                }
+                                dialog.SelectedPath = defaultExportDir;
+                            }
+                        }
+                        catch (Exception exDefault)
+                        {
+                            LogTextHelper.Warn($"设置默认导出路径失败: {exDefault.Message}");
+                        }
+
                         if (dialog.ShowDialog() == DialogResult.OK)
                         {
                             this.Enabled = false;
@@ -211,31 +250,9 @@ namespace DeepSightAI
                                     }
                                 }
                             });
-                            MessageBox.Show($"成功导出 {filteredHeatPoints.Count} 张图片到 '{folderName}' 文件夹。", "导出成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }
-                    }
-                }
-                else
-                {
-                    using (var dialog = new SaveFileDialog())
-                    {
-                        dialog.Filter = "CSV文件|*.csv|Excel文件|*.xlsx";
-                        dialog.FileName = $"缺陷复审_{DateTime.Now:yyyyMMddHHmmss}";
 
-                        if (dialog.ShowDialog() == DialogResult.OK)
-                        {
-                            this.Enabled = false;
-
-                            // 获取导出目录并创建子文件夹
-                            var exportDirectory = Path.GetDirectoryName(dialog.FileName);
-                            var aiOkVvsNgDir = Path.Combine(exportDirectory, "AI_OK_VVS_NG");
-                            var aiNgVvsOkDir = Path.Combine(exportDirectory, "AI_NG_VVS_OK");
-
-                            Directory.CreateDirectory(aiOkVvsNgDir);
-                            Directory.CreateDirectory(aiNgVvsOkDir);
-
-                            await ExportToFile(dialog.FileName, aiOkVvsNgDir, aiNgVvsOkDir);
-                            MessageBox.Show("导出成功！", "导出", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            this.Enabled = true;
+                            MessageBox.Show("导出完成。", "完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                     }
                 }

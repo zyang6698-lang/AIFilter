@@ -375,9 +375,21 @@ namespace DeepSightAI
                     string dir = Path.GetDirectoryName(heatPoint.ImagePath);
                     string filename = Path.GetFileNameWithoutExtension(heatPoint.ImagePath);
                     string ext = Path.GetExtension(heatPoint.ImagePath);
-                    string templatePath = Path.Combine(dir, $"{filename}Template{ext}");
 
-                    if (File.Exists(templatePath))
+                    // 新逻辑：在同目录中查找包含原图名、包含"template"并且扩展名相同的文件
+                    var candidates = Directory.EnumerateFiles(dir)
+                        .Where(p => string.Equals(Path.GetExtension(p), ext, StringComparison.OrdinalIgnoreCase))
+                        .Where(p =>
+                        {
+                            var name = Path.GetFileNameWithoutExtension(p);
+                            return name.IndexOf(filename, StringComparison.OrdinalIgnoreCase) >= 0
+                                   && name.IndexOf("template", StringComparison.OrdinalIgnoreCase) >= 0;
+                        })
+                        .ToList();
+
+                    string templatePath = candidates.FirstOrDefault();
+
+                    if (!string.IsNullOrEmpty(templatePath) && File.Exists(templatePath))
                     {
                         using (var img = Image.FromFile(templatePath))
                         {

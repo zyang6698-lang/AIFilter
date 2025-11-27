@@ -258,53 +258,11 @@ namespace DeepSightAI
         }
 
 
-        private void MasterWorkClass_OnWorkResultPro(string productId, int status)
-        {
-            try
-            {
-
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error("Error", ex);
-            }
-        }
-        // string m_productId = string.Empty;
-        private void MasterWorkClass_OnWorkTotalPro(string productId)
-        {
-            try
-            {
-
-
-
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error("Error", ex);
-            }
-        }
-
         public System.Timers.Timer uph_timer = new System.Timers.Timer();
         private void Uph_timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             try
             {
-                //var today = DateTime.Today;
-                //var stats = Machine.master.workClass.GetDefectCountsPerMachine(today, today.AddDays(1).AddTicks(-1));
-                //foreach (var machineStat in stats)
-                //{
-                //    string machineName = machineStat.Key;
-                //    int totalDefects = (int)machineStat.Value.TotalDefects;
-                //    int aiOkDefects = (int)machineStat.Value.AIOkDefects;
-
-                //    if (this.IsHandleCreated)
-                //    {
-                //        this.BeginInvoke(new Action(() =>
-                //        {
-                //            aviCtr2Container.UpdateAviCtrStats(machineName, totalDefects, aiOkDefects);
-                //        }));
-                //    }
-                //}
                 UpdateMainBorad();
                 UpdateMachineBoard();
                 UpdateLotSn();
@@ -400,7 +358,7 @@ namespace DeepSightAI
 
                 //table_Small.ColumnCount = 4;
                 table_Small.ColumnCount = 2;
-                table_Small.RowCount = 5;
+                table_Small.RowCount = 3;
 
                 int index = 0;
                 for (int i = 0; i < table_Small.RowCount; i++)
@@ -516,7 +474,7 @@ namespace DeepSightAI
                 group.DefectCode = "";
                 if (Machine.isSwitch)
                 {
-                    group.DefectCode = disInfosList[(currentPage - 1) * 5 + index].defect_code;
+                    group.DefectCode = disInfosList[(currentPage - 1) * table_Small.RowCount + index].defect_code;
                 }
                 for (int k = 0; k < 3; k++)
                 {
@@ -527,7 +485,7 @@ namespace DeepSightAI
                             {
                                 group.GroupInfos.Add(new GroupInfo()
                                 {
-                                    ImagePath = imagePaths[(currentPage - 1) * 5 + index / 2].Split(':').ToArray()[0].ToString(),//"20250508152421059165/discolor/20250508152421059165-A-discolor-pcs-X1Y1-vrs0-0.jpg",
+                                    ImagePath = imagePaths[(currentPage - 1) * table_Small.RowCount + index / 2].Split(':').ToArray()[0].ToString(),//"20250508152421059165/discolor/20250508152421059165-A-discolor-pcs-X1Y1-vrs0-0.jpg",
                                     ImageUuid = Guid.NewGuid().ToString(),
                                     ImageType = "defect",
                                 });
@@ -538,7 +496,7 @@ namespace DeepSightAI
                             {
                                 group.GroupInfos.Add(new GroupInfo()
                                 {
-                                    ImagePath = imagePaths_Template[(currentPage - 1) * 5 + index / 2].Split(':').ToArray()[0].ToString(),//"20250508152421059165/discolor/20250508152421059165-A-discolor-pcs-X1Y1-vrs0-0-template-1.jpg",
+                                    ImagePath = imagePaths_Template[(currentPage - 1) * table_Small.RowCount + index / 2].Split(':').ToArray()[0].ToString(),//"20250508152421059165/discolor/20250508152421059165-A-discolor-pcs-X1Y1-vrs0-0-template-1.jpg",
                                     ImageUuid = Guid.NewGuid().ToString(),
                                     ImageType = "template",
                                 });
@@ -549,7 +507,7 @@ namespace DeepSightAI
                             {
                                 group.GroupInfos.Add(new GroupInfo()
                                 {
-                                    ImagePath = imagePaths_Gerber[(currentPage - 1) * 5 + index / 2].Split(':').ToArray()[0].ToString(),//"20250508152421059165/discolor/20250508152421059165-A-discolor-pcs-X1Y1-vrs0-0-gerber-1.jpg",
+                                    ImagePath = imagePaths_Gerber[(currentPage - 1) * table_Small.RowCount + index / 2].Split(':').ToArray()[0].ToString(),//"20250508152421059165/discolor/20250508152421059165-A-discolor-pcs-X1Y1-vrs0-0-gerber-1.jpg",
                                     ImageUuid = Guid.NewGuid().ToString(),
                                     ImageType = "gerber",
                                 });
@@ -863,7 +821,7 @@ namespace DeepSightAI
                             }
                         }
                     }
-                    totalPages = (int)Math.Ceiling((double)index / 5);
+                    totalPages = (int)Math.Ceiling((double)index / table_Small.RowCount);
                     ShowImage();
                 }
             }
@@ -915,15 +873,15 @@ namespace DeepSightAI
         {
             try
             {
-                Index = (currentPage - 1) * 5;
-                FrHome.Instance.InitTableStyle(FrHome.Instance.table_Small, 5, disInfosList);
+                Index = (currentPage - 1) * table_Small.RowCount;
+                FrHome.Instance.InitTableStyle(FrHome.Instance.table_Small, table_Small.RowCount, disInfosList);
                 FrHome.Instance.InitWork();
                 //根据页索引获取图像源
                 // List<string> paths = Machine.ShowFlag == "A" ? imagePaths : Machine.ShowFlag == "B" ? imagePaths_Gerber : imagePaths_Template; 
                 List<string> defect_paths = imagePaths;
                 List<string> gerberOrtemp_paths = Machine.ShowFlag == "B" ? imagePaths_Gerber : imagePaths_Template;
-                var defect_pagedData = defect_paths.Skip((currentPage - 1) * 5).Take(5).ToList(); //imagePaths.Skip((currentPage - 1) * 30).Take(30).ToList();
-                var gerberOrtemp_pagedData = gerberOrtemp_paths.Skip((currentPage - 1) * 5).Take(5).ToList(); //imagePaths.Skip((currentPage - 1) * 30).Take(30).ToList();
+                var defect_pagedData = defect_paths.Skip((currentPage - 1) * table_Small.RowCount).Take(table_Small.RowCount).ToList(); //imagePaths.Skip((currentPage - 1) * 30).Take(30).ToList();
+                var gerberOrtemp_pagedData = gerberOrtemp_paths.Skip((currentPage - 1) * table_Small.RowCount).Take(table_Small.RowCount).ToList(); //imagePaths.Skip((currentPage - 1) * 30).Take(30).ToList();
                 var defect_indexPaths = defect_pagedData.Select((path, index1) => new { Path = path, Index = index1 }).ToList();
                 var gerberOrtemp_indexPaths = gerberOrtemp_pagedData.Select((path, index1) => new { Path = path, Index = index1 }).ToList();
 
@@ -942,7 +900,7 @@ namespace DeepSightAI
                         Parallel.ForEach(defect_indexPaths, parallelOptions, item =>
                         {
                             // 在访问前添加检查
-                            int index1 = (currentPage - 1) * 5 + item.Index;
+                            int index1 = (currentPage - 1) * table_Small.RowCount + item.Index;
                             string labelText = "未处理";
                             if (res_lbl != null && index1 >= 0 && index1 < res_lbl.Count) // 如果是数组
                             {
@@ -953,13 +911,13 @@ namespace DeepSightAI
                                 labelText = list[index1] ?? "未处理";
                             }
 
-                            int index2 = (currentPage - 1) * 5 + item.Index;
+                            int index2 = (currentPage - 1) * table_Small.RowCount + item.Index;
                             VBRcvInfp vbValue = null;
                             if (pcsResult?.vb_List != null && index2 >= 0 && index2 < pcsResult.vb_List.Count)
                             {
                                 vbValue = pcsResult.vb_List[index2];
                             }
-                            //Machine.master.workClass.showImage(item.Path, (item.Index + 1) * 2 - 2, labelText, vbValue);
+                            Machine.master.workClass.showImage(item.Path, (item.Index + 1) * 2 - 2, labelText, vbValue);
                         });
                     });
                     await Task.Factory.StartNew(() =>
@@ -967,7 +925,7 @@ namespace DeepSightAI
                         Parallel.ForEach(gerberOrtemp_indexPaths, parallelOptions, item =>
                         {
                             // 在访问前添加检查
-                            int index1 = (currentPage - 1) * 5 + item.Index;
+                            int index1 = (currentPage - 1) * table_Small.RowCount + item.Index;
                             string labelText = "未处理";
                             if (res_lbl != null && index1 >= 0 && index1 < res_lbl.Count) // 如果是数组
                             {
@@ -978,13 +936,13 @@ namespace DeepSightAI
                                 labelText = list[index1] ?? "未处理";
                             }
 
-                            int index2 = (currentPage - 1) * 5 + item.Index;
+                            int index2 = (currentPage - 1) * table_Small.RowCount + item.Index;
                             VBRcvInfp vbValue = null;
                             if (pcsResult?.vb_List != null && index2 >= 0 && index2 < pcsResult.vb_List.Count)
                             {
                                 vbValue = pcsResult.vb_List[index2];
                             }
-                            //Machine.master.workClass.showImage(item.Path, (item.Index + 1) * 2 - 1, labelText, vbValue);
+                            Machine.master.workClass.showImage(item.Path, (item.Index + 1) * 2 - 1, labelText, vbValue);
                         });
                     });
                 }
@@ -995,14 +953,14 @@ namespace DeepSightAI
                         Parallel.ForEach(defect_indexPaths, parallelOptions, item =>
                         {
                             //Machine.master.workClass.showImage(item.Path, item.Index*2-1);
-                            //Machine.master.workClass.showImage(item.Path, (item.Index + 1) * 2 - 2, "未处理");
+                            Machine.master.workClass.showImage(item.Path, (item.Index + 1) * 2 - 2, "未处理");
                         });
                     });
                     await Task.Factory.StartNew(() =>
                     {
                         Parallel.ForEach(gerberOrtemp_indexPaths, parallelOptions, item =>
                         {
-                            //Machine.master.workClass.showImage(item.Path, (item.Index + 1) * 2 - 1, "未处理");
+                            Machine.master.workClass.showImage(item.Path, (item.Index + 1) * 2 - 1, "未处理");
                         });
                     });
                 }
@@ -1014,16 +972,16 @@ namespace DeepSightAI
                 {
                     await Task.Factory.StartNew(() =>
                     {
-                        Parallel.For(defect_pagedData.Count, 5, item =>
+                        Parallel.For(defect_pagedData.Count, table_Small.RowCount, item =>
                         {
-                            //Machine.master.workClass.showImage("", (item + 1) * 2 - 2);
+                            Machine.master.workClass.showImage("", (item + 1) * 2 - 2);
                         });
                     });
                     await Task.Factory.StartNew(() =>
                     {
-                        Parallel.For(gerberOrtemp_pagedData.Count, 5, item =>
+                        Parallel.For(gerberOrtemp_pagedData.Count, table_Small.RowCount, item =>
                         {
-                            //Machine.master.workClass.showImage("", (item + 1) * 2 - 1);
+                            Machine.master.workClass.showImage("", (item + 1) * 2 - 1);
                         });
                     });
                 }
