@@ -488,45 +488,6 @@ namespace DeepSightAI
             {
                 List<string> rtn_list = new List<string>();
                 dic_PN_SNList.Clear();
-
-                Machine.master.workClass.ReadPNSNByTime(date, out string outInfo);
-
-                if (!string.IsNullOrEmpty(outInfo))
-                {
-                    var root = JObject.Parse(outInfo);
-                    var dataList = root["data_list"] as JArray;
-
-                    if (dataList == null) return new List<string>();
-
-                    foreach (var item in dataList)
-                    {
-                        string itemStr = item.ToString();
-                        if (itemStr == "end_range_send") continue;
-
-                        var itemObj = JObject.Parse(itemStr);
-                        string valueStr = itemObj["value"]?.ToString();
-
-                        if (string.IsNullOrEmpty(valueStr)) continue;
-
-                        var valueObj = JObject.Parse(valueStr);
-                        string productSerial = valueObj["ProductSerial"]?.ToString();
-                        string serialNumber = valueObj["SerialNumber"]?.ToString();
-
-                        if (!string.IsNullOrEmpty(productSerial) && !string.IsNullOrEmpty(serialNumber))
-                        {
-                            dic_PN_SNList.AddOrUpdate(productSerial,
-                                new List<string> { serialNumber },
-                                (key, existingList) =>
-                                {
-                                    if (!existingList.Contains(serialNumber))
-                                    {
-                                        existingList.Add(serialNumber);
-                                    }
-                                    return existingList;
-                                });
-                        }
-                    }
-                }
                 return rtn_list.Distinct().ToList();
             }
             catch (Exception ex)

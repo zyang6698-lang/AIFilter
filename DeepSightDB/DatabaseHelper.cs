@@ -131,10 +131,34 @@ namespace DeepsightSqlite
         /// </summary>
         public void SavePanelSide(PanelSideRecord record)
         {
+            // 参数验证
+            if (record == null)
+            {
+                LogTextHelper.Error("SavePanelSide: record 为 null，无法保存");
+                return;
+            }
+            if (string.IsNullOrEmpty(record.SerialNumber))
+            {
+                LogTextHelper.Error("SavePanelSide: SerialNumber 为空，无法保存");
+                return;
+            }
+            if (string.IsNullOrEmpty(record.Side))
+            {
+                LogTextHelper.Error($"SavePanelSide: Side 为空，SN={record.SerialNumber}，无法保存");
+                return;
+            }
+            if (record.Data == null)
+            {
+                LogTextHelper.Error($"SavePanelSide: Data 为 null，SN={record.SerialNumber}，Side={record.Side}，无法保存");
+                return;
+            }
+
             _dbQueue.Add(connection =>
             {
-                using (var transaction = connection.BeginTransaction())
+                SQLiteTransaction transaction = null;
+                try
                 {
+                    transaction = connection.BeginTransaction();
                     long panelId;
 
                     // 1. 查找或创建 Panel 记录
@@ -152,13 +176,13 @@ namespace DeepsightSqlite
                             var insertPanelCmd = new SQLiteCommand(
                                 "INSERT INTO Panels (MachineId, SerialNumber, LotNumber, DetectionDate, ProductSerial, PathIndex, AviCreationTime) VALUES (@MachineId, @SN, @Lot, @Date, @ProductSerial, @PathIndex, @AviCreationTime); SELECT last_insert_rowid();",
                                 connection, transaction);
-                            insertPanelCmd.Parameters.AddWithValue("@MachineId", record.MachineId);
+                            insertPanelCmd.Parameters.AddWithValue("@MachineId", record.MachineId ?? string.Empty);
                             insertPanelCmd.Parameters.AddWithValue("@SN", record.SerialNumber);
-                            insertPanelCmd.Parameters.AddWithValue("@Lot", record.LotNumber);
+                            insertPanelCmd.Parameters.AddWithValue("@Lot", record.LotNumber ?? string.Empty);
                             insertPanelCmd.Parameters.AddWithValue("@Date", record.DetectionDate);
-                            insertPanelCmd.Parameters.AddWithValue("@ProductSerial", record.ProductSerial);
-                            insertPanelCmd.Parameters.AddWithValue("@PathIndex", record.PathIndex);
-                            insertPanelCmd.Parameters.AddWithValue("@AviCreationTime", record.AviCreationTime);
+                            insertPanelCmd.Parameters.AddWithValue("@ProductSerial", (object)record.ProductSerial ?? DBNull.Value);
+                            insertPanelCmd.Parameters.AddWithValue("@PathIndex", (object)record.PathIndex ?? DBNull.Value);
+                            insertPanelCmd.Parameters.AddWithValue("@AviCreationTime", (object)record.AviCreationTime ?? DBNull.Value);
                             panelId = (long)insertPanelCmd.ExecuteScalar();
                         }
                     }
@@ -184,7 +208,7 @@ namespace DeepsightSqlite
                             connection, transaction);
                         updateSideCmd.Parameters.AddWithValue("@Total", record.Data.TotalDefectsCount);
                         updateSideCmd.Parameters.AddWithValue("@Remaining", record.Data.RemainingDefectsCount);
-                        updateSideCmd.Parameters.AddWithValue("@HeatPoints", JsonConvert.SerializeObject(record.Data.HeatPoints));
+                        updateSideCmd.Parameters.AddWithValue("@HeatPoints", JsonConvert.SerializeObject(record.Data.HeatPoints ?? new List<HeatPoint>()));
                         updateSideCmd.Parameters.AddWithValue("@AviState", record.Data.AviState);
                         updateSideCmd.Parameters.AddWithValue("@AiState", record.Data.AiState);
                         updateSideCmd.Parameters.AddWithValue("@VvsState", record.Data.VvsState);
@@ -203,7 +227,7 @@ namespace DeepsightSqlite
                         insertSideCmd.Parameters.AddWithValue("@Side", record.Side);
                         insertSideCmd.Parameters.AddWithValue("@Total", record.Data.TotalDefectsCount);
                         insertSideCmd.Parameters.AddWithValue("@Remaining", record.Data.RemainingDefectsCount);
-                        insertSideCmd.Parameters.AddWithValue("@HeatPoints", JsonConvert.SerializeObject(record.Data.HeatPoints));
+                        insertSideCmd.Parameters.AddWithValue("@HeatPoints", JsonConvert.SerializeObject(record.Data.HeatPoints ?? new List<HeatPoint>()));
                         insertSideCmd.Parameters.AddWithValue("@AviState", record.Data.AviState);
                         insertSideCmd.Parameters.AddWithValue("@AiState", record.Data.AiState);
                         insertSideCmd.Parameters.AddWithValue("@VvsState", record.Data.VvsState);
@@ -215,6 +239,24 @@ namespace DeepsightSqlite
                     // 3. (移除 IsAIOk 列逻辑) 不再更新 Panels.IsAIOk，统计时动态计算
 
                     transaction.Commit();
+                    LogTextHelper.Info($"SavePanelSide: 成功保存 SN={record.SerialNumber}, Side={record.Side}");
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error($"SavePanelSide: 保存失败 SN={record.SerialNumber}, Side={record.Side}, 错误: {ex.Message}");
+                    LogTextHelper.Error($"SavePanelSide: 详细堆栈: {ex}");
+                    try
+                    {
+                        transaction?.Rollback();
+                    }
+                    catch (Exception rollbackEx)
+                    {
+                        LogTextHelper.Error($"SavePanelSide: 回滚事务失败: {rollbackEx.Message}");
+                    }
+                }
+                finally
+                {
+                    transaction?.Dispose();
                 }
             });
         }
