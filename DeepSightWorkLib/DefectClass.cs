@@ -15,7 +15,7 @@ namespace DeepSightWorkLib
 {
 
     /// <summary>
-    /// 算法检测类 
+    /// 算法检测类
     /// </summary>
     public class DefectClass
     {
@@ -24,96 +24,15 @@ namespace DeepSightWorkLib
         {
             ai_Defect = new AI_DefectClass();
         }
+
+        /// <summary>
+        /// 原有推理方法（C++端从Minio读取图片）
+        /// </summary>
         public void DefectMethod(RootVBInfo info, out string vb_outStr)
         {
             try
             {
-                #region json
-                string json = @"
-{
-    ""message_type"": ""visionbuilder_inference"",
-    ""params"": {
-        ""infer_res_uuid"": """",
-        ""infer_whole_data"": {
-            ""image_data"": {
-                ""data_type"": ""minio"",
-                ""data_value"": {
-                    ""infer_image_group"": [
-                        {
-                            ""group_infos"": [
-                                {
-                                    ""image_path"": ""20250403155016741981/SM PAD FM DL/1502170010001A12502-A-SM PAD FM DL-pcs-X1Y1-vrs0-0.jpg"",
-                                    ""image_type"": ""defect"",
-                                    ""image_uuid"": """"
-                                },
-                                {
-                                    ""image_path"": ""20250403155016741981/SM PAD FM DL/1502170010001A12502-A-SM PAD FM DL-pcs-X1Y1-vrs0-0-gerber-1.jpg"",
-                                    ""image_type"": ""gerber"",
-                                    ""image_uuid"": """"
-                                },
-                                {
-                                    ""image_path"": ""20250403155016741981/SM PAD FM DL/1502170010001A12502-A-SM PAD FM DL-pcs-X1Y1-vrs0-0-template-1.jpg"",
-                                    ""image_type"": ""template"",
-                                    ""image_uuid"": """"
-                                }
-                            ],
-                            ""group_uuid"": ""65e84dc0-256e-11f0-bef0-189341101a89"",
-                            ""inspect_details"": {
-                                ""infer_roi"": []
-                            }
-                        },
-                        {
-                            ""group_infos"": [
-                                {
-                                    ""image_path"": ""20250403155016741981/BIG RING PAD FM DL/1502170010001A12502-A-BIG RING PAD FM DL-pcs-X2Y1-vrs0-0.jpg"",
-                                    ""image_type"": ""defect"",
-                                    ""image_uuid"": """"
-                                },
-                                {
-                                    ""image_path"": ""20250403155016741981/BIG RING PAD FM DL/1502170010001A12502-A-BIG RING PAD FM DL-pcs-X2Y1-vrs0-0-gerber-1.jpg"",
-                                    ""image_type"": ""gerber"",
-                                    ""image_uuid"": """"
-                                },
-                                {
-                                    ""image_path"": ""20250403155016741981/BIG RING PAD FM DL/1502170010001A12502-A-BIG RING PAD FM DL-pcs-X2Y1-vrs0-0-template-1.jpg"",
-                                    ""image_type"": ""template"",
-                                    ""image_uuid"": """"
-                                }
-                            ],
-                            ""group_uuid"": ""65e874bc-256e-11f0-a2e3-189341101a89"",
-                            ""inspect_details"": {
-                                ""infer_roi"": []
-                            }
-                        }
-                    ]
-                }
-            },
-            ""image_infer_params"": {
-                ""node_params"": [
-                    {
-                        ""height"": 200,
-                        ""node_name"": ""flow1"",
-                        ""width"": 200
-                    }
-                ],
-                ""pipeline_name"": ""0311""
-            },
-            ""other_infos"": {
-                ""image_minio"": {
-                    ""access_key"": ""deepiobjectdata"",
-                    ""bucket"": ""deepiresults"",
-                    ""endpoint_address"": ""127.0.0.1"",
-                    ""access_secret"": ""deepiobject2019"",
-                    ""port"": ""9102""
-                }
-            }
-        }
-    }
-}";
-                #endregion
-                JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };//去掉空值NULL
-                //string res = JsonConvert.SerializeObject(info, Formatting.None, jsonSetting);
-
+                JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
                 IntPtr input = Marshal.StringToHGlobalAnsi(JsonConvert.SerializeObject(info, Formatting.None, jsonSetting));
                 IntPtr result = IntPtr.Zero;
                 ai_Defect.Vision_runMethod(input, out result);
@@ -125,6 +44,50 @@ namespace DeepSightWorkLib
                 SystemEvent.SendAlarmMsg($"VB算法调用异常:{ex.ToString()}");
             }
         }
+
+        /// <summary>
+        /// 带图片数据的推理方法（直接传递图片指针给C++，避免C++读取Minio）
+        /// </summary>
+        /// <param name="info">推理参数信息</param>
+        /// <param name="mats">图片数据列表（已解码的Mat）</param>
+        /// <param name="vb_outStr">推理结果输出</param>
+        public void DefectMethodWithImages(RootVBInfo info, List<Mat> mats, out string vb_outStr)
+        {
+            try
+            {
+                // 检查 mats 是否为空
+                if (mats == null || mats.Count == 0)
+                {
+                    vb_outStr = "";
+                    LogTextHelper.Info("DefectMethodWithImages: mats为空或没有图片数据");
+                }
+
+
+                JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+                string jsonStr = JsonConvert.SerializeObject(info, Formatting.None, jsonSetting);
+
+                LogTextHelper.Info($"DefectMethodWithImages: 准备调用推理，图片数量={mats.Count}");
+
+                // 使用 BatchImageData 管理图片数据的非托管内存
+                using (var batchData = ImageHelper.CreateBatchImageData(mats))
+                {
+                    LogTextHelper.Info($"DefectMethodWithImages: BatchImageData创建完成，ImagesPtr={batchData.ImagesPtr}, Count={batchData.Count}");
+
+                    IntPtr result = IntPtr.Zero;
+                    int ret = ai_Defect.InferenceWithImages(jsonStr, batchData.ImagesPtr, batchData.Count, out result);
+
+                    LogTextHelper.Info($"DefectMethodWithImages: 推理返回，ret={ret}, result={result}");
+
+                    vb_outStr = Marshal.PtrToStringAnsi(result);
+
+                }
+            }
+            catch (Exception ex)
+            {
+                vb_outStr = "";
+                SystemEvent.SendAlarmMsg($"VB算法调用异常(WithImages):{ex.ToString()}");
+            }
+        }
     }
 
     //C++接口实现
@@ -133,6 +96,8 @@ namespace DeepSightWorkLib
         public static IntPtr handler = IntPtr.Zero;
 
         private const string strName = @"ProxyServer.dll";
+
+        #region 原有接口
         [DllImport(strName, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
         public static extern IntPtr create_basehandler();
 
@@ -150,14 +115,33 @@ namespace DeepSightWorkLib
 
         [DllImport(strName, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
         public static extern void vision_show_view(int isShow);
+        #endregion
 
+        #region 新增接口 - 直接传递图片数据
+        /// <summary>
+        /// 带图片数据的推理接口（C++端需要实现此接口）
+        /// ImageInfo 结构: { IntPtr data, int width, int height, int channels, int step }
+        /// </summary>
+        /// <param name="handler">句柄</param>
+        /// <param name="json_input">JSON参数字符串</param>
+        /// <param name="images">ImageDataInfo 结构体数组指针</param>
+        /// <param name="image_count">图片数量</param>
+        /// <param name="output">输出结果字符串指针</param>
+        /// <returns>0=成功，其他=失败</returns>
+        [DllImport(strName, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
+        public static extern int basehandler_handle_message_with_images(
+            IntPtr handler,
+            [MarshalAs(UnmanagedType.LPStr)] string json_input,
+            IntPtr images,
+            int image_count,
+            out IntPtr output);
+        #endregion
 
         public AI_DefectClass()
         {
             try
             {
                 handler = create_basehandler();
-
             }
             catch (Exception ex)
             {
@@ -165,14 +149,30 @@ namespace DeepSightWorkLib
             }
         }
 
-        public  void Vision_Show_View(int isShow)
+        public void Vision_Show_View(int isShow)
         {
-           vision_show_view(isShow);
+            vision_show_view(isShow);
         }
 
+        /// <summary>
+        /// 原有推理方法（通过JSON传递Minio路径，C++端读取图片）
+        /// </summary>
         public int Vision_runMethod(IntPtr input, out IntPtr output)
         {
             return basehandler_handle_message(handler, input, out output);
+        }
+
+        /// <summary>
+        /// 带图片数据的推理方法（直接传递图片指针）
+        /// </summary>
+        /// <param name="jsonInput">JSON参数</param>
+        /// <param name="imagesPtr">ImageDataInfo数组指针</param>
+        /// <param name="imageCount">图片数量</param>
+        /// <param name="output">输出结果</param>
+        /// <returns>0=成功</returns>
+        public int InferenceWithImages(string jsonInput, IntPtr imagesPtr, int imageCount, out IntPtr output)
+        {
+            return basehandler_handle_message_with_images(handler, jsonInput, imagesPtr, imageCount, out output);
         }
     }
 }

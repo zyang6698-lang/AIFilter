@@ -74,7 +74,7 @@ namespace DeepSightAI
             Load += FrHome_Load;
             FormClosing += FrHome_FormClosing;
 
-            uph_timer.Interval = 1000 * 10;
+            uph_timer.Interval = 1000 * 6;
             uph_timer.Enabled = true;
             uph_timer.Elapsed += Uph_timer_Elapsed;
         }

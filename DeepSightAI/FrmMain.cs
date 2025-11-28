@@ -149,14 +149,20 @@ namespace DeepSightAI
                 {
                     PcsResult result = new PcsResult();
                     result.vb_List = new List<VBRcvInfp>();
-                    result.vb_List.AddRange(pcsResult.vb_List);
+                    if (pcsResult?.vb_List != null)
+                    {
+                        result.vb_List.AddRange(pcsResult.vb_List);
+                    }
                     FrHome.Instance.dic_PcsResult.Add(sn, result);
                 }
                 else
                 {
                     PcsResult result;
                     FrHome.Instance.dic_PcsResult.TryGetValue(sn, out result);
-                    result.vb_List.AddRange(pcsResult.vb_List);
+                    if (pcsResult?.vb_List != null)
+                    {
+                        result.vb_List.AddRange(pcsResult.vb_List);
+                    }
                 }
 
                 //FrHome.Instance.lbl_AVICount.Invoke(new Action(() =>
