@@ -1291,6 +1291,12 @@ namespace DeepSightAI
             FrHome.Instance.dic_Details.Clear();
             FrHome.Instance.dic_PcsResult.Clear();
             FrHome.Instance.dic_Paths.Clear();
+            while (Machine.master.workClass.que_ImageLoad.Count > 0)
+            {
+                Thread.Sleep(10);
+                ImageLoadModel loadModel = null;
+                Machine.master.workClass.que_ImageLoad.TryDequeue(out loadModel);
+            }
             while (Machine.master.workClass.que_AVI.Count > 0)
             {
                 Thread.Sleep(10);
