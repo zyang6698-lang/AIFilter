@@ -379,9 +379,9 @@ namespace DeepSightWorkLib
                         try
                         {
                             SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面处理中");
-                            //return;
+
                             //调用算法处理
-                            LogTextHelper.Info("准备DefectMethod");
+                            LogTextHelper.Info($"准备DefectMethod，SN:{info.SN}，图片数量:{info.Mats.Count}");
                             List<string> msg;
                             List<string> details;
                             PcsResult pcsResult;
@@ -784,41 +784,56 @@ namespace DeepSightWorkLib
                 JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };//去掉空值NULL
                 string infoJson = JsonConvert.SerializeObject(info, Formatting.None, jsonSetting);
                 LogTextHelper.Info("准备调用算法,参数为：" + infoJson);
-
-                defect.DefectMethod(info, out msg);
+                defect.DefectMethodWithImages(info, vBModel.Mats, out msg);
+               // defect.DefectMethod(info, out msg);
 
                 LogTextHelper.Info($"算法返回原始结果 for Side {panelInfo.SideIndex}: {msg}"); // <-- 增加此行日志
                 //将RootVBOutInfo结果msg处理
-                var obj = JsonConvert.DeserializeObject<RootVBOutInfo>(msg);
-                string code = obj.Code.ToString();
-                string message = obj.Message.ToString();
-                if (code != "200")
+                if (string.IsNullOrEmpty(msg))
                 {
-                    LogTextHelper.Warn($"算法调用失败 for Side {panelInfo.SideIndex}，返回码: {code}，返回信息：{message}"); // <-- 增加此行日志
+                    LogTextHelper.Error($"算法返回结果为空 for Side {panelInfo.SideIndex}");
                     return false;
                 }
-                JObject root = JObject.Parse(msg);
-                if (root["data"]?["infer_whole_data"]?["infer_results"] is JArray inferResults)
+                var obj = JsonConvert.DeserializeObject<RootVBOutInfo>(msg);
+                if (obj == null)
                 {
-                    foreach (var result1 in inferResults)
-                    {
-                        JObject nodeDetails = result1["infer_details"]["node_details"] as JObject;
+                    LogTextHelper.Error($"算法返回结果反序列化失败 for Side {panelInfo.SideIndex}，原始消息: {msg}");
+                    return false;
+                }
+                string code = obj.Code.ToString();
+                string message = obj.Message.ToString();
 
-                        if (nodeDetails != null)
+
+                if (code == "200"||code=="600")
+                {
+                    JObject root = JObject.Parse(msg);
+
+                    // 安全访问嵌套属性，避免 JValue 类型导致的异常
+                    var dataToken = root["data"];
+                    var inferWholeData = (dataToken as JObject)?["infer_whole_data"];
+                    var inferResultsToken = (inferWholeData as JObject)?["infer_results"];
+
+                    if (inferResultsToken is JArray inferResults)
+                    {
+                        foreach (var result1 in inferResults)
                         {
-                            string nodeDetailsJson = nodeDetails.ToString();
-                            detailsList.Add(nodeDetailsJson);
+                            var inferDetails = (result1 as JObject)?["infer_details"];
+                            JObject nodeDetails = (inferDetails as JObject)?["node_details"] as JObject;
+
+                            if (nodeDetails != null)
+                            {
+                                string nodeDetailsJson = nodeDetails.ToString();
+                                detailsList.Add(nodeDetailsJson);
+                            }
                         }
                     }
-                }
-                DsCenterInfo dsCenterInfo = null;
-                if (dic_DsCenterInfo.TryGetValue($"{panelInfo.LotId}_{panelInfo.SerialNumber}", out dsCenterInfo))
-                {
-                    LogTextHelper.Info($"取出{panelInfo.LotId}_{panelInfo.SerialNumber}的中台数据，准备更新...");
-                }
+                    DsCenterInfo dsCenterInfo = null;
+                    if (dic_DsCenterInfo.TryGetValue($"{panelInfo.LotId}_{panelInfo.SerialNumber}", out dsCenterInfo))
+                    {
+                        LogTextHelper.Info($"取出{panelInfo.LotId}_{panelInfo.SerialNumber}的中台数据，准备更新...");
+                    }
 
-                if (code == "200")
-                {
+
                     pcsResult.vb_List = new List<VBRcvInfp>();
                     string time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
@@ -911,6 +926,7 @@ namespace DeepSightWorkLib
                                     HeatPoint heatInfo = new HeatPoint();
                                     heatInfo.DefectName = sub_defectName;
                                     heatInfo.AIStatus = "NG";
+                                    heatInfo.VVSStatus = "NotSet";
                                     heatInfo.RoiX = CenterPointX;
                                     heatInfo.RoiY = CenterPointY;
                                     int index = panelInfo.LocalDescribeDir.IndexOf("deepiresults", StringComparison.OrdinalIgnoreCase);
@@ -990,7 +1006,7 @@ namespace DeepSightWorkLib
                         LogTextHelper.Info($"无法解析 AviCreateTime '{panelInfo.AviCreateTime}'。将使用当前时间 '{detectionDate}' 作为备用。");
                     }
                     //存数据到db
-                    LogTextHelper.Info($"{panelInfo.SerialNumber} Reslist:" +   string.Join(", ", resList));
+                    LogTextHelper.Info($"{panelInfo.SerialNumber} Reslist:" + string.Join(", ", resList));
                     LogTextHelper.Info($"存储{panelInfo.SerialNumber} PanelSide数据到数据库...");
                     databaseHelper.SavePanelSide(new PanelSideRecord()
                     {
@@ -998,7 +1014,7 @@ namespace DeepSightWorkLib
                         {
                             HeatPoints = avi_HeatInfo,
                             AviState = resList.Count == 0 ? 1 : 2,
-                            AiState=resList.Contains("2")?3: resList.Contains("1")?2:1,
+                            AiState = resList.Contains("2") ? 3 : resList.Contains("1") ? 2 : 1,
                             RemainingDefectsCount = resList.Where(t => t == "1").Count(),
                             TotalDefectsCount = resList.Where(t => t == "1" || t == "0").Count()
                         },
@@ -1030,8 +1046,10 @@ namespace DeepSightWorkLib
                     vbJson = msg;
                     result = true;
                 }
+                
                 else
                 {
+                    LogTextHelper.Warn($"算法调用失败 for Side {panelInfo.SideIndex}，返回码: {code}，返回信息：{message}"); // <-- 增加此行日志
                     result = false;
                 }
             }
@@ -1179,7 +1197,7 @@ namespace DeepSightWorkLib
                     LogTextHelper.Warn("图片路径格式错误(需包含冒号)：" + path);
                     return null;
                 }
-                using (var stream = minio.GetImageStreamSync("deepiresults", parts[0], parts[1]))
+                using (var stream = minio.GetImageStreamSync("deepiresults", parts[1], parts[0]))
                 {
                     if (stream == null || stream.Length == 0)
                     {
@@ -1561,6 +1579,23 @@ namespace DeepSightWorkLib
                             .Select(t => LoadMinioImage(t))
                             .Where(m => m != null)
                             .ToList();
+
+                        // 检查加载结果
+                        int expectedCount = loadModel.ImageKeys.Count;
+                        int actualCount = loadModel.Model.Mats.Count;
+                        if (expectedCount == 0)
+                        {
+                            // 本身就没有报点数据，不是错误
+                            LogTextHelper.Info($"SN:{loadModel.Model.SN} 无报点数据，无需加载图片");
+                        }
+                        else if (actualCount == 0)
+                        {
+                            LogTextHelper.Error($"图片加载失败，SN:{loadModel.Model.SN}，期望{expectedCount}张图片，实际加载0张！");
+                        }
+                        else if (actualCount < expectedCount)
+                        {
+                            LogTextHelper.Warn($"图片部分加载失败，SN:{loadModel.Model.SN}，期望{expectedCount}张，实际{actualCount}张");
+                        }
 
                         // 图片加载完成，入推理队列
                         que_AVI.Enqueue(loadModel.Model);
