@@ -1,5 +1,6 @@
 using DeepSightAI.Properties;
 using DeepSightModel;
+using DeepSightTool;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -287,7 +288,7 @@ namespace DeepSightAI.SettingPages
             }
         }
 
-        public async Task UpdateAll(Func<string, Task<(string, string)>> GetLatestLotAndProductSerial, Func<string, string, Task<List<PanelDataRecord>>> getLatestPanelData)
+        public async Task UpdateMachineBoard(Func<string, Task<(string, string)>> GetLatestLotAndProductSerial, Func<string, string, Task<List<PanelDataRecord>>> getLatestPanelData)
         {
             if (this.IsHandleCreated)
             {
@@ -304,17 +305,19 @@ namespace DeepSightAI.SettingPages
                     var panelTasks = lotResults.Select(async r => (r.c, r.lotAndSerial, data: await getLatestPanelData(r.c.ctrConfig.AviName, r.lotAndSerial.Item1))).ToList();
                     var panelResults = await Task.WhenAll(panelTasks);
 
-                    foreach (var r in panelResults)
+                    foreach (var (c, lotAndSerial, data) in panelResults)
                     {
-                        var ctr = r.c;
-                        var tmp = r.lotAndSerial;
+                        var ctr = c;
+                        var tmp = lotAndSerial;
                         ctr.LotId = tmp.Item1;
                         ctr.ProductSerial = tmp.Item2;
-                        var boardStat = PanelDataRecord.GetBoardStat(r.data);
+                        var boardStat = PanelDataRecord.GetBoardStat(data);
                         ctr.AiOkImages = boardStat.aiFilterOKCount;
                         ctr.AiFilterCount = boardStat.aiFilterCount;
-                        ctr.AviPassRate = boardStat.aviPanelCount == 0 ? 0 : (double)boardStat.aviPanelOKCount / boardStat.aviPanelCount ;
-                        ctr.Utilization=r.data.Select(t=>t.AviCreationTime).Where(t=>t.Value.Date==DateTime.Now.Date).Count()/(double)(DateTime.Now.Date.AddDays(1)-DateTime.Now.Date).TotalMinutes;
+                        ctr.AviPassRate = boardStat.aviPanelCount == 0 ? 0 : (double)boardStat.aviPanelOKCount / boardStat.aviPanelCount;
+                        ctr.Utilization = MathHelper.CalculateUtilizationRatePercent(
+                        data.Where(t => t.AviCreationTime.HasValue && t.AviCreationTime.Value.Date == DateTime.Now.Date)
+                            .Select(t => t.AviCreationTime.Value));
                     }
                 }));
             }

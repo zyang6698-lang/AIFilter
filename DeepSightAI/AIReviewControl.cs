@@ -306,6 +306,8 @@ namespace DeepSightAI
             {
                 SerialNumber = panel.SerialNumber,
                 LotNumber = panel.LotNumber,
+                MachineId = panel.MachineId,
+                ProductSerial = panel.ProductSerial,
                 Side = sideData.Side,
                 AviStatus = sideData.AviState == 1 ? "OK" : "NG",
                 AiStatus =sideData.AiState==1?"OK":"NG",
@@ -393,6 +395,8 @@ namespace DeepSightAI
     {
         public string SerialNumber { get; set; }
         public string LotNumber { get; set; }
+        public string MachineId { get; set; }
+        public string ProductSerial { get; set; }
         public string Side { get; set; }
         public string AviStatus { get; set; }
         public string AiStatus { get; set; }

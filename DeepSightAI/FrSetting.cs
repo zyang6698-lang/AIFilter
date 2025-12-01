@@ -322,11 +322,20 @@ namespace DeepSightAI
                 }
                 if (tvw_setting.SelectedNode.Text == "机台配置")
                 {
+                    // 检查软件是否处于运行状态
+                    if (Machine.master != null && Machine.master.workClass != null && Machine.master.workClass.isStart)
+                    {
+                        MessageBox.Show("软件正在运行中，请先停止运行后再保存机台配置！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+
                     FrHWConfig.Instance.GetStationParam();
                     if (Machine.avi_class.Save(Machine.aviconfig))
                     {
                         RestartApplication(appPath, appExe);
                         Machine.master.workClass.aviconfig = Machine.aviconfig;
+                        // 更新FrHome中的AviCtr状态
+                        FrHome.Instance.RefreshAviCtrConfigs();
                         MessageBox.Show("保存Agent配置文件成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                     }

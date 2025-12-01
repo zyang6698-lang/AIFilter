@@ -226,23 +226,6 @@ namespace DeepSightAI.SettingPages
             }
         }
 
-        //protected override void Dispose(bool disposing)
-        //{
-        //    if (disposing)
-        //    {
-        //        // 释放缓存的GDI对象
-        //        _borderPen?.Dispose();
-        //        foreach (var bmp in _statusBitmaps.Values)
-        //        {
-        //            bmp?.Dispose();
-        //        }
-        //        _statusBitmaps.Clear();
-        //        toolTip?.Dispose();
-        //        components?.Dispose();
-        //    }
-        //    base.Dispose(disposing);
-        //}
-
 
         protected override void OnPaint(PaintEventArgs e)
         {
@@ -401,6 +384,13 @@ namespace DeepSightAI.SettingPages
 
         private void AviCtr2_DoubleClick(object sender, EventArgs e)
         {
+            // 实时从文件读取最新配置
+            WatchPathConfig latestConfig = ReadLatestConfigFromFile();
+            if (latestConfig != null)
+            {
+                ctrConfig = latestConfig;
+            }
+
             FrStationCofig frStation = new FrStationCofig(ctrConfig);
             if (frStation.ShowDialog() == DialogResult.OK)
             {
@@ -418,7 +408,49 @@ namespace DeepSightAI.SettingPages
                         MessageBox.Show("信息存在空值,设备不能设为启用状态,请检查！", "列表为空", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     ctrConfig = frStation.stationConfig;
+                    // 更新UI显示（包括左上角状态指示器）
+                    SetName(ctrConfig.AviName);
+                    UpdateDisplay();
                 }
+            }
+        }
+
+        /// <summary>
+        /// 从配置文件中实时读取当前机台的最新配置
+        /// </summary>
+        /// <returns>最新的配置，如果读取失败则返回null</returns>
+        private WatchPathConfig ReadLatestConfigFromFile()
+        {
+            try
+            {
+                string configPath = System.AppDomain.CurrentDomain.BaseDirectory + "ATS_Agent_EXE\\config\\config.json";
+                if (!System.IO.File.Exists(configPath))
+                {
+                    return null;
+                }
+
+                string jsonContent = System.IO.File.ReadAllText(configPath);
+                AVIConfig aviConfig = Newtonsoft.Json.JsonConvert.DeserializeObject<AVIConfig>(jsonContent);
+
+                if (aviConfig?.WatchPaths == null)
+                {
+                    return null;
+                }
+
+                // 根据 AviName 查找对应的配置
+                string currentAviName = ctrConfig?.AviName;
+                if (string.IsNullOrEmpty(currentAviName))
+                {
+                    return null;
+                }
+
+                return aviConfig.WatchPaths.FirstOrDefault(w => w.AviName == currentAviName);
+            }
+            catch (Exception ex)
+            {
+                // 读取失败时记录日志，返回null使用现有配置
+                DeepSightTool.LogTextHelper.Error("读取配置文件失败", ex);
+                return null;
             }
         }
 

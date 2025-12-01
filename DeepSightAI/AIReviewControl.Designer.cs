@@ -42,6 +42,8 @@
             this.dataGridView_Defects = new System.Windows.Forms.DataGridView();
             this.col_SN = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.col_Lot = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.col_MachineId = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.col_ProductSerial = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.col_Side = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.col_AviStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.col_AiStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -222,6 +224,8 @@
             this.dataGridView_Defects.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.col_SN,
             this.col_Lot,
+            this.col_MachineId,
+            this.col_ProductSerial,
             this.col_Side,
             this.col_AviStatus,
             this.col_AiStatus,
@@ -245,7 +249,8 @@
             this.dataGridView_Defects.RowHeadersVisible = false;
             this.dataGridView_Defects.RowHeadersWidth = 51;
             this.dataGridView_Defects.RowTemplate.Height = 23;
-            this.dataGridView_Defects.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dataGridView_Defects.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
+            this.dataGridView_Defects.ClipboardCopyMode = System.Windows.Forms.DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
             this.dataGridView_Defects.Size = new System.Drawing.Size(780, 691);
             this.dataGridView_Defects.TabIndex = 0;
             // 
@@ -256,17 +261,33 @@
             this.col_SN.MinimumWidth = 6;
             this.col_SN.Name = "col_SN";
             this.col_SN.ReadOnly = true;
-            // 
+            //
             // col_Lot
-            // 
+            //
             this.col_Lot.DataPropertyName = "LotNumber";
             this.col_Lot.HeaderText = "Lot号";
             this.col_Lot.MinimumWidth = 6;
             this.col_Lot.Name = "col_Lot";
             this.col_Lot.ReadOnly = true;
-            // 
+            //
+            // col_MachineId
+            //
+            this.col_MachineId.DataPropertyName = "MachineId";
+            this.col_MachineId.HeaderText = "机台号";
+            this.col_MachineId.MinimumWidth = 6;
+            this.col_MachineId.Name = "col_MachineId";
+            this.col_MachineId.ReadOnly = true;
+            //
+            // col_ProductSerial
+            //
+            this.col_ProductSerial.DataPropertyName = "ProductSerial";
+            this.col_ProductSerial.HeaderText = "料号";
+            this.col_ProductSerial.MinimumWidth = 6;
+            this.col_ProductSerial.Name = "col_ProductSerial";
+            this.col_ProductSerial.ReadOnly = true;
+            //
             // col_Side
-            // 
+            //
             this.col_Side.DataPropertyName = "Side";
             this.col_Side.HeaderText = "面次";
             this.col_Side.MinimumWidth = 6;
@@ -385,6 +406,8 @@
         private System.Windows.Forms.Button btn_Save;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_SN;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_Lot;
+        private System.Windows.Forms.DataGridViewTextBoxColumn col_MachineId;
+        private System.Windows.Forms.DataGridViewTextBoxColumn col_ProductSerial;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_Side;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_AviStatus;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_AiStatus;

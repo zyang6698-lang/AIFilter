@@ -72,7 +72,6 @@ namespace DeepSightAI
             SetStyle(ControlStyles.DoubleBuffer, true); // 双缓冲
             InitializeUI();
             Load += FrHome_Load;
-            FormClosing += FrHome_FormClosing;
 
             uph_timer.Interval = 1000 * 6;
             uph_timer.Enabled = true;
@@ -81,19 +80,10 @@ namespace DeepSightAI
 
         private void FrHome_Load(object sender, EventArgs e)
         {
-            //LoadMethod();
             LogTextHelper.OnCallBackLogProc -= Log_single_OnCallBackLogProc;
             LogTextHelper.OnCallBackLogProc += Log_single_OnCallBackLogProc;
-            //this.Shown += FrHome_Shown;
-            //InitializeUI();
-            // 禁用视觉样式
-            //dataProductInfo.EnableHeadersVisualStyles = false;
         }
 
-        private void FrHome_Shown(object sender, EventArgs e)
-        {
-            //InitializeUI();
-        }
 
         private void InitializeUI()
         {
@@ -174,16 +164,6 @@ namespace DeepSightAI
                 LogTextHelper.Error("Error", ex);
             }
         }
-        private void FrHome_FormClosing(object sender, FormClosingEventArgs e)
-        {
-
-        }
-
-        /// <summary>
-        /// 0:表示白班
-        /// 1：表示晚班
-        /// </summary>
-        private int shiftFlag = -1;
 
 
         private void ToolStripMenuItem_Click(object sender, EventArgs e)
@@ -210,20 +190,6 @@ namespace DeepSightAI
                             FilterIndex = 1
                         };
                         dig_openImage.Filter = string.Format("{1} | *{0}*.bmp; *{0}*.jpg; *{0}*.jpeg; *{0}*.gif; *{0}*.png; *{0}*.tif;", station, "图片文件");
-
-                        //if (dig_openImage.ShowDialog() == DialogResult.OK)
-                        //{
-                        //    Task.Factory.StartNew(() =>
-                        //    {
-                        //        for (int i = 0; i < Machine.masterWorkClass.stationWorkClass.Length; i++)
-                        //        {
-                        //            if (Machine.masterWorkClass.stationWorkClass[i].stationConfig.Station == station)
-                        //            {
-                        //                Machine.masterWorkClass.stationWorkClass[i].workClasses[workIndex].TestImage(snapIndex, dig_openImage.FileName);
-                        //            }
-                        //        }
-                        //    });
-                        //}
                     }
                 }
             }
@@ -300,7 +266,7 @@ namespace DeepSightAI
 
         private async Task UpdateMachineBoard()
         {
-           await aviCtr2Container.UpdateAll(Machine.master.workClass.GetLatestLotAndProductSerial, Machine.master.workClass.GetPanelsDataByMachineAndLot);
+           await aviCtr2Container.UpdateMachineBoard(Machine.master.workClass.GetLatestLotAndProductSerial, Machine.master.workClass.GetPanelsDataByMachineAndLot);
         }
 
 
@@ -1018,7 +984,15 @@ namespace DeepSightAI
         {
             aviCtr2Container.UpdateAllAviCtrLotSn(Machine.master.workClass.GetLatestPanelInfoByMachineId);
         }
-        
+
+        /// <summary>
+        /// 更新所有AviCtr控件的配置（保存机台配置后调用）
+        /// </summary>
+        public void RefreshAviCtrConfigs()
+        {
+            aviCtr2Container.UpdateAllMachinePanels(Machine.aviconfig.WatchPaths);
+        }
+
     }
 }
 
