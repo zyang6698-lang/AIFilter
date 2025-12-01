@@ -35,6 +35,18 @@ namespace DeepsightSqlite
             using (var connection = new SQLiteConnection(connectionString))
             {
                 connection.Open();
+
+                // 开启 WAL 模式提升写入性能
+                using (var pragmaCmd = new SQLiteCommand("PRAGMA journal_mode=WAL;", connection))
+                {
+                    pragmaCmd.ExecuteNonQuery();
+                }
+                // 设置同步模式为 NORMAL，平衡性能和安全性
+                using (var syncCmd = new SQLiteCommand("PRAGMA synchronous=NORMAL;", connection))
+                {
+                    syncCmd.ExecuteNonQuery();
+                }
+
                 foreach (var action in _dbQueue.GetConsumingEnumerable())
                 {
                     if (_disposed) break;
@@ -113,6 +125,20 @@ namespace DeepsightSqlite
                     VRSOKNumber INTEGER NOT NULL
                 );";
 
+                // 创建索引以提升查询性能
+                // PanelSides 的唯一索引，同时支持 INSERT OR REPLACE
+                string createPanelSidesUniqueIndex = @"
+                CREATE UNIQUE INDEX IF NOT EXISTS idx_panelsides_panelid_side ON PanelSides (PanelId, Side);";
+
+                string createPanelsDetectionDateIndex = @"
+                CREATE INDEX IF NOT EXISTS idx_panels_detectiondate ON Panels (DetectionDate);";
+
+                string createPanelsMachineIdIndex = @"
+                CREATE INDEX IF NOT EXISTS idx_panels_machineid ON Panels (MachineId);";
+
+                string createPanelsLotNumberIndex = @"
+                CREATE INDEX IF NOT EXISTS idx_panels_lotnumber ON Panels (LotNumber);";
+
                 using (var command = new SQLiteCommand(connection))
                 {
                     command.CommandText = createPanelsTable;
@@ -122,6 +148,15 @@ namespace DeepsightSqlite
                     command.CommandText = createEmployeeReportsTable;
                     command.ExecuteNonQuery();
 
+                    // 创建索引
+                    command.CommandText = createPanelSidesUniqueIndex;
+                    command.ExecuteNonQuery();
+                    command.CommandText = createPanelsDetectionDateIndex;
+                    command.ExecuteNonQuery();
+                    command.CommandText = createPanelsMachineIdIndex;
+                    command.ExecuteNonQuery();
+                    command.CommandText = createPanelsLotNumberIndex;
+                    command.ExecuteNonQuery();
                 }
             }
         }
@@ -153,6 +188,9 @@ namespace DeepsightSqlite
                 return;
             }
 
+            // 提前序列化 HeatPoints，避免在数据库操作中序列化
+            var heatPointsJson = JsonConvert.SerializeObject(record.Data.HeatPoints ?? new List<HeatPoint>());
+
             _dbQueue.Add(connection =>
             {
                 SQLiteTransaction transaction = null;
@@ -161,82 +199,46 @@ namespace DeepsightSqlite
                     transaction = connection.BeginTransaction();
                     long panelId;
 
-                    // 1. 查找或创建 Panel 记录
-                    using (var cmd = new SQLiteCommand("SELECT Id FROM Panels WHERE SerialNumber = @SN", connection))
+                    // 1. 使用 INSERT OR IGNORE + SELECT 获取 PanelId（比先查再插更高效）
+                    using (var insertCmd = new SQLiteCommand(
+                        "INSERT OR IGNORE INTO Panels (MachineId, SerialNumber, LotNumber, DetectionDate, ProductSerial, PathIndex, AviCreationTime) VALUES (@MachineId, @SN, @Lot, @Date, @ProductSerial, @PathIndex, @AviCreationTime)",
+                        connection, transaction))
                     {
-                        cmd.Transaction = transaction;
-                        cmd.Parameters.AddWithValue("@SN", record.SerialNumber);
-                        var result = cmd.ExecuteScalar();
-                        if (result != null)
-                        {
-                            panelId = (long)result;
-                        }
-                        else
-                        {
-                            var insertPanelCmd = new SQLiteCommand(
-                                "INSERT INTO Panels (MachineId, SerialNumber, LotNumber, DetectionDate, ProductSerial, PathIndex, AviCreationTime) VALUES (@MachineId, @SN, @Lot, @Date, @ProductSerial, @PathIndex, @AviCreationTime); SELECT last_insert_rowid();",
-                                connection, transaction);
-                            insertPanelCmd.Parameters.AddWithValue("@MachineId", record.MachineId ?? string.Empty);
-                            insertPanelCmd.Parameters.AddWithValue("@SN", record.SerialNumber);
-                            insertPanelCmd.Parameters.AddWithValue("@Lot", record.LotNumber ?? string.Empty);
-                            insertPanelCmd.Parameters.AddWithValue("@Date", record.DetectionDate);
-                            insertPanelCmd.Parameters.AddWithValue("@ProductSerial", (object)record.ProductSerial ?? DBNull.Value);
-                            insertPanelCmd.Parameters.AddWithValue("@PathIndex", (object)record.PathIndex ?? DBNull.Value);
-                            insertPanelCmd.Parameters.AddWithValue("@AviCreationTime", (object)record.AviCreationTime ?? DBNull.Value);
-                            panelId = (long)insertPanelCmd.ExecuteScalar();
-                        }
+                        insertCmd.Parameters.AddWithValue("@MachineId", record.MachineId ?? string.Empty);
+                        insertCmd.Parameters.AddWithValue("@SN", record.SerialNumber);
+                        insertCmd.Parameters.AddWithValue("@Lot", record.LotNumber ?? string.Empty);
+                        insertCmd.Parameters.AddWithValue("@Date", record.DetectionDate);
+                        insertCmd.Parameters.AddWithValue("@ProductSerial", (object)record.ProductSerial ?? DBNull.Value);
+                        insertCmd.Parameters.AddWithValue("@PathIndex", (object)record.PathIndex ?? DBNull.Value);
+                        insertCmd.Parameters.AddWithValue("@AviCreationTime", (object)record.AviCreationTime ?? DBNull.Value);
+                        insertCmd.ExecuteNonQuery();
                     }
 
-                    // 2. 检查该面数据是否已存在，如果存在则更新，否则插入
-                    long? existingSideId = null;
-                    using (var checkSideCmd = new SQLiteCommand("SELECT Id FROM PanelSides WHERE PanelId = @PanelId AND Side = @Side", connection, transaction))
+                    using (var selectCmd = new SQLiteCommand("SELECT Id FROM Panels WHERE SerialNumber = @SN", connection, transaction))
                     {
-                        checkSideCmd.Parameters.AddWithValue("@PanelId", panelId);
-                        checkSideCmd.Parameters.AddWithValue("@Side", record.Side);
-                        var sideResult = checkSideCmd.ExecuteScalar();
-                        if (sideResult != null)
-                        {
-                            existingSideId = (long)sideResult;
-                        }
+                        selectCmd.Parameters.AddWithValue("@SN", record.SerialNumber);
+                        panelId = (long)selectCmd.ExecuteScalar();
                     }
 
-                    if (existingSideId.HasValue)
+                    // 2. 使用 INSERT OR REPLACE 一条语句搞定插入或更新
+                    using (var upsertCmd = new SQLiteCommand(
+                        @"INSERT OR REPLACE INTO PanelSides
+                          (PanelId, Side, TotalDefectsCount, RemainingDefectsCount, HeatPoints, AviState, AiState, VvsState, VrsState, FinalState)
+                          VALUES (@PanelId, @Side, @Total, @Remaining, @HeatPoints, @AviState, @AiState, @VvsState, @VrsState, @FinalState)",
+                        connection, transaction))
                     {
-                        // 更新现有的面数据
-                        var updateSideCmd = new SQLiteCommand(
-                            "UPDATE PanelSides SET TotalDefectsCount = @Total, RemainingDefectsCount = @Remaining, HeatPoints = @HeatPoints, AviState = @AviState, AiState = @AiState, VvsState = @VvsState, VrsState = @VrsState, FinalState = @FinalState WHERE Id = @Id",
-                            connection, transaction);
-                        updateSideCmd.Parameters.AddWithValue("@Total", record.Data.TotalDefectsCount);
-                        updateSideCmd.Parameters.AddWithValue("@Remaining", record.Data.RemainingDefectsCount);
-                        updateSideCmd.Parameters.AddWithValue("@HeatPoints", JsonConvert.SerializeObject(record.Data.HeatPoints ?? new List<HeatPoint>()));
-                        updateSideCmd.Parameters.AddWithValue("@AviState", record.Data.AviState);
-                        updateSideCmd.Parameters.AddWithValue("@AiState", record.Data.AiState);
-                        updateSideCmd.Parameters.AddWithValue("@VvsState", record.Data.VvsState);
-                        updateSideCmd.Parameters.AddWithValue("@VrsState", record.Data.VrsState);
-                        updateSideCmd.Parameters.AddWithValue("@FinalState", record.Data.FinalState);
-                        updateSideCmd.Parameters.AddWithValue("@Id", existingSideId.Value);
-                        updateSideCmd.ExecuteNonQuery();
+                        upsertCmd.Parameters.AddWithValue("@PanelId", panelId);
+                        upsertCmd.Parameters.AddWithValue("@Side", record.Side);
+                        upsertCmd.Parameters.AddWithValue("@Total", record.Data.TotalDefectsCount);
+                        upsertCmd.Parameters.AddWithValue("@Remaining", record.Data.RemainingDefectsCount);
+                        upsertCmd.Parameters.AddWithValue("@HeatPoints", heatPointsJson);
+                        upsertCmd.Parameters.AddWithValue("@AviState", record.Data.AviState);
+                        upsertCmd.Parameters.AddWithValue("@AiState", record.Data.AiState);
+                        upsertCmd.Parameters.AddWithValue("@VvsState", record.Data.VvsState);
+                        upsertCmd.Parameters.AddWithValue("@VrsState", record.Data.VrsState);
+                        upsertCmd.Parameters.AddWithValue("@FinalState", record.Data.FinalState);
+                        upsertCmd.ExecuteNonQuery();
                     }
-                    else
-                    {
-                        // 插入新的面数据
-                        var insertSideCmd = new SQLiteCommand(
-                            "INSERT INTO PanelSides (PanelId, Side, TotalDefectsCount, RemainingDefectsCount, HeatPoints, AviState, AiState, VvsState, VrsState, FinalState) VALUES (@PanelId, @Side, @Total, @Remaining, @HeatPoints, @AviState, @AiState, @VvsState, @VrsState, @FinalState)",
-                            connection, transaction);
-                        insertSideCmd.Parameters.AddWithValue("@PanelId", panelId);
-                        insertSideCmd.Parameters.AddWithValue("@Side", record.Side);
-                        insertSideCmd.Parameters.AddWithValue("@Total", record.Data.TotalDefectsCount);
-                        insertSideCmd.Parameters.AddWithValue("@Remaining", record.Data.RemainingDefectsCount);
-                        insertSideCmd.Parameters.AddWithValue("@HeatPoints", JsonConvert.SerializeObject(record.Data.HeatPoints ?? new List<HeatPoint>()));
-                        insertSideCmd.Parameters.AddWithValue("@AviState", record.Data.AviState);
-                        insertSideCmd.Parameters.AddWithValue("@AiState", record.Data.AiState);
-                        insertSideCmd.Parameters.AddWithValue("@VvsState", record.Data.VvsState);
-                        insertSideCmd.Parameters.AddWithValue("@VrsState", record.Data.VrsState);
-                        insertSideCmd.Parameters.AddWithValue("@FinalState", record.Data.FinalState);
-                        insertSideCmd.ExecuteNonQuery();
-                    }
-
-                    // 3. (移除 IsAIOk 列逻辑) 不再更新 Panels.IsAIOk，统计时动态计算
 
                     transaction.Commit();
                     LogTextHelper.Info($"SavePanelSide: 成功保存 SN={record.SerialNumber}, Side={record.Side}");

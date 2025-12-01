@@ -750,7 +750,7 @@ namespace DeepSightWorkLib
                 string msg = "";
                 JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };//去掉空值NULL
                 string infoJson = JsonConvert.SerializeObject(info, Formatting.None, jsonSetting);
-                LogTextHelper.Info("准备调用算法,参数为：" + infoJson);
+                LogTextHelper.Info($"{vBModel.SN}  准备调用算法,参数为：" + infoJson);
                 defect.DefectMethodWithImages(info, vBModel.Mats, out msg);
                // defect.DefectMethod(info, out msg);
 
@@ -985,11 +985,11 @@ namespace DeepSightWorkLib
                         }
                     }
 
-                    DateTime detectionDate;
-                    if (!DateTime.TryParse(panelInfo.AviCreateTime, out detectionDate))
+                    DateTime AviCreationTime;
+                    if (!DateTime.TryParse(panelInfo.AviCreateTime, out AviCreationTime))
                     {
-                        detectionDate = DateTime.Now;
-                        LogTextHelper.Info($"无法解析 AviCreateTime '{panelInfo.AviCreateTime}'。将使用当前时间 '{detectionDate}' 作为备用。");
+                        AviCreationTime = DateTime.Now;
+                        LogTextHelper.Info($"无法解析 AviCreateTime '{panelInfo.AviCreateTime}'。将使用当前时间 '{AviCreationTime}' 作为备用。");
                     }
                     //存数据到db
                     //LogTextHelper.Info($"{panelInfo.SerialNumber} Reslist:" + string.Join(", ", resList));
@@ -1006,7 +1006,7 @@ namespace DeepSightWorkLib
                         },
                         ProductSerial = panelInfo.ProductSerial,
                         DetectionDate = DateTime.Now,
-                        AviCreationTime = detectionDate,
+                        AviCreationTime = AviCreationTime,
                         LotNumber = panelInfo.LotId,
                         SerialNumber = panelInfo.SerialNumber,
                         MachineId = panelInfo.StationName,
@@ -1019,11 +1019,11 @@ namespace DeepSightWorkLib
                 }
                 else if (code == "600")
                 {
-                    DateTime detectionDate;
-                    if (!DateTime.TryParse(panelInfo.AviCreateTime, out detectionDate))
+                    DateTime AviCreationTime;
+                    if (!DateTime.TryParse(panelInfo.AviCreateTime, out AviCreationTime))
                     {
-                        detectionDate = DateTime.Now;
-                        LogTextHelper.Info($"无法解析 AviCreateTime '{panelInfo.AviCreateTime}'。将使用当前时间 '{detectionDate}' 作为备用。");
+                        AviCreationTime = DateTime.Now;
+                        LogTextHelper.Info($"无法解析 AviCreateTime '{panelInfo.AviCreateTime}'。将使用当前时间 '{AviCreationTime}' 作为备用。");
                     }
                     //存数据到db
                     //LogTextHelper.Info($"{panelInfo.SerialNumber} Reslist:" + string.Join(", ", resList));
@@ -1040,7 +1040,7 @@ namespace DeepSightWorkLib
                         },
                         ProductSerial = panelInfo.ProductSerial,
                         DetectionDate = DateTime.Now,
-                        AviCreationTime = detectionDate,
+                        AviCreationTime = AviCreationTime,
                         LotNumber = panelInfo.LotId,
                         SerialNumber = panelInfo.SerialNumber,
                         MachineId = panelInfo.StationName,
