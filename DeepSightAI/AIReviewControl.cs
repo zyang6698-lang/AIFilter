@@ -40,6 +40,9 @@ namespace DeepSightAI
             dataGridView_Defects.CellDoubleClick += DataGridView_Defects_CellDoubleClick;
             dataGridView_Defects.CellValueChanged += DataGridView_Defects_CellValueChanged;
 
+            // 订阅详情控件的切换下一行事件
+            defectDetailControl1.SelectNextRowRequested += DefectDetailControl_SelectNextRowRequested;
+
             // 初始化绑定列表（使用支持排序的SortableBindingList）
             _bindingList = new SortableBindingList<DefectReviewItem>(_defectItems);
             dataGridView_Defects.DataSource = _bindingList;
@@ -144,6 +147,27 @@ namespace DeepSightAI
             }
         }
 
+        private void DefectDetailControl_SelectNextRowRequested(object sender, EventArgs e)
+        {
+            // 切换到表格的下一行
+            if (dataGridView_Defects.Rows.Count == 0)
+                return;
+
+            int currentRowIndex = dataGridView_Defects.CurrentCell?.RowIndex ?? -1;
+            int nextRowIndex = (currentRowIndex + 1) % dataGridView_Defects.Rows.Count;
+
+            // 选中下一行并显示详情
+            dataGridView_Defects.ClearSelection();
+            dataGridView_Defects.Rows[nextRowIndex].Selected = true;
+            dataGridView_Defects.CurrentCell = dataGridView_Defects.Rows[nextRowIndex].Cells[0];
+
+            var selectedItem = dataGridView_Defects.Rows[nextRowIndex].DataBoundItem as DefectReviewItem;
+            if (selectedItem != null)
+            {
+                defectDetailControl1.DisplayDefectDetails(selectedItem);
+            }
+        }
+
         private async void Btn_Save_Click(object sender, EventArgs e)
         {
             try
@@ -184,6 +208,19 @@ namespace DeepSightAI
             {
                 if (tabControl_Main.SelectedTab == tabPage_Details)
                 {
+                    // 获取当前选中的行
+                    DefectReviewItem currentItem = null;
+                    if (dataGridView_Defects.CurrentCell != null && dataGridView_Defects.CurrentCell.RowIndex >= 0)
+                    {
+                        currentItem = dataGridView_Defects.Rows[dataGridView_Defects.CurrentCell.RowIndex].DataBoundItem as DefectReviewItem;
+                    }
+
+                    if (currentItem == null)
+                    {
+                        MessageBox.Show("请先选择一条记录。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+
                     using (var dialog = new FolderBrowserDialog())
                     {
                         dialog.Description = "请选择要导出图片的文件夹";
@@ -225,13 +262,15 @@ namespace DeepSightAI
                             var filteredHeatPoints = defectDetailControl1.GetFilteredHeatPoints();
                             var (aiFilter, vvsFilter) = defectDetailControl1.GetFilters();
 
+                            // 以SN命名子文件夹
                             string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
-                            string folderName = $"{timestamp}_{aiFilter}_{vvsFilter}";
-                            string exportPath = Path.Combine(dialog.SelectedPath, folderName);
+                            string snFolderName = $"{currentItem.SerialNumber}_{currentItem.Side}_{timestamp}";
+                            string exportPath = Path.Combine(dialog.SelectedPath, snFolderName);
                             Directory.CreateDirectory(exportPath);
 
                             await Task.Run(() =>
                             {
+                                // 导出图片
                                 foreach (var heatPoint in filteredHeatPoints)
                                 {
                                     if (!string.IsNullOrEmpty(heatPoint.ImagePath) && File.Exists(heatPoint.ImagePath))
@@ -247,10 +286,31 @@ namespace DeepSightAI
                                         }
                                     }
                                 }
+
+                                // 导出表格信息到CSV
+                                var csvPath = Path.Combine(exportPath, $"{currentItem.SerialNumber}_{currentItem.Side}_info.csv");
+                                var csvLines = new List<string>
+                                {
+                                    "序列号,Lot号,机台号,料号,面次,AVI状态,AI状态,人工判定,缺陷数,检测日期",
+                                    $"{currentItem.SerialNumber},{currentItem.LotNumber},{currentItem.MachineId},{currentItem.ProductSerial}," +
+                                    $"{currentItem.Side},{currentItem.AviStatus},{currentItem.AiStatus},{currentItem.ManualStatus}," +
+                                    $"{currentItem.DefectCount},{currentItem.DetectionDate:yyyy-MM-dd HH:mm:ss}"
+                                };
+
+                                // 添加缺陷点详情
+                                csvLines.Add("");
+                                csvLines.Add("缺陷点详情");
+                                csvLines.Add("图片路径,AI状态,VVS状态");
+                                foreach (var hp in filteredHeatPoints)
+                                {
+                                    csvLines.Add($"{hp.ImagePath},{hp.AIStatus},{hp.VVSStatus}");
+                                }
+
+                                File.WriteAllLines(csvPath, csvLines, System.Text.Encoding.UTF8);
                             });
 
                             this.Enabled = true;
-                            MessageBox.Show("导出完成。", "完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            MessageBox.Show($"导出完成。\n导出路径: {exportPath}", "完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                     }
                 }

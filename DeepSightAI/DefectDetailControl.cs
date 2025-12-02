@@ -15,10 +15,15 @@ namespace DeepSightAI
         private List<HeatPoint> _allHeatPoints;
         private List<HeatPoint> _filteredHeatPoints; // For filtered data
         private int _currentPage = 1;
-        private const int PageSize = 5; // 
+        private const int PageSize = 5; //
         private int _totalPages;
         private string _aiFilter = "All";
         private string _vvsFilter = "All";
+
+        /// <summary>
+        /// 当需要切换到下一行记录时触发（按Tab键时）
+        /// </summary>
+        public event EventHandler SelectNextRowRequested;
 
         public DefectDetailControl()
         {
@@ -134,7 +139,8 @@ namespace DeepSightAI
             }
             else if (keyData == Keys.Tab)
             {
-                SelectNextImage();
+                // 触发事件，通知父控件切换到下一行
+                SelectNextRowRequested?.Invoke(this, EventArgs.Empty);
                 return true;
             }
             return base.ProcessCmdKey(ref msg, keyData);
