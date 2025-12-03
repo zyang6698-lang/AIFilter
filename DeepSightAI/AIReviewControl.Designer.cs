@@ -45,7 +45,6 @@
             this.col_MachineId = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.col_ProductSerial = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.col_Side = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.col_AviStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.col_AiStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.col_ManualStatus = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.col_DefectCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -227,7 +226,6 @@
             this.col_MachineId,
             this.col_ProductSerial,
             this.col_Side,
-            this.col_AviStatus,
             this.col_AiStatus,
             this.col_ManualStatus,
             this.col_DefectCount,
@@ -293,15 +291,7 @@
             this.col_Side.MinimumWidth = 6;
             this.col_Side.Name = "col_Side";
             this.col_Side.ReadOnly = true;
-            // 
-            // col_AviStatus
-            // 
-            this.col_AviStatus.DataPropertyName = "AviStatus";
-            this.col_AviStatus.HeaderText = "AVI状态";
-            this.col_AviStatus.MinimumWidth = 6;
-            this.col_AviStatus.Name = "col_AviStatus";
-            this.col_AviStatus.ReadOnly = true;
-            // 
+            //
             // col_AiStatus
             // 
             this.col_AiStatus.DataPropertyName = "AiStatus";
@@ -409,7 +399,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn col_MachineId;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_ProductSerial;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_Side;
-        private System.Windows.Forms.DataGridViewTextBoxColumn col_AviStatus;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_AiStatus;
         private System.Windows.Forms.DataGridViewComboBoxColumn col_ManualStatus;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_DefectCount;

@@ -95,7 +95,11 @@ namespace DeepSightAI
                         // 无匹配面，跳过该panel
                         continue;
                     }
-                    _defectItems.Add(CreateDefectReviewItem(panel, side));
+                    // 只添加AVI状态为NG的数据 (AviState != 1 表示NG)
+                    if (side.AviState != 1)
+                    {
+                        _defectItems.Add(CreateDefectReviewItem(panel, side));
+                    }
                 }
 
                 _bindingList = new SortableBindingList<DefectReviewItem>(_defectItems);
