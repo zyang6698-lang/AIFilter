@@ -1,4 +1,4 @@
-using DeepSightAI.Properties;
+ï»¿using DeepSightAI.Properties;
 using DeepSightModel;
 using DeepSightTool;
 using System;
@@ -17,7 +17,7 @@ namespace DeepSightAI.SettingPages
     public partial class AviCtr2Container : UserControl
     {
         private List<AviCtr2> aviCtr2Controls = new List<AviCtr2>();
-        // »º´æ´¦Àí¹ıµÄ±³¾°£¬±ÜÃâÃ¿´Î OnPaint ÖØĞÂÓ¦ÓÃ ColorMatrix ºÍËõ·Å
+        // ç¼“å­˜å¤„ç†è¿‡çš„èƒŒæ™¯ï¼Œé¿å…æ¯æ¬¡ OnPaint é‡æ–°åº”ç”¨ ColorMatrix å’Œç¼©æ”¾
         private Bitmap _cachedBackground;
         private readonly object _bgLock = new object();
 
@@ -31,7 +31,7 @@ namespace DeepSightAI.SettingPages
             this.UpdateStyles();
         }
 
-        // Ê¹ÓÃ×éºÏË«»º³å£¨×¢Òâ£º¿ÉÄÜÓ°Ïì²ã¼¶¿Ø¼şÏÔÊ¾£¬ÈôÓĞÎÊÌâ¿ÉÒÆ³ı£©
+        // ä½¿ç”¨ç»„åˆåŒç¼“å†²ï¼ˆæ³¨æ„ï¼šå¯èƒ½å½±å“å±‚çº§æ§ä»¶æ˜¾ç¤ºï¼Œè‹¥æœ‰é—®é¢˜å¯ç§»é™¤ï¼‰
         protected override CreateParams CreateParams
         {
             get
@@ -43,21 +43,21 @@ namespace DeepSightAI.SettingPages
         }
 
         /// <summary>
-        /// ¸ù¾İÅäÖÃÁĞ±íÔöÁ¿´´½¨/¸üĞÂ AviCtr2 ¿Ø¼ş£¨±ÜÃâÃ¿´ÎÈ«Çåµ¼ÖÂÖØ»æ¿ªÏú£©
+        /// æ ¹æ®é…ç½®åˆ—è¡¨å¢é‡åˆ›å»º/æ›´æ–° AviCtr2 æ§ä»¶ï¼ˆé¿å…æ¯æ¬¡å…¨æ¸…å¯¼è‡´é‡ç»˜å¼€é”€ï¼‰
         /// </summary>
-        /// <param name="watchPaths">ÅäÖÃÁĞ±í</param>
+        /// <param name="watchPaths">é…ç½®åˆ—è¡¨</param>
         public void CreateMachinePanels(List<WatchPathConfig> watchPaths)
         {
             if (watchPaths == null) return;
 
-            // ÏÖÓĞÓ³Éä
+            // ç°æœ‰æ˜ å°„
             var existingMap = aviCtr2Controls.ToDictionary(c => c.ctrConfig.AviName, c => c);
             var incomingNames = new HashSet<string>(watchPaths.Select(w => w.AviName));
 
             flowLayoutPanel1.SuspendLayout();
             try
             {
-                // ÒÆ³ı²»´æÔÚµÄ
+                // ç§»é™¤ä¸å­˜åœ¨çš„
                 for (int i = aviCtr2Controls.Count - 1; i >= 0; i--)
                 {
                     var ctr = aviCtr2Controls[i];
@@ -69,12 +69,12 @@ namespace DeepSightAI.SettingPages
                     }
                 }
 
-                // Ìí¼Ó»ò¸üĞÂÏÖÓĞ
+                // æ·»åŠ æˆ–æ›´æ–°ç°æœ‰
                 foreach (var cfg in watchPaths)
                 {
                     if (existingMap.TryGetValue(cfg.AviName, out var ctr))
                     {
-                        // ¸üĞÂÅäÖÃÒıÓÃ£¨¼ÙÉèÊôĞÔÓÃÓÚÏÔÊ¾£©
+                        // æ›´æ–°é…ç½®å¼•ç”¨ï¼ˆå‡è®¾å±æ€§ç”¨äºæ˜¾ç¤ºï¼‰
                         ctr.ctrConfig = cfg;
                         ctr.UpdateDisplay();
                     }
@@ -105,7 +105,7 @@ namespace DeepSightAI.SettingPages
         }
 
         /// <summary>
-        /// Ìí¼Óµ¥¸ö AviCtr2 ¿Ø¼ş
+        /// æ·»åŠ å•ä¸ª AviCtr2 æ§ä»¶
         /// </summary>
         private void AddAviControl(WatchPathConfig watchPath)
         {
@@ -122,7 +122,7 @@ namespace DeepSightAI.SettingPages
         }
 
         /// <summary>
-        /// »ñÈ¡ËùÓĞ AviCtr2 ¿Ø¼şµÄÅäÖÃÁĞ±í
+        /// è·å–æ‰€æœ‰ AviCtr2 æ§ä»¶çš„é…ç½®åˆ—è¡¨
         /// </summary>
         public List<WatchPathConfig> GetAllConfigs()
         {
@@ -130,7 +130,7 @@ namespace DeepSightAI.SettingPages
         }
 
         /// <summary>
-        /// ¸üĞÂÖ¸¶¨Ãû³ÆµÄ AviCtr2 ¿Ø¼şµÄÍ³¼ÆĞÅÏ¢
+        /// æ›´æ–°æŒ‡å®šåç§°çš„ AviCtr2 æ§ä»¶çš„ç»Ÿè®¡ä¿¡æ¯
         /// </summary>
         public void UpdateAviCtrStats(string aviName, int totalImages, int aiOkImages)
         {
@@ -143,7 +143,7 @@ namespace DeepSightAI.SettingPages
         }
 
         /// <summary>
-        /// ¸üĞÂËùÓĞ AviCtr2 ¿Ø¼şµÄĞÅÏ¢
+        /// æ›´æ–°æ‰€æœ‰ AviCtr2 æ§ä»¶çš„ä¿¡æ¯
         /// </summary>
         public void UpdateAllAviCtrsInfo(Func<string, (string LotNumber, string SerialNumber, string ProductSerial, string PathIndex, double Utilization)> getLatestPanelInfo)
         {
@@ -189,7 +189,7 @@ namespace DeepSightAI.SettingPages
             new float[] {0, 0, 0, 0, 1}
         });
 
-        // ¼õÉÙ±³¾°ÖØ¸´»æÖÆ¿ªÏú
+        // å‡å°‘èƒŒæ™¯é‡å¤ç»˜åˆ¶å¼€é”€
         private void RebuildBackgroundCache()
         {
             lock (_bgLock)
@@ -209,7 +209,7 @@ namespace DeepSightAI.SettingPages
                 }
                 _cachedBackground = bmp;
             }
-            Invalidate(); // Ë¢ĞÂÏÔÊ¾
+            Invalidate(); // åˆ·æ–°æ˜¾ç¤º
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -224,15 +224,15 @@ namespace DeepSightAI.SettingPages
             RebuildBackgroundCache();
         }
 
-        // ±ÜÃâÄ¬ÈÏ±³¾°²Á³ıµ¼ÖÂÉÁË¸
+        // é¿å…é»˜è®¤èƒŒæ™¯æ“¦é™¤å¯¼è‡´é—ªçƒ
         protected override void OnPaintBackground(PaintEventArgs pevent)
         {
-            // ²»µ÷ÓÃ base£¬¸ÄÓÉ OnPaint Ê¹ÓÃ»º´æÍ¼
+            // ä¸è°ƒç”¨ baseï¼Œæ”¹ç”± OnPaint ä½¿ç”¨ç¼“å­˜å›¾
         }
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            base.OnPaint(e); // ±£Áô×Ó¿Ø¼şµÈ»æÖÆ
+            base.OnPaint(e); // ä¿ç•™å­æ§ä»¶ç­‰ç»˜åˆ¶
             try
             {
                 lock (_bgLock)
@@ -243,7 +243,7 @@ namespace DeepSightAI.SettingPages
                         return;
                     }
                 }
-                // ¶µµ×Â·¾¶£¨Ê×´Î»ò×ÊÔ´Îª¿Õ£©
+                // å…œåº•è·¯å¾„ï¼ˆé¦–æ¬¡æˆ–èµ„æºä¸ºç©ºï¼‰
                 Image backgroundImage = Resources.background;
                 if (backgroundImage != null)
                 {
@@ -267,7 +267,7 @@ namespace DeepSightAI.SettingPages
             {
                 this.BeginInvoke(new Action(async () =>
                 {
-                    // ²¢ĞĞ»ñÈ¡¼õÉÙ¶à´Î UI Ë¢ĞÂ
+                    // å¹¶è¡Œè·å–å‡å°‘å¤šæ¬¡ UI åˆ·æ–°
                     var tasks = aviCtr2Controls
                         .Where(c => c.ctrConfig.IsEnable)
                         .Select(async c => (c, info: await getLatestPanelInfo(c.ctrConfig.AviName)))
@@ -294,14 +294,14 @@ namespace DeepSightAI.SettingPages
             {
                 this.BeginInvoke(new Action(async () =>
                 {
-                    // ²¢ĞĞÊÕ¼¯ËùÓĞĞèÒªµÄÊı¾İ£¬¼õÉÙ UI Ïß³ÌÇĞ»»
+                    // å¹¶è¡Œæ”¶é›†æ‰€æœ‰éœ€è¦çš„æ•°æ®ï¼Œå‡å°‘ UI çº¿ç¨‹åˆ‡æ¢
                     var lotTasks = aviCtr2Controls
                         .Where(c => c.ctrConfig.IsEnable)
                         .Select(async c => (c, lotAndSerial: await GetLatestLotAndProductSerial(c.ctrConfig.AviName)))
                         .ToList();
                     var lotResults = await Task.WhenAll(lotTasks);
 
-                    // »ñÈ¡ panel Êı¾İ
+                    // è·å– panel æ•°æ®
                     var panelTasks = lotResults.Select(async r => (r.c, r.lotAndSerial, data: await getLatestPanelData(r.c.ctrConfig.AviName, r.lotAndSerial.Item1))).ToList();
                     var panelResults = await Task.WhenAll(panelTasks);
 

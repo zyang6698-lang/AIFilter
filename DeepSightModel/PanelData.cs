@@ -1,11 +1,11 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace DeepSightModel
 {
     /// <summary>
-    /// µ¥¸öÈ±ÏİµÄÏêÏ¸ĞÅÏ¢
+    /// å•ä¸ªç¼ºé™·çš„è¯¦ç»†ä¿¡æ¯
     /// </summary>
     public class HeatPoint
     {
@@ -20,30 +20,30 @@ namespace DeepSightModel
     }
 
     /// <summary>
-    /// µ¥Ãæ£¨A/BÃæ£©µÄÊı¾İ
+    /// å•é¢ï¼ˆA/Bé¢ï¼‰çš„æ•°æ®
     /// </summary>
     public class SideData
     {
 
         public List<HeatPoint> HeatPoints { get; set; } = new List<HeatPoint>();
-        // ×Ü±¨µãÊıÁ¿ (AVI ¼ì²â³öµÄÈ±ÏİÊı)
+        // æ€»æŠ¥ç‚¹æ•°é‡ (AVI æ£€æµ‹å‡ºçš„ç¼ºé™·æ•°)
         public int TotalDefectsCount { get; set; }
-        // ¹ıÂËºó±£ÁôµÄÈ±ÏİÊı (AI / ¸´ÅĞºóÈÔ´æÔÚµÄÈ±Ïİ)
+        // è¿‡æ»¤åä¿ç•™çš„ç¼ºé™·æ•° (AI / å¤åˆ¤åä»å­˜åœ¨çš„ç¼ºé™·)
         public int RemainingDefectsCount { get; set; }
         public string SerialNumber { get; set; }
         public string Side { get; set; }
 
-        // ·Ö½×¶Î×´Ì¬£º0 Î´ÔËĞĞ / 1 OK / 2 NG / 3 Òì³£
-        public int AviState { get; set; }      // AVI ½×¶Î
-        public int AiState { get; set; }       // AI ¹ıÂË½×¶Î
-        public int VvsState { get; set; }      // VVS ¸´ÅĞ½×¶Î
-        public int VrsState { get; set; }      // VRS ÖÕÅĞ½×¶Î
-        // ×îÖÕ×´Ì¬£º0 ´ı´¦Àí / 1 ×îÖÕOK / 2 ×îÖÕNG
+        // åˆ†é˜¶æ®µçŠ¶æ€ï¼š0 æœªè¿è¡Œ / 1 OK / 2 NG / 3 å¼‚å¸¸
+        public int AviState { get; set; }      // AVI é˜¶æ®µ
+        public int AiState { get; set; }       // AI è¿‡æ»¤é˜¶æ®µ
+        public int VvsState { get; set; }      // VVS å¤åˆ¤é˜¶æ®µ
+        public int VrsState { get; set; }      // VRS ç»ˆåˆ¤é˜¶æ®µ
+        // æœ€ç»ˆçŠ¶æ€ï¼š0 å¾…å¤„ç† / 1 æœ€ç»ˆOK / 2 æœ€ç»ˆNG
         public int FinalState { get; set; }
     }
 
     /// <summary>
-    /// ÓÃÓÚ´«Èëµ¥ÃæÊı¾İµÄ¼ÇÂ¼
+    /// ç”¨äºä¼ å…¥å•é¢æ•°æ®çš„è®°å½•
     /// </summary>
     public class PanelSideRecord
     {
@@ -60,16 +60,16 @@ namespace DeepSightModel
 
 
     /// <summary>
-    /// Êı¾İ¿âÖĞÍêÕûµÄÃæ°å¼ì²â¼ÇÂ¼£¨ÓÃÓÚ¶ÁÈ¡£©
+    /// æ•°æ®åº“ä¸­å®Œæ•´çš„é¢æ¿æ£€æµ‹è®°å½•ï¼ˆç”¨äºè¯»å–ï¼‰
     /// </summary>
     public class PanelDataRecord
     {
-        public int Id { get; set; } // Êı¾İ¿âÖ÷¼ü
+        public int Id { get; set; } // æ•°æ®åº“ä¸»é”®
         public string MachineId { get; set; }
         public DateTime DetectionDate { get; set; }
         public string SerialNumber { get; set; }
         public string LotNumber { get; set; }
-        // ÁÏºÅ
+        // æ–™å·
         public string ProductSerial { get; set; }
         public bool IsAIOk { get; set; }
         public string PathIndex { get; set; }
@@ -89,21 +89,21 @@ namespace DeepSightModel
                         var sideA = record.Sides[0];
                         var sideB = record.Sides[1];
 
-                        // AVI Ãæ°å OK£ºÁ½Ãæ AVI OK
+                        // AVI é¢æ¿ OKï¼šä¸¤é¢ AVI OK
                         if (sideA.AviState == 1 && sideB.AviState == 1)
                             stat.aviPanelOKCount = 1;
 
-                        // AI Ãæ°å OK£ºÁ½Ãæ AI OK (ÇÒ¾ù¾­¹ı AVI ¼ì²â)
+                        // AI é¢æ¿ OKï¼šä¸¤é¢ AI OK (ä¸”å‡ç»è¿‡ AVI æ£€æµ‹)
                         if (sideA.AviState > 0 && sideB.AviState > 0 && sideA.AiState == 1 && sideB.AiState == 1)
                             stat.aiPanelOKCount = 1;
 
-                        // ±¨µã×ÜÊı (ÒÔ AVI ÌáÈ¡µÄÈ±ÏİÊıÎª»ù´¡)
+                        // æŠ¥ç‚¹æ€»æ•° (ä»¥ AVI æå–çš„ç¼ºé™·æ•°ä¸ºåŸºç¡€)
                         stat.aiFilterCount = sideA.TotalDefectsCount + sideB.TotalDefectsCount;
 
-                        // AI ¹ıÂË OK µÄ±¨µãÊı (±»¹ıÂËµôµÄÈ±ÏİÊı)
+                        // AI è¿‡æ»¤ OK çš„æŠ¥ç‚¹æ•° (è¢«è¿‡æ»¤æ‰çš„ç¼ºé™·æ•°)
                         stat.aiFilterOKCount = (sideA.TotalDefectsCount + sideB.TotalDefectsCount) - (sideA.RemainingDefectsCount + sideB.RemainingDefectsCount);
 
-                        // Î´¼ì²â±¨µã
+                        // æœªæ£€æµ‹æŠ¥ç‚¹
                         if ((sideA.AiState != 1&& sideA.AiState != 2 && sideA.AviState != 0) || (sideB.AiState != 1 && sideB.AiState != 2 && sideB.AviState != 0))
                         {
                             stat.aiFilterUninspectedCount = sideA.TotalDefectsCount + sideB.TotalDefectsCount;
@@ -126,18 +126,18 @@ namespace DeepSightModel
 
     public class BoardStat
     {
-        // Ãæ°åÎ¬¶È
+        // é¢æ¿ç»´åº¦
         public int aviPanelCount { get; set; }
         public int aviPanelOKCount { get; set; }
         public int aiPanelOKCount { get; set; }
-        // ±¨µãÎ¬¶È
+        // æŠ¥ç‚¹ç»´åº¦
         public int aiFilterCount { get; set; }
         public int aiFilterOKCount { get; set; }
         public int aiFilterUninspectedCount { get; set; }
     }
 
     /// <summary>
-    /// ÓÃÓÚÍ³¼Æ²éÑ¯µÄÃ¿ÈÕÊı¾İÕªÒª
+    /// ç”¨äºç»Ÿè®¡æŸ¥è¯¢çš„æ¯æ—¥æ•°æ®æ‘˜è¦
     /// </summary>
     public class DailyStat
     {

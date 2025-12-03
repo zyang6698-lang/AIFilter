@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
@@ -7,7 +7,7 @@ using DeepSightTool;
 namespace DeepSightModel
 {
     /// <summary>
-    /// µ¥¸ö²úÆ·µÄ²Ã¼ô/¿½±´Ä£Ê½¼°Æ«ÒÆÅäÖÃ
+    /// å•ä¸ªäº§å“çš„è£å‰ª/æ‹·è´æ¨¡å¼åŠåç§»é…ç½®
     /// </summary>
     public class ProductModeItem
     {
@@ -15,7 +15,7 @@ namespace DeepSightModel
         public string Name { get; set; }
 
         [JsonProperty("copy_or_cut_mode")]
-        public string CopyCutMode { get; set; } // "copy" | "cut" | ÆäËûÀ©Õ¹
+        public string CopyCutMode { get; set; } // "copy" | "cut" | å…¶ä»–æ‰©å±•
 
         [JsonProperty("x_offset")]
         public int XOffset { get; set; }
@@ -25,7 +25,7 @@ namespace DeepSightModel
     }
 
     /// <summary>
-    /// ²úÆ·Ä£Ê½ÅäÖÃ¼¯ºÏ
+    /// äº§å“æ¨¡å¼é…ç½®é›†åˆ
     /// </summary>
     public class ProductModeConfig
     {
@@ -34,13 +34,13 @@ namespace DeepSightModel
     }
 
     /// <summary>
-    /// ²úÆ·Ä£Ê½ÅäÖÃ¶ÁĞ´Àà£¨ÎÄ¼ş: ATS_Agent_EXE\\config\\config.json£©
-    /// ×¢Òâ: ÈôÓë AVIConfig ¹²ÓÃÍ¬Ò»Â·¾¶ÎÄ¼ş½«²úÉú³åÍ»£»½¨Òé·ÖÀëÎÄ¼şÃû£¬ÈçĞè¹²´æ¿É¸ü¸Ä FILE_NAME¡£
+    /// äº§å“æ¨¡å¼é…ç½®è¯»å†™ç±»ï¼ˆæ–‡ä»¶: ATS_Agent_EXE\\config\\config.jsonï¼‰
+    /// æ³¨æ„: è‹¥ä¸ AVIConfig å…±ç”¨åŒä¸€è·¯å¾„æ–‡ä»¶å°†äº§ç”Ÿå†²çªï¼›å»ºè®®åˆ†ç¦»æ–‡ä»¶åï¼Œå¦‚éœ€å…±å­˜å¯æ›´æ”¹ FILE_NAMEã€‚
     /// </summary>
     public class DeepSight_ProductMode_class
     {
         private const string DIR = "ATS_Agent_EXE\\config";
-        private const string FILE_NAME = "products.json"; // ÓëÏÖÓĞ AVI Ê¹ÓÃÍ¬ÃûÊ±ÇëÈ·ÈÏÎÄ¼ş½á¹¹ÊÇ·ñÒÑ¸üĞÂ
+        private const string FILE_NAME = "products.json"; // ä¸ç°æœ‰ AVI ä½¿ç”¨åŒåæ—¶è¯·ç¡®è®¤æ–‡ä»¶ç»“æ„æ˜¯å¦å·²æ›´æ–°
         private static readonly string FullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, DIR, FILE_NAME);
 
         public DeepSight_ProductMode_class()
@@ -62,7 +62,7 @@ namespace DeepSightModel
         }
 
         /// <summary>
-        /// Éú³ÉÄ¬ÈÏÅäÖÃÎÄ¼ş
+        /// ç”Ÿæˆé»˜è®¤é…ç½®æ–‡ä»¶
         /// </summary>
         public bool DefaultConfig()
         {
@@ -80,13 +80,13 @@ namespace DeepSightModel
             }
             catch (Exception ex)
             {
-                LogTextHelper.Error("Ä¬ÈÏ²úÆ·Ä£Ê½ÅäÖÃÉú³ÉÒì³£", ex);
+                LogTextHelper.Error("é»˜è®¤äº§å“æ¨¡å¼é…ç½®ç”Ÿæˆå¼‚å¸¸", ex);
                 return false;
             }
         }
 
         /// <summary>
-        /// ¶ÁÈ¡ÅäÖÃ
+        /// è¯»å–é…ç½®
         /// </summary>
         public bool Read(out ProductModeConfig config)
         {
@@ -103,13 +103,13 @@ namespace DeepSightModel
             }
             catch (Exception ex)
             {
-                LogTextHelper.Error("¶ÁÈ¡²úÆ·Ä£Ê½ÅäÖÃÒì³£", ex);
+                LogTextHelper.Error("è¯»å–äº§å“æ¨¡å¼é…ç½®å¼‚å¸¸", ex);
                 return false;
             }
         }
 
         /// <summary>
-        /// ±£´æÅäÖÃ£¨¸²¸ÇĞ´Èë£©
+        /// ä¿å­˜é…ç½®ï¼ˆè¦†ç›–å†™å…¥ï¼‰
         /// </summary>
         public bool Save(ProductModeConfig config)
         {
@@ -122,13 +122,13 @@ namespace DeepSightModel
             }
             catch (Exception ex)
             {
-                LogTextHelper.Error("±£´æ²úÆ·Ä£Ê½ÅäÖÃÒì³£", ex);
+                LogTextHelper.Error("ä¿å­˜äº§å“æ¨¡å¼é…ç½®å¼‚å¸¸", ex);
                 return false;
             }
         }
 
         /// <summary>
-        /// »ñÈ¡Ö¸¶¨ÁÏºÅµÄÄ£Ê½Ïî, Î´ÕÒµ½·µ»Ø null
+        /// è·å–æŒ‡å®šæ–™å·çš„æ¨¡å¼é¡¹, æœªæ‰¾åˆ°è¿”å› null
         /// </summary>
         public ProductModeItem GetProduct(string name, ProductModeConfig config)
         {
@@ -137,7 +137,7 @@ namespace DeepSightModel
         }
 
         /// <summary>
-        /// ¸üĞÂ»òĞÂÔöÄ³²úÆ·ÅäÖÃ²¢±£´æ
+        /// æ›´æ–°æˆ–æ–°å¢æŸäº§å“é…ç½®å¹¶ä¿å­˜
         /// </summary>
         public bool UpsertProduct(ProductModeItem item)
         {

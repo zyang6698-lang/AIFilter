@@ -1,4 +1,4 @@
-using System;
+锘縰sing System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -75,8 +75,8 @@ namespace DeepSightAI
                 Height = 40
             };
 
-            this.btnOk = new Button { Text = "确定", DialogResult = DialogResult.OK };
-            this.btnCancel = new Button { Text = "取消", DialogResult = DialogResult.Cancel };
+            this.btnOk = new Button { Text = "纭畾", DialogResult = DialogResult.OK };
+            this.btnCancel = new Button { Text = "鍙栨秷", DialogResult = DialogResult.Cancel };
 
             this.btnOk.Click += (sender, e) => {
                 for (int i = 0; i < rows; i++)

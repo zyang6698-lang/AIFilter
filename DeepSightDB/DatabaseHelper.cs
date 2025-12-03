@@ -1,4 +1,4 @@
-using DeepSightModel;
+ï»¿using DeepSightModel;
 using DeepSightTool;
 using Newtonsoft.Json;
 using System;
@@ -36,12 +36,12 @@ namespace DeepsightSqlite
             {
                 connection.Open();
 
-                // ¿ªÆô WAL Ä£Ê½ÌáÉıĞ´ÈëĞÔÄÜ
+                // å¼€å¯ WAL æ¨¡å¼æå‡å†™å…¥æ€§èƒ½
                 using (var pragmaCmd = new SQLiteCommand("PRAGMA journal_mode=WAL;", connection))
                 {
                     pragmaCmd.ExecuteNonQuery();
                 }
-                // ÉèÖÃÍ¬²½Ä£Ê½Îª NORMAL£¬Æ½ºâĞÔÄÜºÍ°²È«ĞÔ
+                // è®¾ç½®åŒæ­¥æ¨¡å¼ä¸º NORMALï¼Œå¹³è¡¡æ€§èƒ½å’Œå®‰å…¨æ€§
                 using (var syncCmd = new SQLiteCommand("PRAGMA synchronous=NORMAL;", connection))
                 {
                     syncCmd.ExecuteNonQuery();
@@ -101,15 +101,15 @@ namespace DeepsightSqlite
                 CREATE TABLE IF NOT EXISTS PanelSides (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
                     PanelId INTEGER NOT NULL,
-                    Side TEXT NOT NULL, -- 'A' »ò 'B'
+                    Side TEXT NOT NULL, -- 'A' æˆ– 'B'
                     TotalDefectsCount INTEGER NOT NULL,
                     RemainingDefectsCount INTEGER NOT NULL,
-                    HeatPoints TEXT, -- ´æ´¢ HeatPoint ÁĞ±íµÄ JSON ×Ö·û´®
-                    AviState INTEGER DEFAULT 0, -- 0: Î´ÔËĞĞ, 1: OK, 2: NG
-                    AiState INTEGER DEFAULT 0,  -- 0: Î´ÔËĞĞ, 1: OK, 2: NG
-                    VvsState INTEGER DEFAULT 0, -- 0: Î´ÔËĞĞ, 1: OK, 2: NG
-                    VrsState INTEGER DEFAULT 0, -- 0: Î´ÔËĞĞ, 1: OK, 2: NG
-                    FinalState INTEGER DEFAULT 0, -- 0: ´ı´¦Àí, 1: ×îÖÕOK, 2: ×îÖÕNG
+                    HeatPoints TEXT, -- å­˜å‚¨ HeatPoint åˆ—è¡¨çš„ JSON å­—ç¬¦ä¸²
+                    AviState INTEGER DEFAULT 0, -- 0: æœªè¿è¡Œ, 1: OK, 2: NG
+                    AiState INTEGER DEFAULT 0,  -- 0: æœªè¿è¡Œ, 1: OK, 2: NG
+                    VvsState INTEGER DEFAULT 0, -- 0: æœªè¿è¡Œ, 1: OK, 2: NG
+                    VrsState INTEGER DEFAULT 0, -- 0: æœªè¿è¡Œ, 1: OK, 2: NG
+                    FinalState INTEGER DEFAULT 0, -- 0: å¾…å¤„ç†, 1: æœ€ç»ˆOK, 2: æœ€ç»ˆNG
                     FOREIGN KEY (PanelId) REFERENCES Panels(Id) ON DELETE CASCADE
                 );";
 
@@ -125,8 +125,8 @@ namespace DeepsightSqlite
                     VRSOKNumber INTEGER NOT NULL
                 );";
 
-                // ´´½¨Ë÷ÒıÒÔÌáÉı²éÑ¯ĞÔÄÜ
-                // PanelSides µÄÎ¨Ò»Ë÷Òı£¬Í¬Ê±Ö§³Ö INSERT OR REPLACE
+                // åˆ›å»ºç´¢å¼•ä»¥æå‡æŸ¥è¯¢æ€§èƒ½
+                // PanelSides çš„å”¯ä¸€ç´¢å¼•ï¼ŒåŒæ—¶æ”¯æŒ INSERT OR REPLACE
                 string createPanelSidesUniqueIndex = @"
                 CREATE UNIQUE INDEX IF NOT EXISTS idx_panelsides_panelid_side ON PanelSides (PanelId, Side);";
 
@@ -148,7 +148,7 @@ namespace DeepsightSqlite
                     command.CommandText = createEmployeeReportsTable;
                     command.ExecuteNonQuery();
 
-                    // ´´½¨Ë÷Òı
+                    // åˆ›å»ºç´¢å¼•
                     command.CommandText = createPanelSidesUniqueIndex;
                     command.ExecuteNonQuery();
                     command.CommandText = createPanelsDetectionDateIndex;
@@ -162,33 +162,33 @@ namespace DeepsightSqlite
         }
 
         /// <summary>
-        /// ´æ´¢µ¥ÃæÊı¾İ
+        /// å­˜å‚¨å•é¢æ•°æ®
         /// </summary>
         public void SavePanelSide(PanelSideRecord record)
         {
-            // ²ÎÊıÑéÖ¤
+            // å‚æ•°éªŒè¯
             if (record == null)
             {
-                LogTextHelper.Error("SavePanelSide: record Îª null£¬ÎŞ·¨±£´æ");
+                LogTextHelper.Error("SavePanelSide: record ä¸º nullï¼Œæ— æ³•ä¿å­˜");
                 return;
             }
             if (string.IsNullOrEmpty(record.SerialNumber))
             {
-                LogTextHelper.Error("SavePanelSide: SerialNumber Îª¿Õ£¬ÎŞ·¨±£´æ");
+                LogTextHelper.Error("SavePanelSide: SerialNumber ä¸ºç©ºï¼Œæ— æ³•ä¿å­˜");
                 return;
             }
             if (string.IsNullOrEmpty(record.Side))
             {
-                LogTextHelper.Error($"SavePanelSide: Side Îª¿Õ£¬SN={record.SerialNumber}£¬ÎŞ·¨±£´æ");
+                LogTextHelper.Error($"SavePanelSide: Side ä¸ºç©ºï¼ŒSN={record.SerialNumber}ï¼Œæ— æ³•ä¿å­˜");
                 return;
             }
             if (record.Data == null)
             {
-                LogTextHelper.Error($"SavePanelSide: Data Îª null£¬SN={record.SerialNumber}£¬Side={record.Side}£¬ÎŞ·¨±£´æ");
+                LogTextHelper.Error($"SavePanelSide: Data ä¸º nullï¼ŒSN={record.SerialNumber}ï¼ŒSide={record.Side}ï¼Œæ— æ³•ä¿å­˜");
                 return;
             }
 
-            // ÌáÇ°ĞòÁĞ»¯ HeatPoints£¬±ÜÃâÔÚÊı¾İ¿â²Ù×÷ÖĞĞòÁĞ»¯
+            // æå‰åºåˆ—åŒ– HeatPointsï¼Œé¿å…åœ¨æ•°æ®åº“æ“ä½œä¸­åºåˆ—åŒ–
             var heatPointsJson = JsonConvert.SerializeObject(record.Data.HeatPoints ?? new List<HeatPoint>());
 
             _dbQueue.Add(connection =>
@@ -199,7 +199,7 @@ namespace DeepsightSqlite
                     transaction = connection.BeginTransaction();
                     long panelId;
 
-                    // 1. Ê¹ÓÃ INSERT OR IGNORE + SELECT »ñÈ¡ PanelId£¨±ÈÏÈ²éÔÙ²å¸ü¸ßĞ§£©
+                    // 1. ä½¿ç”¨ INSERT OR IGNORE + SELECT è·å– PanelIdï¼ˆæ¯”å…ˆæŸ¥å†æ’æ›´é«˜æ•ˆï¼‰
                     using (var insertCmd = new SQLiteCommand(
                         "INSERT OR IGNORE INTO Panels (MachineId, SerialNumber, LotNumber, DetectionDate, ProductSerial, PathIndex, AviCreationTime) VALUES (@MachineId, @SN, @Lot, @Date, @ProductSerial, @PathIndex, @AviCreationTime)",
                         connection, transaction))
@@ -220,7 +220,7 @@ namespace DeepsightSqlite
                         panelId = (long)selectCmd.ExecuteScalar();
                     }
 
-                    // 2. Ê¹ÓÃ INSERT OR REPLACE Ò»ÌõÓï¾ä¸ã¶¨²åÈë»ò¸üĞÂ
+                    // 2. ä½¿ç”¨ INSERT OR REPLACE ä¸€æ¡è¯­å¥æå®šæ’å…¥æˆ–æ›´æ–°
                     using (var upsertCmd = new SQLiteCommand(
                         @"INSERT OR REPLACE INTO PanelSides
                           (PanelId, Side, TotalDefectsCount, RemainingDefectsCount, HeatPoints, AviState, AiState, VvsState, VrsState, FinalState)
@@ -241,19 +241,19 @@ namespace DeepsightSqlite
                     }
 
                     transaction.Commit();
-                    LogTextHelper.Info($"SavePanelSide: ³É¹¦±£´æ SN={record.SerialNumber}, Side={record.Side}");
+                    LogTextHelper.Info($"SavePanelSide: æˆåŠŸä¿å­˜ SN={record.SerialNumber}, Side={record.Side}");
                 }
                 catch (Exception ex)
                 {
-                    LogTextHelper.Error($"SavePanelSide: ±£´æÊ§°Ü SN={record.SerialNumber}, Side={record.Side}, ´íÎó: {ex.Message}");
-                    LogTextHelper.Error($"SavePanelSide: ÏêÏ¸¶ÑÕ»: {ex}");
+                    LogTextHelper.Error($"SavePanelSide: ä¿å­˜å¤±è´¥ SN={record.SerialNumber}, Side={record.Side}, é”™è¯¯: {ex.Message}");
+                    LogTextHelper.Error($"SavePanelSide: è¯¦ç»†å †æ ˆ: {ex}");
                     try
                     {
                         transaction?.Rollback();
                     }
                     catch (Exception rollbackEx)
                     {
-                        LogTextHelper.Error($"SavePanelSide: »Ø¹öÊÂÎñÊ§°Ü: {rollbackEx.Message}");
+                        LogTextHelper.Error($"SavePanelSide: å›æ»šäº‹åŠ¡å¤±è´¥: {rollbackEx.Message}");
                     }
                 }
                 finally
@@ -263,7 +263,7 @@ namespace DeepsightSqlite
             });
         }
 
-        // ²éÑ¯Âß¼­ 1: ¸ù¾İ lot ºÅ»ñÈ¡ËùÓĞ sn
+        // æŸ¥è¯¢é€»è¾‘ 1: æ ¹æ® lot å·è·å–æ‰€æœ‰ sn
         public Task<List<string>> GetSerialNumbersByLot(string lotNumber)
         {
             var tcs = new TaskCompletionSource<List<string>>();
@@ -293,7 +293,7 @@ namespace DeepsightSqlite
             return tcs.Task;
         }
 
-        // ²éÑ¯Âß¼­ 2: ¸ù¾İÊ±¼äºÍ sn »ñÈ¡ËùÓĞ heatpoint ĞÅÏ¢
+        // æŸ¥è¯¢é€»è¾‘ 2: æ ¹æ®æ—¶é—´å’Œ sn è·å–æ‰€æœ‰ heatpoint ä¿¡æ¯
         public Task<List<HeatPoint>> GetHeatPoints(string serialNumber, DateTime detectionDate)
         {
             var tcs = new TaskCompletionSource<List<HeatPoint>>();
@@ -335,7 +335,7 @@ namespace DeepsightSqlite
             return tcs.Task;
         }
 
-        // ²éÑ¯Âß¼­ 3 & 5 µÄ×éºÏ: »ñÈ¡»úÌ¨ÔÚÊ±¼ä¶ÎÄÚµÄ°åÊıÍ³¼Æ
+        // æŸ¥è¯¢é€»è¾‘ 3 & 5 çš„ç»„åˆ: è·å–æœºå°åœ¨æ—¶é—´æ®µå†…çš„æ¿æ•°ç»Ÿè®¡
         public Task<(int TotalBoards, int AIOkBoards)> GetBoardCounts(DateTime start, DateTime end, string machineId = null)
         {
             var tcs = new TaskCompletionSource<(int, int)>();
@@ -343,7 +343,7 @@ namespace DeepsightSqlite
             {
                 try
                 {
-                    // ×Ü°åÊı°´ Panels ¼ÆÊı£»AI OK °åÊıÎªÁ½Ãæ AiState ¶¼Îª 1 µÄ Panel
+                    // æ€»æ¿æ•°æŒ‰ Panels è®¡æ•°ï¼›AI OK æ¿æ•°ä¸ºä¸¤é¢ AiState éƒ½ä¸º 1 çš„ Panel
                     var totalSql = "SELECT COUNT(*) FROM Panels WHERE DetectionDate BETWEEN @Start AND @End" + (string.IsNullOrEmpty(machineId) ? string.Empty : " AND MachineId = @MachineId");
                     int totalBoards = 0;
                     using (var totalCmd = new SQLiteCommand(totalSql, connection))
@@ -381,7 +381,7 @@ namespace DeepsightSqlite
             return tcs.Task;
         }
 
-        // ²éÑ¯Âß¼­ 4 & 6 µÄ×éºÏ: »ñÈ¡»úÌ¨ÔÚÊ±¼ä¶ÎÄÚµÄ±¨µãÊıÍ³¼Æ
+        // æŸ¥è¯¢é€»è¾‘ 4 & 6 çš„ç»„åˆ: è·å–æœºå°åœ¨æ—¶é—´æ®µå†…çš„æŠ¥ç‚¹æ•°ç»Ÿè®¡
         public Task<(long TotalDefects, long AIOkDefects)> GetDefectCounts(DateTime start, DateTime end, string machineId = null)
         {
             var tcs = new TaskCompletionSource<(long, long)>();
@@ -490,7 +490,7 @@ namespace DeepsightSqlite
         }
 
         /// <summary>
-        /// »ñÈ¡Êı¾İ¿âÖĞËùÓĞÎ¨Ò»µÄ MachineId
+        /// è·å–æ•°æ®åº“ä¸­æ‰€æœ‰å”¯ä¸€çš„ MachineId
         /// </summary>
         public Task<List<string>> GetAllMachineIds()
         {
@@ -521,7 +521,7 @@ namespace DeepsightSqlite
         }
 
         /// <summary>
-        /// »ñÈ¡Ã¿¸ö»úÌ¨ÔÚÊ±¼ä¶ÎÄÚµÄ±¨µãÊıÍ³¼Æ
+        /// è·å–æ¯ä¸ªæœºå°åœ¨æ—¶é—´æ®µå†…çš„æŠ¥ç‚¹æ•°ç»Ÿè®¡
         /// </summary>
         public async Task<Dictionary<string, (long TotalDefects, long AIOkDefects)>> GetDefectCountsPerMachine(DateTime start, DateTime end)
         {
@@ -531,7 +531,7 @@ namespace DeepsightSqlite
             foreach (var machineId in machineIds)
             {
                 var counts = await GetDefectCounts(start, end, machineId);
-                if (counts.TotalDefects > 0) // Ö»Ìí¼ÓÓĞÊı¾İµÄ»úÌ¨
+                if (counts.TotalDefects > 0) // åªæ·»åŠ æœ‰æ•°æ®çš„æœºå°
                 {
                     results[machineId] = counts;
                 }
@@ -540,7 +540,7 @@ namespace DeepsightSqlite
         }
 
         /// <summary>
-        /// »ñÈ¡Ò»¸öÊ±¼ä¶ÎÄÚËùÓĞµÄ DetectionDate
+        /// è·å–ä¸€ä¸ªæ—¶é—´æ®µå†…æ‰€æœ‰çš„ DetectionDate
         /// </summary>
         public Task<List<DateTime>> GetDetectionDates(DateTime start, DateTime end)
         {
@@ -573,10 +573,10 @@ namespace DeepsightSqlite
         }
 
         /// <summary>
-        /// ¸ù¾İ machineID »ñÈ¡×îĞÂµÄ SN ºÍ Lot
+        /// æ ¹æ® machineID è·å–æœ€æ–°çš„ SN å’Œ Lot
         /// </summary>
-        /// <param name="machineId">»úÆ÷ID</param>
-        /// <returns>×îĞÂµÄ SN ºÍ Lot</returns>
+        /// <param name="machineId">æœºå™¨ID</param>
+        /// <returns>æœ€æ–°çš„ SN å’Œ Lot</returns>
         public Task<(string SerialNumber, string LotNumber, string ProductSerial, string PathIndex)> GetLatestPanelInfoByMachineId(string machineId)
         {
             var tcs = new TaskCompletionSource<(string, string, string, string)>();
@@ -615,7 +615,7 @@ namespace DeepsightSqlite
         }
 
         /// <summary>
-        /// Éú³É²âÊÔÊı¾İ
+        /// ç”Ÿæˆæµ‹è¯•æ•°æ®
         /// </summary>
         public static void GenerateTestData()
         {
@@ -645,37 +645,37 @@ namespace DeepsightSqlite
                     };
                     sideAData.RemainingDefectsCount = random.Next(0, sideAData.TotalDefectsCount + 1);
 
-                    // ¸ù¾İÈ±ÏİÊıÉú³É State
+                    // æ ¹æ®ç¼ºé™·æ•°ç”Ÿæˆ State
                     if (sideAData.TotalDefectsCount == 0)
                     {
                         sideAData.AviState = 1; // AVI OK
-                        sideAData.AiState = 1; // AI Ä¬ÈÏÒ² OK
-                        sideAData.FinalState = 1; // ×îÖÕ OK
+                        sideAData.AiState = 1; // AI é»˜è®¤ä¹Ÿ OK
+                        sideAData.FinalState = 1; // æœ€ç»ˆ OK
                     }
                     else
                     {
                         sideAData.AviState = 2; // AVI NG
-                        // Ä£ÄâAI´¦Àí
+                        // æ¨¡æ‹ŸAIå¤„ç†
                         if (sideAData.RemainingDefectsCount == 0)
                         {
                             sideAData.AiState = 1; // AI OK
-                            sideAData.FinalState = 1; // ×îÖÕ OK
+                            sideAData.FinalState = 1; // æœ€ç»ˆ OK
                         }
                         else
                         {
                             sideAData.AiState = 2; // AI NG
-                            // Ä£ÄâVVS/VRS
-                            if (random.Next(0, 2) == 0) // 50% ¸ÅÂÊ VVS/VRS OK
+                            // æ¨¡æ‹ŸVVS/VRS
+                            if (random.Next(0, 2) == 0) // 50% æ¦‚ç‡ VVS/VRS OK
                             {
                                 sideAData.VvsState = 1;
                                 sideAData.VrsState = 1;
-                                sideAData.FinalState = 1; // ×îÖÕ OK
+                                sideAData.FinalState = 1; // æœ€ç»ˆ OK
                             }
                             else
                             {
                                 sideAData.VvsState = 2;
                                 sideAData.VrsState = 2;
-                                sideAData.FinalState = 2; // ×îÖÕ NG
+                                sideAData.FinalState = 2; // æœ€ç»ˆ NG
                             }
                         }
                     }
@@ -708,37 +708,37 @@ namespace DeepsightSqlite
                     };
                     sideBData.RemainingDefectsCount = random.Next(0, sideBData.TotalDefectsCount + 1);
 
-                    // ¸ù¾İÈ±ÏİÊıÉú³É State
+                    // æ ¹æ®ç¼ºé™·æ•°ç”Ÿæˆ State
                     if (sideBData.TotalDefectsCount == 0)
                     {
                         sideBData.AviState = 1; // AVI OK
-                        sideBData.AiState = 1; // AI Ä¬ÈÏÒ² OK
-                        sideBData.FinalState = 1; // ×îÖÕ OK
+                        sideBData.AiState = 1; // AI é»˜è®¤ä¹Ÿ OK
+                        sideBData.FinalState = 1; // æœ€ç»ˆ OK
                     }
                     else
                     {
                         sideBData.AviState = 2; // AVI NG
-                        // Ä£ÄâAI´¦Àí
+                        // æ¨¡æ‹ŸAIå¤„ç†
                         if (sideBData.RemainingDefectsCount == 0)
                         {
                             sideBData.AiState = 1; // AI OK
-                            sideBData.FinalState = 1; // ×îÖÕ OK
+                            sideBData.FinalState = 1; // æœ€ç»ˆ OK
                         }
                         else
                         {
                             sideBData.AiState = 2; // AI NG
-                            // Ä£ÄâVVS/VRS
-                            if (random.Next(0, 2) == 0) // 50% ¸ÅÂÊ VVS/VRS OK
+                            // æ¨¡æ‹ŸVVS/VRS
+                            if (random.Next(0, 2) == 0) // 50% æ¦‚ç‡ VVS/VRS OK
                             {
                                 sideBData.VvsState = 1;
                                 sideBData.VrsState = 1;
-                                sideBData.FinalState = 1; // ×îÖÕ OK
+                                sideBData.FinalState = 1; // æœ€ç»ˆ OK
                             }
                             else
                             {
                                 sideBData.VvsState = 2;
                                 sideBData.VrsState = 2;
-                                sideBData.FinalState = 2; // ×îÖÕ NG
+                                sideBData.FinalState = 2; // æœ€ç»ˆ NG
                             }
                         }
                     }
@@ -765,10 +765,10 @@ namespace DeepsightSqlite
             }
         }
         /// <summary>
-        /// 1.	Èç¹ûÓĞÒ»¸östateÎª3£¬ÔòÌí¼Óµ½Î´¼ì²â½á¹ûÊı
-        /// 2.	Èç¹ûÓĞÒ»¸östateÎª2£¬ÔòÌí¼Óµ½¹ıÂËºóÈÔNG½á¹ûÊı
-        /// 3.	Èç¹ûÓĞÁ½¸östateÎª0£¬ÔòÌí¼Óµ½AVI OKµÄ½á¹ûÊı
-        /// 4.	Ê£ÓàÇé¿ö£¬Ìí¼Óµ½¹ıÂËºóOKµÄÊı ËùÒÔ×Ü¹²»ñÈ¡5¸öÊı×Ö
+        /// 1.	å¦‚æœæœ‰ä¸€ä¸ªstateä¸º3ï¼Œåˆ™æ·»åŠ åˆ°æœªæ£€æµ‹ç»“æœæ•°
+        /// 2.	å¦‚æœæœ‰ä¸€ä¸ªstateä¸º2ï¼Œåˆ™æ·»åŠ åˆ°è¿‡æ»¤åä»NGç»“æœæ•°
+        /// 3.	å¦‚æœæœ‰ä¸¤ä¸ªstateä¸º0ï¼Œåˆ™æ·»åŠ åˆ°AVI OKçš„ç»“æœæ•°
+        /// 4.	å‰©ä½™æƒ…å†µï¼Œæ·»åŠ åˆ°è¿‡æ»¤åOKçš„æ•° æ‰€ä»¥æ€»å…±è·å–5ä¸ªæ•°å­—
         /// </summary>
         /// <param name="start"></param>
         /// <param name="end"></param>
@@ -814,24 +814,24 @@ namespace DeepsightSqlite
 
                     foreach (var states in snStates.Values)
                     {
-                        // 1. Èç¹ûÓĞÒ»¸östateÎª3£¬ÔòÌí¼Óµ½Î´¼ì²â½á¹ûÊı
+                        // 1. å¦‚æœæœ‰ä¸€ä¸ªstateä¸º3ï¼Œåˆ™æ·»åŠ åˆ°æœªæ£€æµ‹ç»“æœæ•°
                         if (states.Any(s => s == 3))
                         {
                             uninspectedCount++;
                         }
-                        // 2. Èç¹ûÓĞÒ»¸östateÎª2£¬ÔòÌí¼Óµ½¹ıÂËºóÈÔNG½á¹ûÊı
+                        // 2. å¦‚æœæœ‰ä¸€ä¸ªstateä¸º2ï¼Œåˆ™æ·»åŠ åˆ°è¿‡æ»¤åä»NGç»“æœæ•°
                         else if (states.Any(s => s == 2))
                         {
                             stillNgCount++;
                         }
-                        // 3. Èç¹ûÓĞÁ½¸östateÎª0£¬ÔòÌí¼Óµ½AVI OKµÄ½á¹ûÊı
+                        // 3. å¦‚æœæœ‰ä¸¤ä¸ªstateä¸º0ï¼Œåˆ™æ·»åŠ åˆ°AVI OKçš„ç»“æœæ•°
                         else if (states.Count(s => s == 0) == 2)
                         {
                             aviOkCount++;
                         }
                     }
 
-                    // 4. Ê£ÓàÇé¿ö£¬Ìí¼Óµ½¹ıÂËºóOKµÄÊı
+                    // 4. å‰©ä½™æƒ…å†µï¼Œæ·»åŠ åˆ°è¿‡æ»¤åOKçš„æ•°
                     int filteredOkCount = totalSnCount - uninspectedCount - stillNgCount - aviOkCount;
 
                     tcs.SetResult((totalSnCount, uninspectedCount, stillNgCount, aviOkCount, filteredOkCount));
@@ -846,11 +846,11 @@ namespace DeepsightSqlite
 
 
         /// <summary>
-        /// ¸ù¾İ LotNumber »ñÈ¡ SN ×´Ì¬Í³¼Æ
-        /// 1.	Èç¹ûÓĞÒ»¸östateÎª3£¬ÔòÌí¼Óµ½Î´¼ì²â½á¹ûÊı
-        /// 2.	Èç¹ûÓĞÒ»¸östateÎª2£¬ÔòÌí¼Óµ½¹ıÂËºóÈÔNG½á¹ûÊı
-        /// 3.	Èç¹ûÓĞÁ½¸östateÎª0£¬ÔòÌí¼Óµ½AVI OKµÄ½á¹ûÊı
-        /// 4.	Ê£ÓàÇé¿ö£¬Ìí¼Óµ½¹ıÂËºóOKµÄÊı ËùÒÔ×Ü¹²»ñÈ¡5¸öÊı×Ö
+        /// æ ¹æ® LotNumber è·å– SN çŠ¶æ€ç»Ÿè®¡
+        /// 1.	å¦‚æœæœ‰ä¸€ä¸ªstateä¸º3ï¼Œåˆ™æ·»åŠ åˆ°æœªæ£€æµ‹ç»“æœæ•°
+        /// 2.	å¦‚æœæœ‰ä¸€ä¸ªstateä¸º2ï¼Œåˆ™æ·»åŠ åˆ°è¿‡æ»¤åä»NGç»“æœæ•°
+        /// 3.	å¦‚æœæœ‰ä¸¤ä¸ªstateä¸º0ï¼Œåˆ™æ·»åŠ åˆ°AVI OKçš„ç»“æœæ•°
+        /// 4.	å‰©ä½™æƒ…å†µï¼Œæ·»åŠ åˆ°è¿‡æ»¤åOKçš„æ•° æ‰€ä»¥æ€»å…±è·å–5ä¸ªæ•°å­—
         /// </summary>
         /// <param name="lotNumber"></param>
         /// <returns></returns>
@@ -894,24 +894,24 @@ namespace DeepsightSqlite
 
                     foreach (var states in snStates.Values)
                     {
-                        // 1. Èç¹ûÓĞÒ»¸östateÎª3£¬ÔòÌí¼Óµ½Î´¼ì²â½á¹ûÊı
+                        // 1. å¦‚æœæœ‰ä¸€ä¸ªstateä¸º3ï¼Œåˆ™æ·»åŠ åˆ°æœªæ£€æµ‹ç»“æœæ•°
                         if (states.Any(s => s == 3))
                         {
                             uninspectedCount++;
                         }
-                        // 2. Èç¹ûÓĞÒ»¸östateÎª2£¬ÔòÌí¼Óµ½¹ıÂËºóÈÔNG½á¹ûÊı
+                        // 2. å¦‚æœæœ‰ä¸€ä¸ªstateä¸º2ï¼Œåˆ™æ·»åŠ åˆ°è¿‡æ»¤åä»NGç»“æœæ•°
                         else if (states.Any(s => s == 2))
                         {
                             stillNgCount++;
                         }
-                        // 3. Èç¹ûÓĞÁ½¸östateÎª0£¬ÔòÌí¼Óµ½AVI OKµÄ½á¹ûÊı
+                        // 3. å¦‚æœæœ‰ä¸¤ä¸ªstateä¸º0ï¼Œåˆ™æ·»åŠ åˆ°AVI OKçš„ç»“æœæ•°
                         else if (states.Count(s => s == 0) == 2)
                         {
                             aviOkCount++;
                         }
                     }
 
-                    // 4. Ê£ÓàÇé¿ö£¬Ìí¼Óµ½¹ıÂËºóOKµÄÊı
+                    // 4. å‰©ä½™æƒ…å†µï¼Œæ·»åŠ åˆ°è¿‡æ»¤åOKçš„æ•°
                     int filteredOkCount = totalSnCount - uninspectedCount - stillNgCount - aviOkCount;
 
                     tcs.SetResult((totalSnCount, uninspectedCount, stillNgCount, aviOkCount, filteredOkCount));
@@ -967,27 +967,27 @@ namespace DeepsightSqlite
 
                     foreach (var states in snStates.Values)
                     {
-                        // ¼ì²éÎ´¼ì²â: Ö»ÒªÓĞÒ»¸öÃæµÄ AviState ÊÇ 0 (Î´ÔËĞĞ)
+                        // æ£€æŸ¥æœªæ£€æµ‹: åªè¦æœ‰ä¸€ä¸ªé¢çš„ AviState æ˜¯ 0 (æœªè¿è¡Œ)
                         if (states.Any(s => s.AviState == 0))
                         {
                             uninspectedCount++;
                             continue;
                         }
 
-                        // ¼ì²éAVI OK: Á½Ãæ¶¼±ØĞëÊÇ AVI OK (AviState = 1)
+                        // æ£€æŸ¥AVI OK: ä¸¤é¢éƒ½å¿…é¡»æ˜¯ AVI OK (AviState = 1)
                         if (states.Count == 2 && states.All(s => s.AviState == 1))
                         {
                             aviOkCount++;
                             continue;
                         }
 
-                        // Ê£ÏÂµÄ¶¼ÊÇ AVI NG µÄ°å
-                        // ¼ì²é×îÖÕ×´Ì¬: Ö»ÒªÓĞÒ»¸öÃæ×îÖÕÊÇ NG (FinalState = 2)£¬Õû¸ö°å¾ÍÊÇ NG
+                        // å‰©ä¸‹çš„éƒ½æ˜¯ AVI NG çš„æ¿
+                        // æ£€æŸ¥æœ€ç»ˆçŠ¶æ€: åªè¦æœ‰ä¸€ä¸ªé¢æœ€ç»ˆæ˜¯ NG (FinalState = 2)ï¼Œæ•´ä¸ªæ¿å°±æ˜¯ NG
                         if (states.Any(s => s.FinalState == 2))
                         {
                             aiNgCount++;
                         }
-                        else // ·ñÔò£¬ËùÓĞÃæ×îÖÕ¶¼ÊÇ OK
+                        else // å¦åˆ™ï¼Œæ‰€æœ‰é¢æœ€ç»ˆéƒ½æ˜¯ OK
                         {
                             aiOkCount++;
                         }
@@ -1083,7 +1083,7 @@ namespace DeepsightSqlite
 
                     foreach (var record in panelRecords)
                     {
-                        // Ìî³ä sides
+                        // å¡«å…… sides
                         var sidesSql = "SELECT Side, TotalDefectsCount, RemainingDefectsCount, HeatPoints, AviState, AiState, VvsState, VrsState, FinalState FROM PanelSides WHERE PanelId = @PanelId";
                         using (var sidesCmd = new SQLiteCommand(sidesSql, connection))
                         {
@@ -1117,7 +1117,7 @@ namespace DeepsightSqlite
                             }
                         }
 
-                        // ÑÜÉú IsAIOk
+                        // è¡ç”Ÿ IsAIOk
                         record.IsAIOk = record.Sides.Count == 2 && record.Sides.All(s => s.AiState == 1);
                     }
                     tcs.SetResult(panelRecords);
@@ -1131,11 +1131,11 @@ namespace DeepsightSqlite
         }
 
         /// <summary>
-        /// 1.	ÊäÈëÆğÖ¹Ê±¼ä£¬Êä³öpanelsÊı¾İ¿âËùÓĞµÄÊı¾İ
+        /// 1.	è¾“å…¥èµ·æ­¢æ—¶é—´ï¼Œè¾“å‡ºpanelsæ•°æ®åº“æ‰€æœ‰çš„æ•°æ®
         /// </summary>
         /// <param name="start"></param>
         /// <param name="end"></param>
-        /// <param name="partNumber">ÁÏºÅ (¿ÉÑ¡)</param>
+        /// <param name="partNumber">æ–™å· (å¯é€‰)</param>
         /// <returns></returns>
         public Task<List<PanelDataRecord>> GetPanelsData(DateTime start, DateTime end, string partNumber = null)
         {
@@ -1216,7 +1216,7 @@ namespace DeepsightSqlite
                             }
                         }
 
-                        // ÑÜÉú IsAIOk
+                        // è¡ç”Ÿ IsAIOk
                         record.IsAIOk = record.Sides.Count == 2 && record.Sides.All(s => s.AiState == 1);
                     }
                     tcs.SetResult(panelRecords);
@@ -1230,9 +1230,9 @@ namespace DeepsightSqlite
         }
 
         /// <summary>
-        /// Éú³É EmployeeReport ²âÊÔÊı¾İ
+        /// ç”Ÿæˆ EmployeeReport æµ‹è¯•æ•°æ®
         /// </summary>
-        /// <param name="recordCount">ÒªÉú³ÉµÄ¼ÇÂ¼Êı</param>
+        /// <param name="recordCount">è¦ç”Ÿæˆçš„è®°å½•æ•°</param>
         public static void GenerateEmployeeReportTestData(int recordCount)
         {
             var dbHelper = new DatabaseHelper();

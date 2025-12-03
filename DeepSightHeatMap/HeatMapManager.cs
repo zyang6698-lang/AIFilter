@@ -1,4 +1,4 @@
-using DeepSightHeatMap;
+锘縰sing DeepSightHeatMap;
 using DeepSightModel;
 using DeepSightTool;
 using OpenCvSharp;
@@ -83,7 +83,7 @@ namespace DeepSightHeatMap
                 .ToList();
 
             _heatPoints.AddRange(heatPoints);
-            LogTextHelper.Info($"热力点位数：{_heatPoints.Count}");
+            LogTextHelper.Info($"鐑姏鐐逛綅鏁帮細{_heatPoints.Count}");
 
             await Task.Run(() =>
             {

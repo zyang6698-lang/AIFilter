@@ -1,16 +1,16 @@
-namespace DeepSightAI
+ï»¿namespace DeepSightAI
 {
     partial class DefectDetailControl
     {
         /// <summary> 
-        /// ±ØĞèµÄÉè¼ÆÆ÷±äÁ¿¡£
+        /// å¿…éœ€çš„è®¾è®¡å™¨å˜é‡ã€‚
         /// </summary>
         private System.ComponentModel.IContainer components = null;
 
         /// <summary> 
-        /// ÇåÀíËùÓĞÕıÔÚÊ¹ÓÃµÄ×ÊÔ´¡£
+        /// æ¸…ç†æ‰€æœ‰æ­£åœ¨ä½¿ç”¨çš„èµ„æºã€‚
         /// </summary>
-        /// <param name="disposing">Èç¹ûÓ¦ÊÍ·ÅÍĞ¹Ü×ÊÔ´£¬Îª true£»·ñÔòÎª false¡£</param>
+        /// <param name="disposing">å¦‚æœåº”é‡Šæ”¾æ‰˜ç®¡èµ„æºï¼Œä¸º trueï¼›å¦åˆ™ä¸º falseã€‚</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
@@ -20,11 +20,11 @@ namespace DeepSightAI
             base.Dispose(disposing);
         }
 
-        #region ×é¼şÉè¼ÆÆ÷Éú³ÉµÄ´úÂë
+        #region ç»„ä»¶è®¾è®¡å™¨ç”Ÿæˆçš„ä»£ç 
 
         /// <summary> 
-        /// Éè¼ÆÆ÷Ö§³ÖËùĞèµÄ·½·¨ - ²»ÒªĞŞ¸Ä
-        /// Ê¹ÓÃ´úÂë±à¼­Æ÷ĞŞ¸Ä´Ë·½·¨µÄÄÚÈİ¡£
+        /// è®¾è®¡å™¨æ”¯æŒæ‰€éœ€çš„æ–¹æ³• - ä¸è¦ä¿®æ”¹
+        /// ä½¿ç”¨ä»£ç ç¼–è¾‘å™¨ä¿®æ”¹æ­¤æ–¹æ³•çš„å†…å®¹ã€‚
         /// </summary>
         private void InitializeComponent()
         {
@@ -70,7 +70,7 @@ namespace DeepSightAI
             // label_DetailTitle
             // 
             this.label_DetailTitle.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label_DetailTitle.Font = new System.Drawing.Font("Î¢ÈíÑÅºÚ", 12F, System.Drawing.FontStyle.Bold);
+            this.label_DetailTitle.Font = new System.Drawing.Font("å¾®è½¯é›…é»‘", 12F, System.Drawing.FontStyle.Bold);
             this.label_DetailTitle.ForeColor = System.Drawing.Color.White;
             this.label_DetailTitle.Location = new System.Drawing.Point(0, 0);
             this.label_DetailTitle.Name = "label_DetailTitle";
@@ -97,7 +97,7 @@ namespace DeepSightAI
             this.btnPrevPage.AutoSize = true;
             this.btnPrevPage.FlatAppearance.BorderSize = 0;
             this.btnPrevPage.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnPrevPage.Font = new System.Drawing.Font("Î¢ÈíÑÅºÚ", 9F);
+            this.btnPrevPage.Font = new System.Drawing.Font("å¾®è½¯é›…é»‘", 9F);
             this.btnPrevPage.ForeColor = System.Drawing.Color.White;
             this.btnPrevPage.Location = new System.Drawing.Point(3, 3);
             this.btnPrevPage.Name = "btnPrevPage";
@@ -110,7 +110,7 @@ namespace DeepSightAI
             // 
             this.lblPageInfo.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.lblPageInfo.AutoSize = true;
-            this.lblPageInfo.Font = new System.Drawing.Font("Î¢ÈíÑÅºÚ", 9F);
+            this.lblPageInfo.Font = new System.Drawing.Font("å¾®è½¯é›…é»‘", 9F);
             this.lblPageInfo.ForeColor = System.Drawing.Color.White;
             this.lblPageInfo.Location = new System.Drawing.Point(75, 9);
             this.lblPageInfo.Name = "lblPageInfo";
@@ -123,7 +123,7 @@ namespace DeepSightAI
             this.btnNextPage.AutoSize = true;
             this.btnNextPage.FlatAppearance.BorderSize = 0;
             this.btnNextPage.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnNextPage.Font = new System.Drawing.Font("Î¢ÈíÑÅºÚ", 9F);
+            this.btnNextPage.Font = new System.Drawing.Font("å¾®è½¯é›…é»‘", 9F);
             this.btnNextPage.ForeColor = System.Drawing.Color.White;
             this.btnNextPage.Location = new System.Drawing.Point(141, 3);
             this.btnNextPage.Name = "btnNextPage";
@@ -149,7 +149,7 @@ namespace DeepSightAI
             // label_FilterVVS
             // 
             this.label_FilterVVS.AutoSize = true;
-            this.label_FilterVVS.Font = new System.Drawing.Font("Î¢ÈíÑÅºÚ", 9F);
+            this.label_FilterVVS.Font = new System.Drawing.Font("å¾®è½¯é›…é»‘", 9F);
             this.label_FilterVVS.ForeColor = System.Drawing.Color.White;
             this.label_FilterVVS.Location = new System.Drawing.Point(250, 16);
             this.label_FilterVVS.Name = "label_FilterVVS";
@@ -160,7 +160,7 @@ namespace DeepSightAI
             // label_FilterAI
             // 
             this.label_FilterAI.AutoSize = true;
-            this.label_FilterAI.Font = new System.Drawing.Font("Î¢ÈíÑÅºÚ", 9F);
+            this.label_FilterAI.Font = new System.Drawing.Font("å¾®è½¯é›…é»‘", 9F);
             this.label_FilterAI.ForeColor = System.Drawing.Color.White;
             this.label_FilterAI.Location = new System.Drawing.Point(20, 16);
             this.label_FilterAI.Name = "label_FilterAI";
@@ -193,7 +193,7 @@ namespace DeepSightAI
             this.Controls.Add(this.flowLayoutPanel_DefectImages);
             this.Controls.Add(this.panel_Filter);
             this.Controls.Add(this.panel_Top);
-            this.Font = new System.Drawing.Font("Î¢ÈíÑÅºÚ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.Font = new System.Drawing.Font("å¾®è½¯é›…é»‘", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.Name = "DefectDetailControl";
             this.Size = new System.Drawing.Size(1085, 635);
