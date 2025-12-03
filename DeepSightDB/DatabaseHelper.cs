@@ -102,9 +102,7 @@ namespace DeepsightSqlite
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
                     PanelId INTEGER NOT NULL,
                     Side TEXT NOT NULL, -- 'A' 或 'B'
-                    TotalDefectsCount INTEGER NOT NULL,
-                    RemainingDefectsCount INTEGER NOT NULL,
-                    HeatPoints TEXT, -- 存储 HeatPoint 列表的 JSON 字符串
+                    HeatPoints TEXT, -- 存储 DetectInfo 列表的 JSON 字符串
                     AviState INTEGER DEFAULT 0, -- 0: 未运行, 1: OK, 2: NG
                     AiState INTEGER DEFAULT 0,  -- 0: 未运行, 1: OK, 2: NG
                     VvsState INTEGER DEFAULT 0, -- 0: 未运行, 1: OK, 2: NG
@@ -189,7 +187,7 @@ namespace DeepsightSqlite
             }
 
             // 提前序列化 HeatPoints，避免在数据库操作中序列化
-            var heatPointsJson = JsonConvert.SerializeObject(record.Data.HeatPoints ?? new List<HeatPoint>());
+            var heatPointsJson = JsonConvert.SerializeObject(record.Data.DetectPoints ?? new List<DetectInfo>());
 
             _dbQueue.Add(connection =>
             {
@@ -198,6 +196,7 @@ namespace DeepsightSqlite
                 {
                     transaction = connection.BeginTransaction();
                     long panelId;
+                    bool isNewPanel;
 
                     // 1. 使用 INSERT OR IGNORE + SELECT 获取 PanelId（比先查再插更高效）
                     using (var insertCmd = new SQLiteCommand(
@@ -211,7 +210,9 @@ namespace DeepsightSqlite
                         insertCmd.Parameters.AddWithValue("@ProductSerial", (object)record.ProductSerial ?? DBNull.Value);
                         insertCmd.Parameters.AddWithValue("@PathIndex", (object)record.PathIndex ?? DBNull.Value);
                         insertCmd.Parameters.AddWithValue("@AviCreationTime", (object)record.AviCreationTime ?? DBNull.Value);
-                        insertCmd.ExecuteNonQuery();
+                        // ExecuteNonQuery 返回受影响的行数，0 表示 SN 重复被忽略
+                        int rowsAffected = insertCmd.ExecuteNonQuery();
+                        isNewPanel = rowsAffected > 0;
                     }
 
                     using (var selectCmd = new SQLiteCommand("SELECT Id FROM Panels WHERE SerialNumber = @SN", connection, transaction))
@@ -220,17 +221,29 @@ namespace DeepsightSqlite
                         panelId = (long)selectCmd.ExecuteScalar();
                     }
 
+                    // 检查当前 Side 是否已存在数据
+                    bool sideExists = false;
+                    if (!isNewPanel)
+                    {
+                        using (var checkSideCmd = new SQLiteCommand(
+                            "SELECT COUNT(*) FROM PanelSides WHERE PanelId = @PanelId AND Side = @Side",
+                            connection, transaction))
+                        {
+                            checkSideCmd.Parameters.AddWithValue("@PanelId", panelId);
+                            checkSideCmd.Parameters.AddWithValue("@Side", record.Side);
+                            sideExists = Convert.ToInt32(checkSideCmd.ExecuteScalar()) > 0;
+                        }
+                    }
+
                     // 2. 使用 INSERT OR REPLACE 一条语句搞定插入或更新
                     using (var upsertCmd = new SQLiteCommand(
                         @"INSERT OR REPLACE INTO PanelSides
-                          (PanelId, Side, TotalDefectsCount, RemainingDefectsCount, HeatPoints, AviState, AiState, VvsState, VrsState, FinalState)
-                          VALUES (@PanelId, @Side, @Total, @Remaining, @HeatPoints, @AviState, @AiState, @VvsState, @VrsState, @FinalState)",
+                          (PanelId, Side, HeatPoints, AviState, AiState, VvsState, VrsState, FinalState)
+                          VALUES (@PanelId, @Side, @HeatPoints, @AviState, @AiState, @VvsState, @VrsState, @FinalState)",
                         connection, transaction))
                     {
                         upsertCmd.Parameters.AddWithValue("@PanelId", panelId);
                         upsertCmd.Parameters.AddWithValue("@Side", record.Side);
-                        upsertCmd.Parameters.AddWithValue("@Total", record.Data.TotalDefectsCount);
-                        upsertCmd.Parameters.AddWithValue("@Remaining", record.Data.RemainingDefectsCount);
                         upsertCmd.Parameters.AddWithValue("@HeatPoints", heatPointsJson);
                         upsertCmd.Parameters.AddWithValue("@AviState", record.Data.AviState);
                         upsertCmd.Parameters.AddWithValue("@AiState", record.Data.AiState);
@@ -241,7 +254,21 @@ namespace DeepsightSqlite
                     }
 
                     transaction.Commit();
-                    LogTextHelper.Info($"SavePanelSide: 成功保存 SN={record.SerialNumber}, Side={record.Side}");
+
+                    if (isNewPanel)
+                    {
+                        LogTextHelper.Info($"SavePanelSide: 成功保存 SN={record.SerialNumber}, Side={record.Side}");
+                    }
+                    else if (sideExists)
+                    {
+                        // SN存在且当前面数据也已存在，警告覆盖
+                        LogTextHelper.Warn($"SavePanelSide: SN={record.SerialNumber} 的 Side={record.Side} 数据已存在，正在覆盖");
+                    }
+                    else
+                    {
+                        // SN存在但是存的是另一面的数据，正常情况
+                        LogTextHelper.Info($"SavePanelSide: 成功保存 SN={record.SerialNumber}, Side={record.Side} (另一面已存在)");
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -294,14 +321,14 @@ namespace DeepsightSqlite
         }
 
         // 查询逻辑 2: 根据时间和 sn 获取所有 heatpoint 信息
-        public Task<List<HeatPoint>> GetHeatPoints(string serialNumber, DateTime detectionDate)
+        public Task<List<DetectInfo>> GetHeatPoints(string serialNumber, DateTime detectionDate)
         {
-            var tcs = new TaskCompletionSource<List<HeatPoint>>();
+            var tcs = new TaskCompletionSource<List<DetectInfo>>();
             _dbQueue.Add(connection =>
             {
                 try
                 {
-                    var heatPoints = new List<HeatPoint>();
+                    var heatPoints = new List<DetectInfo>();
                     using (var cmd = new SQLiteCommand(
                         "SELECT ps.HeatPoints FROM PanelSides ps JOIN Panels p ON ps.PanelId = p.Id WHERE p.SerialNumber = @SN AND date(p.DetectionDate) = date(@Date)",
                         connection))
@@ -316,7 +343,7 @@ namespace DeepsightSqlite
                                 if (!reader.IsDBNull(0))
                                 {
                                     var heatPointsJson = reader.GetString(0);
-                                    var points = JsonConvert.DeserializeObject<List<HeatPoint>>(heatPointsJson);
+                                    var points = JsonConvert.DeserializeObject<List<DetectInfo>>(heatPointsJson);
                                     if (points != null)
                                     {
                                         heatPoints.AddRange(points);
@@ -382,6 +409,7 @@ namespace DeepsightSqlite
         }
 
         // 查询逻辑 4 & 6 的组合: 获取机台在时间段内的报点数统计
+        // 由于 TotalDefectsCount 已经从数据库中移除，现在通过解析 HeatPoints JSON 来计算缺陷数
         public Task<(long TotalDefects, long AIOkDefects)> GetDefectCounts(DateTime start, DateTime end, string machineId = null)
         {
             var tcs = new TaskCompletionSource<(long, long)>();
@@ -389,39 +417,71 @@ namespace DeepsightSqlite
             {
                 try
                 {
-                    var sql = @"
-                        SELECT 
-                          SUM(ps.TotalDefectsCount) AS TotalDefects,
-                          SUM(CASE WHEN both.AiOkBothSides = 1 THEN ps.TotalDefectsCount ELSE 0 END) AS AIOkDefects
+                    long totalDefects = 0;
+                    long aiOkDefects = 0;
+
+                    // 首先获取所有 Panel 及其 AiOkBothSides 状态
+                    var panelAiOkSql = @"
+                        SELECT PanelId,
+                               CASE WHEN COUNT(*) = 2 AND SUM(CASE WHEN AiState = 1 THEN 1 ELSE 0 END) = 2 THEN 1 ELSE 0 END AS AiOkBothSides
                         FROM PanelSides ps
                         JOIN Panels p ON ps.PanelId = p.Id
-                        LEFT JOIN (
-                          SELECT PanelId,
-                                 CASE WHEN COUNT(*) = 2 AND SUM(CASE WHEN AiState = 1 THEN 1 ELSE 0 END) = 2 THEN 1 ELSE 0 END AS AiOkBothSides
-                          FROM PanelSides
-                          GROUP BY PanelId
-                        ) both ON ps.PanelId = both.PanelId
-                        WHERE p.DetectionDate BETWEEN @Start AND @End" + (string.IsNullOrEmpty(machineId) ? string.Empty : " AND p.MachineId = @MachineId");
+                        WHERE p.DetectionDate BETWEEN @Start AND @End" + (string.IsNullOrEmpty(machineId) ? string.Empty : " AND p.MachineId = @MachineId") + @"
+                        GROUP BY PanelId";
 
-                    using (var cmd = new SQLiteCommand(sql, connection))
+                    var panelAiOkDict = new Dictionary<long, bool>();
+                    using (var cmd = new SQLiteCommand(panelAiOkSql, connection))
                     {
                         cmd.Parameters.AddWithValue("@Start", start);
                         cmd.Parameters.AddWithValue("@End", end);
                         if (!string.IsNullOrEmpty(machineId)) cmd.Parameters.AddWithValue("@MachineId", machineId);
                         using (var reader = cmd.ExecuteReader())
                         {
-                            if (reader.Read())
+                            while (reader.Read())
                             {
-                                long totalDefects = reader.IsDBNull(0) ? 0 : Convert.ToInt64(reader.GetValue(0));
-                                long aiOkDefects = reader.IsDBNull(1) ? 0 : Convert.ToInt64(reader.GetValue(1));
-                                tcs.SetResult((totalDefects, aiOkDefects));
-                            }
-                            else
-                            {
-                                tcs.SetResult((0, 0));
+                                long panelId = reader.GetInt64(0);
+                                bool isAiOk = reader.GetInt32(1) == 1;
+                                panelAiOkDict[panelId] = isAiOk;
                             }
                         }
                     }
+
+                    // 然后获取每个 PanelSide 的 HeatPoints 并计算缺陷数
+                    var sidesSql = @"
+                        SELECT ps.PanelId, ps.HeatPoints
+                        FROM PanelSides ps
+                        JOIN Panels p ON ps.PanelId = p.Id
+                        WHERE p.DetectionDate BETWEEN @Start AND @End" + (string.IsNullOrEmpty(machineId) ? string.Empty : " AND p.MachineId = @MachineId");
+
+                    using (var cmd = new SQLiteCommand(sidesSql, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@Start", start);
+                        cmd.Parameters.AddWithValue("@End", end);
+                        if (!string.IsNullOrEmpty(machineId)) cmd.Parameters.AddWithValue("@MachineId", machineId);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                long panelId = reader.GetInt64(0);
+                                int defectCount = 0;
+
+                                if (!reader.IsDBNull(1))
+                                {
+                                    var heatPointsJson = reader.GetString(1);
+                                    var points = JsonConvert.DeserializeObject<List<DetectInfo>>(heatPointsJson);
+                                    defectCount = points?.Count ?? 0;
+                                }
+
+                                totalDefects += defectCount;
+                                if (panelAiOkDict.TryGetValue(panelId, out bool isAiOk) && isAiOk)
+                                {
+                                    aiOkDefects += defectCount;
+                                }
+                            }
+                        }
+                    }
+
+                    tcs.SetResult((totalDefects, aiOkDefects));
                 }
                 catch (Exception ex)
                 {
@@ -638,15 +698,29 @@ namespace DeepsightSqlite
                     DateTime? aviCreationTime = detectionDate.AddSeconds(-random.Next(30, 300));
 
                     // Side A
+                    int totalDefectsCountA = random.Next(0, 10);
                     var sideAData = new SideData
                     {
-                        TotalDefectsCount = random.Next(0, 10),
-                        HeatPoints = new List<HeatPoint>()
+                        Side = "A",
+                        DetectPoints = new List<DetectInfo>()
                     };
-                    sideAData.RemainingDefectsCount = random.Next(0, sideAData.TotalDefectsCount + 1);
+
+                    // 生成缺陷点
+                    for (int j = 0; j < totalDefectsCountA; j++)
+                    {
+                        sideAData.DetectPoints.Add(new DetectInfo
+                        {
+                            DefectName = $"Defect-{j}",
+                            DefectType = $"Type-{random.Next(1, 5)}",
+                            AIStatus = random.Next(0, 3),
+                            VVSStatus = random.Next(0, 3),
+                            VrsState = random.Next(0, 3),
+                            FinalState = random.Next(0, 3)
+                        });
+                    }
 
                     // 根据缺陷数生成 State
-                    if (sideAData.TotalDefectsCount == 0)
+                    if (totalDefectsCountA == 0)
                     {
                         sideAData.AviState = 1; // AVI OK
                         sideAData.AiState = 1; // AI 默认也 OK
@@ -656,7 +730,8 @@ namespace DeepsightSqlite
                     {
                         sideAData.AviState = 2; // AVI NG
                         // 模拟AI处理
-                        if (sideAData.RemainingDefectsCount == 0)
+                        int remainingA = sideAData.DetectPoints.Count(d => d.AIStatus != 1);
+                        if (remainingA == 0)
                         {
                             sideAData.AiState = 1; // AI OK
                             sideAData.FinalState = 1; // 最终 OK
@@ -680,12 +755,6 @@ namespace DeepsightSqlite
                         }
                     }
 
-
-                    for (int j = 0; j < sideAData.TotalDefectsCount; j++)
-                    {
-                        sideAData.HeatPoints.Add(new HeatPoint());
-                    }
-
                     var recordA = new PanelSideRecord
                     {
                         MachineId = machineId,
@@ -701,15 +770,29 @@ namespace DeepsightSqlite
                     dbHelper.SavePanelSide(recordA);
 
                     // Side B
+                    int totalDefectsCountB = random.Next(0, 10);
                     var sideBData = new SideData
                     {
-                        TotalDefectsCount = random.Next(0, 10),
-                        HeatPoints = new List<HeatPoint>()
+                        Side = "B",
+                        DetectPoints = new List<DetectInfo>()
                     };
-                    sideBData.RemainingDefectsCount = random.Next(0, sideBData.TotalDefectsCount + 1);
+
+                    // 生成缺陷点
+                    for (int j = 0; j < totalDefectsCountB; j++)
+                    {
+                        sideBData.DetectPoints.Add(new DetectInfo
+                        {
+                            DefectName = $"Defect-{j}",
+                            DefectType = $"Type-{random.Next(1, 5)}",
+                            AIStatus = random.Next(0, 3),
+                            VVSStatus = random.Next(0, 3),
+                            VrsState = random.Next(0, 3),
+                            FinalState = random.Next(0, 3)
+                        });
+                    }
 
                     // 根据缺陷数生成 State
-                    if (sideBData.TotalDefectsCount == 0)
+                    if (totalDefectsCountB == 0)
                     {
                         sideBData.AviState = 1; // AVI OK
                         sideBData.AiState = 1; // AI 默认也 OK
@@ -719,7 +802,8 @@ namespace DeepsightSqlite
                     {
                         sideBData.AviState = 2; // AVI NG
                         // 模拟AI处理
-                        if (sideBData.RemainingDefectsCount == 0)
+                        int remainingB = sideBData.DetectPoints.Count(d => d.AIStatus != 1);
+                        if (remainingB == 0)
                         {
                             sideBData.AiState = 1; // AI OK
                             sideBData.FinalState = 1; // 最终 OK
@@ -741,11 +825,6 @@ namespace DeepsightSqlite
                                 sideBData.FinalState = 2; // 最终 NG
                             }
                         }
-                    }
-
-                    for (int j = 0; j < sideBData.TotalDefectsCount; j++)
-                    {
-                        sideBData.HeatPoints.Add(new HeatPoint());
                     }
 
                     var recordB = new PanelSideRecord
@@ -1084,7 +1163,7 @@ namespace DeepsightSqlite
                     foreach (var record in panelRecords)
                     {
                         // 填充 sides
-                        var sidesSql = "SELECT Side, TotalDefectsCount, RemainingDefectsCount, HeatPoints, AviState, AiState, VvsState, VrsState, FinalState FROM PanelSides WHERE PanelId = @PanelId";
+                        var sidesSql = "SELECT Side, HeatPoints, AviState, AiState, VvsState, VrsState, FinalState FROM PanelSides WHERE PanelId = @PanelId";
                         using (var sidesCmd = new SQLiteCommand(sidesSql, connection))
                         {
                             sidesCmd.Parameters.AddWithValue("@PanelId", record.Id);
@@ -1095,22 +1174,20 @@ namespace DeepsightSqlite
                                     var sideData = new SideData
                                     {
                                         Side = sidesReader.GetString(0),
-                                        TotalDefectsCount = sidesReader.GetInt32(1),
-                                        RemainingDefectsCount = sidesReader.GetInt32(2),
-                                        AviState = sidesReader.IsDBNull(4) ? 0 : sidesReader.GetInt32(4),
-                                        AiState = sidesReader.IsDBNull(5) ? 0 : sidesReader.GetInt32(5),
-                                        VvsState = sidesReader.IsDBNull(6) ? 0 : sidesReader.GetInt32(6),
-                                        VrsState = sidesReader.IsDBNull(7) ? 0 : sidesReader.GetInt32(7),
-                                        FinalState = sidesReader.IsDBNull(8) ? 0 : sidesReader.GetInt32(8)
+                                        AviState = sidesReader.IsDBNull(2) ? 0 : sidesReader.GetInt32(2),
+                                        AiState = sidesReader.IsDBNull(3) ? 0 : sidesReader.GetInt32(3),
+                                        VvsState = sidesReader.IsDBNull(4) ? 0 : sidesReader.GetInt32(4),
+                                        VrsState = sidesReader.IsDBNull(5) ? 0 : sidesReader.GetInt32(5),
+                                        FinalState = sidesReader.IsDBNull(6) ? 0 : sidesReader.GetInt32(6)
                                     };
 
-                                    if (!sidesReader.IsDBNull(3))
+                                    if (!sidesReader.IsDBNull(1))
                                     {
-                                        sideData.HeatPoints = JsonConvert.DeserializeObject<List<HeatPoint>>(sidesReader.GetString(3));
+                                        sideData.DetectPoints = JsonConvert.DeserializeObject<List<DetectInfo>>(sidesReader.GetString(1));
                                     }
                                     else
                                     {
-                                        sideData.HeatPoints = new List<HeatPoint>();
+                                        sideData.DetectPoints = new List<DetectInfo>();
                                     }
                                     record.Sides.Add(sideData);
                                 }
@@ -1183,7 +1260,7 @@ namespace DeepsightSqlite
 
                     foreach (var record in panelRecords)
                     {
-                        var sidesSql = "SELECT Side, TotalDefectsCount, RemainingDefectsCount, HeatPoints, AviState, AiState, VvsState, VrsState, FinalState FROM PanelSides WHERE PanelId = @PanelId";
+                        var sidesSql = "SELECT Side, HeatPoints, AviState, AiState, VvsState, VrsState, FinalState FROM PanelSides WHERE PanelId = @PanelId";
                         using (var sidesCmd = new SQLiteCommand(sidesSql, connection))
                         {
                             sidesCmd.Parameters.AddWithValue("@PanelId", record.Id);
@@ -1194,22 +1271,20 @@ namespace DeepsightSqlite
                                     var sideData = new SideData
                                     {
                                         Side = sidesReader.GetString(0),
-                                        TotalDefectsCount = sidesReader.GetInt32(1),
-                                        RemainingDefectsCount = sidesReader.GetInt32(2),
-                                        AviState = sidesReader.IsDBNull(4) ? 0 : sidesReader.GetInt32(4),
-                                        AiState = sidesReader.IsDBNull(5) ? 0 : sidesReader.GetInt32(5),
-                                        VvsState = sidesReader.IsDBNull(6) ? 0 : sidesReader.GetInt32(6),
-                                        VrsState = sidesReader.IsDBNull(7) ? 0 : sidesReader.GetInt32(7),
-                                        FinalState = sidesReader.IsDBNull(8) ? 0 : sidesReader.GetInt32(8)
+                                        AviState = sidesReader.IsDBNull(2) ? 0 : sidesReader.GetInt32(2),
+                                        AiState = sidesReader.IsDBNull(3) ? 0 : sidesReader.GetInt32(3),
+                                        VvsState = sidesReader.IsDBNull(4) ? 0 : sidesReader.GetInt32(4),
+                                        VrsState = sidesReader.IsDBNull(5) ? 0 : sidesReader.GetInt32(5),
+                                        FinalState = sidesReader.IsDBNull(6) ? 0 : sidesReader.GetInt32(6)
                                     };
 
-                                    if (!sidesReader.IsDBNull(3))
+                                    if (!sidesReader.IsDBNull(1))
                                     {
-                                        sideData.HeatPoints = JsonConvert.DeserializeObject<List<HeatPoint>>(sidesReader.GetString(3));
+                                        sideData.DetectPoints = JsonConvert.DeserializeObject<List<DetectInfo>>(sidesReader.GetString(1));
                                     }
                                     else
                                     {
-                                        sideData.HeatPoints = new List<HeatPoint>();
+                                        sideData.DetectPoints = new List<DetectInfo>();
                                     }
                                     record.Sides.Add(sideData);
                                 }

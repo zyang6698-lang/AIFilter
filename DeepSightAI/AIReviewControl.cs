@@ -88,17 +88,13 @@ namespace DeepSightAI
 
                 foreach (var panel in QueryControl.GetQueryResult())
                 {
-                    // 可能不存在匹配的面，需防御处理
-                    var side = panel.Sides != null && panel.Sides.Count > 0 ? panel.Sides[0] : null;
-                    if (side == null)
+                    if (panel.Sides == null) continue;
+                    foreach (var side in panel.Sides)
                     {
-                        // 无匹配面，跳过该panel
-                        continue;
-                    }
-                    // 只添加AVI状态为NG的数据 (AviState != 1 表示NG)
-                    if (side.AviState != 1)
-                    {
-                        _defectItems.Add(CreateDefectReviewItem(panel, side));
+                        if (side!=null && side.AviState != 1)
+                        {
+                            _defectItems.Add(CreateDefectReviewItem(panel, side));
+                        }
                     }
                 }
 
@@ -232,7 +228,7 @@ namespace DeepSightAI
                         // 构造默认导出路径：以 MaterialLocation 为基础，去掉末尾的 TemplateImages，追加 AIReview
                         try
                         {
-                            var materialLocation = Machine.solconfig.MaterialLocation;
+                            var materialLocation = Machine.solconfig.PartNumberImagesLoc;
                             if (!string.IsNullOrWhiteSpace(materialLocation))
                             {
                                 string baseDir = materialLocation;
@@ -347,7 +343,7 @@ namespace DeepSightAI
                         {
                             SerialNumber = "LOCAL_FILES",
                             Side = "A",
-                            HeatPoints = imagePaths.Select(p => new HeatPoint { ImagePath = p }).ToList()
+                            HeatPoints = imagePaths.Select(p => new DetectInfo { ImagePath = p }).ToList()
                         };
                         _defectItems.Add(defectItem);
                         _bindingList.ResetBindings();
@@ -376,10 +372,10 @@ namespace DeepSightAI
                 AviStatus = sideData.AviState == 1 ? "OK" : "NG",
                 AiStatus =sideData.AiState==1?"OK":"NG",
                 ManualStatus = "未判定",
-                DefectCount = sideData.TotalDefectsCount,
+                DefectCount = sideData.DetectPoints?.Count ?? 0,
                 PathIndex = panel.PathIndex,
                 DetectionDate = panel.DetectionDate,
-                HeatPoints = sideData.HeatPoints,
+                HeatPoints = sideData.DetectPoints,
                 IsModified = false
             };
         }
@@ -468,7 +464,7 @@ namespace DeepSightAI
         public int DefectCount { get; set; }
         public string PathIndex { get; set; }
         public DateTime DetectionDate { get; set; }
-        public List<HeatPoint> HeatPoints { get; set; }
+        public List<DetectInfo> HeatPoints { get; set; }
         public bool IsModified { get; set; }
     }
 

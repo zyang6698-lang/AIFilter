@@ -472,22 +472,22 @@ namespace DeepSightWorkLib
                 {
                     SystemEvent.SendTaskMsg(sn);
                 }
-                RootVBInfo vbInfo = PanelJsonToVBInfo(ip, port, head, obj, ref defectIndex, ref pcsList);
+                RootVBInfo vbInfo = PanelJsonToVBInfo(ip, port, head, obj, ref defectIndex, ref pcsList,out bool isByPass);
 
                 //考虑用Model方式
-                VBModel model = new VBModel();
-                model.Key = key;
-                model.SN = sn;
-                model.Side = side;
-                model.DefectIndex = defectIndex;
-                model.PcsIndex = pcsList;
-                model.VbInfo = vbInfo;
-                model.minioPath = head;
-                model.panelInfo = obj;
-                if (!File.Exists($"D:\\ATS_AI_INSTALL\\TemplateImages\\{obj.ProductSerial}\\{obj.ProductSerial}[{obj.SideIndex}].jpg"))
+                VBModel model = new VBModel
                 {
-                    model.isByPass = true;
-                }
+                    Key = key,
+                    SN = sn,
+                    Side = side,
+                    DefectIndex = defectIndex,
+                    PcsIndex = pcsList,
+                    VbInfo = vbInfo,
+                    minioPath = head,
+                    panelInfo = obj,
+                    isByPass = isByPass
+                };
+
 
                 RootPanelInfoWithIP rootobj = new RootPanelInfoWithIP()
                 {
@@ -513,10 +513,11 @@ namespace DeepSightWorkLib
             }
         }
 
-        public RootVBInfo PanelJsonToVBInfo(string minioip, string minioport, string head, RootPanelInfo info, ref List<int> defectList, ref List<int> pcsList)
+        public RootVBInfo PanelJsonToVBInfo(string minioip, string minioport, string head, RootPanelInfo info, ref List<int> defectList, ref List<int> pcsList,out bool isByPass)
         {
             try
             {
+                isByPass = false;
                 LogTextHelper.Info("ProcuctSerial:" + info.ProductSerial);
                 var solutionFlow = solconfig.solus.FirstOrDefault(o => o.ProductSerial == info.ProductSerial);
                 if (solutionFlow != null)
@@ -535,6 +536,7 @@ namespace DeepSightWorkLib
                 }
                 else
                 {
+                    isByPass = true;
                     var defaultSolutionFlow = solconfig.solus.FirstOrDefault(o => o.ProductSerial.ToUpper() == "DEFAULT");
                     if (defaultSolutionFlow != null)
                     {
@@ -656,7 +658,7 @@ namespace DeepSightWorkLib
                             group.GroupUuid = Guid.NewGuid().ToString();
                             group.GroupInfos = new List<GroupInfo>();
                             group.DefectCode = "";
-                            group.TempImgPath = $"D:\\ATS_AI_INSTALL\\TemplateImages\\{info.ProductSerial}\\{info.ProductSerial}[{info.SideIndex}].jpg";
+                            group.TempImgPath = Path.Combine(solconfig.PartNumberImagesLoc, $"{info.ProductSerial}\\{info.ProductSerial}[{info.SideIndex}].jpg");
                             group.ImgROI = new List<int>();
                             group.ImgROI.Add(pcsInfo.DefectInfo[j].DefectRoi.X);
                             group.ImgROI.Add(pcsInfo.DefectInfo[j].DefectRoi.Y);
@@ -790,7 +792,7 @@ namespace DeepSightWorkLib
                             }
                         }
                     }
-                    List<HeatPoint> avi_HeatInfo = new List<HeatPoint>();
+                    List<DetectInfo> avi_HeatInfo = new List<DetectInfo>();
 
                     // 更新中台数据
                     UpdateDsCenterInfo(panelInfo, obj);
@@ -801,8 +803,8 @@ namespace DeepSightWorkLib
                     {
                         VBRcvInfp vBRcv = new VBRcvInfp();
                         vBRcv.bbox = new List<List<double>>();
-                        HeatPoint heatInfo = new HeatPoint();
-                        heatInfo.VVSStatus = "NotSet";
+                        DetectInfo heatInfo = new DetectInfo();
+                        heatInfo.VVSStatus = 0;
                         int index = panelInfo.LocalDescribeDir.IndexOf("deepiresults", StringComparison.OrdinalIgnoreCase);
                         if (index == -1)
                         {
@@ -818,11 +820,11 @@ namespace DeepSightWorkLib
 
                         if (obj.Data.InferWholeData.InferResults[i].Infer_Result == "OK")
                         {
-                            heatInfo.AIStatus = "OK";
+                            heatInfo.AIStatus = 1;
                         }
                         else
                         {
-                            heatInfo.AIStatus = "NG";
+                            heatInfo.AIStatus =2;
                             for (int j = 0; j < obj.Data.InferWholeData.InferResults[i].inferDetails.Location.Count; j++)
                             {
                                 string sub_defectName = obj.Data.InferWholeData.InferResults[i].Defect_name;
@@ -839,7 +841,6 @@ namespace DeepSightWorkLib
                                     heatInfo.RoiX = subX / 2 + subW / 4;
                                     heatInfo.RoiY = subY / 2 + subH / 4;
                                    
-                                    avi_HeatInfo.Add(heatInfo);
                                     //这里在生产时根据缺陷名称将缺陷形态赋值,（点状与线状）
                                     if (sub_defectName == "AU10" || sub_defectName == "CU10" || sub_defectName == "CU41"
                                         || sub_defectName == "HO01" || sub_defectName == "SM10")
@@ -860,10 +861,13 @@ namespace DeepSightWorkLib
                                 vBRcv.sub_DefectNames.Add(sub_defectName);
                             }
                         }
+                        avi_HeatInfo.Add(heatInfo);
+
                         // 0为OK 1为NG 2为bypass
                         if (vBModel.isByPass)
                         {
                             resList.Add("2");
+                            heatInfo.AIStatus = 3;
                         }
                         else
                         {
@@ -885,11 +889,9 @@ namespace DeepSightWorkLib
                     {
                         Data = new SideData()
                         {
-                            HeatPoints = avi_HeatInfo,
+                            DetectPoints = avi_HeatInfo,
                             AviState = resList.Count == 0 ? 1 : 2,
-                            AiState = resList.Contains("2") ? 3 : resList.Contains("1") ? 2 : 1,
-                            RemainingDefectsCount = resList.Where(t => t == "1").Count(),
-                            TotalDefectsCount = resList.Where(t => t == "1" || t == "0").Count()
+                            AiState = resList.Contains("2") ? 3 : resList.Contains("1") ? 2 : 1
                         },
                         ProductSerial = panelInfo.ProductSerial,
                         DetectionDate = DateTime.Now,
@@ -919,11 +921,9 @@ namespace DeepSightWorkLib
                     {
                         Data = new SideData()
                         {
-                            HeatPoints = new List<HeatPoint>(),
+                            DetectPoints = new List<DetectInfo>(),
                             AviState = 1,
-                            AiState = 1,
-                            RemainingDefectsCount = 0,
-                            TotalDefectsCount = 0
+                            AiState = 1
                         },
                         ProductSerial = panelInfo.ProductSerial,
                         DetectionDate = DateTime.Now,

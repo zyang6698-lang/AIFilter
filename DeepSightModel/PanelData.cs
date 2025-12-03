@@ -7,16 +7,22 @@ namespace DeepSightModel
     /// <summary>
     /// 单个缺陷的详细信息
     /// </summary>
-    public class HeatPoint
+    public class DetectInfo
     {
         public string DefectName { get; set; }
         public string DefectType { get; set; }
         public string DefectShape { get; set; }
         public int RoiX { get; set; }
         public int RoiY { get; set; }
+        public int Width {  get; set; }
+        public int Height { get; set; }
         public string ImagePath { get; set; }
-        public string AIStatus { get; set; }
-        public string VVSStatus { get; set; } 
+        // 分阶段状态：0 未运行 / 1 OK / 2 NG / 3 异常
+        public int AIStatus { get; set; }
+        public int VVSStatus { get; set; }
+        public int VrsState { get; set; }
+        public int FinalState { get; set; }
+
     }
 
     /// <summary>
@@ -24,13 +30,7 @@ namespace DeepSightModel
     /// </summary>
     public class SideData
     {
-
-        public List<HeatPoint> HeatPoints { get; set; } = new List<HeatPoint>();
-        // 总报点数量 (AVI 检测出的缺陷数)
-        public int TotalDefectsCount { get; set; }
-        // 过滤后保留的缺陷数 (AI / 复判后仍存在的缺陷)
-        public int RemainingDefectsCount { get; set; }
-        public string SerialNumber { get; set; }
+        public List<DetectInfo> DetectPoints { get; set; } = new List<DetectInfo>();
         public string Side { get; set; }
 
         // 分阶段状态：0 未运行 / 1 OK / 2 NG / 3 异常
@@ -78,37 +78,41 @@ namespace DeepSightModel
 
         public static BoardStat GetBoardStat(List<PanelDataRecord> records)
         {
+            if (records == null || records.Count == 0)
+                return new BoardStat();
+
             return records.AsParallel()
                 .Select(record =>
                 {
-                    var stat = new BoardStat();
-                    stat.aviPanelCount = 1;
+                    var stat = new BoardStat { aviPanelCount = 1 };
 
-                    if (record.Sides != null && record.Sides.Count == 2)
-                    {
-                        var sideA = record.Sides[0];
-                        var sideB = record.Sides[1];
+                    if (record.Sides?.Count != 2)
+                        return stat;
 
-                        // AVI 面板 OK：两面 AVI OK
-                        if (sideA.AviState == 1 && sideB.AviState == 1)
-                            stat.aviPanelOKCount = 1;
+                    var sideA = record.Sides[0];
+                    var sideB = record.Sides[1];
+                    var pointsA = sideA.DetectPoints ?? new List<DetectInfo>();
+                    var pointsB = sideB.DetectPoints ?? new List<DetectInfo>();
 
-                        // AI 面板 OK：两面 AI OK (且均经过 AVI 检测)
-                        if (sideA.AviState > 0 && sideB.AviState > 0 && sideA.AiState == 1 && sideB.AiState == 1)
-                            stat.aiPanelOKCount = 1;
+                    // AVI 面板 OK：两面 AVI OK
+                    if (sideA.AviState == 1 && sideB.AviState == 1)
+                        stat.aviPanelOKCount = 1;
 
-                        // 报点总数 (以 AVI 提取的缺陷数为基础)
-                        stat.aiFilterCount = sideA.TotalDefectsCount + sideB.TotalDefectsCount;
+                    // AI 面板 OK：两面 AI OK (且均经过 AVI 检测)
+                    if (sideA.AviState > 0 && sideB.AviState > 0 && sideA.AiState == 1 && sideB.AiState == 1)
+                        stat.aiPanelOKCount = 1;
 
-                        // AI 过滤 OK 的报点数 (被过滤掉的缺陷数)
-                        stat.aiFilterOKCount = (sideA.TotalDefectsCount + sideB.TotalDefectsCount) - (sideA.RemainingDefectsCount + sideB.RemainingDefectsCount);
+                    // 报点总数
+                    stat.aiFilterCount = pointsA.Count + pointsB.Count;
 
-                        // 未检测报点
-                        if ((sideA.AiState != 1&& sideA.AiState != 2 && sideA.AviState != 0) || (sideB.AiState != 1 && sideB.AiState != 2 && sideB.AviState != 0))
-                        {
-                            stat.aiFilterUninspectedCount = sideA.TotalDefectsCount + sideB.TotalDefectsCount;
-                        }
-                    }
+                    // AI 过滤 OK 的报点数
+                    stat.aiFilterOKCount = pointsA.Count(t => t.AIStatus == 1) + pointsB.Count(t => t.AIStatus == 1);
+
+                    // 未检测报点（累加两面）
+                    stat.aiFilterUninspectedCount =
+                        (sideA.AiState == 2 ? pointsA.Count(t => t.AIStatus == 3) : 0) +
+                        (sideB.AiState == 2 ? pointsB.Count(t => t.AIStatus == 3) : 0);
+
                     return stat;
                 })
                 .Aggregate(new BoardStat(), (total, current) =>

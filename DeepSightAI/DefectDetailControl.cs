@@ -12,8 +12,8 @@ namespace DeepSightAI
     public partial class DefectDetailControl : UserControl
     {
         private int _selectedIndex = -1;
-        private List<HeatPoint> _allHeatPoints;
-        private List<HeatPoint> _filteredHeatPoints; // For filtered data
+        private List<DetectInfo> _allHeatPoints;
+        private List<DetectInfo> _filteredHeatPoints; // For filtered data
         private int _currentPage = 1;
         private const int PageSize = 5; //
         private int _totalPages;
@@ -59,18 +59,23 @@ namespace DeepSightAI
 
             if (_aiFilter != "All")
             {
-                _filteredHeatPoints = _filteredHeatPoints.Where(p => p.AIStatus == _aiFilter).ToList();
+                // AIStatus: 0 未运行 / 1 OK / 2 NG / 3 异常
+                int targetAiStatus = _aiFilter == "AI_OK" ? 1 : 2;
+                _filteredHeatPoints = _filteredHeatPoints.Where(p => p.AIStatus == targetAiStatus).ToList();
             }
 
             if (_vvsFilter != "All")
             {
                 if (_vvsFilter == "NotSet")
                 {
-                    _filteredHeatPoints = _filteredHeatPoints.Where(p => string.IsNullOrEmpty(p.VVSStatus)).ToList();
+                    // VVSStatus: 0 未运行
+                    _filteredHeatPoints = _filteredHeatPoints.Where(p => p.VVSStatus == 0).ToList();
                 }
                 else
                 {
-                    _filteredHeatPoints = _filteredHeatPoints.Where(p => p.VVSStatus == _vvsFilter).ToList();
+                    // VVSStatus: 1 OK / 2 NG
+                    int targetVvsStatus = _vvsFilter == "VVS_OK" ? 1 : 2;
+                    _filteredHeatPoints = _filteredHeatPoints.Where(p => p.VVSStatus == targetVvsStatus).ToList();
                 }
             }
 
@@ -164,7 +169,7 @@ namespace DeepSightAI
                     var label = topPictureBox.Controls.OfType<Label>().FirstOrDefault();
                     if (label != null)
                     {
-                        var heatPoint = label.Tag as HeatPoint;
+                        var heatPoint = label.Tag as DetectInfo;
                         if (heatPoint != null)
                         {
                             if (isAiTag)
@@ -173,11 +178,12 @@ namespace DeepSightAI
                             }
                             else
                             {
-                                heatPoint.VVSStatus = tag;
+                                // VVSStatus: 0 未运行 / 1 OK / 2 NG
+                                heatPoint.VVSStatus = tag == "VVS_OK" ? 1 : 2;
                             }
 
-                            label.Text = $"AI: {heatPoint.AIStatus}\n" +
-                                         $"VVS: {heatPoint.VVSStatus}";
+                            label.Text = $"AI: {GetStatusText(heatPoint.AIStatus)}\n" +
+                                         $"VVS: {GetStatusText(heatPoint.VVSStatus)}";
 
                             // Update border color after tagging
                             UpdatePanelAppearance(panel, true);
@@ -187,10 +193,25 @@ namespace DeepSightAI
             }
         }
 
+        /// <summary>
+        /// 将状态码转换为显示文本
+        /// </summary>
+        private string GetStatusText(int status)
+        {
+            switch (status)
+            {
+                case 0: return "未检测";
+                case 1: return "OK";
+                case 2: return "NG";
+                case 3: return "异常";
+                default: return status.ToString();
+            }
+        }
+
         public void DisplayDefectDetails(DefectReviewItem item)
         {
-            _allHeatPoints = item.HeatPoints ?? new List<HeatPoint>();
-            _filteredHeatPoints = new List<HeatPoint>(_allHeatPoints); // Initialize filtered list
+            _allHeatPoints = item.HeatPoints ?? new List<DetectInfo>();
+            _filteredHeatPoints = new List<DetectInfo>(_allHeatPoints); // Initialize filtered list
             _totalPages = (int)Math.Ceiling((double)_filteredHeatPoints.Count / PageSize);
             _currentPage = 1;
 
@@ -284,18 +305,19 @@ namespace DeepSightAI
             if (topPictureBox != null)
             {
                 var label = topPictureBox.Controls.OfType<Label>().FirstOrDefault();
-                if (label != null && label.Tag is HeatPoint heatPoint)
+                if (label != null && label.Tag is DetectInfo heatPoint)
                 {
                     Color borderColor;
+                    // VVSStatus: 0 未运行 / 1 OK / 2 NG
                     switch (heatPoint.VVSStatus)
                     {
-                        case "VVS_OK":
+                        case 1: // OK
                             borderColor = Color.Green;
                             break;
-                        case "VVS_NG":
+                        case 2: // NG
                             borderColor = Color.Red;
                             break;
-                        default:
+                        default: // 0 未运行 或其他
                             borderColor = Color.FromArgb(60, 60, 60); // Neutral border for unset status
                             break;
                     }
@@ -322,7 +344,7 @@ namespace DeepSightAI
             SelectImage(nextLocalIndex);
         }
 
-        private Panel CreateDefectImagePanel(HeatPoint heatPoint, int index)
+        private Panel CreateDefectImagePanel(DetectInfo heatPoint, int index)
         {
             var panel = new Panel
             {
@@ -412,8 +434,8 @@ namespace DeepSightAI
             // 信息显示
             var infoLabel = new Label
             {
-                Text = $"AI: {heatPoint.AIStatus}\n" +
-                       $"VVS: {heatPoint.VVSStatus}",
+                Text = $"AI: {GetStatusText(heatPoint.AIStatus)}\n" +
+                       $"VVS: {GetStatusText(heatPoint.VVSStatus)}",
                 AutoSize = false,
                 Dock = DockStyle.Bottom,
                 Height = 40,
@@ -450,14 +472,14 @@ namespace DeepSightAI
             }
         }
 
-        public List<HeatPoint> GetHeatPoints()
+        public List<DetectInfo> GetHeatPoints()
         {
-            return _allHeatPoints ?? new List<HeatPoint>();
+            return _allHeatPoints ?? new List<DetectInfo>();
         }
 
-        public List<HeatPoint> GetFilteredHeatPoints()
+        public List<DetectInfo> GetFilteredHeatPoints()
         {
-            return _filteredHeatPoints ?? new List<HeatPoint>();
+            return _filteredHeatPoints ?? new List<DetectInfo>();
         }
 
         public (string aiFilter, string vvsFilter) GetFilters()

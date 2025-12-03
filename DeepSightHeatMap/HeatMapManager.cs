@@ -41,7 +41,7 @@ namespace DeepSightHeatMap
         }
 
         public async Task UpdateHeatMapPointsAsync(
-            ConcurrentDictionary<string, List<HeatPoint>> dicHeatPints,
+            ConcurrentDictionary<string, List<DetectInfo>> dicHeatPints,
             List<string> selectedDefectNames,
             Func<string,  int,  int, bool> tryParseSnPosition,
             Mat sourceImage,

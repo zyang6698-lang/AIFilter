@@ -28,7 +28,7 @@ namespace DeepSightAI
     {
         #region Fields and Properties
 
-        private readonly ConcurrentDictionary<string, List<HeatPoint>> dic_heatPints = new ConcurrentDictionary<string, List<HeatPoint>>();
+        private readonly ConcurrentDictionary<string, List<DetectInfo>> dic_heatPints = new ConcurrentDictionary<string, List<DetectInfo>>();
         private readonly HeatMapManager _heatMapManager = new HeatMapManager();
         private Mat SourceImage = null;
         private ConcurrentDictionary<string, List<string>> dic_PN_SNList = new ConcurrentDictionary<string, List<string>>();
@@ -186,7 +186,7 @@ namespace DeepSightAI
             {
                 if (!dic_heatPints.ContainsKey(res.SerialNumber))
                 {
-                    dic_heatPints[res.SerialNumber] = res.Sides[0].HeatPoints;
+                    dic_heatPints[res.SerialNumber] = res.Sides[0].DetectPoints;
                 }
             } 
 #endif

@@ -512,7 +512,7 @@ namespace DeepSightAI.SettingPages
         private void btnAutoAdd_Click(object sender, EventArgs e)
         {
             // 原逻辑改造：按料号位置批量生成，跳过已存在的料号
-            string loc = Machine.solconfig?.MaterialLocation;
+            string loc = Machine.solconfig?.PartNumberImagesLoc;
             if (string.IsNullOrEmpty(loc))
             {
                 MessageBox.Show("料号位置未配置，请先设置并保存。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
