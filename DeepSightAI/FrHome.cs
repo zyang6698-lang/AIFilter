@@ -395,15 +395,12 @@ namespace DeepSightAI
                     MessageBox.Show("请点击缺陷图进行单图测试", "测试提示", MessageBoxButtons.OK, MessageBoxIcon.Question);
                     return;
                 }
-                //展示VB
-                //await Task.Factory.StartNew(()=>
-                //  {
 
                 this.Invoke(new MethodInvoker(() =>
                 {
                     Machine.master.workClass.defect.ai_Defect.Vision_Show_View(1);
                 }));
-                // });
+
 
                 //传图给VB
                 RootVBInfo vBInfo = new RootVBInfo();

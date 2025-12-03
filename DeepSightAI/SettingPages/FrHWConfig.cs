@@ -77,55 +77,7 @@ namespace DeepSightAI.SettingPages
                 return _instance;
             }
         }
-        public void Language(int language)
-        {
-            if (language == 1)
-            {
-                label2.Text = "工站数量:";
-            }
-            else
-            {
-                label2.Text = "Number of plant stations:";
-            }
 
-            for (int i = 0; i < Machine.aviconfig.WatchPaths.Count; i++)
-            {
-                LanguageParam(i);
-            }
-        }
-        private bool LanguageParam(int i)
-        {
-            try
-            {
-                //if (FrHWConfig.Instance.tabControl.Controls.Count <= i)
-                //{
-                //    return false;
-                //}
-                //TabPage tabPage = FrHWConfig.Instance.tabControl.Controls[i] as TabPage;
-
-                //if (tabPage.Controls.Count > 0)
-                //{
-                //    tabPage.Text = "工站" + (i + 1);
-                //    //工站信息
-                //    Panel panel1 = tabPage.Controls[0] as Panel;
-                //    if (panel1.Controls.Count > 0)
-                //    {
-                //        FrStationCofig frStationCofig = panel1.Controls[0] as FrStationCofig;
-                //        if (frStationCofig == null)
-                //        {
-                //            return false;
-                //        }
-                //        frStationCofig.Language(1);
-                //    }
-                //}
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error("Error", ex);
-                return false;
-            }
-            return true;
-        }
         private void txt_station_count_ValueChanged(object sender, EventArgs e)
         {
             try
@@ -162,13 +114,6 @@ namespace DeepSightAI.SettingPages
                 {
                     //减少的数量
                     int num = int.Parse(lblstationcount.Text) - (int)txt_station_count.Value;
-
-                    //for (int i = 0; i < num; i++)
-                    //{
-                    //    int index = tabControl.Controls.Count;
-
-                    //    tabControl.Controls.RemoveAt(index - 1);
-                    //}
                     for (int i = 0; i < num; i++)
                     {
                         int index = aviCtr2Container1.Controls.Count;
@@ -193,30 +138,14 @@ namespace DeepSightAI.SettingPages
         {
             try
             {
-                // FrHWConfig.Instance.tabControl.Controls.Clear();//先清空
                 FrHWConfig.Instance.txt_station_count.Value = Machine.aviconfig.WatchPaths.Count;
-                //公共参数
-                //FrHWConfig.Instance.txt_depth_from_watch_path_to_result_ini.Text = Machine.aviconfig.Depth.ToString();
                 FrHWConfig.Instance.txt_max_wait_time.Text = Machine.aviconfig.MaxWaitTime.ToString(); ;
-                //FrHWConfig.Instance.txt_depth_from_watch_path_to_result_ini.Text = Machine.aviconfig.WaitFlag;
-                //FrHWConfig.Instance.txt_depth_from_watch_path_to_result_ini.Text = Machine.aviconfig.Finishflag;
-                //FrHWConfig.Instance.txt_A_minio_config.Text = Machine.aviconfig.AMinioConfig;
-                //FrHWConfig.Instance.txt_B_minio_config.Text = Machine.aviconfig.BMinioConfig;
                 FrHWConfig.Instance.txt_LDB_endpoint.Text = Machine.aviconfig.LDBEndpoint;
                 FrHWConfig.Instance.txt_get_infer_result_interval.Text = Machine.aviconfig.GetInferResultInterval.ToString();
                 FrHWConfig.Instance.txt_infer_request_timeout.Text = Machine.aviconfig.InferRequestTimeout.ToString();
                 FrHWConfig.Instance.txt_get_infer_result_timeout.Text = Machine.aviconfig.GetInferResultTimeout.ToString();
-                //FrHWConfig.Instance.txt_copy_or_cut_mode.Text = Machine.aviconfig.CopyOrCutMode;
-                //FrHWConfig.Instance.txt_deepsight_agent_data_workspace.Text = Machine.aviconfig.DeepsightAgentDataWorkspace;
-                //FrHWConfig.Instance.txt_temporary_file_storage_area_A.Text = Machine.aviconfig.TemporaryFileStorageArea_A;
-                //FrHWConfig.Instance.txt_temporary_file_storage_area_B.Text = Machine.aviconfig.TemporaryFileStorageArea_B;
-
 
                 aviCtr2Container1.CreateMachinePanels(Machine.aviconfig.WatchPaths);
-                //for (int i = 0; i < Machine.aviconfig.WatchPaths.Count; i++)
-                //{
-                //     AddParam(i);
-                //}
             }
             catch (Exception ex)
             {
@@ -224,68 +153,13 @@ namespace DeepSightAI.SettingPages
             }
         }
 
-
-        private void AddAviControl(WatchPathConfig watchPath, int index)
-        {
-            try
-            {
-                AviCtr2 ctr = new AviCtr2(watchPath);
-                ctr.Size = new Size(200, 100); // 根据需求调整
-
-                // 计算位置 - 根据索引排列
-                int cols = 5; // 每行显示5个
-                int spacing = 5; // 间距
-
-                int x = (index % cols) * (ctr.Width + spacing) + spacing;
-                int y = (index / cols) * (ctr.Height + spacing) + spacing;
-
-                ctr.Location = new Point(x, y + 50);
-                this.aviCtr2Container1.Controls.Add(ctr);
-            }
-            catch (Exception ex)
-            {
-                // Consider logging the exception
-            }
-        }
-
-
         private bool AddParam(int i)
         {
             try
             {
-                AviCtr2 ctr = new AviCtr2(Machine.aviconfig.WatchPaths[i]);
-
-                this.aviCtr2Container1.Controls.Add(ctr);
-
-                //TabPage tabPage = FrHWConfig.Instance.tabControl.Controls[i] as TabPage;
-                //if (tabPage.Controls.Count > 0)
-                //{
-                //    //工站信息
-                //    Panel panel1 = tabPage.Controls[0] as Panel;
-                //    if (panel1.Controls.Count > 0)
-                //    {
-                //        FrStationCofig frStationCofig = panel1.Controls[0] as FrStationCofig;
-                //        if (frStationCofig == null)
-                //        {
-                //            return false;
-                //        }
-                //        frStationCofig.txt_APath.Text = Machine.aviconfig.WatchPaths[i].APath;
-
-                //        frStationCofig.txt_BPath.Text = Machine.aviconfig.WatchPaths[i].BPath;
-                //        frStationCofig.txt_Depth.Text = Machine.aviconfig.WatchPaths[i].Depth.ToString();
-
-                //        if (Machine.aviconfig.WatchPaths[i].IsEnable)
-                //        {
-                //            frStationCofig.radiotcp1.Checked = true;
-                //            frStationCofig.radiotcp2.Checked = false;
-                //        }
-                //        else if (!Machine.aviconfig.WatchPaths[i].IsEnable)
-                //        {
-                //            frStationCofig.radiotcp1.Checked = false;
-                //            frStationCofig.radiotcp2.Checked = true;
-                //        }
-                //    }
-                //}
+                // 使用 AviCtr2Container 的 CreateMachinePanels 方法来正确添加控件
+                // 该方法会将控件添加到内部的 flowLayoutPanel1 和 aviCtr2Controls 列表中
+                aviCtr2Container1.CreateMachinePanels(Machine.aviconfig.WatchPaths);
             }
             catch (Exception ex)
             {

@@ -116,7 +116,6 @@ namespace DeepSightAI
             }
 
             FrBaseConfig.Instance.Language(language);
-            FrHWConfig.Instance.Language(language);
         }
 
 

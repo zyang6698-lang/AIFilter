@@ -407,7 +407,7 @@ namespace DeepSightWorkLib
                                     que_AI.Enqueue(dbTub);
                                 }
                                 LogTextHelper.SaveVBResultInfo($"{info.SN}：{string.Join(",", msg)}");
-                                LogTextHelper.WriteJsonFile($"D:/minio/deepiresults/{info.minioPath}/{info.SN}-vb.json", vbJson);
+                                LogTextHelper.WriteJsonFile(info.panelInfo.DescribePath, vbJson);
                                 if (info.Side == "B")
                                 {
                                     RootDbInfo dbInfo = new RootDbInfo();
@@ -475,7 +475,6 @@ namespace DeepSightWorkLib
                 RootVBInfo vbInfo = PanelJsonToVBInfo(ip, port, head, obj, ref defectIndex, ref pcsList);
 
                 //考虑用Model方式
-                //Tuple<string, string,string,List<int>, RootVBInfo> vbTub = Tuple.Create(key, sn,side, defectIndex, vbInfo);
                 VBModel model = new VBModel();
                 model.Key = key;
                 model.SN = sn;
@@ -572,12 +571,9 @@ namespace DeepSightWorkLib
                 }
                 else
                 {
-
                     dic_DsCenterInfo.TryGetValue($"{info.LotId}_{info.SerialNumber}", out dsInfo);
                     JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };//去掉空值NULL
                     string infoJson = JsonConvert.SerializeObject(dsInfo, Formatting.None, jsonSetting);
-                    //LogTextHelper.Info("DSINFO:" + infoJson);
-
                 }
 
                 LogTextHelper.Info($"当前产品:{info.SerialNumber},{info.SideIndex}面,所属料号:{info.ProductSerial},切换参数-->方案:{solution},flow:{flow}");
@@ -794,196 +790,88 @@ namespace DeepSightWorkLib
                             }
                         }
                     }
-                    DsCenterInfo dsCenterInfo = null;
-                    if (dic_DsCenterInfo.TryGetValue($"{panelInfo.LotId}_{panelInfo.SerialNumber}", out dsCenterInfo))
-                    {
-                        LogTextHelper.Info($"取出{panelInfo.LotId}_{panelInfo.SerialNumber}的中台数据，准备更新...");
-                    }
-
                     List<HeatPoint> avi_HeatInfo = new List<HeatPoint>();
 
-                    if (dsCenterInfo!=null)
+                    // 更新中台数据
+                    UpdateDsCenterInfo(panelInfo, obj);
+
+                    // 处理HeatPoint、resList、pcsResult等
+                    pcsResult.vb_List = new List<VBRcvInfp>();
+                    for (int i = 0; i < obj.Data.InferWholeData.InferResults.Count; i++)
                     {
-                        pcsResult.vb_List = new List<VBRcvInfp>();
-                        string time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-
-                        //热力点对象
-
-                        //这个有几个  就是几个报点图各自的结果，
-                        try
+                        VBRcvInfp vBRcv = new VBRcvInfp();
+                        vBRcv.bbox = new List<List<double>>();
+                        HeatPoint heatInfo = new HeatPoint();
+                        heatInfo.VVSStatus = "NotSet";
+                        int index = panelInfo.LocalDescribeDir.IndexOf("deepiresults", StringComparison.OrdinalIgnoreCase);
+                        if (index == -1)
                         {
-                            for (int i = 0; i < obj.Data.InferWholeData.InferResults.Count; i++)
-                            {
-                                VBRcvInfp vBRcv = new VBRcvInfp();
-                                vBRcv.bbox = new List<List<double>>();
-                                dsCenterInfo.Data[0].Content["1"].DefectsCount++;
-
-                                try
-                                {
-                                    //更新中台数据
-                                    if (panelInfo.SideIndex == "A")
-                                    {
-                                        dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].AiResult = obj.Data.InferWholeData.InferResults[i].Infer_Result.ToLower(); ;
-                                        dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].ManualResult = obj.Data.InferWholeData.InferResults[i].Infer_Result.ToLower();
-                                        dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].ManualDefectCode = obj.Data.InferWholeData.InferResults[i].Defect_name;
-                                        dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].DefectCode = obj.Data.InferWholeData.InferResults[i].Defect_name;
-                                    }
-                                    else
-                                    {
-                                        dsCenterInfo.Data[0].Content["1"].EndTime = time;
-                                        panelInfo.EndTime = time;
-                                        //因为上传中台数据A/B面的一个pcs信息在一个包，但A/B面处理是分开的；
-                                        //如果是B的话，先计算A面的报点数
-                                        int Bcount = panelInfo.PcsInfo["1"].DefectInfo.Count;
-                                        int ALLcount = dsCenterInfo.Data[0].Content["1"].DefectsInfo.Count;
-                                        int index = ALLcount - Bcount;
-                                        dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].AiResult = obj.Data.InferWholeData.InferResults[i].Infer_Result.ToLower();
-                                        dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].ManualResult = obj.Data.InferWholeData.InferResults[i].Infer_Result.ToLower();
-                                        dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].ManualDefectCode = obj.Data.InferWholeData.InferResults[i].Defect_name;
-                                        dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].DefectCode = obj.Data.InferWholeData.InferResults[i].Defect_name;
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    LogTextHelper.Error("更新中台数据异常" + ex.ToString());
-                                }
-
-                                for (int j = 0; j < obj.Data.InferWholeData.InferResults[i].inferDetails.Location.Count; j++)
-                                {
-                                    //奥特斯
-                                    DsCenterSubDefectInfo subDefectInfo = new DsCenterSubDefectInfo();
-                                    subDefectInfo.SubDefectArea = Convert.ToDouble(obj.Data.InferWholeData.InferResults[i].inferDetails.DefectArea);
-                                    string sub_defectName = obj.Data.InferWholeData.InferResults[i].Defect_name;
-                                    subDefectInfo.SubDefectCode = sub_defectName;
-
-                                    int defectX = 0;
-                                    int defectY = 0;
-                                    if (panelInfo.SideIndex == "A")
-                                    {
-                                        defectX = dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].DefectRoi.X;
-                                        defectY = dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].DefectRoi.Y;
-                                    }
-                                    else
-                                    {
-                                        int Bcount = panelInfo.PcsInfo["1"].DefectInfo.Count;
-                                        int ALLcount = dsCenterInfo.Data[0].Content["1"].DefectsInfo.Count;
-                                        int index = ALLcount - Bcount;
-                                        defectX = dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].DefectRoi.X;
-                                        defectY = dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].DefectRoi.Y;
-                                    }
-
-                                    int subX = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].inferDetails.Location[j].X);
-                                    int subY = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].inferDetails.Location[j].Y);
-                                    int subH = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].inferDetails.Location[j].Height);
-                                    int subW = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].inferDetails.Location[j].Width);
-
-                                    subDefectInfo.SubDefectHeight = subH;//Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].inferDetails.Location[j].Height);
-                                    subDefectInfo.SubDefectWidth = subW;//Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].inferDetails.Location[j].Width);
-                                    subDefectInfo.SubDefectIndex = j;
-                                    subDefectInfo.SubDefectRoi.Add(subX);
-                                    subDefectInfo.SubDefectRoi.Add(subY);
-                                    subDefectInfo.SubDefectRoi.Add(subW);
-                                    subDefectInfo.SubDefectRoi.Add(subH);
-                                    //热力点参数  
-                                    int CenterPointX = defectX + subX / 2 + subW / 4;
-                                    int CenterPointY = defectY + subY / 2 + subH / 4;
-                                    subDefectInfo.CenterPoint.Add(CenterPointX);
-                                    subDefectInfo.CenterPoint.Add(CenterPointY);
-                                    //热力点
-                                    if (j == 0)
-                                    {
-                                        HeatPoint heatInfo = new HeatPoint();
-                                        heatInfo.DefectName = sub_defectName;
-                                        heatInfo.AIStatus = "NG";
-                                        heatInfo.VVSStatus = "NotSet";
-                                        heatInfo.RoiX = CenterPointX;
-                                        heatInfo.RoiY = CenterPointY;
-                                        int index = panelInfo.LocalDescribeDir.IndexOf("deepiresults", StringComparison.OrdinalIgnoreCase);
-                                        if (index == -1)
-                                        {
-                                            Console.WriteLine("第一个路径中未找到 'deepiresults'");
-                                        }
-                                        // 截取到 "deepiresults" 所在目录的完整路径（包含自身）
-                                        string basePath = panelInfo.LocalDescribeDir.Substring(0, index + "deepiresults".Length);
-                                        // 将第二个路径的斜杠统一转换为Windows的反斜杠
-                                        string relativePath = obj.Data.InferWholeData.InferResults[i].GroupInfos[0].ImagePath.Replace('/', '\\');
-                                        // 合并路径
-                                        string mergedPath = Path.Combine(basePath, relativePath);
-                                        heatInfo.ImagePath = mergedPath;
-                                        avi_HeatInfo.Add(heatInfo);
-                                        //这里在生产时根据缺陷名称将缺陷形态赋值,（点状与线状）
-                                        if (sub_defectName == "AU10" || sub_defectName == "CU10" || sub_defectName == "CU41"
-                                            || sub_defectName == "HO01" || sub_defectName == "SM10")
-                                        {
-                                            heatInfo.DefectShape = "dot";
-                                        }
-                                        else
-                                        {
-                                            heatInfo.DefectShape = "line";
-                                        }
-                                    }
-
-                                    vBRcv.raw_bbox = new List<double>();
-                                    vBRcv.raw_bbox.Add(subX);
-                                    vBRcv.raw_bbox.Add(subY);
-                                    vBRcv.raw_bbox.Add(subW);
-                                    vBRcv.raw_bbox.Add(subH);
-                                    vBRcv.bbox.Add(vBRcv.raw_bbox);
-                                    vBRcv.sub_DefectNames.Add(sub_defectName);
-
-                                    //更新中台数据
-                                    if (panelInfo.SideIndex == "A")
-                                    {
-                                        //dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].AiResult= obj.Data.InferWholeData.InferResults[i].Infer_Result.ToLower(); ;
-                                        //dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].ManualResult = obj.Data.InferWholeData.InferResults[i].Infer_Result.ToLower();
-                                        //dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].ManualDefectCode= obj.Data.InferWholeData.InferResults[i].Defect_name;
-                                        dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].SubDefectsInfo.Add(subDefectInfo);
-                                    }
-                                    else
-                                    {
-                                        //因为上传中台数据A/B面的一个pcs信息在一个包，但A/B面处理是分开的；
-                                        //如果是B的话，先计算A面的报点数
-                                        int Bcount = panelInfo.PcsInfo["1"].DefectInfo.Count;
-                                        int ALLcount = dsCenterInfo.Data[0].Content["1"].DefectsInfo.Count;
-                                        int index = ALLcount - Bcount;
-                                        //dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].AiResult = obj.Data.InferWholeData.InferResults[i].Infer_Result.ToLower();
-                                        //dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].ManualResult = obj.Data.InferWholeData.InferResults[i].Infer_Result.ToLower();
-                                        //dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].ManualDefectCode = obj.Data.InferWholeData.InferResults[i].Defect_name;
-                                        dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].SubDefectsInfo.Add(subDefectInfo);
-                                    }
-                                }
-                                // 0为OK 1为NG 2为bypass
-                                if (vBModel.isByPass)
-                                {
-                                    resList.Add("2");
-                                }
-                                else
-                                {
-                                    resList.Add(obj.Data.InferWholeData.InferResults[i].Infer_Result == "NG" ? "1" : "0");
-                                }
-                                pcsResult.vb_List.Add(vBRcv);
-                            }
-                            //B面做完判断总结果
-                            if (panelInfo.SideIndex == "B")
-                            {
-                                if (dsCenterInfo.Data[0].Content["1"].DefectsInfo.Exists(o => o.AiResult.ToLower() == "ng"))
-                                {
-                                    dsCenterInfo.Data[0].Content["1"].ConfirmResult = "ng";
-                                }
-                                else
-                                {
-                                    dsCenterInfo.Data[0].Content["1"].ConfirmResult = "ok";
-                                }
-                                dsCenterInfo.Data[0].EndTime = time;
-                                dsCenterInfo.Data[0].Content["1"].EndTime = time;
-                            }
-                            vbJson = msg;
+                            Console.WriteLine("第一个路径中未找到 'deepiresults'");
                         }
-                        catch (Exception ex)
+                        // 截取到 "deepiresults" 所在目录的完整路径（包含自身）
+                        string basePath = panelInfo.LocalDescribeDir.Substring(0, index + "deepiresults".Length);
+                        // 将第二个路径的斜杠统一转换为Windows的反斜杠
+                        string relativePath = obj.Data.InferWholeData.InferResults[i].GroupInfos[0].ImagePath.Replace('/', '\\');
+                        // 合并路径
+                        string mergedPath = Path.Combine(basePath, relativePath);
+                        heatInfo.ImagePath = mergedPath;
+
+                        if (obj.Data.InferWholeData.InferResults[i].Infer_Result == "OK")
                         {
-                            LogTextHelper.Error("中台数据处理异常" + ex.ToString());
+                            heatInfo.AIStatus = "OK";
                         }
+                        else
+                        {
+                            heatInfo.AIStatus = "NG";
+                            for (int j = 0; j < obj.Data.InferWholeData.InferResults[i].inferDetails.Location.Count; j++)
+                            {
+                                string sub_defectName = obj.Data.InferWholeData.InferResults[i].Defect_name;
+
+                                int subX = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].inferDetails.Location[j].X);
+                                int subY = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].inferDetails.Location[j].Y);
+                                int subH = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].inferDetails.Location[j].Height);
+                                int subW = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].inferDetails.Location[j].Width);
+
+                                //热力点
+                                if (j == 0)
+                                {
+                                    heatInfo.DefectName = sub_defectName;
+                                    heatInfo.RoiX = subX / 2 + subW / 4;
+                                    heatInfo.RoiY = subY / 2 + subH / 4;
+                                   
+                                    avi_HeatInfo.Add(heatInfo);
+                                    //这里在生产时根据缺陷名称将缺陷形态赋值,（点状与线状）
+                                    if (sub_defectName == "AU10" || sub_defectName == "CU10" || sub_defectName == "CU41"
+                                        || sub_defectName == "HO01" || sub_defectName == "SM10")
+                                    {
+                                        heatInfo.DefectShape = "dot";
+                                    }
+                                    else
+                                    {
+                                        heatInfo.DefectShape = "line";
+                                    }
+                                }
+                                vBRcv.raw_bbox = new List<double>();
+                                vBRcv.raw_bbox.Add(subX);
+                                vBRcv.raw_bbox.Add(subY);
+                                vBRcv.raw_bbox.Add(subW);
+                                vBRcv.raw_bbox.Add(subH);
+                                vBRcv.bbox.Add(vBRcv.raw_bbox);
+                                vBRcv.sub_DefectNames.Add(sub_defectName);
+                            }
+                        }
+                        // 0为OK 1为NG 2为bypass
+                        if (vBModel.isByPass)
+                        {
+                            resList.Add("2");
+                        }
+                        else
+                        {
+                            resList.Add(obj.Data.InferWholeData.InferResults[i].Infer_Result == "NG" ? "1" : "0");
+                        }
+                        pcsResult.vb_List.Add(vBRcv);
                     }
+                    vbJson = msg;
 
                     DateTime AviCreationTime;
                     if (!DateTime.TryParse(panelInfo.AviCreateTime, out AviCreationTime))
@@ -992,7 +880,6 @@ namespace DeepSightWorkLib
                         LogTextHelper.Info($"无法解析 AviCreateTime '{panelInfo.AviCreateTime}'。将使用当前时间 '{AviCreationTime}' 作为备用。");
                     }
                     //存数据到db
-                    //LogTextHelper.Info($"{panelInfo.SerialNumber} Reslist:" + string.Join(", ", resList));
                     LogTextHelper.Info($"存储{panelInfo.SerialNumber} PanelSide数据到数据库...");
                     databaseHelper.SavePanelSide(new PanelSideRecord()
                     {
@@ -1066,6 +953,135 @@ namespace DeepSightWorkLib
                 SystemEvent.SendAlarmMsg("算法处理异常" + ex.ToString());
             }
             return result;
+        }
+
+        /// <summary>
+        /// 更新中台数据（奥特斯项目）- 纯中台数据更新，不涉及HeatPoint等其他逻辑
+        /// </summary>
+        /// <param name="panelInfo">面板信息</param>
+        /// <param name="obj">算法返回结果</param>
+        private void UpdateDsCenterInfo(RootPanelInfo panelInfo, RootVBOutInfo obj)
+        {
+            DsCenterInfo dsCenterInfo = null;
+            if (!dic_DsCenterInfo.TryGetValue($"{panelInfo.LotId}_{panelInfo.SerialNumber}", out dsCenterInfo))
+            {
+                return;
+            }
+            LogTextHelper.Info($"取出{panelInfo.LotId}_{panelInfo.SerialNumber}的中台数据，准备更新...");
+
+            string time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+            try
+            {
+                for (int i = 0; i < obj.Data.InferWholeData.InferResults.Count; i++)
+                {
+                    dsCenterInfo.Data[0].Content["1"].DefectsCount++;
+
+                    try
+                    {
+                        //更新中台数据
+                        if (panelInfo.SideIndex == "A")
+                        {
+                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].AiResult = obj.Data.InferWholeData.InferResults[i].Infer_Result.ToLower();
+                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].ManualResult = obj.Data.InferWholeData.InferResults[i].Infer_Result.ToLower();
+                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].ManualDefectCode = obj.Data.InferWholeData.InferResults[i].Defect_name;
+                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].DefectCode = obj.Data.InferWholeData.InferResults[i].Defect_name;
+                        }
+                        else
+                        {
+                            dsCenterInfo.Data[0].Content["1"].EndTime = time;
+                            panelInfo.EndTime = time;
+                            //因为上传中台数据A/B面的一个pcs信息在一个包，但A/B面处理是分开的；
+                            //如果是B的话，先计算A面的报点数
+                            int Bcount = panelInfo.PcsInfo["1"].DefectInfo.Count;
+                            int ALLcount = dsCenterInfo.Data[0].Content["1"].DefectsInfo.Count;
+                            int index = ALLcount - Bcount;
+                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].AiResult = obj.Data.InferWholeData.InferResults[i].Infer_Result.ToLower();
+                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].ManualResult = obj.Data.InferWholeData.InferResults[i].Infer_Result.ToLower();
+                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].ManualDefectCode = obj.Data.InferWholeData.InferResults[i].Defect_name;
+                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].DefectCode = obj.Data.InferWholeData.InferResults[i].Defect_name;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        LogTextHelper.Error("更新中台数据异常" + ex.ToString());
+                    }
+
+                    // 更新子缺陷信息到中台数据
+                    for (int j = 0; j < obj.Data.InferWholeData.InferResults[i].inferDetails.Location.Count; j++)
+                    {
+                        DsCenterSubDefectInfo subDefectInfo = new DsCenterSubDefectInfo();
+                        subDefectInfo.SubDefectArea = Convert.ToDouble(obj.Data.InferWholeData.InferResults[i].inferDetails.DefectArea);
+                        string sub_defectName = obj.Data.InferWholeData.InferResults[i].Defect_name;
+                        subDefectInfo.SubDefectCode = sub_defectName;
+
+                        int defectX = 0;
+                        int defectY = 0;
+                        if (panelInfo.SideIndex == "A")
+                        {
+                            defectX = dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].DefectRoi.X;
+                            defectY = dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].DefectRoi.Y;
+                        }
+                        else
+                        {
+                            int Bcount = panelInfo.PcsInfo["1"].DefectInfo.Count;
+                            int ALLcount = dsCenterInfo.Data[0].Content["1"].DefectsInfo.Count;
+                            int index = ALLcount - Bcount;
+                            defectX = dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].DefectRoi.X;
+                            defectY = dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].DefectRoi.Y;
+                        }
+
+                        int subX = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].inferDetails.Location[j].X);
+                        int subY = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].inferDetails.Location[j].Y);
+                        int subH = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].inferDetails.Location[j].Height);
+                        int subW = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].inferDetails.Location[j].Width);
+
+                        subDefectInfo.SubDefectHeight = subH;
+                        subDefectInfo.SubDefectWidth = subW;
+                        subDefectInfo.SubDefectIndex = j;
+                        subDefectInfo.SubDefectRoi.Add(subX);
+                        subDefectInfo.SubDefectRoi.Add(subY);
+                        subDefectInfo.SubDefectRoi.Add(subW);
+                        subDefectInfo.SubDefectRoi.Add(subH);
+                        //中心点参数
+                        int CenterPointX = defectX + subX / 2 + subW / 4;
+                        int CenterPointY = defectY + subY / 2 + subH / 4;
+                        subDefectInfo.CenterPoint.Add(CenterPointX);
+                        subDefectInfo.CenterPoint.Add(CenterPointY);
+
+                        //更新中台数据
+                        if (panelInfo.SideIndex == "A")
+                        {
+                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].SubDefectsInfo.Add(subDefectInfo);
+                        }
+                        else
+                        {
+                            int Bcount = panelInfo.PcsInfo["1"].DefectInfo.Count;
+                            int ALLcount = dsCenterInfo.Data[0].Content["1"].DefectsInfo.Count;
+                            int index = ALLcount - Bcount;
+                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].SubDefectsInfo.Add(subDefectInfo);
+                        }
+                    }
+                }
+                //B面做完判断总结果
+                if (panelInfo.SideIndex == "B")
+                {
+                    if (dsCenterInfo.Data[0].Content["1"].DefectsInfo.Exists(o => o.AiResult.ToLower() == "ng"))
+                    {
+                        dsCenterInfo.Data[0].Content["1"].ConfirmResult = "ng";
+                    }
+                    else
+                    {
+                        dsCenterInfo.Data[0].Content["1"].ConfirmResult = "ok";
+                    }
+                    dsCenterInfo.Data[0].EndTime = time;
+                    dsCenterInfo.Data[0].Content["1"].EndTime = time;
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error("中台数据处理异常" + ex.ToString());
+            }
         }
 
         /// <summary>

@@ -16,6 +16,15 @@
             if (disposing && (components != null))
             {
                 components.Dispose();
+               // 释放缓存的GDI对象
+               _borderPen?.Dispose();
+               foreach (var bmp in _statusBitmaps.Values)
+               {
+                   bmp?.Dispose();
+               }
+               _statusBitmaps.Clear();
+               toolTip?.Dispose();
+               components?.Dispose();
             }
             base.Dispose(disposing);
         }

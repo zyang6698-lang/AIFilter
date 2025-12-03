@@ -53,7 +53,7 @@ namespace DeepSightTool
             }
 
             // 计算总时间跨度（首尾时间差）
-            TimeSpan totalTime = sortedTimestamps.Last() - sortedTimestamps.First();
+            TimeSpan totalTime = sortedTimestamps.Last() - sortedTimestamps.Last().Date;
 
             // 计算稼动率
             double utilizationRate = totalTime.TotalSeconds > 0
@@ -68,13 +68,13 @@ namespace DeepSightTool
         /// </summary>
         /// <param name="timestamps">时间点集合</param>
         /// <param name="idleThresholdMinutes">判断非工作状态的时间阈值（分钟），默认为2分钟</param>
-        /// <returns>稼动率百分比 (0-100之间的数字，例如85.5表示85.5%)</returns>
+        /// <returns>稼动率 0.85</returns>
         public static double CalculateUtilizationRatePercent(
             IEnumerable<DateTime> timestamps,
             double idleThresholdMinutes = 2.0)
         {
             var (rate, _, _) = CalculateUtilizationRate(timestamps, idleThresholdMinutes);
-            return rate * 100;
+            return rate ;
         }
     }
 }

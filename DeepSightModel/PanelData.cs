@@ -16,7 +16,7 @@ namespace DeepSightModel
         public int RoiY { get; set; }
         public string ImagePath { get; set; }
         public string AIStatus { get; set; }
-        public string VVSStatus { get; set; } = "";
+        public string VVSStatus { get; set; } 
     }
 
     /// <summary>
@@ -24,6 +24,7 @@ namespace DeepSightModel
     /// </summary>
     public class SideData
     {
+
         public List<HeatPoint> HeatPoints { get; set; } = new List<HeatPoint>();
         // 总报点数量 (AVI 检测出的缺陷数)
         public int TotalDefectsCount { get; set; }
