@@ -174,6 +174,7 @@ namespace DeepSightModel
                 LogTextHelper.Error("异常", ex);
                 result = false;
             }
+
             return result;
         }
 

@@ -18,7 +18,10 @@ namespace DeepSightAI
         #region Fields
 
         private List<DefectReviewItem> _defectItems = new List<DefectReviewItem>();
+        private List<DefectReviewItem> _allDefectItems = new List<DefectReviewItem>(); // 存储所有查询结果
+        private Dictionary<string, List<DefectReviewItem>> _lotGroups = new Dictionary<string, List<DefectReviewItem>>(); // 按Lot分组
         private SortableBindingList<DefectReviewItem> _bindingList;
+        private string _currentSelectedLot = null; // 当前选中的Lot
 
         #endregion
 
@@ -32,7 +35,6 @@ namespace DeepSightAI
 
         private void InitializeControl()
         {
-
             // 订阅查询控件事件
             QueryControl.QueryClicked += HeatMapQueryControl_QueryClicked;
 
@@ -42,6 +44,18 @@ namespace DeepSightAI
 
             // 订阅详情控件的切换下一行事件
             defectDetailControl1.SelectNextRowRequested += DefectDetailControl_SelectNextRowRequested;
+
+            // 订阅VVS复判完成事件 - 当某SN所有缺陷点都完成VVS复判时自动更新人工判定状态
+            defectDetailControl1.SnVvsCompleted += DefectDetailControl_SnVvsCompleted;
+
+            // 订阅TreeView事件
+            treeView_Lots.AfterSelect += TreeView_Lots_AfterSelect;
+            treeView_Lots.BeforeExpand += TreeView_Lots_BeforeExpand;
+            treeView_Lots.NodeMouseDoubleClick += TreeView_Lots_NodeMouseDoubleClick;
+
+            // 订阅SN搜索事件
+            btn_SnSearch.Click += Btn_SnSearch_Click;
+            txt_SnFilter.KeyDown += Txt_SnFilter_KeyDown;
 
             // 初始化绑定列表（使用支持排序的SortableBindingList）
             _bindingList = new SortableBindingList<DefectReviewItem>(_defectItems);
@@ -84,30 +98,40 @@ namespace DeepSightAI
 
                 this.Enabled = false;
                 _defectItems.Clear();
+                _allDefectItems.Clear();
+                _lotGroups.Clear();
+                treeView_Lots.Nodes.Clear();
                 defectDetailControl1.ClearDetails();
+                _currentSelectedLot = null;
 
+                // 收集所有数据
                 foreach (var panel in QueryControl.GetQueryResult())
                 {
                     if (panel.Sides == null) continue;
                     foreach (var side in panel.Sides)
                     {
-                        if (side!=null && side.AviState != 1)
+                        if (side != null && side.AviState != 1)
                         {
-                            _defectItems.Add(CreateDefectReviewItem(panel, side));
+                            _allDefectItems.Add(CreateDefectReviewItem(panel, side));
                         }
                     }
                 }
 
+                // 按Lot分组
+                _lotGroups = _allDefectItems
+                    .GroupBy(x => x.LotNumber ?? "未知Lot")
+                    .ToDictionary(g => g.Key, g => g.ToList());
+
+                // 构建TreeView节点
+                BuildLotTreeNodes();
+
+                // 默认不加载任何数据到表格，提示用户选择Lot
+                _defectItems.Clear();
                 _bindingList = new SortableBindingList<DefectReviewItem>(_defectItems);
                 dataGridView_Defects.DataSource = _bindingList;
-                _bindingList.ResetBindings();
 
-
-                // 更新绑定
-                _bindingList.ResetBindings();
-
-                MessageBox.Show($"查询完成，共找到 {_defectItems.Count} 条记录。", "查询结果",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show($"查询完成，共找到 {_allDefectItems.Count} 条记录，分布在 {_lotGroups.Count} 个Lot中。\n请在左侧选择Lot查看详情。",
+                    "查询结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
@@ -166,6 +190,55 @@ namespace DeepSightAI
             {
                 defectDetailControl1.DisplayDefectDetails(selectedItem);
             }
+        }
+
+        /// <summary>
+        /// 当某SN的所有缺陷点都完成VVS复判时，自动更新该SN的人工判定状态
+        /// </summary>
+        private void DefectDetailControl_SnVvsCompleted(object sender, VvsCompletedEventArgs e)
+        {
+            if (e.HeatPoints == null || e.HeatPoints.Count == 0)
+                return;
+
+            // 在所有数据中查找包含这些HeatPoints的DefectReviewItem
+            DefectReviewItem targetItem = null;
+
+            // 先在当前显示的列表中查找
+            foreach (var item in _defectItems)
+            {
+                if (item.HeatPoints != null && item.HeatPoints == e.HeatPoints)
+                {
+                    targetItem = item;
+                    break;
+                }
+            }
+
+            // 如果没找到，在全部数据中查找
+            if (targetItem == null)
+            {
+                foreach (var item in _allDefectItems)
+                {
+                    if (item.HeatPoints != null && item.HeatPoints == e.HeatPoints)
+                    {
+                        targetItem = item;
+                        break;
+                    }
+                }
+            }
+
+            if (targetItem == null)
+                return;
+
+            // 根据VVS复判结果自动设置人工判定状态：全部OK则OK，有任一NG则NG
+            targetItem.ManualStatus = e.AllOk ? "OK" : "NG";
+            targetItem.IsModified = true;
+
+            // 更新缺陷点数变化：原始数量 -> VVS复判后NG数量
+            int originalCount = targetItem.DefectCount;
+            targetItem.DefectChange = $"{originalCount} -> {e.NgCount}";
+
+            // 刷新DataGridView显示
+            _bindingList.ResetBindings();
         }
 
         private async void Btn_Save_Click(object sender, EventArgs e)
@@ -262,10 +335,29 @@ namespace DeepSightAI
                             var filteredHeatPoints = defectDetailControl1.GetFilteredHeatPoints();
                             var (aiFilter, vvsFilter) = defectDetailControl1.GetFilters();
 
-                            // 以SN命名子文件夹
+                            // 构建导出文件夹名
                             string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
-                            string snFolderName = $"{currentItem.SerialNumber}_{currentItem.Side}_{timestamp}";
-                            string exportPath = Path.Combine(dialog.SelectedPath, snFolderName);
+                            string folderName;
+
+                            // 判断是否为Lot查看模式（双击Lot节点时SerialNumber会以"Lot:"开头）
+                            if (currentItem.SerialNumber != null && currentItem.SerialNumber.StartsWith("Lot:"))
+                            {
+                                // Lot查看模式：使用Lot名称（去除非法字符）
+                                string safeLotName = currentItem.SerialNumber.Replace(":", "_").Replace(" ", "");
+                                folderName = $"{safeLotName}_{timestamp}";
+                            }
+                            else if (!string.IsNullOrEmpty(_currentSelectedLot))
+                            {
+                                // 在Lot下选择了具体SN：包含Lot和SN
+                                folderName = $"{_currentSelectedLot}_{currentItem.SerialNumber}_{currentItem.Side}_{timestamp}";
+                            }
+                            else
+                            {
+                                // 普通模式：仅SN
+                                folderName = $"{currentItem.SerialNumber}_{currentItem.Side}_{timestamp}";
+                            }
+
+                            string exportPath = Path.Combine(dialog.SelectedPath, folderName);
                             Directory.CreateDirectory(exportPath);
 
                             await Task.Run(() =>
@@ -277,8 +369,17 @@ namespace DeepSightAI
                                     {
                                         try
                                         {
+                                            // 导出原图
                                             var destFileName = Path.GetFileName(heatPoint.ImagePath);
                                             File.Copy(heatPoint.ImagePath, Path.Combine(exportPath, destFileName), true);
+
+                                            // 导出模板图
+                                            string templatePath = FindTemplatePath(heatPoint.ImagePath);
+                                            if (!string.IsNullOrEmpty(templatePath) && File.Exists(templatePath))
+                                            {
+                                                var templateDestFileName = Path.GetFileName(templatePath);
+                                                File.Copy(templatePath, Path.Combine(exportPath, templateDestFileName), true);
+                                            }
                                         }
                                         catch (Exception ex)
                                         {
@@ -310,7 +411,9 @@ namespace DeepSightAI
                             });
 
                             this.Enabled = true;
-                            MessageBox.Show($"导出完成。\n导出路径: {exportPath}", "完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                            // 自动打开导出文件夹
+                            System.Diagnostics.Process.Start("explorer.exe", exportPath);
                         }
                     }
                 }
@@ -355,10 +458,327 @@ namespace DeepSightAI
             }
         }
 
+        /// <summary>
+        /// TreeView节点选择事件 - 加载选中Lot的数据到表格
+        /// </summary>
+        private void TreeView_Lots_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            if (e.Node == null) return;
+
+            // 如果是Lot节点（第一层），加载该Lot的数据
+            if (e.Node.Level == 0)
+            {
+                LoadLotData(e.Node.Name);
+            }
+            // 如果是子分类节点（第二层，如按Side分组），加载该分类的数据
+            else if (e.Node.Level == 1 && e.Node.Parent != null)
+            {
+                string lotNumber = e.Node.Parent.Name;
+                string category = e.Node.Name; // 如 "A面", "B面" 等
+                LoadLotDataByCategory(lotNumber, category);
+            }
+        }
+
+        /// <summary>
+        /// TreeView节点展开前事件 - 用于延迟加载子节点
+        /// </summary>
+        private void TreeView_Lots_BeforeExpand(object sender, TreeViewCancelEventArgs e)
+        {
+            // 如果节点包含占位符子节点，则加载真实子节点
+            if (e.Node.Nodes.Count == 1 && e.Node.Nodes[0].Text == "加载中...")
+            {
+                e.Node.Nodes.Clear();
+                LoadLotSubCategories(e.Node);
+            }
+        }
+
+        /// <summary>
+        /// TreeView节点双击事件 - 显示该Lot下所有缺陷图片并跳转到图片显示
+        /// </summary>
+        private void TreeView_Lots_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
+        {
+            if (e.Node == null) return;
+
+            List<DefectReviewItem> itemsToDisplay = null;
+            string displayTitle = string.Empty;
+
+            // 如果是Lot节点（第一层），显示该Lot的所有缺陷图片
+            if (e.Node.Level == 0)
+            {
+                string lotNumber = e.Node.Name;
+                if (_lotGroups.TryGetValue(lotNumber, out var items))
+                {
+                    itemsToDisplay = items;
+                    displayTitle = $"Lot: {lotNumber}";
+                }
+            }
+            // 如果是子分类节点（第二层，如按Side分组），显示该分类的缺陷图片
+            else if (e.Node.Level == 1 && e.Node.Parent != null)
+            {
+                string lotNumber = e.Node.Parent.Name;
+                string category = e.Node.Name;
+                if (_lotGroups.TryGetValue(lotNumber, out var items))
+                {
+                    itemsToDisplay = items.Where(x => x.Side == category).ToList();
+                    displayTitle = $"Lot: {lotNumber} - {category}面";
+                }
+            }
+
+            if (itemsToDisplay != null && itemsToDisplay.Count > 0)
+            {
+                // 检查是否有缺陷图片
+                int totalHeatPoints = itemsToDisplay.Sum(item => item.HeatPoints?.Count ?? 0);
+
+                if (totalHeatPoints > 0)
+                {
+                    // 使用新的重载方法，传递原始items列表（保持HeatPoints引用），以便按SN分组检查VVS状态
+                    defectDetailControl1.DisplayDefectDetails(itemsToDisplay, displayTitle);
+                    tabControl_Main.SelectedTab = tabPage_Details;
+                }
+                else
+                {
+                    MessageBox.Show($"{displayTitle} 下没有缺陷图片。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 构建Lot分组的TreeView节点
+        /// </summary>
+        private void BuildLotTreeNodes()
+        {
+            treeView_Lots.BeginUpdate();
+            treeView_Lots.Nodes.Clear();
+
+            foreach (var lotGroup in _lotGroups.OrderBy(x => x.Key))
+            {
+                var lotNode = new TreeNode
+                {
+                    Name = lotGroup.Key,
+                    Text = $"{lotGroup.Key} ({lotGroup.Value.Count}条)",
+                    ForeColor = Color.White
+                };
+
+                // 添加占位符子节点，用于延迟加载
+                lotNode.Nodes.Add(new TreeNode("加载中..."));
+                treeView_Lots.Nodes.Add(lotNode);
+            }
+
+            treeView_Lots.EndUpdate();
+        }
+
+        /// <summary>
+        /// 加载Lot的子分类节点（按Side分组）
+        /// </summary>
+        private void LoadLotSubCategories(TreeNode lotNode)
+        {
+            string lotNumber = lotNode.Name;
+            if (!_lotGroups.TryGetValue(lotNumber, out var items)) return;
+
+            // 按Side分组
+            var sideGroups = items.GroupBy(x => x.Side ?? "未知").OrderBy(g => g.Key);
+            foreach (var sideGroup in sideGroups)
+            {
+                var sideNode = new TreeNode
+                {
+                    Name = sideGroup.Key,
+                    Text = $"{sideGroup.Key}面 ({sideGroup.Count()}条)",
+                    ForeColor = Color.LightGray
+                };
+                lotNode.Nodes.Add(sideNode);
+            }
+        }
+
+        /// <summary>
+        /// 加载指定Lot的所有数据到表格
+        /// </summary>
+        private void LoadLotData(string lotNumber)
+        {
+            if (!_lotGroups.TryGetValue(lotNumber, out var items)) return;
+
+            _currentSelectedLot = lotNumber;
+            _defectItems.Clear();
+            _defectItems.AddRange(items);
+
+            _bindingList = new SortableBindingList<DefectReviewItem>(_defectItems);
+            dataGridView_Defects.DataSource = _bindingList;
+            _bindingList.ResetBindings();
+
+            label_LotTitle.Text = $"Lot: {lotNumber} ({items.Count}条)";
+        }
+
+        /// <summary>
+        /// 按Lot和子分类加载数据到表格
+        /// </summary>
+        private void LoadLotDataByCategory(string lotNumber, string category)
+        {
+            if (!_lotGroups.TryGetValue(lotNumber, out var items)) return;
+
+            var filteredItems = items.Where(x => x.Side == category).ToList();
+
+            _currentSelectedLot = lotNumber;
+            _defectItems.Clear();
+            _defectItems.AddRange(filteredItems);
+
+            _bindingList = new SortableBindingList<DefectReviewItem>(_defectItems);
+            dataGridView_Defects.DataSource = _bindingList;
+            _bindingList.ResetBindings();
+
+            label_LotTitle.Text = $"Lot: {lotNumber} - {category}面 ({filteredItems.Count}条)";
+        }
+
+        /// <summary>
+        /// SN搜索按钮点击事件
+        /// </summary>
+        private void Btn_SnSearch_Click(object sender, EventArgs e)
+        {
+            FilterBySn();
+        }
+
+        /// <summary>
+        /// SN输入框回车事件
+        /// </summary>
+        private void Txt_SnFilter_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                FilterBySn();
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
+        }
+
+        /// <summary>
+        /// 根据SN筛选数据
+        /// </summary>
+        private void FilterBySn()
+        {
+            string filterText = txt_SnFilter.Text.Trim();
+
+            // 如果搜索框为空，恢复当前Lot的所有数据
+            if (string.IsNullOrEmpty(filterText))
+            {
+                if (!string.IsNullOrEmpty(_currentSelectedLot))
+                {
+                    LoadLotData(_currentSelectedLot);
+                }
+                else
+                {
+                    // 如果没有选中Lot，搜索所有数据
+                    SearchAllData(filterText);
+                }
+                return;
+            }
+
+            // 确定搜索范围：当前选中的Lot或所有数据
+            List<DefectReviewItem> searchSource;
+            if (!string.IsNullOrEmpty(_currentSelectedLot) && _lotGroups.TryGetValue(_currentSelectedLot, out var lotItems))
+            {
+                searchSource = lotItems;
+            }
+            else
+            {
+                searchSource = _allDefectItems;
+            }
+
+            // 模糊搜索SN（支持部分匹配）
+            var filteredItems = searchSource
+                .Where(x => x.SerialNumber != null && x.SerialNumber.IndexOf(filterText, StringComparison.OrdinalIgnoreCase) >= 0)
+                .ToList();
+
+            // 更新表格
+            _defectItems.Clear();
+            _defectItems.AddRange(filteredItems);
+
+            _bindingList = new SortableBindingList<DefectReviewItem>(_defectItems);
+            dataGridView_Defects.DataSource = _bindingList;
+            _bindingList.ResetBindings();
+
+            // 更新标题
+            string scopeText = string.IsNullOrEmpty(_currentSelectedLot) ? "全部" : $"Lot: {_currentSelectedLot}";
+            label_LotTitle.Text = $"{scopeText} - 搜索: {filterText} ({filteredItems.Count}条)";
+
+            // 如果只找到一条，自动选中并可选择显示详情
+            if (filteredItems.Count == 1)
+            {
+                dataGridView_Defects.ClearSelection();
+                dataGridView_Defects.Rows[0].Selected = true;
+                dataGridView_Defects.CurrentCell = dataGridView_Defects.Rows[0].Cells[0];
+            }
+            else if (filteredItems.Count == 0)
+            {
+                MessageBox.Show($"未找到包含 \"{filterText}\" 的序列号。", "搜索结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        /// <summary>
+        /// 在所有数据中搜索
+        /// </summary>
+        private void SearchAllData(string filterText)
+        {
+            if (string.IsNullOrEmpty(filterText))
+            {
+                // 清空表格，提示用户选择Lot
+                _defectItems.Clear();
+                _bindingList = new SortableBindingList<DefectReviewItem>(_defectItems);
+                dataGridView_Defects.DataSource = _bindingList;
+                label_LotTitle.Text = "请选择Lot或输入SN搜索";
+                return;
+            }
+
+            var filteredItems = _allDefectItems
+                .Where(x => x.SerialNumber != null && x.SerialNumber.IndexOf(filterText, StringComparison.OrdinalIgnoreCase) >= 0)
+                .ToList();
+
+            _defectItems.Clear();
+            _defectItems.AddRange(filteredItems);
+
+            _bindingList = new SortableBindingList<DefectReviewItem>(_defectItems);
+            dataGridView_Defects.DataSource = _bindingList;
+            _bindingList.ResetBindings();
+
+            label_LotTitle.Text = $"全局搜索: {filterText} ({filteredItems.Count}条)";
+        }
+
         #endregion
 
         #region Data Operations
 
+        /// <summary>
+        /// 查找模板图片路径
+        /// </summary>
+        /// <param name="imagePath">原图路径</param>
+        /// <returns>模板图片路径，未找到返回null</returns>
+        private string FindTemplatePath(string imagePath)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(imagePath) || !File.Exists(imagePath))
+                    return null;
+
+                string dir = Path.GetDirectoryName(imagePath);
+                string filename = Path.GetFileNameWithoutExtension(imagePath);
+                string ext = Path.GetExtension(imagePath);
+
+                // 在同目录中查找包含原图名、包含"template"并且扩展名相同的文件
+                var candidates = Directory.EnumerateFiles(dir)
+                    .Where(p => string.Equals(Path.GetExtension(p), ext, StringComparison.OrdinalIgnoreCase))
+                    .Where(p =>
+                    {
+                        var name = Path.GetFileNameWithoutExtension(p);
+                        return name.IndexOf(filename, StringComparison.OrdinalIgnoreCase) >= 0
+                               && name.IndexOf("template", StringComparison.OrdinalIgnoreCase) >= 0;
+                    })
+                    .ToList();
+
+                return candidates.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"查找模板图片失败: {imagePath}, {ex.Message}");
+                return null;
+            }
+        }
 
         private DefectReviewItem CreateDefectReviewItem(PanelDataRecord panel, SideData sideData)
         {
@@ -458,13 +878,20 @@ namespace DeepSightAI
         public string MachineId { get; set; }
         public string ProductSerial { get; set; }
         public string Side { get; set; }
+        [Browsable(false)]
         public string AviStatus { get; set; }
         public string AiStatus { get; set; }
         public string ManualStatus { get; set; }
         public int DefectCount { get; set; }
+        /// <summary>
+        /// 缺陷点数变化，格式：原始数量 -> VVS复判后NG数量
+        /// </summary>
+        public string DefectChange { get; set; }
         public string PathIndex { get; set; }
         public DateTime DetectionDate { get; set; }
+        [Browsable(false)]
         public List<DetectInfo> HeatPoints { get; set; }
+        [Browsable(false)]
         public bool IsModified { get; set; }
     }
 

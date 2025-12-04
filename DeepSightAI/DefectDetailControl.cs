@@ -20,10 +20,20 @@ namespace DeepSightAI
         private string _aiFilter = "All";
         private string _vvsFilter = "All";
 
+        // 存储原始的DefectReviewItem列表，用于按SN分组检查VVS状态
+        private List<DefectReviewItem> _sourceItems;
+        // 记录已经触发过完成事件的SN（避免重复触发）
+        private HashSet<string> _completedSnSet = new HashSet<string>();
+
         /// <summary>
         /// 当需要切换到下一行记录时触发（按Tab键时）
         /// </summary>
         public event EventHandler SelectNextRowRequested;
+
+        /// <summary>
+        /// 当某个SN的所有缺陷点VVS状态都已设置时触发
+        /// </summary>
+        public event EventHandler<VvsCompletedEventArgs> SnVvsCompleted;
 
         public DefectDetailControl()
         {
@@ -180,6 +190,9 @@ namespace DeepSightAI
                             {
                                 // VVSStatus: 0 未运行 / 1 OK / 2 NG
                                 heatPoint.VVSStatus = tag == "VVS_OK" ? 1 : 2;
+
+                                // 检查是否所有缺陷点都已完成VVS复判
+                                CheckAllVvsStatusSet();
                             }
 
                             label.Text = $"AI: {GetStatusText(heatPoint.AIStatus)}\n" +
@@ -189,6 +202,49 @@ namespace DeepSightAI
                             UpdatePanelAppearance(panel, true);
                         }
                     }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 检查每个SN的所有缺陷点是否都已完成VVS复判，如果是则触发事件
+        /// </summary>
+        private void CheckAllVvsStatusSet()
+        {
+            if (_sourceItems == null || _sourceItems.Count == 0)
+                return;
+
+            // 遍历每个原始item（每个SN），检查是否所有缺陷点都已复判
+            foreach (var item in _sourceItems)
+            {
+                if (item.HeatPoints == null || item.HeatPoints.Count == 0)
+                    continue;
+
+                // 生成唯一标识（SN + Side）
+                string snKey = $"{item.SerialNumber}_{item.Side}";
+
+                // 如果已经触发过，跳过
+                if (_completedSnSet.Contains(snKey))
+                    continue;
+
+                // 检查该SN的所有缺陷点是否都已设置VVS状态
+                bool allSet = item.HeatPoints.All(hp => hp.VVSStatus != 0);
+                if (allSet)
+                {
+                    // 标记为已完成，避免重复触发
+                    _completedSnSet.Add(snKey);
+
+                    // 计算结果
+                    bool allOk = item.HeatPoints.All(hp => hp.VVSStatus == 1);
+                    int ngCount = item.HeatPoints.Count(hp => hp.VVSStatus == 2);
+
+                    // 触发事件，传递该SN的HeatPoints
+                    SnVvsCompleted?.Invoke(this, new VvsCompletedEventArgs
+                    {
+                        HeatPoints = item.HeatPoints,
+                        AllOk = allOk,
+                        NgCount = ngCount
+                    });
                 }
             }
         }
@@ -210,12 +266,34 @@ namespace DeepSightAI
 
         public void DisplayDefectDetails(DefectReviewItem item)
         {
-            _allHeatPoints = item.HeatPoints ?? new List<DetectInfo>();
-            _filteredHeatPoints = new List<DetectInfo>(_allHeatPoints); // Initialize filtered list
+            // 单个item显示，包装成列表调用
+            DisplayDefectDetails(new List<DefectReviewItem> { item }, $" SN: {item.SerialNumber} ({item.Side})");
+        }
+
+        /// <summary>
+        /// 显示多个DefectReviewItem的缺陷详情（用于Lot模式下查看多个SN）
+        /// </summary>
+        public void DisplayDefectDetails(List<DefectReviewItem> items, string title)
+        {
+            // 保存原始items列表，用于按SN分组检查VVS状态
+            _sourceItems = items;
+            _completedSnSet.Clear();
+
+            // 合并所有HeatPoints
+            _allHeatPoints = new List<DetectInfo>();
+            foreach (var item in items)
+            {
+                if (item.HeatPoints != null)
+                {
+                    _allHeatPoints.AddRange(item.HeatPoints);
+                }
+            }
+
+            _filteredHeatPoints = new List<DetectInfo>(_allHeatPoints);
             _totalPages = (int)Math.Ceiling((double)_filteredHeatPoints.Count / PageSize);
             _currentPage = 1;
 
-            label_DetailTitle.Text = $" SN: {item.SerialNumber} ({item.Side})";
+            label_DetailTitle.Text = title;
 
             // Reset filters
             _aiFilter = "All";
@@ -486,5 +564,26 @@ namespace DeepSightAI
         {
             return (_aiFilter, _vvsFilter);
         }
+    }
+
+    /// <summary>
+    /// VVS复判完成事件参数
+    /// </summary>
+    public class VvsCompletedEventArgs : EventArgs
+    {
+        /// <summary>
+        /// 完成复判的缺陷点列表
+        /// </summary>
+        public List<DetectInfo> HeatPoints { get; set; }
+
+        /// <summary>
+        /// 是否全部OK（true=全部OK, false=有NG）
+        /// </summary>
+        public bool AllOk { get; set; }
+
+        /// <summary>
+        /// NG数量
+        /// </summary>
+        public int NgCount { get; set; }
     }
 }
