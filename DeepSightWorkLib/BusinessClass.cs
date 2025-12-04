@@ -366,12 +366,11 @@ namespace DeepSightWorkLib
 
                             //调用算法处理
                             LogTextHelper.Info($"准备DefectMethod，SN:{info.SN}，图片数量:{info.Mats.Count}");
-                            List<string> msg;
                             List<string> details;
                             PcsResult pcsResult;
                             string vbJson = null;
 
-                            if (DefectMethod(info, out msg, out details, out pcsResult, out vbJson))
+                            if (DefectMethod(info, out List<string> msg, out details, out pcsResult, out vbJson))
                             {
                                 SystemEvent.SendResultInfo(info.SN, msg, details, pcsResult);
                                 if (TestFlag)
@@ -1668,8 +1667,7 @@ namespace DeepSightWorkLib
                 {
                     if (que_AI.Count > 0)
                     {
-                        Tuple<string, string, string, RootAIResult> info = null;
-                        if (que_AI.TryDequeue(out info))
+                        if (que_AI.TryDequeue(out Tuple<string, string, string, RootAIResult> info))
                         {
                             //回写处理
                             ReturnAVI(info);
