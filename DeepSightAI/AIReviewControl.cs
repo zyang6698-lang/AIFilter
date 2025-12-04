@@ -390,21 +390,43 @@ namespace DeepSightAI
 
                                 // 导出表格信息到CSV
                                 var csvPath = Path.Combine(exportPath, $"{currentItem.SerialNumber}_{currentItem.Side}_info.csv");
-                                var csvLines = new List<string>
-                                {
-                                    "序列号,Lot号,机台号,料号,面次,AVI状态,AI状态,人工判定,缺陷数,检测日期",
-                                    $"{currentItem.SerialNumber},{currentItem.LotNumber},{currentItem.MachineId},{currentItem.ProductSerial}," +
+                                var csvLines = new List<string>();
+
+                                // 基本信息表头和数据
+                                csvLines.Add("序列号,Lot号,机台号,料号,面次,AVI状态,AI状态,人工判定,缺陷数,缺陷变化,检测日期");
+                                csvLines.Add($"{currentItem.SerialNumber},{currentItem.LotNumber},{currentItem.MachineId},{currentItem.ProductSerial}," +
                                     $"{currentItem.Side},{currentItem.AviStatus},{currentItem.AiStatus},{currentItem.ManualStatus}," +
-                                    $"{currentItem.DefectCount},{currentItem.DetectionDate:yyyy-MM-dd HH:mm:ss}"
-                                };
+                                    $"{currentItem.DefectCount},{currentItem.DefectChange ?? ""},{currentItem.DetectionDate:yyyy-MM-dd HH:mm:ss}");
+
+                                // 统计信息
+                                csvLines.Add("");
+                                csvLines.Add("统计信息");
+                                int aiOkCount = filteredHeatPoints.Count(hp => hp.AIStatus == 1);
+                                int aiNgCount = filteredHeatPoints.Count(hp => hp.AIStatus == 2);
+                                int vvsOkCount = filteredHeatPoints.Count(hp => hp.VVSStatus == 1);
+                                int vvsNgCount = filteredHeatPoints.Count(hp => hp.VVSStatus == 2);
+                                int vvsNotSetCount = filteredHeatPoints.Count(hp => hp.VVSStatus == 0);
+                                csvLines.Add($"总缺陷数,{filteredHeatPoints.Count}");
+                                csvLines.Add($"AI_OK数,{aiOkCount}");
+                                csvLines.Add($"AI_NG数,{aiNgCount}");
+                                csvLines.Add($"VVS_OK数,{vvsOkCount}");
+                                csvLines.Add($"VVS_NG数,{vvsNgCount}");
+                                csvLines.Add($"VVS未设置数,{vvsNotSetCount}");
 
                                 // 添加缺陷点详情
                                 csvLines.Add("");
                                 csvLines.Add("缺陷点详情");
-                                csvLines.Add("图片路径,AI状态,VVS状态");
+                                csvLines.Add("序号,缺陷名称,缺陷类型,坐标X,坐标Y,宽度,高度,AI状态,AI状态文本,VVS状态,VVS状态文本,VRS状态,最终状态,图片路径");
+                                int index = 1;
                                 foreach (var hp in filteredHeatPoints)
                                 {
-                                    csvLines.Add($"{hp.ImagePath},{hp.AIStatus},{hp.VVSStatus}");
+                                    string aiStatusText = GetStatusTextStatic(hp.AIStatus);
+                                    string vvsStatusText = GetStatusTextStatic(hp.VVSStatus);
+                                    csvLines.Add($"{index},{hp.DefectName ?? ""},{hp.DefectType ?? ""}," +
+                                        $"{hp.RoiX},{hp.RoiY},{hp.Width},{hp.Height}," +
+                                        $"{hp.AIStatus},{aiStatusText},{hp.VVSStatus},{vvsStatusText}," +
+                                        $"{hp.VrsState},{hp.FinalState},{hp.ImagePath ?? ""}");
+                                    index++;
                                 }
 
                                 File.WriteAllLines(csvPath, csvLines, System.Text.Encoding.UTF8);
@@ -791,7 +813,7 @@ namespace DeepSightAI
                 Side = sideData.Side,
                 AviStatus = sideData.AviState == 1 ? "OK" : "NG",
                 AiStatus =sideData.AiState==1?"OK":"NG",
-                ManualStatus = "未判定",
+                ManualStatus = sideData.VvsState==0?"未判定" : sideData.VvsState == 1?"OK":"NG",
                 DefectCount = sideData.DetectPoints?.Count ?? 0,
                 PathIndex = panel.PathIndex,
                 DetectionDate = panel.DetectionDate,
@@ -800,68 +822,88 @@ namespace DeepSightAI
             };
         }
 
+        /// <summary>
+        /// 将状态码转换为显示文本（静态方法，用于CSV导出）
+        /// </summary>
+        private static string GetStatusTextStatic(int status)
+        {
+            switch (status)
+            {
+                case 0: return "未检测";
+                case 1: return "OK";
+                case 2: return "NG";
+                case 3: return "异常";
+                default: return status.ToString();
+            }
+        }
+
 
         private async Task SaveManualReviewResults(List<DefectReviewItem> items)
         {
-            // 这里需要实现保存逻辑
-            // 由于当前DatabaseHelper没有提供更新方法，这里暂时记录日志
-            foreach (var item in items)
-            {
-                LogTextHelper.Info($"保存人工判定结果: SN={item.SerialNumber}, Side={item.Side}, " +
-                    $"ManualStatus={item.ManualStatus}");
-
-                // TODO: 实现实际的数据库更新逻辑
-                // await _databaseHelper.UpdateManualReviewResult(item);
-            }
-
-            await Task.CompletedTask;
-        }
-
-        private async Task ExportToFile(string filePath, string aiOkVvsNgDir, string aiNgVvsOkDir)
-        {
             await Task.Run(() =>
             {
-                var lines = new List<string>();
-
-                // 添加表头
-                lines.Add("序列号,Lot号,面次,AVI状态,AI状态,人工判定,缺陷数,检测日期");
-
-                // 添加数据并复制图片
-                foreach (var item in _defectItems)
+                foreach (var item in items)
                 {
-                    lines.Add($"{item.SerialNumber},{item.LotNumber},{item.Side}," +
-                        $"{item.AviStatus},{item.AiStatus},{item.ManualStatus}," +
-                        $"{item.DefectCount},{item.DetectionDate:yyyy-MM-dd HH:mm:ss}");
+                    try
+                    {
+                        // 将人工判定状态转换为 FinalState
+                        // ManualStatus: "OK" -> 1, "NG" -> 2, "未判定" -> 0
+                        int finalState = 0;
+                        if (item.ManualStatus == "OK") finalState = 1;
+                        else if (item.ManualStatus == "NG") finalState = 2;
 
-                    // AI OK, VVS NG
-                    if (item.AiStatus == "OK" && item.AviStatus == "NG")
-                    {
-                        foreach (var heatPoint in item.HeatPoints)
+                        // 计算各阶段状态
+                        int aviState = item.AviStatus == "OK" ? 1 : 2;
+                        int aiState = item.AiStatus == "OK" ? 1 : 2;
+
+                        // 计算 VVS 状态：基于 HeatPoints 中的 VVSStatus
+                        int vvsState = 0;
+                        if (item.HeatPoints != null && item.HeatPoints.Count > 0)
                         {
-                            if (File.Exists(heatPoint.ImagePath))
+                            bool hasVvsSet = item.HeatPoints.Any(hp => hp.VVSStatus != 0);
+                            if (hasVvsSet)
                             {
-                                var destFileName = $"{item.SerialNumber}_{item.Side}_{Path.GetFileName(heatPoint.ImagePath)}";
-                                File.Copy(heatPoint.ImagePath, Path.Combine(aiOkVvsNgDir, destFileName), true);
+                                bool allVvsOk = item.HeatPoints.All(hp => hp.VVSStatus == 0 || hp.VVSStatus == 1);
+                                vvsState = allVvsOk ? 1 : 2;
                             }
                         }
+
+                        // 创建 PanelSideRecord 用于保存
+                        var record = new PanelSideRecord
+                        {
+                            SerialNumber = item.SerialNumber,
+                            LotNumber = item.LotNumber,
+                            MachineId = item.MachineId,
+                            ProductSerial = item.ProductSerial,
+                            Side = item.Side,
+                            PathIndex = item.PathIndex,
+                            DetectionDate = item.DetectionDate,
+                            Data = new SideData
+                            {
+                                Side = item.Side,
+                                DetectPoints = item.HeatPoints ?? new List<DetectInfo>(),
+                                AviState = aviState,
+                                AiState = aiState,
+                                VvsState = vvsState,
+                                VrsState = 0, // VRS 状态暂不处理
+                                FinalState = finalState
+                            }
+                        };
+
+                        // 调用 SavePanelSide 保存到数据库（支持覆盖）
+                        Machine.master.workClass.SavePanelSide(record);
+
+                        LogTextHelper.Info($"保存人工判定结果成功: SN={item.SerialNumber}, Side={item.Side}, " +
+                            $"ManualStatus={item.ManualStatus}, FinalState={finalState}");
                     }
-                    // AI NG, VVS OK
-                    else if (item.AiStatus == "NG" && item.AviStatus == "OK")
+                    catch (Exception ex)
                     {
-                        foreach (var heatPoint in item.HeatPoints)
-                        {
-                            if (File.Exists(heatPoint.ImagePath))
-                            {
-                                var destFileName = $"{item.SerialNumber}_{item.Side}_{Path.GetFileName(heatPoint.ImagePath)}";
-                                File.Copy(heatPoint.ImagePath, Path.Combine(aiNgVvsOkDir, destFileName), true);
-                            }
-                        }
+                        LogTextHelper.Error($"保存人工判定结果失败: SN={item.SerialNumber}, Side={item.Side}, 错误: {ex.Message}");
                     }
                 }
-
-                File.WriteAllLines(filePath, lines, System.Text.Encoding.UTF8);
             });
         }
+
 
         #endregion
     }

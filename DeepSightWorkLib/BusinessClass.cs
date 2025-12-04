@@ -586,14 +586,15 @@ namespace DeepSightWorkLib
                 vBInfo.paramsData.InferWholeData = new InferWholeData();
                 vBInfo.paramsData.InferWholeData.ImageInferParams = new ImageInferParams();
                 vBInfo.paramsData.InferWholeData.ImageInferParams.PipelineName = solution;
-                vBInfo.paramsData.InferWholeData.ImageInferParams.NodeParams = new List<NodeParam>();
-                vBInfo.paramsData.InferWholeData.ImageInferParams.NodeParams.Add(
-                  new NodeParam()
-                  {
-                      NodeName = flow,
-                      height = 200,
-                      width = 200,
-                  });
+                vBInfo.paramsData.InferWholeData.ImageInferParams.NodeParams = new List<NodeParam>
+                {
+                    new NodeParam()
+                    {
+                        NodeName = flow,
+                        height = 200,
+                        width = 200,
+                    }
+                };
 
                 vBInfo.paramsData.InferWholeData.ImageData = new ImageData();
                 vBInfo.paramsData.InferWholeData.ImageData.DataType = "minio";
@@ -635,35 +636,43 @@ namespace DeepSightWorkLib
                         for (int j = 0; j < pcsInfo.DefectInfo.Count; j++)
                         {
                             //奥特斯
-                            DsCenterDefectInfo dsDefectinfo = new DsCenterDefectInfo();
-                            dsDefectinfo.SideType = info.SideIndex;
-                            dsDefectinfo.SideType2 = info.SideIndex;
-                            dsDefectinfo.PcsIndex = i + 1;
-                            dsDefectinfo.PcsVesIndex = (i + 1).ToString();
-                            dsDefectinfo.DefectRoi = pcsInfo.DefectInfo[j].DefectRoi;
-
-                            dsDefectinfo.DefectOriginRoi = pcsInfo.DefectInfo[j].DefectOriginRoi;
-                            dsDefectinfo.DefectsRoi.Add(pcsInfo.DefectInfo[j].DefectRoi.X);
-                            dsDefectinfo.DefectsRoi.Add(pcsInfo.DefectInfo[j].DefectRoi.Y);
-                            dsDefectinfo.DefectsRoi.Add(pcsInfo.DefectInfo[j].DefectRoi.Height);
-                            dsDefectinfo.DefectsRoi.Add(pcsInfo.DefectInfo[j].DefectRoi.Width);
-
-                            InferImageGroup group = new InferImageGroup();
-                            group.MachineTemplateInfo = new MachineTemplateInfo()
+                            DsCenterDefectInfo dsDefectinfo = new DsCenterDefectInfo
                             {
-                                MachineName = info.StationName,
-                                product = info.ProductSerial,
-                                Side = info.SideIndex,
+                                SideType = info.SideIndex,
+                                SideType2 = info.SideIndex,
+                                PcsIndex = i + 1,
+                                PcsVesIndex = (i + 1).ToString(),
+                                DefectRoi = pcsInfo.DefectInfo[j].DefectRoi,
+
+                                DefectOriginRoi = pcsInfo.DefectInfo[j].DefectOriginRoi,
+                                DefectsRoi = new List<int>()
+                                {
+                                    pcsInfo.DefectInfo[j].DefectRoi.X,
+                                    pcsInfo.DefectInfo[j].DefectRoi.Y,
+                                    pcsInfo.DefectInfo[j].DefectRoi.Height,
+                                    pcsInfo.DefectInfo[j].DefectRoi.Width
+                                }
                             };
-                            group.GroupUuid = Guid.NewGuid().ToString();
-                            group.GroupInfos = new List<GroupInfo>();
-                            group.DefectCode = "";
-                            group.TempImgPath = Path.Combine(solconfig.PartNumberImagesLoc, $"{info.ProductSerial}\\{info.ProductSerial}[{info.SideIndex}].jpg");
-                            group.ImgROI = new List<int>();
-                            group.ImgROI.Add(pcsInfo.DefectInfo[j].DefectRoi.X);
-                            group.ImgROI.Add(pcsInfo.DefectInfo[j].DefectRoi.Y);
-                            group.ImgROI.Add(pcsInfo.DefectInfo[j].DefectRoi.Width);
-                            group.ImgROI.Add(pcsInfo.DefectInfo[j].DefectRoi.Height);
+                            InferImageGroup group = new InferImageGroup
+                            {
+                                MachineTemplateInfo = new MachineTemplateInfo()
+                                {
+                                    MachineName = info.StationName,
+                                    product = info.ProductSerial,
+                                    Side = info.SideIndex,
+                                },
+                                GroupUuid = Guid.NewGuid().ToString(),
+                                GroupInfos = new List<GroupInfo>(),
+                                DefectCode = "",
+                                TempImgPath = Path.Combine(solconfig.PartNumberImagesLoc, $"{info.ProductSerial}\\{info.ProductSerial}[{info.SideIndex}].jpg"),
+                                ImgROI = new List<int>
+                                {
+                                    pcsInfo.DefectInfo[j].DefectRoi.X,
+                                    pcsInfo.DefectInfo[j].DefectRoi.Y,
+                                    pcsInfo.DefectInfo[j].DefectRoi.Width,
+                                    pcsInfo.DefectInfo[j].DefectRoi.Height
+                                }
+                            };
                             if (isSwitch)
                             {
                                 group.DefectCode = pcsInfo.DefectInfo[j].DefectCode;
@@ -1548,6 +1557,13 @@ namespace DeepSightWorkLib
 
         public void SaveEmployeeReport(EmployeeReport report)=>
             databaseHelper.SaveEmployeeReport(report);
+
+        /// <summary>
+        /// 保存/更新 PanelSide 数据到数据库（支持覆盖现有数据）
+        /// </summary>
+        /// <param name="record">PanelSideRecord 记录</param>
+        public void SavePanelSide(PanelSideRecord record) =>
+            databaseHelper.SavePanelSide(record);
 
         public Task< (int totalSnCount, int uninspectedCount, int stillNgCount, int aviOkCount, int filteredOkCount)> GetSnStateCountsByLot(string lotNumber) =>
             databaseHelper.GetSnStateCountsByLot(lotNumber);

@@ -152,10 +152,49 @@ namespace DeepSightAI
                 SelectNextImage();
                 return true;
             }
+            else if (keyData == Keys.D3 || keyData == Keys.NumPad3)
+            {
+                // 按键3：设置为未设置状态
+                TagImage("VVS_NotSet", false);
+                SelectNextImage();
+                return true;
+            }
             else if (keyData == Keys.Tab)
             {
                 // 触发事件，通知父控件切换到下一行
                 SelectNextRowRequested?.Invoke(this, EventArgs.Empty);
+                return true;
+            }
+            else if (keyData == Keys.Down)
+            {
+                // 下键：下一张图片
+                SelectNextImage();
+                return true;
+            }
+            else if (keyData == Keys.Up)
+            {
+                // 上键：上一张图片
+                SelectPreviousImage();
+                return true;
+            }
+            else if (keyData == Keys.Right)
+            {
+                // 右键：下一页
+                if (_currentPage < _totalPages)
+                {
+                    _currentPage++;
+                    LoadDefectsPage(_currentPage);
+                }
+                return true;
+            }
+            else if (keyData == Keys.Left)
+            {
+                // 左键：上一页
+                if (_currentPage > 1)
+                {
+                    _currentPage--;
+                    LoadDefectsPage(_currentPage);
+                }
                 return true;
             }
             return base.ProcessCmdKey(ref msg, keyData);
@@ -188,8 +227,13 @@ namespace DeepSightAI
                             }
                             else
                             {
-                                // VVSStatus: 0 未运行 / 1 OK / 2 NG
-                                heatPoint.VVSStatus = tag == "VVS_OK" ? 1 : 2;
+                                // VVSStatus: 0 未设置 / 1 OK / 2 NG
+                                if (tag == "VVS_OK")
+                                    heatPoint.VVSStatus = 1;
+                                else if (tag == "VVS_NG")
+                                    heatPoint.VVSStatus = 2;
+                                else if (tag == "VVS_NotSet")
+                                    heatPoint.VVSStatus = 0;
 
                                 // 检查是否所有缺陷点都已完成VVS复判
                                 CheckAllVvsStatusSet();
@@ -386,21 +430,33 @@ namespace DeepSightAI
                 if (label != null && label.Tag is DetectInfo heatPoint)
                 {
                     Color borderColor;
-                    // VVSStatus: 0 未运行 / 1 OK / 2 NG
-                    switch (heatPoint.VVSStatus)
+
+                    if (isSelected)
                     {
-                        case 1: // OK
-                            borderColor = Color.Green;
-                            break;
-                        case 2: // NG
-                            borderColor = Color.Red;
-                            break;
-                        default: // 0 未运行 或其他
-                            borderColor = Color.FromArgb(60, 60, 60); // Neutral border for unset status
-                            break;
+                        // 选中状态：使用醒目的高亮颜色（亮青色）
+                        borderColor = Color.FromArgb(0, 200, 255);
+                        panel.Padding = new Padding(6);
                     }
+                    else
+                    {
+                        // 未选中状态：根据VVS状态显示边框颜色
+                        // VVSStatus: 0 未运行 / 1 OK / 2 NG
+                        switch (heatPoint.VVSStatus)
+                        {
+                            case 1: // OK
+                                borderColor = Color.Green;
+                                break;
+                            case 2: // NG
+                                borderColor = Color.Red;
+                                break;
+                            default: // 0 未运行 或其他
+                                borderColor = Color.FromArgb(60, 60, 60);
+                                break;
+                        }
+                        panel.Padding = new Padding(2);
+                    }
+
                     panel.BackColor = borderColor;
-                    panel.Padding = new Padding(isSelected ? 5 : 2); // Thicker border for selection
                 }
             }
         }
@@ -420,6 +476,23 @@ namespace DeepSightAI
                 LoadDefectsPage(nextPage);
             }
             SelectImage(nextLocalIndex);
+        }
+
+        private void SelectPreviousImage()
+        {
+            if (_filteredHeatPoints == null || _filteredHeatPoints.Count == 0) return;
+
+            int globalIndex = ((_currentPage - 1) * PageSize) + _selectedIndex;
+            int prevGlobalIndex = (globalIndex - 1 + _filteredHeatPoints.Count) % _filteredHeatPoints.Count;
+
+            int prevPage = (prevGlobalIndex / PageSize) + 1;
+            int prevLocalIndex = prevGlobalIndex % PageSize;
+
+            if (prevPage != _currentPage)
+            {
+                LoadDefectsPage(prevPage);
+            }
+            SelectImage(prevLocalIndex);
         }
 
         private Panel CreateDefectImagePanel(DetectInfo heatPoint, int index)
