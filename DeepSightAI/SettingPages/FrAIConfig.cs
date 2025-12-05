@@ -316,9 +316,9 @@ namespace DeepSightAI.SettingPages
 
         private void btn_setSolution_Click(object sender, EventArgs e)
         {
-            Machine.master.workClass.solution = Machine.solution = solutionName;
-            Machine.master.workClass.flow = Machine.flow = flowName;
-            Machine.master.workClass.isSwitch = Machine.isSwitch = isSCH;
+            Machine.master.workClass.Solution = Machine.solution = solutionName;
+            Machine.master.workClass.Flow = Machine.flow = flowName;
+            Machine.master.workClass.IsSwitch = Machine.isSwitch = isSCH;
             Machine.master.workClass.ProductSerial = Machine.productSerial = productSerial;
             FrmMain.Instance.solutionAndflow.Text = $"当前方案:{solutionName}_当前流程:{flowName}_当前Switch:{isSCH}";
             SaveParam();

@@ -100,12 +100,12 @@ namespace DeepSightAI
                 master = new MasterWorkClass();
                 master.InitWork();
                 master.workClass.ProductSerial = solconfig.CurrentProductSerial;
-                master.workClass.solution = solconfig.CurrentSolution;
-                master.workClass.flow = solconfig.CurrentFlow;
-                master.workClass.isSwitch = solconfig.CurrentisSwitch;
-                master.workClass.solconfig = solconfig;
-                master.workClass.aviconfig = aviconfig;
-                master.workClass.sysConfig = sysConfig;
+                master.workClass.Solution = solconfig.CurrentSolution;
+                master.workClass.Flow = solconfig.CurrentFlow;
+                master.workClass.IsSwitch = solconfig.CurrentisSwitch;
+                master.workClass.SolConfig = solconfig;
+                master.workClass.AviConfig = aviconfig;
+                master.workClass.SysConfig = sysConfig;
                 FrmMain.Instance.solutionAndflow.Text = $"当前方案:{solconfig.CurrentSolution} 当前流程:{solconfig.CurrentFlow} 当前Switch:{solconfig.CurrentisSwitch}";
                 UpdateStep(50, "读取配置文件中...", true);
               

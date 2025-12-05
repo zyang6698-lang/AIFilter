@@ -26,6 +26,17 @@ namespace DeepSightDB
         public string Value { get; set; }
     }
 
+    public class WriteBackData
+    {
+        [JsonProperty("result_infos")]
+        public List<ResultInfo> ResultInfos { get; set; }
+        [JsonProperty("serial_number")]
+        public string SerialNumber { get; set; }
+        [JsonProperty("panel_json_path")]
+        public string PanelJsonPath { get; set; }
+    }
+
+
     public class ResultInfo
     {
         [JsonProperty("result_infos")]

@@ -114,7 +114,6 @@
             this.tabControl1.SelectedIndex = 0;
             this.tabControl1.Size = new System.Drawing.Size(1381, 825);
             this.tabControl1.TabIndex = 0;
-            this.tabControl1.Visible = false;
             // 
             // FrChart
             // 
