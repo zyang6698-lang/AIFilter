@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DeepSightTool;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -81,13 +82,25 @@ namespace DeepSightModel
             if (records == null || records.Count == 0)
                 return new BoardStat();
 
-            return records.AsParallel()
+            // 计算各机台的稼动率并取平均值 - 按机台分组并行计算
+            var utilizationByMachine = records
+                .Where(r => r.AviCreationTime.HasValue && r.AviCreationTime.Value.Date == DateTime.Now.Date)
+                .GroupBy(r => r.MachineId)
+                .AsParallel()
+                .Select(g => MathHelper.CalculateUtilizationRatePercent(g.Select(r => r.AviCreationTime.Value)))
+                .Where(u => u > 0)
+                .ToList();
+
+            double avgUtilization = utilizationByMachine.Count > 0 ? utilizationByMachine.Average() : 0;
+
+            // 统计面板和报点数据
+            var stat = records.AsParallel()
                 .Select(record =>
                 {
-                    var stat = new BoardStat { aviPanelCount = 1 };
+                    var s = new BoardStat { AviPanelCount = 1 };
 
                     if (record.Sides?.Count != 2)
-                        return stat;
+                        return s;
 
                     var sideA = record.Sides[0];
                     var sideB = record.Sides[1];
@@ -96,48 +109,52 @@ namespace DeepSightModel
 
                     // AVI 面板 OK：两面 AVI OK
                     if (sideA.AviState == 1 && sideB.AviState == 1)
-                        stat.aviPanelOKCount = 1;
+                        s.AviPanelOKCount = 1;
 
                     // AI 面板 OK：两面 AI OK (且均经过 AVI 检测)
                     if (sideA.AviState > 0 && sideB.AviState > 0 && sideA.AiState == 1 && sideB.AiState == 1)
-                        stat.aiPanelOKCount = 1;
+                        s.AiPanelOKCount = 1;
 
                     // 报点总数
-                    stat.aiFilterCount = pointsA.Count + pointsB.Count;
+                    s.AiFilterCount = pointsA.Count + pointsB.Count;
 
                     // AI 过滤 OK 的报点数
-                    stat.aiFilterOKCount = pointsA.Count(t => t.AIStatus == 1) + pointsB.Count(t => t.AIStatus == 1);
+                    s.AiFilterOKCount = pointsA.Count(t => t.AIStatus == 1) + pointsB.Count(t => t.AIStatus == 1);
 
                     // 未检测报点（累加两面）
-                    stat.aiFilterUninspectedCount =
-                        (sideA.AiState == 2 ? pointsA.Count(t => t.AIStatus == 3) : 0) +
-                        (sideB.AiState == 2 ? pointsB.Count(t => t.AIStatus == 3) : 0);
+                    s.AiFilterUninspectedCount =
+                        (sideA.AiState == 3 ? pointsA.Count(t => t.AIStatus == 3) : 0) +
+                        (sideB.AiState == 3 ? pointsB.Count(t => t.AIStatus == 3) : 0);
 
-                    return stat;
+                    return s;
                 })
                 .Aggregate(new BoardStat(), (total, current) =>
                 {
-                    total.aviPanelCount += current.aviPanelCount;
-                    total.aviPanelOKCount += current.aviPanelOKCount;
-                    total.aiPanelOKCount += current.aiPanelOKCount;
-                    total.aiFilterCount += current.aiFilterCount;
-                    total.aiFilterOKCount += current.aiFilterOKCount;
-                    total.aiFilterUninspectedCount += current.aiFilterUninspectedCount;
+                    total.AviPanelCount += current.AviPanelCount;
+                    total.AviPanelOKCount += current.AviPanelOKCount;
+                    total.AiPanelOKCount += current.AiPanelOKCount;
+                    total.AiFilterCount += current.AiFilterCount;
+                    total.AiFilterOKCount += current.AiFilterOKCount;
+                    total.AiFilterUninspectedCount += current.AiFilterUninspectedCount;
                     return total;
                 });
+
+            stat.Utilization = avgUtilization;
+            return stat;
         }
     }
 
     public class BoardStat
     {
         // 面板维度
-        public int aviPanelCount { get; set; }
-        public int aviPanelOKCount { get; set; }
-        public int aiPanelOKCount { get; set; }
+        public int AviPanelCount { get; set; }
+        public int AviPanelOKCount { get; set; }
+        public int AiPanelOKCount { get; set; }
         // 报点维度
-        public int aiFilterCount { get; set; }
-        public int aiFilterOKCount { get; set; }
-        public int aiFilterUninspectedCount { get; set; }
+        public int AiFilterCount { get; set; }
+        public int AiFilterOKCount { get; set; }
+        public int AiFilterUninspectedCount { get; set; }
+        public double Utilization { get; set; }
     }
 
     /// <summary>

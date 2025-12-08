@@ -235,6 +235,19 @@ namespace DeepsightSqlite
                         }
                     }
 
+                    // 如果是重复数据写入（SN存在且当前面数据也已存在），更新 DetectionDate 为最新时间
+                    if (!isNewPanel && sideExists)
+                    {
+                        using (var updateDateCmd = new SQLiteCommand(
+                            "UPDATE Panels SET DetectionDate = @Date WHERE Id = @PanelId",
+                            connection, transaction))
+                        {
+                            updateDateCmd.Parameters.AddWithValue("@Date", record.DetectionDate);
+                            updateDateCmd.Parameters.AddWithValue("@PanelId", panelId);
+                            updateDateCmd.ExecuteNonQuery();
+                        }
+                    }
+
                     // 2. 使用 INSERT OR REPLACE 一条语句搞定插入或更新
                     using (var upsertCmd = new SQLiteCommand(
                         @"INSERT OR REPLACE INTO PanelSides

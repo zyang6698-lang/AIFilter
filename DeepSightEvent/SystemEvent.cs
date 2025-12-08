@@ -17,8 +17,7 @@ namespace DeepSightEvent
         /// <param name="msg"></param>
         public static void SendAlarmMsg(string msg)
         {
-            if (EventSendAlarmToUI != null)
-                EventSendAlarmToUI(msg);
+            EventSendAlarmToUI?.Invoke(msg);
         }
 
         public static event SendProcess EventSendProcessToUI;
@@ -29,8 +28,7 @@ namespace DeepSightEvent
         /// <param name="isOk"></param>
         public static void SendProcessMsg(string id, int isOk)
         {
-            if (EventSendProcessToUI != null)
-                EventSendProcessToUI(id, isOk);
+            EventSendProcessToUI?.Invoke(id, isOk);
         }
 
         public static event SendTask EventSendTaskToUI;
@@ -40,8 +38,7 @@ namespace DeepSightEvent
         /// <param name="task"></param>
         public static void SendTaskMsg(object task, string msg = "")
         {
-            if (EventSendTaskToUI != null)
-                EventSendTaskToUI(task, msg);
+            EventSendTaskToUI?.Invoke(task, msg);
         }
 
         public static event SendException EventSendExceptionToUI;
@@ -51,10 +48,7 @@ namespace DeepSightEvent
         /// <param name="msg"></param>
         public static void SendException(string msg)
         {
-            if (EventSendExceptionToUI != null)
-            {
-                EventSendExceptionToUI(msg);
-            }
+            EventSendExceptionToUI?.Invoke(msg);
         }
 
         public static event SendDefectNum EventSendDefectNumToUI;

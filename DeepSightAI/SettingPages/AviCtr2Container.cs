@@ -312,9 +312,9 @@ namespace DeepSightAI.SettingPages
                         ctr.LotId = tmp.Item1;
                         ctr.ProductSerial = tmp.Item2;
                         var boardStat = PanelDataRecord.GetBoardStat(data);
-                        ctr.AiOkImages = boardStat.aiFilterOKCount;
-                        ctr.AiFilterCount = boardStat.aiFilterCount;
-                        ctr.AviPassRate = boardStat.aviPanelCount == 0 ? 0 : (double)boardStat.aviPanelOKCount / boardStat.aviPanelCount;
+                        ctr.AiOkImages = boardStat.AiFilterOKCount;
+                        ctr.AiFilterCount = boardStat.AiFilterCount;
+                        ctr.AviPassRate = boardStat.AviPanelCount == 0 ? 0 : (double)boardStat.AviPanelOKCount / boardStat.AviPanelCount;
                         ctr.Utilization = MathHelper.CalculateUtilizationRatePercent(
                         data.Where(t => t.AviCreationTime.HasValue && t.AviCreationTime.Value.Date == DateTime.Now.Date)
                             .Select(t => t.AviCreationTime.Value));

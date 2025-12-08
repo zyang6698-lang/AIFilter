@@ -60,11 +60,6 @@ namespace DeepSightWorkLib
         private readonly ConcurrentQueue<ImageLoadModel> _imageLoadQueue = new ConcurrentQueue<ImageLoadModel>();
 
         /// <summary>
-        /// Minio 客户端字典
-        /// </summary>
-        private readonly ConcurrentDictionary<string, MinioClient> _minioClients = new ConcurrentDictionary<string, MinioClient>();
-
-        /// <summary>
         /// 奥特斯项目上传中台数据字典
         /// </summary>
         private readonly ConcurrentDictionary<string, DsCenterInfo> _dsCenterInfoDict = new ConcurrentDictionary<string, DsCenterInfo>();
@@ -465,8 +460,7 @@ namespace DeepSightWorkLib
                 }
                 if (_aviQueue.Count > 0)
                 {
-                    VBModel info = null;
-                    if (_aviQueue.TryDequeue(out info))
+                    if (_aviQueue.TryDequeue(out VBModel info))
                     {
                         try
                         {
@@ -488,13 +482,13 @@ namespace DeepSightWorkLib
                                     {
                                         DbName = "filter_time_to_airesults",
                                         Operation = "put",
-                                        OpMode = info.Side == "A"? "all_ow":"ap",
+                                        OpMode = info.Side == "A" ? "all_ow" : "ap",
                                         Key = info.Key,
                                     };
 
 
                                     List<ResultInfo> results = new List<ResultInfo>();
-                                    
+
                                     for (int i = 0; i < info.DefectIndex.Count; i++)
                                     {
                                         ResultInfo res = new ResultInfo
@@ -502,7 +496,7 @@ namespace DeepSightWorkLib
                                             ResultInfos = $"{info.Side}_{info.PcsIndex[i]}_{info.DefectIndex[i]}_{msg[i]}",
                                             Details = new Details()
                                             {
-     
+
                                             }
                                         };
                                         results.Add(res);
@@ -526,10 +520,8 @@ namespace DeepSightWorkLib
                                 if (info.Side == "B")
                                 {
                                     // 中台
-                                    DsCenterInfo dsinfo;
-                                    _dsCenterInfoDict.TryRemove($"{info.panelInfo.LotId}_{info.panelInfo.SerialNumber}", out dsinfo);
-                                    string outInfo = null;
-                                    HttpDb.HttpPostMethod2(SysConfig.DsCenterUrl, dsinfo, 0, out outInfo);
+                                    _dsCenterInfoDict.TryRemove($"{info.panelInfo.LotId}_{info.panelInfo.SerialNumber}", out DsCenterInfo dsinfo);
+                                    HttpDb.HttpPostMethod2(SysConfig.DsCenterUrl, dsinfo, 0, out string outInfo);
                                     LogTextHelper.Info($"sn:{info.SN}_中台数据返回信息:{outInfo}");
                                 }
                             }
@@ -857,21 +849,34 @@ namespace DeepSightWorkLib
         }
         public bool DefectMethod(VBModel vBModel, out List<string> resList, out List<string> detailsList, out PcsResult pcsResult, out string vbJson)
         {
-            bool result = false;
+            resList = new List<string>();
+            pcsResult = new PcsResult();
+            detailsList = new List<string>();
+            vbJson = string.Empty;
+
+            if (vBModel.Mats.Count == 0)
+            {
+                SavePanelSideToDatabase(vBModel.panelInfo, new List<DetectInfo>(), 1, 1);
+                LogTextHelper.Info($"{vBModel.SN},图片数量为0，跳过vb检测流程");
+                return true;
+            }
+
+            if (vBModel.Mats.Count>100)
+            {
+                // TODO 当缺陷数量过多认为是不合理的，直接bypass   
+            }
+
             RootVBInfo info = vBModel.VbInfo;
             RootPanelInfo panelInfo = vBModel.panelInfo;
+            bool result;
             try
             {
-                resList = new List<string>();
-                pcsResult = new PcsResult();
-                detailsList = new List<string>();
-                vbJson = string.Empty;
-                string msg = "";
+
                 JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };//去掉空值NULL
                 string infoJson = JsonConvert.SerializeObject(info, Formatting.None, jsonSetting);
                 LogTextHelper.Info($"{vBModel.SN}  准备调用算法,参数为：" + infoJson);
-                Defect.DefectMethodWithImages(info, vBModel.Mats, out msg);
-               // defect.DefectMethod(info, out msg);
+                Defect.DefectMethodWithImages(info, vBModel.Mats, out string msg);
+                // defect.DefectMethod(info, out msg);
 
                 LogTextHelper.Info($"{vBModel.SN} 算法返回原始结果 for Side {panelInfo.SideIndex}: {msg}"); // <-- 增加此行日志
                 //将RootVBOutInfo结果msg处理
@@ -904,9 +909,8 @@ namespace DeepSightWorkLib
                         foreach (var result1 in inferResults)
                         {
                             var inferDetails = (result1 as JObject)?["infer_details"];
-                            JObject nodeDetails = (inferDetails as JObject)?["node_details"] as JObject;
 
-                            if (nodeDetails != null)
+                            if ((inferDetails as JObject)?["node_details"] is JObject nodeDetails)
                             {
                                 string nodeDetailsJson = nodeDetails.ToString();
                                 detailsList.Add(nodeDetailsJson);
@@ -922,10 +926,11 @@ namespace DeepSightWorkLib
                     pcsResult.vb_List = new List<VBRcvInfp>();
                     for (int i = 0; i < obj.Data.InferWholeData.InferResults.Count; i++)
                     {
-                        VBRcvInfp vBRcv = new VBRcvInfp();
-                        vBRcv.bbox = new List<List<double>>();
+                        VBRcvInfp vBRcv = new VBRcvInfp
+                        {
+                            bbox = new List<List<double>>()
+                        };
                         DetectInfo heatInfo = new DetectInfo();
-                        heatInfo.VVSStatus = 0;
                         int index = panelInfo.LocalDescribeDir.IndexOf("deepiresults", StringComparison.OrdinalIgnoreCase);
                         if (index == -1)
                         {
@@ -945,7 +950,7 @@ namespace DeepSightWorkLib
                         }
                         else
                         {
-                            heatInfo.AIStatus =2;
+                            heatInfo.AIStatus = 2;
                             for (int j = 0; j < obj.Data.InferWholeData.InferResults[i].inferDetails.Location.Count; j++)
                             {
                                 string sub_defectName = obj.Data.InferWholeData.InferResults[i].Defect_name;
@@ -961,7 +966,7 @@ namespace DeepSightWorkLib
                                     heatInfo.DefectName = sub_defectName;
                                     heatInfo.RoiX = subX / 2 + subW / 4;
                                     heatInfo.RoiY = subY / 2 + subH / 4;
-                                   
+
                                     //这里在生产时根据缺陷名称将缺陷形态赋值,（点状与线状）
                                     if (sub_defectName == "AU10" || sub_defectName == "CU10" || sub_defectName == "CU41"
                                         || sub_defectName == "HO01" || sub_defectName == "SM10")
@@ -998,61 +1003,17 @@ namespace DeepSightWorkLib
                     }
                     vbJson = msg;
 
-                    DateTime AviCreationTime;
-                    if (!DateTime.TryParse(panelInfo.AviCreateTime, out AviCreationTime))
-                    {
-                        AviCreationTime = DateTime.Now;
-                        LogTextHelper.Info($"无法解析 AviCreateTime '{panelInfo.AviCreateTime}'。将使用当前时间 '{AviCreationTime}' 作为备用。");
-                    }
                     // 存数据到 db
-                    LogTextHelper.Info($"存储{panelInfo.SerialNumber} PanelSide数据到数据库...");
-                    _databaseHelper.SavePanelSide(new PanelSideRecord()
-                    {
-                        Data = new SideData()
-                        {
-                            DetectPoints = avi_HeatInfo,
-                            AviState = resList.Count == 0 ? 1 : 2,
-                            AiState = resList.Contains("2") ? 3 : resList.Contains("1") ? 2 : 1
-                        },
-                        ProductSerial = panelInfo.ProductSerial,
-                        DetectionDate = DateTime.Now,
-                        AviCreationTime = AviCreationTime,
-                        LotNumber = panelInfo.LotId,
-                        SerialNumber = panelInfo.SerialNumber,
-                        MachineId = panelInfo.StationName,
-                        Side = panelInfo.SideIndex,
-                        PathIndex = panelInfo.PathIndex
-                    });
+                    int aviState = resList.Count == 0 ? 1 : 2;
+                    int aiState = resList.Contains("2") ? 3 : resList.Contains("1") ? 2 : 1;
+                    SavePanelSideToDatabase(panelInfo, avi_HeatInfo, aviState, aiState);
 
                     result = true;
                 }
                 else if (code == "600")
                 {
-                    DateTime AviCreationTime;
-                    if (!DateTime.TryParse(panelInfo.AviCreateTime, out AviCreationTime))
-                    {
-                        AviCreationTime = DateTime.Now;
-                        LogTextHelper.Info($"无法解析 AviCreateTime '{panelInfo.AviCreateTime}'。将使用当前时间 '{AviCreationTime}' 作为备用。");
-                    }
-                    // 存数据到 db
-                    LogTextHelper.Info($"存储{panelInfo.SerialNumber} PanelSide数据到数据库...");
-                    _databaseHelper.SavePanelSide(new PanelSideRecord()
-                    {
-                        Data = new SideData()
-                        {
-                            DetectPoints = new List<DetectInfo>(),
-                            AviState = 1,
-                            AiState = 1
-                        },
-                        ProductSerial = panelInfo.ProductSerial,
-                        DetectionDate = DateTime.Now,
-                        AviCreationTime = AviCreationTime,
-                        LotNumber = panelInfo.LotId,
-                        SerialNumber = panelInfo.SerialNumber,
-                        MachineId = panelInfo.StationName,
-                        Side = panelInfo.SideIndex,
-                        PathIndex = panelInfo.PathIndex
-                    });
+                    // 存数据到 db (无缺陷，AVI OK, AI OK)
+                    SavePanelSideToDatabase(panelInfo, new List<DetectInfo>(), 1, 1);
                     result = true;
                 }
                 else
@@ -1648,6 +1609,41 @@ namespace DeepSightWorkLib
         /// <param name="record">PanelSideRecord 记录</param>
         public void SavePanelSide(PanelSideRecord record) =>
             _databaseHelper.SavePanelSide(record);
+
+        /// <summary>
+        /// 保存 PanelSide 数据到数据库（从 RootPanelInfo 构建记录）
+        /// </summary>
+        /// <param name="panelInfo">面板信息</param>
+        /// <param name="detectPoints">缺陷点列表</param>
+        /// <param name="aviState">AVI 状态 (1: OK, 2: NG)</param>
+        /// <param name="aiState">AI 状态 (1: OK, 2: NG, 3: Bypass)</param>
+        private void SavePanelSideToDatabase(RootPanelInfo panelInfo, List<DetectInfo> detectPoints, int aviState, int aiState)
+        {
+            if (!DateTime.TryParse(panelInfo.AviCreateTime, out DateTime aviCreationTime))
+            {
+                aviCreationTime = DateTime.Now;
+                LogTextHelper.Info($"无法解析 AviCreateTime '{panelInfo.AviCreateTime}'。将使用当前时间 '{aviCreationTime}' 作为备用。");
+            }
+
+            LogTextHelper.Info($"存储{panelInfo.SerialNumber} PanelSide数据到数据库...");
+            _databaseHelper.SavePanelSide(new PanelSideRecord()
+            {
+                Data = new SideData()
+                {
+                    DetectPoints = detectPoints,
+                    AviState = aviState,
+                    AiState = aiState
+                },
+                ProductSerial = panelInfo.ProductSerial,
+                DetectionDate = DateTime.Now,
+                AviCreationTime = aviCreationTime,
+                LotNumber = panelInfo.LotId,
+                SerialNumber = panelInfo.SerialNumber,
+                MachineId = panelInfo.StationName,
+                Side = panelInfo.SideIndex,
+                PathIndex = panelInfo.PathIndex
+            });
+        }
 
         public Task<(int totalSnCount, int uninspectedCount, int stillNgCount, int aviOkCount, int filteredOkCount)> GetSnStateCountsByLot(string lotNumber) =>
             _databaseHelper.GetSnStateCountsByLot(lotNumber);

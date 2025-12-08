@@ -1,6 +1,7 @@
 ﻿using DeepSightAI.SettingPages;
 using DeepSightTool;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
@@ -470,30 +471,112 @@ namespace DeepSightAI
             }
             RestartApplication(appDirectory, exeName, true);
         }
-        public bool KillProcessInDirectory(string directoryPath, string exeName)
+        /// <summary>
+        /// 通过Windows事件信号通知ATS_Agent进程优雅关闭
+        /// </summary>
+        /// <param name="directoryPath">进程目录路径</param>
+        /// <param name="exeName">进程名称</param>
+        /// <param name="timeoutMs">等待进程退出的超时时间（毫秒），默认10秒</param>
+        /// <returns>如果进程存在并成功关闭返回true</returns>
+        public bool KillProcessInDirectory(string directoryPath, string exeName, int timeoutMs = 10000)
         {
             bool result = false;
             // 获取所有同名进程
             Process[] processes = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(exeName));
+
+            // 找到匹配目录的进程
+            List<Process> targetProcesses = new List<Process>();
             foreach (Process process in processes)
             {
                 try
                 {
-                    // 检查进程的启动目录是否匹配
                     if (process.MainModule != null &&
                         Path.GetDirectoryName(process.MainModule.FileName)?.Equals(directoryPath, StringComparison.OrdinalIgnoreCase) == true)
                     {
-                        process.Kill();
-                        process.WaitForExit(5000); // 等待最多5秒
-                        Console.WriteLine($"已终止进程: {process.Id}");
+                        targetProcesses.Add(process);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"终止进程失败: {ex.Message}");
+                    LogTextHelper.Error($"获取进程信息失败: {ex.Message}");
                 }
-                result = true;
             }
+
+            if (targetProcesses.Count == 0)
+            {
+                return false;
+            }
+
+            try
+            {
+                // 尝试打开已存在的Windows事件
+                using (EventWaitHandle shutdownEvent = EventWaitHandle.OpenExisting(@"Global\ATS_Agent_Shutdown_Event"))
+                {
+                    // 发送关闭信号
+                    shutdownEvent.Set();
+                    LogTextHelper.Info("已发送关闭信号到 ATS_Agent");
+
+                    // 等待所有目标进程退出
+                    foreach (Process process in targetProcesses)
+                    {
+                        try
+                        {
+                            if (process.WaitForExit(timeoutMs))
+                            {
+                                LogTextHelper.Info($"进程 {process.Id} 已正常退出");
+                                result = true;
+                            }
+                            else
+                            {
+                                // 超时后强制终止
+                                LogTextHelper.Warn($"进程 {process.Id} 等待超时，强制终止");
+                                process.Kill();
+                                process.WaitForExit(5000);
+                                result = true;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            LogTextHelper.Error($"等待进程退出失败: {ex.Message}");
+                        }
+                    }
+                }
+            }
+            catch (WaitHandleCannotBeOpenedException)
+            {
+                // 事件不存在，说明ATS_Agent可能没有运行或未创建事件，使用强制终止
+                LogTextHelper.Warn("关闭事件不存在，使用强制终止方式");
+                foreach (Process process in targetProcesses)
+                {
+                    try
+                    {
+                        process.Kill();
+                        process.WaitForExit(5000);
+                        LogTextHelper.Info($"已强制终止进程: {process.Id}");
+                        result = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        LogTextHelper.Error($"强制终止进程失败: {ex.Message}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"发送关闭信号失败: {ex.Message}");
+                // 出现异常时也尝试强制终止
+                foreach (Process process in targetProcesses)
+                {
+                    try
+                    {
+                        process.Kill();
+                        process.WaitForExit(5000);
+                        result = true;
+                    }
+                    catch { }
+                }
+            }
+
             return result;
         }
         // 使用示例
