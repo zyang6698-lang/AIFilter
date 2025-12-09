@@ -1,24 +1,15 @@
 ﻿using DeepSightAI.Properties;
-using DeepSightDB;
 using DeepSightEvent;
 using DeepSightModel;
 using DeepSightTool;
-using DeepSightWorkLib;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using OpenCvSharp;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -27,25 +18,6 @@ namespace DeepSightAI
 {
     public partial class FrmMain : Form
     {
-        /// <summary>
-        /// 总数计数
-        /// </summary>
-        //private int total_count = 0;
-        /// <summary>
-        /// OK计数
-        /// </summary>
-        private int ok_count = 0;
-        /// <summary>
-        /// NG计数
-        /// </summary>
-        private int ng_count = 0;
-        /// <summary>
-        ///AI PASSCount
-        /// </summary>
-        //private int AI_PassCount = 0;
-
-        //private int AI_PassImageCount = 0;
-
         public bool IsAllow = false;
 
         private DateTime _lastResetDate = DateTime.Now.Date;
@@ -95,29 +67,6 @@ namespace DeepSightAI
         {
             try
             {
-                if (msg.Count > 0)
-                {
-                    for (int i = 0; i < msg.Count; i++)
-                    {
-                        switch (msg[i])
-                        {
-                            case "0":
-                                Machine.sysConfig.AIPassImageCount++;
-                                break;
-                            case "1":
-                                ng_count++;
-                                break;
-                            case "2":
-                                
-                                break;
-                        }
-
-                    }
-                }
-                Machine.sysConfig.AVIImageCount += msg.Count;
-                Machine.sysConfig.ByPassCount += msg.Where(t => t == "2").Count();
-                //结果
-                //sn = sn.Split('_').ToArray()[0].ToString();
                 if (!FrHome.Instance.dic_Results.ContainsKey(sn))
                 {
                     List<string> result = new List<string>();
@@ -165,19 +114,6 @@ namespace DeepSightAI
                     }
                 }
 
-                //FrHome.Instance.lbl_AVICount.Invoke(new Action(() =>
-                //{
-                //    FrHome.Instance.lbl_AVICount.Text = $"今日AVI产生图片数:{Machine.sysConfig.AVIImageCount}";
-                //}));
-                //FrHome.Instance.lbl_ImageCount.Invoke(new Action(() =>
-                //{
-                //    FrHome.Instance.lbl_ImageCount.Text = $"今日推理图片数:{Machine.sysConfig.AVIImageCount-Machine.sysConfig.ByPassCount}";
-                //}));
-                ////推理图片数
-                //this.lbl_ImageCount.Invoke(new MethodInvoker(() =>
-                //{
-                //    this.lbl_ImageCount.Text = $"当前推理图片数:{ok_count + ng_count}";
-                //}));
             }
             catch (Exception ex)
             {
@@ -213,38 +149,9 @@ namespace DeepSightAI
                 SystemEvent.SendAlarmMsg("Panel回调异常" + ex.ToString());
             }
         }
-        public void AddOrUpdateMachineData(string machineName, string materialNo, string workOrderNo)
-        {
-            //客户要求先屏蔽
-            //FrHome.Instance.dataProductInfo.Invoke(new MethodInvoker(() =>
-            //{
-            //    var existingRow = FrHome.Instance.dataProductInfo.Rows
-            //        .Cast<DataGridViewRow>()
-            //        .FirstOrDefault(row =>
-            //            row.Cells["MachineNumber"].Value?.ToString() == machineName &&
-            //            !row.IsNewRow);
-
-            //    if (existingRow != null)
-            //    {
-            //        existingRow.Cells["liaohao"].Value = materialNo;
-            //        existingRow.Cells["lot"].Value = workOrderNo;
-            //    }
-            //    else
-            //    {
-            //        int rowIndex = FrHome.Instance.dataProductInfo.Rows.Add();
-            //        DataGridViewRow newRow = FrHome.Instance.dataProductInfo.Rows[rowIndex];
-            //        newRow.Cells["MachineNumber"].Value = machineName;
-            //        newRow.Cells["liaohao"].Value = materialNo;
-            //        newRow.Cells["lot"].Value = workOrderNo;
-            //        FrHome.Instance.dataProductInfo.Rows[rowIndex].DefaultCellStyle.ForeColor = Color.Green;
-            //    }
-            //}));
-
-        }
         private void SystemEvent_EventSendDefectNumToUI(int num)
         {
-            //FrHome.Instance.InitTableStyle(FrHome.Instance.table_Small, num);
-            //FrHome.Instance.InitWork();
+
         }
 
         private void FrmMain_Load(object sender, EventArgs e)
@@ -262,8 +169,6 @@ namespace DeepSightAI
 
         private void SystemEvent_EventSendAlarmToUI(string massage)
         {
-            //有异常发生，暂停任务
-            btnPause_Click(null, null);
             LogTextHelper.Warn($"收到异常消息：{massage},任务已停止");
         }
         public static object Locker = new object();
@@ -279,16 +184,7 @@ namespace DeepSightAI
                         {
                             FrHome.Instance.dataGridViewData.Rows.Insert(0, new List<string> { task.ToString(), "0", "0", "排队中" }.ToArray());
                             FrHome.Instance.dataGridViewData.Rows[0].DefaultCellStyle.ForeColor = Color.Yellow;
-
                         }));
-                        //this.lbl_Count.Invoke(new MethodInvoker(() =>
-                        //{
-                        //    this.lbl_Count.Text = $"当前总作业数:{++total_count}";
-                        //}));
-
-
-                        //int total = ok_count + ng_count;
-
                     }
                     else
                     {
@@ -316,10 +212,6 @@ namespace DeepSightAI
                                             NG = res_lbl.Where(o => o.Contains("1")).Count();
                                             ByPass = res_lbl.Where(o => o.Contains("2")).Count();
                                             msg = $"{msg}_{"图片一致"}_OK:{OK} NG:{NG} ByPass{ByPass}";
-                                            if (NG == 0)
-                                            {
-                                                Machine.sysConfig.AIPassPCS++;
-                                            }
                                         }
                                         FrHome.Instance.dataGridViewData.Rows[i].Cells[1].Value = Count;
                                         FrHome.Instance.dataGridViewData.Rows[i].Cells[2].Value = Count;
@@ -394,13 +286,6 @@ namespace DeepSightAI
                 FrSetting.Instance.Dock = DockStyle.Fill;
                 FrSetting.Instance.Show();
 
-                ////拍照
-                //FrmMain.Instance.panel3.Controls.Clear();
-                //FrCamera.Instance.TopLevel = false;
-                //FrCamera.Instance.Parent = FrmMain.Instance.panel3;
-                //FrCamera.Instance.Dock = DockStyle.Fill;
-                //FrCamera.Instance.Show();
-
                 ////警报
                 FrmMain.Instance.panel4.Controls.Clear();
                 FrAlarm.Instance.TopLevel = false;
@@ -414,20 +299,6 @@ namespace DeepSightAI
                 FrChart.Instance.Parent = FrmMain.Instance.panel5;
                 FrChart.Instance.Dock = DockStyle.Fill;
                 FrChart.Instance.Show();
-
-                ////Fn
-                //FrmMain.Instance.panel6.Controls.Clear();
-                //FrFn.Instance.TopLevel = false;
-                //FrFn.Instance.Parent = FrmMain.Instance.panel6;
-                //FrFn.Instance.Dock = DockStyle.Fill;
-                //FrFn.Instance.Show();
-
-                ////查询点检
-                //FrmMain.Instance.panel7.Controls.Clear();
-                //FrSearch.Instance.TopLevel = false;
-                //FrSearch.Instance.Parent = FrmMain.Instance.panel7;
-                //FrSearch.Instance.Dock = DockStyle.Fill;
-                //FrSearch.Instance.Show();
 
             }
             catch (Exception ex)
@@ -484,11 +355,6 @@ namespace DeepSightAI
                 WindowState = FormWindowState.Normal;
                 btnMax.BackgroundImage = Resources.max;
             }
-            //if (FrHome.Instance.DispWin1 != null)
-            //{
-            //    FrHome.Instance.DispWin1[0].Refresh();
-
-            //}
         }
 
         private void btnStart_Click(object sender, EventArgs e)
@@ -511,20 +377,7 @@ namespace DeepSightAI
 
                     LogTextHelper.Info("暂停作业...");
                 }
-
                 return;
-
-                btnStart.Image = Resources.start2;
-                btnPause.Image = Resources.pause1;
-                Machine.master.workClass.isStart = true;
-                //开启Gennt 如果agent开，就不开，如果没开，就开
-                //FrSetting.Instance.RunAppLication(FrSetting.Instance.appPath, FrSetting.Instance.appExe);
-                FrSetting.Instance.RestartApplication(FrSetting.Instance.appPath, FrSetting.Instance.appExe, true);
-                //this.Invoke(new MethodInvoker(() =>
-                //{
-                //    Machine.master.workClass.defect.ai_Defect.Vision_Show_View(0);
-                //}));
-                LogTextHelper.Info("开始作业...");
             }
             catch (Exception)
             {
@@ -536,13 +389,6 @@ namespace DeepSightAI
         private void btnPause_Click(object sender, EventArgs e)
         {
             return;
-            Machine.master.workClass.isStart = false;
-            btnStart.Image = Resources.start1;
-            btnPause.Image = Resources.pause2;
-            //关闭Gennt
-            FrSetting.Instance.KillProcessInDirectory(FrSetting.Instance.appPath, FrSetting.Instance.appExe);
-
-            LogTextHelper.Info("暂停作业...");
         }
         private void btnClose_Click(object sender, EventArgs e)
         {
@@ -654,26 +500,6 @@ namespace DeepSightAI
                     }
                     break;
 
-                //case FormMode.CameraForm:
-
-                //    if (curFormMode != FormMode.CameraForm)
-                //    {
-                //        curFormMode = FormMode.CameraForm;
-
-                //        btnCamera.Image = Resources.pho2;
-
-                //        FrmMain.Instance.panel3.Dock = DockStyle.Fill;
-
-                //        FrmMain.Instance.panel1.Visible = false;
-                //        FrmMain.Instance.panel2.Visible = false;
-                //        FrmMain.Instance.panel3.Visible = true;
-                //        FrmMain.Instance.panel4.Visible = false;
-                //        FrmMain.Instance.panel5.Visible = false;
-                //        FrmMain.Instance.panel6.Visible = false;
-                //        FrmMain.Instance.panel7.Visible = false;
-                //    }
-                //    break;
-
                 case FormMode.AlarmForm:
 
                     if (curFormMode != FormMode.AlarmForm)
@@ -714,45 +540,6 @@ namespace DeepSightAI
                     }
                     break;
 
-                    //case FormMode.FnForm:
-
-                    //    if (curFormMode != FormMode.FnForm)
-                    //    {
-                    //        curFormMode = FormMode.FnForm;
-
-                    //        btnFn.Image = Resources.Fn2;
-
-                    //        FrmMain.Instance.panel6.Dock = DockStyle.Fill;
-
-                    //        FrmMain.Instance.panel1.Visible = false;
-                    //        FrmMain.Instance.panel2.Visible = false;
-                    //        FrmMain.Instance.panel3.Visible = false;
-                    //        FrmMain.Instance.panel4.Visible = false;
-                    //        FrmMain.Instance.panel5.Visible = false;
-                    //        FrmMain.Instance.panel6.Visible = true;
-                    //        FrmMain.Instance.panel7.Visible = false;
-                    //    }
-                    //    break;
-
-                    //case FormMode.SearchForm:
-
-                    //    if (curFormMode != FormMode.SearchForm)
-                    //    {
-                    //        curFormMode = FormMode.SearchForm;
-
-                    //        btnSearch.Image = Resources.search2;
-
-                    //        FrmMain.Instance.panel7.Dock = DockStyle.Fill;
-
-                    //        FrmMain.Instance.panel1.Visible = false;
-                    //        FrmMain.Instance.panel2.Visible = false;
-                    //        FrmMain.Instance.panel3.Visible = false;
-                    //        FrmMain.Instance.panel4.Visible = false;
-                    //        FrmMain.Instance.panel5.Visible = false;
-                    //        FrmMain.Instance.panel6.Visible = false;
-                    //        FrmMain.Instance.panel7.Visible = true;
-                    //    }
-                    //    break;
             }
         }
         private void SwitchButton()
@@ -979,14 +766,6 @@ namespace DeepSightAI
         private void ResetCount()
         {
             LogTextHelper.Info("Data Reset");
-            ok_count = 0;
-            ng_count = 0;
-            Machine.sysConfig.TotalCount = 0;
-            Machine.sysConfig.AIPassPCS = 0;
-            Machine.sysConfig.AVIImageCount = 0;
-            Machine.sysConfig.AIPassImageCount = 0;
-            Machine.sysConfig.ByPassCount = 0;
-
         }
 
         #endregion 状态栏-运行时间-当前时间

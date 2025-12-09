@@ -20,14 +20,6 @@ namespace DeepSightModel
         /// </summary>
         public string ProjectName { get; set; }
         /// <summary>
-        /// 图片路径
-        /// </summary>
-        public string ImagePath { get; set; }
-        /// <summary>
-        /// 缺陷图片路径
-        /// </summary>
-        public string defectPath { get; set; }
-        /// <summary>
         /// 线体
         /// </summary>
         public string Line { get; set; }
@@ -44,88 +36,25 @@ namespace DeepSightModel
         /// </summary>
         public string ServerPort { get; set; }
         /// <summary>
-        /// 是否启动算法处理
-        /// </summary>
-        public bool TestFlag { get; set; }
-        /// <summary>
-        /// 是存储
-        /// 0：全部存储
-        /// 1：仅存NG
-        /// 2：不存储
-        /// </summary>
-        public int ImageEnable { get; set; }
-        /// <summary>
-        /// 是否存储日志
-        /// </summary>
-        public bool LogEnable { get; set; }
-
-
-        /// <summary>
-        /// 保存图片的后缀
-        /// </summary>
-        public string ImageSuffix { get; set; }
-
-        /// <summary>
         /// 存储游标
         /// </summary>
         public string Index { get; set; }
-
-        /// <summary>
-        /// minio账号
-        /// </summary>
-        public string access_key { get; set; }
-        /// <summary>
-        /// minio桶名
-        /// </summary>
-        public string bucket { get; set; }
         /// <summary>
         /// minioIP
         /// </summary>
         public string endpoint_address { get; set; }
         /// <summary>
-        /// mini密码
-        /// </summary>
-        public string access_secret { get; set; }
-        /// <summary>
         /// minio端口
         /// </summary>
         public string MinioPort { get; set; }
-
         /// <summary>
         /// minio端口
         /// </summary>
         public string DsCenterUrl { get; set; }
 
-        public int TotalCount { get; set; }
-        public int AVIImageCount { get; set; }
-        public int AIPassPCS { get; set; }
-        public int AIPassImageCount { get; set; }
-        public int ByPassCount { get; set; }
-
         public ConfigurationClass()
         {
 
-        }
-        public ConfigurationClass(ConfigurationClass config)
-        {
-            this.ProjectName = config.ProjectName;
-            this.ImagePath = config.ImagePath;
-            this.Line = config.Line;
-            this.ServerIP = config.ServerIP;
-            this.ServerPort = config.ServerPort;
-            this.LogDay = config.LogDay;
-            this.TestFlag = config.TestFlag;
-            this.access_key = config.access_key;
-            this.bucket = config.bucket;
-            this.endpoint_address = config.endpoint_address;
-            this.access_secret = config.access_secret;
-            this.MinioPort = config.MinioPort;
-            this.DsCenterUrl = config.DsCenterUrl;
-            this.TotalCount = config.TotalCount;
-            this.AVIImageCount = config.AVIImageCount;
-            this.AIPassPCS = config.AIPassPCS;
-            this.AIPassImageCount = config.AIPassImageCount;
-            this.ByPassCount = config.ByPassCount;
         }
     }
 
@@ -151,26 +80,14 @@ namespace DeepSightModel
                 {
                     ProjectName = "DeepSight_AI",
                     Line = "Line1",
-                    ImagePath = "D:\\Image",
                     ServerIP = "http://",
                     ServerPort = "2000",
                     LogDay = 7,
-                    TestFlag = false,
-                    LogEnable = false,
                     Index = "20250514111732556",
-                    access_key = "deepiobjectdata",
-                    bucket = "deepiresults",
                     endpoint_address = "127.0.0.1",
-                    access_secret = "deepiobject2019",
                     MinioPort = "9102",
                     DsCenterUrl = "http://dp55.local:82/api/zmq/dataImport",
-                    TotalCount = 0,
-                    AVIImageCount = 0,
-                    AIPassPCS = 0,
-                    AIPassImageCount=0,
-                    ByPassCount=0,
-                    
-                };
+                 };
                 return Save(config);
             }
             catch

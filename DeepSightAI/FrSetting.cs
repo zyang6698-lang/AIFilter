@@ -116,7 +116,6 @@ namespace DeepSightAI
                 this.treeNode4.Text = "工具配置";
             }
 
-            FrBaseConfig.Instance.Language(language);
         }
 
 
