@@ -33,6 +33,8 @@
 
             this.txt_DsCenterURL = new System.Windows.Forms.TextBox();
             this.label19 = new System.Windows.Forms.Label();
+            this.txt_MaxDefectCount = new System.Windows.Forms.TextBox();
+            this.label21 = new System.Windows.Forms.Label();
             this.txt_Minioport = new System.Windows.Forms.TextBox();
             this.label18 = new System.Windows.Forms.Label();
             this.txt_endpoint_address = new System.Windows.Forms.TextBox();
@@ -50,6 +52,8 @@
             // 
             resources.ApplyResources(this.panel1, "panel1");
             this.panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.panel1.Controls.Add(this.txt_MaxDefectCount);
+            this.panel1.Controls.Add(this.label21);
             this.panel1.Controls.Add(this.txt_DsCenterURL);
             this.panel1.Controls.Add(this.label19);
             this.panel1.Controls.Add(this.txt_Minioport);
@@ -69,13 +73,24 @@
             // 
             resources.ApplyResources(this.txt_DsCenterURL, "txt_DsCenterURL");
             this.txt_DsCenterURL.Name = "txt_DsCenterURL";
-            // 
+            //
             // label19
-            // 
+            //
             resources.ApplyResources(this.label19, "label19");
             this.label19.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.label19.Name = "label19";
-            // 
+            //
+            // txt_MaxDefectCount
+            //
+            resources.ApplyResources(this.txt_MaxDefectCount, "txt_MaxDefectCount");
+            this.txt_MaxDefectCount.Name = "txt_MaxDefectCount";
+            //
+            // label21
+            //
+            resources.ApplyResources(this.label21, "label21");
+            this.label21.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.label21.Name = "label21";
+            //
             // txt_Minioport
             // 
             resources.ApplyResources(this.txt_Minioport, "txt_Minioport");
@@ -162,5 +177,7 @@
         internal System.Windows.Forms.Label label17;
         internal System.Windows.Forms.TextBox txt_DsCenterURL;
         internal System.Windows.Forms.Label label19;
+        internal System.Windows.Forms.TextBox txt_MaxDefectCount;
+        internal System.Windows.Forms.Label label21;
     }
 }

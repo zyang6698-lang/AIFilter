@@ -515,7 +515,7 @@ namespace DeepSightWorkLib
                                     _aiResultQueue.Enqueue(dbTub);
                                 }
                                 LogTextHelper.SaveVBResultInfo($"{info.SN}：{string.Join(",", msg)}");
-                                LogTextHelper.WriteJsonFile(info.panelInfo.DescribePath, vbJson);
+                               // LogTextHelper.WriteJsonFile(info.panelInfo.DescribePath, vbJson);
                                 if (info.Side == "B")
                                 {
                                     // 中台
@@ -860,9 +860,11 @@ namespace DeepSightWorkLib
                 return true;
             }
 
-            if (vBModel.Mats.Count>100)
+            if (vBModel.Mats.Count >SysConfig.MaxDefectCount)
             {
-                // TODO 当缺陷数量过多认为是不合理的，直接bypass   
+                SavePanelSideToDatabase(vBModel.panelInfo, new List<DetectInfo>(), 2, 3);
+                LogTextHelper.Info($"{vBModel.SN},图片数量大于{SysConfig.MaxDefectCount}，跳过vb检测流程");
+                return true;
             }
 
             RootVBInfo info = vBModel.VbInfo;

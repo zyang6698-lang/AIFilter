@@ -477,7 +477,7 @@ namespace DeepSightAI
         /// <param name="exeName">进程名称</param>
         /// <param name="timeoutMs">等待进程退出的超时时间（毫秒），默认10秒</param>
         /// <returns>如果进程存在并成功关闭返回true</returns>
-        public bool KillProcessInDirectory(string directoryPath, string exeName, int timeoutMs = 10000)
+        public bool KillProcessInDirectory(string directoryPath, string exeName, int timeoutMs = 2000)
         {
             bool result = false;
             // 获取所有同名进程

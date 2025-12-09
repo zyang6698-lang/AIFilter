@@ -58,10 +58,7 @@ namespace DeepSightEvent
         /// <param name="num"></param>
         public static void SendDefectNum(int num)
         {
-            if (EventSendDefectNumToUI != null)
-            {
-                EventSendDefectNumToUI(num);
-            }
+            EventSendDefectNumToUI?.Invoke(num);
         }
 
         public static event SendDefectPanelInfo EventSendDefectPanelInfoToUI;

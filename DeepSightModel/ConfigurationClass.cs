@@ -51,6 +51,10 @@ namespace DeepSightModel
         /// minio端口
         /// </summary>
         public string DsCenterUrl { get; set; }
+        /// <summary>
+        /// 最大缺陷数
+        /// </summary>
+        public int MaxDefectCount { get; set; } = 200;
 
         public ConfigurationClass()
         {
@@ -87,6 +91,7 @@ namespace DeepSightModel
                     endpoint_address = "127.0.0.1",
                     MinioPort = "9102",
                     DsCenterUrl = "http://dp55.local:82/api/zmq/dataImport",
+                    MaxDefectCount = 200,
                  };
                 return Save(config);
             }
