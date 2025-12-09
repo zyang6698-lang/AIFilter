@@ -63,6 +63,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DeepSightDB\DeepSightDB.csproj">
+      <Project>{7e93dcae-d40b-4019-a1e9-8f710072b16a}</Project>
+      <Name>DeepSightDB</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DeepSightModel\DeepSightModel.csproj">
       <Project>{C3032123-71AF-4B9F-AAF1-5FDBB73274B0}</Project>
       <Name>DeepSightModel</Name>

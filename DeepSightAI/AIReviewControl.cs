@@ -1,5 +1,5 @@
-﻿using DeepSightModel;
-using DeepsightSqlite;
+﻿using DeepSightDB;
+using DeepSightModel;
 using DeepSightTool;
 using System;
 using System.Collections.Generic;

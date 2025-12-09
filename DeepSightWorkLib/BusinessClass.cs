@@ -18,7 +18,6 @@ using Newtonsoft.Json;
 using Minio;
 using System.Drawing;
 using System.Drawing.Imaging;
-using DeepsightSqlite;
 
 namespace DeepSightWorkLib
 {

@@ -1,5 +1,6 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
+using DeepSightTool;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -9,7 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace DeepSightModel
+namespace DeepSightDB
 {
     public static class AnalyticsHelper
     {
@@ -25,17 +26,17 @@ namespace DeepSightModel
                 }
                 catch (UnauthorizedAccessException)
                 {
-                    MessageBox.Show("错误：没有权限访问该文件夹。", "权限错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                    LogTextHelper.Info("错误：没有权限访问该文件夹。");
                     return null;
                 }
                 catch (DirectoryNotFoundException)
                 {
-                    MessageBox.Show("错误：找不到指定的文件夹。", "路径错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                    LogTextHelper.Info("错误：找不到指定的文件夹。");
                     return null;
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"发生未知错误: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                    LogTextHelper.Info($"发生未知错误: {ex.Message}");
                     return null;
                 }
             }

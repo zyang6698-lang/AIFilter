@@ -41,7 +41,7 @@ else {
 if (Test-Path $logSourcePath) {
     Write-Host "正在从 $logSourcePath 查找以 '$today' 开头的日志文件..."
     $logFiles = Get-ChildItem -Path $logSourcePath -Filter "$($today)*.log"
-    
+
     if ($logFiles.Count -gt 0) {
         foreach ($file in $logFiles) {
             Write-Host "正在拷贝 $($file.FullName) 到 $destinationPath"
@@ -51,6 +51,21 @@ if (Test-Path $logSourcePath) {
     }
     else {
         Write-Warning "警告: 未找到以 '$today' 开头的日志文件。"
+    }
+
+    # 5. 拷贝当天日期的 dataserver_log 文件夹
+    Write-Host "正在从 $logSourcePath 查找以 'dataserver_log_$today' 开头的文件夹..."
+    $logFolders = Get-ChildItem -Path $logSourcePath -Directory -Filter "dataserver_log_$($today)*"
+
+    if ($logFolders.Count -gt 0) {
+        foreach ($folder in $logFolders) {
+            Write-Host "正在拷贝文件夹 $($folder.FullName) 到 $destinationPath"
+            Copy-Item -Path $folder.FullName -Destination $destinationPath -Recurse -Force
+        }
+        Write-Host "$($logFolders.Count) 个 dataserver_log 文件夹已成功拷贝。"
+    }
+    else {
+        Write-Warning "警告: 未找到以 'dataserver_log_$today' 开头的文件夹。"
     }
 }
 else {

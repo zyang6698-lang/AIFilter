@@ -1,5 +1,4 @@
-﻿using DeepSightModel;
-using DeepSightTool;
+﻿using DeepSightTool;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
@@ -10,7 +9,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DeepsightSqlite
+namespace DeepSightDB
 {
     public class DatabaseHelper : IDisposable
     {

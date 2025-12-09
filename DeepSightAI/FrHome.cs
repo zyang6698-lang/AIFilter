@@ -1,4 +1,5 @@
 ﻿using DeepSightAI.SettingPages;
+using DeepSightDB;
 using DeepSightDisplay;
 using DeepSightModel;
 using DeepSightTool;
@@ -257,7 +258,7 @@ namespace DeepSightAI
                     lbl_aviPassRateCount.Text = $"AVI Pass Rate_AI前\n{(double)boardStat.AviPanelOKCount / (boardStat.AviPanelCount):P1}";
                     lbl_filteredOkCount.Text = $"AI Pass Rate\n{(double)boardStat.AiFilterOKCount / (boardStat.AiFilterCount - boardStat.AiFilterUninspectedCount):P1}";
 
-                    lbl_utilizationRate.Text= $"今日机台利用率\n-{boardStat.Utilization:P1}";
+                    lbl_utilizationRate.Text= $"今日机台利用率\n{boardStat.Utilization:P1}";
                     lbl_boardAiPassRate.Text=$"AVI Pass Rate_AI后\n{(double)(boardStat.AiPanelOKCount) / (boardStat.AviPanelCount):P1}";
                     lbl_CountPerPanel.Text=$"平均报点数\n{(double)boardStat.AiFilterCount/boardStat.AviPanelCount:0.0}";
                 }));

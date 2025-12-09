@@ -1,4 +1,5 @@
-﻿using DeepSightModel;
+﻿using DeepSightDB;
+using DeepSightModel;
 using DeepSightTool;
 using System;
 using System.Collections.Concurrent;
@@ -12,7 +13,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using static DeepSightModel.AnalyticsHelper;
+using static DeepSightDB.AnalyticsHelper;
 
 namespace DeepSightAI
 {

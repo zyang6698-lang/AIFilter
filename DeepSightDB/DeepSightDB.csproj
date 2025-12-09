@@ -1,74 +1,53 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{7E93DCAE-D40B-4019-A1E9-8F710072B16A}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <TargetFrameworks>net472;net8.0</TargetFrameworks>
     <RootNamespace>DeepSightDB</RootNamespace>
     <AssemblyName>DeepSightDB</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic>
+    <ProjectGuid>{7E93DCAE-D40B-4019-A1E9-8F710072B16A}</ProjectGuid>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugRemote|AnyCPU'">
-    <OutputPath>bin\DebugRemote\</OutputPath>
-  </PropertyGroup>
+
+  <!-- Common packages for all frameworks -->
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Data.SQLite, Version=2.0.2.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Data.SQLite.2.0.2\lib\net471\System.Data.SQLite.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Transactions" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="CsvHelper" Version="33.0.1" />
   </ItemGroup>
+
+  <!-- SQLite: 两个框架都使用 Core 包，它会自动处理原生 DLL 的部署 -->
   <ItemGroup>
-    <Compile Include="AIResult.cs" />
-    <Compile Include="DatabaseHelper.cs" />
-    <Compile Include="DbInfo.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
   </ItemGroup>
+
+  <!-- Project Reference -->
   <ItemGroup>
-    <None Include="app.config" />
-    <None Include="packages.config" />
+    <ProjectReference Include="..\DeepSightTool\DeepSightTool.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\DeepSightModel\DeepSightModel.csproj">
-      <Project>{C3032123-71AF-4B9F-AAF1-5FDBB73274B0}</Project>
-      <Name>DeepSightModel</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DeepSightTool\DeepSightTool.csproj">
-      <Project>{57CA0C29-06A8-4ACC-B6EB-7BF1BF6CF1B3}</Project>
-      <Name>DeepSightTool</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+
+  <!-- 为 .NET Framework 4.7.2 复制 SQLite.Interop.dll 到输出目录 -->
+  <Target Name="CopySQLiteInteropDll" AfterTargets="Build" Condition="'$(TargetFramework)' == 'net472'">
+    <PropertyGroup>
+      <SQLiteNativePath>$(NuGetPackageRoot)stub.system.data.sqlite.core.netframework\1.0.118\build\net46\</SQLiteNativePath>
+    </PropertyGroup>
+
+    <!-- 创建 x64 目录 -->
+    <MakeDir Directories="$(OutDir)x64" Condition="!Exists('$(OutDir)x64')" />
+    <!-- 创建 x86 目录 -->
+    <MakeDir Directories="$(OutDir)x86" Condition="!Exists('$(OutDir)x86')" />
+
+    <!-- 复制 x64 版本 -->
+    <Copy SourceFiles="$(SQLiteNativePath)x64\SQLite.Interop.dll"
+          DestinationFolder="$(OutDir)x64"
+          SkipUnchangedFiles="true"
+          Condition="Exists('$(SQLiteNativePath)x64\SQLite.Interop.dll')" />
+
+    <!-- 复制 x86 版本 -->
+    <Copy SourceFiles="$(SQLiteNativePath)x86\SQLite.Interop.dll"
+          DestinationFolder="$(OutDir)x86"
+          SkipUnchangedFiles="true"
+          Condition="Exists('$(SQLiteNativePath)x86\SQLite.Interop.dll')" />
+  </Target>
+
 </Project>

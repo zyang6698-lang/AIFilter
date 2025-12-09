@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace DeepSightModel
+namespace DeepSightDB
 {
     /// <summary>
     /// 单个缺陷的详细信息
