@@ -171,8 +171,9 @@ namespace DeepSightWorkLib
             Defect = new DefectClass();
             HttpDb = new HttpClass();
             Minio = new MinioClass();
-            _databaseHelper = new DatabaseHelper();
+            // 先初始化数据库（确保数据库和表存在），然后再创建 DatabaseHelper 实例
             DatabaseHelper.InitializeDatabase();
+            _databaseHelper = new DatabaseHelper();
         }
 
         /// <summary>
@@ -346,7 +347,7 @@ namespace DeepSightWorkLib
 
                         var valueObj = JObject.Parse(valueStr);
                         //string serialNumber = $"{valueObj["serial_number"].ToString()}_{++count_Index}";
-                        string serialNumber = $"{valueObj["serial_number"].ToString()}";
+                        string serialNumber = $"{valueObj["serial_number"]}";
 
                         LogTextHelper.Info($"获取到{serialNumber}的数据");
                         // 遍历 result_infos
@@ -370,7 +371,6 @@ namespace DeepSightWorkLib
                             ReadJsonByMinio(minio_ip, minio_port, key, result, serialNumber, side, path);
                             LogTextHelper.Info($"SN:{serialNumber} 通过Minio读取Json完成");
                         }
-
                     }
                     catch (Exception ex)
                     {
@@ -979,11 +979,13 @@ namespace DeepSightWorkLib
                                         heatInfo.DefectShape = "line";
                                     }
                                 }
-                                vBRcv.raw_bbox = new List<double>();
-                                vBRcv.raw_bbox.Add(subX);
-                                vBRcv.raw_bbox.Add(subY);
-                                vBRcv.raw_bbox.Add(subW);
-                                vBRcv.raw_bbox.Add(subH);
+                                vBRcv.raw_bbox = new List<double>
+                                {
+                                    subX,
+                                    subY,
+                                    subW,
+                                    subH
+                                };
                                 vBRcv.bbox.Add(vBRcv.raw_bbox);
                                 vBRcv.sub_DefectNames.Add(sub_defectName);
                             }
@@ -1605,6 +1607,12 @@ namespace DeepSightWorkLib
             _databaseHelper.SaveEmployeeReport(report);
 
         /// <summary>
+        /// 清空数据库所有表的数据
+        /// </summary>
+        public Task<bool> ClearAllDatabaseData() =>
+            _databaseHelper.ClearAllData();
+
+        /// <summary>
         /// 保存/更新 PanelSide 数据到数据库（支持覆盖现有数据）
         /// </summary>
         /// <param name="record">PanelSideRecord 记录</param>
@@ -1626,14 +1634,18 @@ namespace DeepSightWorkLib
                 LogTextHelper.Info($"无法解析 AviCreateTime '{panelInfo.AviCreateTime}'。将使用当前时间 '{aviCreationTime}' 作为备用。");
             }
 
-            LogTextHelper.Info($"存储{panelInfo.SerialNumber} PanelSide数据到数据库...");
+            LogTextHelper.Info($"存储 SN={panelInfo.SerialNumber}, Side={panelInfo.SideIndex}, AviState={aviState}, AiState={aiState}, DefectCount={detectPoints?.Count ?? 0} 到数据库...");
             _databaseHelper.SavePanelSide(new PanelSideRecord()
             {
                 Data = new SideData()
                 {
+                    Side = panelInfo.SideIndex,
                     DetectPoints = detectPoints,
                     AviState = aviState,
-                    AiState = aiState
+                    AiState = aiState,
+                    VvsState = 0,
+                    VrsState = 0,
+                    FinalState = 0
                 },
                 ProductSerial = panelInfo.ProductSerial,
                 DetectionDate = DateTime.Now,

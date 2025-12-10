@@ -72,7 +72,6 @@ namespace DeepSightDB
         public string LotNumber { get; set; }
         // 料号
         public string ProductSerial { get; set; }
-        public bool IsAIOk { get; set; }
         public string PathIndex { get; set; }
         public DateTime? AviCreationTime { get; set; }
         public List<SideData> Sides { get; set; }

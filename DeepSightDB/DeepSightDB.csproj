@@ -13,41 +13,13 @@
   <!-- Common packages for all frameworks -->
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="CsvHelper" Version="33.0.1" />
-  </ItemGroup>
-
-  <!-- SQLite: 两个框架都使用 Core 包，它会自动处理原生 DLL 的部署 -->
-  <ItemGroup>
-    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
+    <PackageReference Include="CsvHelper" Version="33.1.0" />
+    <PackageReference Include="Npgsql" Version="4.1.14" />
   </ItemGroup>
 
   <!-- Project Reference -->
   <ItemGroup>
     <ProjectReference Include="..\DeepSightTool\DeepSightTool.csproj" />
   </ItemGroup>
-
-  <!-- 为 .NET Framework 4.7.2 复制 SQLite.Interop.dll 到输出目录 -->
-  <Target Name="CopySQLiteInteropDll" AfterTargets="Build" Condition="'$(TargetFramework)' == 'net472'">
-    <PropertyGroup>
-      <SQLiteNativePath>$(NuGetPackageRoot)stub.system.data.sqlite.core.netframework\1.0.118\build\net46\</SQLiteNativePath>
-    </PropertyGroup>
-
-    <!-- 创建 x64 目录 -->
-    <MakeDir Directories="$(OutDir)x64" Condition="!Exists('$(OutDir)x64')" />
-    <!-- 创建 x86 目录 -->
-    <MakeDir Directories="$(OutDir)x86" Condition="!Exists('$(OutDir)x86')" />
-
-    <!-- 复制 x64 版本 -->
-    <Copy SourceFiles="$(SQLiteNativePath)x64\SQLite.Interop.dll"
-          DestinationFolder="$(OutDir)x64"
-          SkipUnchangedFiles="true"
-          Condition="Exists('$(SQLiteNativePath)x64\SQLite.Interop.dll')" />
-
-    <!-- 复制 x86 版本 -->
-    <Copy SourceFiles="$(SQLiteNativePath)x86\SQLite.Interop.dll"
-          DestinationFolder="$(OutDir)x86"
-          SkipUnchangedFiles="true"
-          Condition="Exists('$(SQLiteNativePath)x86\SQLite.Interop.dll')" />
-  </Target>
 
 </Project>

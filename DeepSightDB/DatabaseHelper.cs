@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data.SQLite;
+using Npgsql;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -13,9 +13,9 @@ namespace DeepSightDB
 {
     public class DatabaseHelper : IDisposable
     {
-        private static readonly string dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "deepsight.db");
-        private static readonly string connectionString = $"Data Source={dbPath};Version=3;";
-        private readonly BlockingCollection<Action<SQLiteConnection>> _dbQueue = new BlockingCollection<Action<SQLiteConnection>>();
+        private static readonly PostgreSqlConfig _config = PostgreSqlConfig.Load();
+        private static readonly string connectionString = _config.GetConnectionString();
+        private readonly BlockingCollection<Action<NpgsqlConnection>> _dbQueue = new BlockingCollection<Action<NpgsqlConnection>>();
         private readonly Thread _dbThread;
         private bool _disposed = false;
 
@@ -31,20 +31,11 @@ namespace DeepSightDB
 
         private void ProcessQueue()
         {
-            using (var connection = new SQLiteConnection(connectionString))
+            using (var connection = new NpgsqlConnection(connectionString))
             {
                 connection.Open();
 
-                // 开启 WAL 模式提升写入性能
-                using (var pragmaCmd = new SQLiteCommand("PRAGMA journal_mode=WAL;", connection))
-                {
-                    pragmaCmd.ExecuteNonQuery();
-                }
-                // 设置同步模式为 NORMAL，平衡性能和安全性
-                using (var syncCmd = new SQLiteCommand("PRAGMA synchronous=NORMAL;", connection))
-                {
-                    syncCmd.ExecuteNonQuery();
-                }
+                // PostgreSQL 不需要 PRAGMA 设置，连接池和性能由 Npgsql 自动管理
 
                 foreach (var action in _dbQueue.GetConsumingEnumerable())
                 {
@@ -73,32 +64,96 @@ namespace DeepSightDB
             }
         }
 
+        /// <summary>
+        /// 确保数据库存在，如果不存在则自动创建
+        /// </summary>
+        private static void EnsureDatabaseExists()
+        {
+            try
+            {
+                // 尝试连接到目标数据库，如果成功则数据库已存在
+                using (var testConnection = new NpgsqlConnection(connectionString))
+                {
+                    testConnection.Open();
+                    LogTextHelper.Info($"数据库 '{_config.Database}' 已存在");
+                    return;
+                }
+            }
+            catch (Npgsql.PostgresException ex)
+            {
+                // 错误代码 3D000 表示数据库不存在
+                if (ex.SqlState == "3D000")
+                {
+                    LogTextHelper.Warn($"数据库 '{_config.Database}' 不存在，正在自动创建...");
+
+                    try
+                    {
+                        // 连接到 postgres 数据库来创建新数据库
+                        using (var connection = new NpgsqlConnection(_config.GetPostgresConnectionString()))
+                        {
+                            connection.Open();
+
+                            // 创建数据库 - 使用简化的语法，继承模板数据库的排序规则
+                            // 这样可以避免与中文 Windows 系统的默认排序规则冲突
+                            string createDbSql = $@"
+                                CREATE DATABASE {_config.Database}
+                                WITH
+                                OWNER = {_config.Username}
+                                ENCODING = 'UTF8'";
+
+                            using (var command = new NpgsqlCommand(createDbSql, connection))
+                            {
+                                command.ExecuteNonQuery();
+                            }
+
+                            LogTextHelper.Info($"数据库 '{_config.Database}' 创建成功！");
+                        }
+                    }
+                    catch (Exception createEx)
+                    {
+                        LogTextHelper.Error($"创建数据库失败: {createEx.Message}");
+                        throw new Exception($"无法创建数据库 '{_config.Database}'。请确保 PostgreSQL 服务正在运行，并且用户 '{_config.Username}' 有创建数据库的权限。", createEx);
+                    }
+                }
+                else
+                {
+                    // 其他类型的错误，直接抛出
+                    LogTextHelper.Error($"连接数据库时发生错误: {ex.Message}");
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"检查数据库存在性时发生错误: {ex.Message}");
+                throw;
+            }
+        }
+
         public static void InitializeDatabase()
         {
-            if (!File.Exists(dbPath))
-            {
-                SQLiteConnection.CreateFile(dbPath);
-            }
+            // 首先确保数据库存在
+            EnsureDatabaseExists();
 
-            using (var connection = new SQLiteConnection(connectionString))
+            // 然后创建表结构
+            using (var connection = new NpgsqlConnection(connectionString))
             {
                 connection.Open();
 
                 string createPanelsTable = @"
                 CREATE TABLE IF NOT EXISTS Panels (
-                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Id SERIAL PRIMARY KEY,
                     MachineId TEXT NOT NULL,
                     SerialNumber TEXT NOT NULL UNIQUE,
                     LotNumber TEXT NOT NULL,
                     ProductSerial TEXT,
-                    DetectionDate DATETIME NOT NULL,
+                    DetectionDate TIMESTAMP NOT NULL,
                     PathIndex TEXT,
-                    AviCreationTime DATETIME
+                    AviCreationTime TIMESTAMP
                 );";
 
                 string createPanelSidesTable = @"
                 CREATE TABLE IF NOT EXISTS PanelSides (
-                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Id SERIAL PRIMARY KEY,
                     PanelId INTEGER NOT NULL,
                     Side TEXT NOT NULL, -- 'A' 或 'B'
                     HeatPoints TEXT, -- 存储 DetectInfo 列表的 JSON 字符串
@@ -113,17 +168,17 @@ namespace DeepSightDB
 
                 string createEmployeeReportsTable = @"
                 CREATE TABLE IF NOT EXISTS EmployeeReports (
-                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Id SERIAL PRIMARY KEY,
                     EmployeeID TEXT NOT NULL,
                     SN TEXT NOT NULL,
                     AllNGNumber INTEGER NOT NULL,
-                    StartTime DATETIME NOT NULL,
-                    EndTime DATETIME NOT NULL,
+                    StartTime TIMESTAMP NOT NULL,
+                    EndTime TIMESTAMP NOT NULL,
                     VRSOKNumber INTEGER NOT NULL
                 );";
 
                 // 创建索引以提升查询性能
-                // PanelSides 的唯一索引，同时支持 INSERT OR REPLACE
+                // PanelSides 的唯一索引，同时支持 INSERT ON CONFLICT
                 string createPanelSidesUniqueIndex = @"
                 CREATE UNIQUE INDEX IF NOT EXISTS idx_panelsides_panelid_side ON PanelSides (PanelId, Side);";
 
@@ -136,8 +191,9 @@ namespace DeepSightDB
                 string createPanelsLotNumberIndex = @"
                 CREATE INDEX IF NOT EXISTS idx_panels_lotnumber ON Panels (LotNumber);";
 
-                using (var command = new SQLiteCommand(connection))
+                using (var command = new NpgsqlCommand())
                 {
+                    command.Connection = connection;
                     command.CommandText = createPanelsTable;
                     command.ExecuteNonQuery();
                     command.CommandText = createPanelSidesTable;
@@ -190,16 +246,16 @@ namespace DeepSightDB
 
             _dbQueue.Add(connection =>
             {
-                SQLiteTransaction transaction = null;
+                NpgsqlTransaction transaction = null;
                 try
                 {
                     transaction = connection.BeginTransaction();
                     long panelId;
                     bool isNewPanel;
 
-                    // 1. 使用 INSERT OR IGNORE + SELECT 获取 PanelId（比先查再插更高效）
-                    using (var insertCmd = new SQLiteCommand(
-                        "INSERT OR IGNORE INTO Panels (MachineId, SerialNumber, LotNumber, DetectionDate, ProductSerial, PathIndex, AviCreationTime) VALUES (@MachineId, @SN, @Lot, @Date, @ProductSerial, @PathIndex, @AviCreationTime)",
+                    // 1. 使用 INSERT ON CONFLICT DO NOTHING + SELECT 获取 PanelId
+                    using (var insertCmd = new NpgsqlCommand(
+                        "INSERT INTO Panels (MachineId, SerialNumber, LotNumber, DetectionDate, ProductSerial, PathIndex, AviCreationTime) VALUES (@MachineId, @SN, @Lot, @Date, @ProductSerial, @PathIndex, @AviCreationTime) ON CONFLICT (SerialNumber) DO NOTHING",
                         connection, transaction))
                     {
                         insertCmd.Parameters.AddWithValue("@MachineId", record.MachineId ?? string.Empty);
@@ -214,17 +270,17 @@ namespace DeepSightDB
                         isNewPanel = rowsAffected > 0;
                     }
 
-                    using (var selectCmd = new SQLiteCommand("SELECT Id FROM Panels WHERE SerialNumber = @SN", connection, transaction))
+                    using (var selectCmd = new NpgsqlCommand("SELECT Id FROM Panels WHERE SerialNumber = @SN", connection, transaction))
                     {
                         selectCmd.Parameters.AddWithValue("@SN", record.SerialNumber);
-                        panelId = (long)selectCmd.ExecuteScalar();
+                        panelId = Convert.ToInt64(selectCmd.ExecuteScalar());
                     }
 
                     // 检查当前 Side 是否已存在数据
                     bool sideExists = false;
                     if (!isNewPanel)
                     {
-                        using (var checkSideCmd = new SQLiteCommand(
+                        using (var checkSideCmd = new NpgsqlCommand(
                             "SELECT COUNT(*) FROM PanelSides WHERE PanelId = @PanelId AND Side = @Side",
                             connection, transaction))
                         {
@@ -237,7 +293,7 @@ namespace DeepSightDB
                     // 如果是重复数据写入（SN存在且当前面数据也已存在），更新 DetectionDate 为最新时间
                     if (!isNewPanel && sideExists)
                     {
-                        using (var updateDateCmd = new SQLiteCommand(
+                        using (var updateDateCmd = new NpgsqlCommand(
                             "UPDATE Panels SET DetectionDate = @Date WHERE Id = @PanelId",
                             connection, transaction))
                         {
@@ -247,11 +303,17 @@ namespace DeepSightDB
                         }
                     }
 
-                    // 2. 使用 INSERT OR REPLACE 一条语句搞定插入或更新
-                    using (var upsertCmd = new SQLiteCommand(
-                        @"INSERT OR REPLACE INTO PanelSides
-                          (PanelId, Side, HeatPoints, AviState, AiState, VvsState, VrsState, FinalState)
-                          VALUES (@PanelId, @Side, @HeatPoints, @AviState, @AiState, @VvsState, @VrsState, @FinalState)",
+                    // 2. 使用 INSERT ON CONFLICT DO UPDATE 一条语句搞定插入或更新
+                    using (var upsertCmd = new NpgsqlCommand(
+                        @"INSERT INTO PanelSides (PanelId, Side, HeatPoints, AviState, AiState, VvsState, VrsState, FinalState)
+                          VALUES (@PanelId, @Side, @HeatPoints, @AviState, @AiState, @VvsState, @VrsState, @FinalState)
+                          ON CONFLICT (PanelId, Side) DO UPDATE SET
+                          HeatPoints = EXCLUDED.HeatPoints,
+                          AviState = EXCLUDED.AviState,
+                          AiState = EXCLUDED.AiState,
+                          VvsState = EXCLUDED.VvsState,
+                          VrsState = EXCLUDED.VrsState,
+                          FinalState = EXCLUDED.FinalState",
                         connection, transaction))
                     {
                         upsertCmd.Parameters.AddWithValue("@PanelId", panelId);
@@ -263,6 +325,16 @@ namespace DeepSightDB
                         upsertCmd.Parameters.AddWithValue("@VrsState", record.Data.VrsState);
                         upsertCmd.Parameters.AddWithValue("@FinalState", record.Data.FinalState);
                         upsertCmd.ExecuteNonQuery();
+                    }
+
+                    // 3. 检查是否双面数据都已存在（用于日志记录和验证）
+                    int sidesCount = 0;
+                    using (var checkSidesCmd = new NpgsqlCommand(
+                        "SELECT COUNT(*) FROM PanelSides WHERE PanelId = @PanelId",
+                        connection, transaction))
+                    {
+                        checkSidesCmd.Parameters.AddWithValue("@PanelId", panelId);
+                        sidesCount = Convert.ToInt32(checkSidesCmd.ExecuteScalar());
                     }
 
                     transaction.Commit();
@@ -280,6 +352,12 @@ namespace DeepSightDB
                     {
                         // SN存在但是存的是另一面的数据，正常情况
                         LogTextHelper.Info($"SavePanelSide: 成功保存 SN={record.SerialNumber}, Side={record.Side} (另一面已存在)");
+                    }
+
+                    // 如果双面数据都已存在，记录日志
+                    if (sidesCount == 2)
+                    {
+                        LogTextHelper.Info($"SavePanelSide: SN={record.SerialNumber} 的 A、B 两面数据已完整");
                     }
                 }
                 catch (Exception ex)
@@ -311,7 +389,7 @@ namespace DeepSightDB
                 try
                 {
                     var serialNumbers = new List<string>();
-                    using (var cmd = new SQLiteCommand("SELECT SerialNumber FROM Panels WHERE LotNumber = @Lot", connection))
+                    using (var cmd = new NpgsqlCommand("SELECT SerialNumber FROM Panels WHERE LotNumber = @Lot", connection))
                     {
                         cmd.Parameters.AddWithValue("@Lot", lotNumber);
                         using (var reader = cmd.ExecuteReader())
@@ -341,8 +419,8 @@ namespace DeepSightDB
                 try
                 {
                     var heatPoints = new List<DetectInfo>();
-                    using (var cmd = new SQLiteCommand(
-                        "SELECT ps.HeatPoints FROM PanelSides ps JOIN Panels p ON ps.PanelId = p.Id WHERE p.SerialNumber = @SN AND date(p.DetectionDate) = date(@Date)",
+                    using (var cmd = new NpgsqlCommand(
+                        "SELECT ps.HeatPoints FROM PanelSides ps JOIN Panels p ON ps.PanelId = p.Id WHERE p.SerialNumber = @SN AND DATE(p.DetectionDate) = DATE(@Date)",
                         connection))
                     {
                         cmd.Parameters.AddWithValue("@SN", serialNumber);
@@ -385,7 +463,7 @@ namespace DeepSightDB
                     // 总板数按 Panels 计数；AI OK 板数为两面 AiState 都为 1 的 Panel
                     var totalSql = "SELECT COUNT(*) FROM Panels WHERE DetectionDate BETWEEN @Start AND @End" + (string.IsNullOrEmpty(machineId) ? string.Empty : " AND MachineId = @MachineId");
                     int totalBoards = 0;
-                    using (var totalCmd = new SQLiteCommand(totalSql, connection))
+                    using (var totalCmd = new NpgsqlCommand(totalSql, connection))
                     {
                         totalCmd.Parameters.AddWithValue("@Start", start);
                         totalCmd.Parameters.AddWithValue("@End", end);
@@ -403,7 +481,7 @@ namespace DeepSightDB
                           HAVING COUNT(ps.Id) = 2 AND SUM(CASE WHEN ps.AiState = 1 THEN 1 ELSE 0 END) = 2
                         ) t";
                     int aiOkBoards = 0;
-                    using (var aiOkCmd = new SQLiteCommand(aiOkSql, connection))
+                    using (var aiOkCmd = new NpgsqlCommand(aiOkSql, connection))
                     {
                         aiOkCmd.Parameters.AddWithValue("@Start", start);
                         aiOkCmd.Parameters.AddWithValue("@End", end);
@@ -442,7 +520,7 @@ namespace DeepSightDB
                         GROUP BY PanelId";
 
                     var panelAiOkDict = new Dictionary<long, bool>();
-                    using (var cmd = new SQLiteCommand(panelAiOkSql, connection))
+                    using (var cmd = new NpgsqlCommand(panelAiOkSql, connection))
                     {
                         cmd.Parameters.AddWithValue("@Start", start);
                         cmd.Parameters.AddWithValue("@End", end);
@@ -465,7 +543,7 @@ namespace DeepSightDB
                         JOIN Panels p ON ps.PanelId = p.Id
                         WHERE p.DetectionDate BETWEEN @Start AND @End" + (string.IsNullOrEmpty(machineId) ? string.Empty : " AND p.MachineId = @MachineId");
 
-                    using (var cmd = new SQLiteCommand(sidesSql, connection))
+                    using (var cmd = new NpgsqlCommand(sidesSql, connection))
                     {
                         cmd.Parameters.AddWithValue("@Start", start);
                         cmd.Parameters.AddWithValue("@End", end);
@@ -509,7 +587,7 @@ namespace DeepSightDB
             _dbQueue.Add(connection =>
             {
                 var sql = "INSERT INTO EmployeeReports (EmployeeID, SN, AllNGNumber, StartTime, EndTime, VRSOKNumber) VALUES (@ID, @SN, @AllNGNumber, @StartTime, @EndTime, @VRSOKNumber)";
-                using (var cmd = new SQLiteCommand(sql, connection))
+                using (var cmd = new NpgsqlCommand(sql, connection))
                 {
                     cmd.Parameters.AddWithValue("@ID", report.ID);
                     cmd.Parameters.AddWithValue("@SN", report.SN);
@@ -531,7 +609,7 @@ namespace DeepSightDB
                 {
                     var reports = new List<EmployeeReport>();
                     var sql = "SELECT EmployeeID, SN, AllNGNumber, StartTime, EndTime, VRSOKNumber FROM EmployeeReports WHERE StartTime >= @Start AND EndTime <= @End";
-                    using (var cmd = new SQLiteCommand(sql, connection))
+                    using (var cmd = new NpgsqlCommand(sql, connection))
                     {
                         cmd.Parameters.AddWithValue("@Start", start);
                         cmd.Parameters.AddWithValue("@End", end);
@@ -572,7 +650,7 @@ namespace DeepSightDB
                 try
                 {
                     var machineIds = new List<string>();
-                    using (var cmd = new SQLiteCommand("SELECT DISTINCT MachineId FROM Panels", connection))
+                    using (var cmd = new NpgsqlCommand("SELECT DISTINCT MachineId FROM Panels", connection))
                     {
                         using (var reader = cmd.ExecuteReader())
                         {
@@ -622,7 +700,7 @@ namespace DeepSightDB
                 try
                 {
                     var detectionDates = new List<DateTime>();
-                    using (var cmd = new SQLiteCommand("SELECT DISTINCT DetectionDate FROM Panels WHERE DetectionDate BETWEEN @Start AND @End", connection))
+                    using (var cmd = new NpgsqlCommand("SELECT DISTINCT DetectionDate FROM Panels WHERE DetectionDate BETWEEN @Start AND @End", connection))
                     {
                         cmd.Parameters.AddWithValue("@Start", start);
                         cmd.Parameters.AddWithValue("@End", end);
@@ -656,7 +734,7 @@ namespace DeepSightDB
             {
                 try
                 {
-                    using (var cmd = new SQLiteCommand("SELECT SerialNumber, LotNumber, ProductSerial, PathIndex, AviCreationTime FROM Panels WHERE MachineId = @MachineId ORDER BY DetectionDate DESC LIMIT 1", connection))
+                    using (var cmd = new NpgsqlCommand("SELECT SerialNumber, LotNumber, ProductSerial, PathIndex, AviCreationTime FROM Panels WHERE MachineId = @MachineId ORDER BY DetectionDate DESC LIMIT 1", connection))
                     {
                         cmd.Parameters.AddWithValue("@MachineId", machineId);
                         using (var reader = cmd.ExecuteReader())
@@ -878,7 +956,7 @@ namespace DeepSightDB
                     JOIN PanelSides ps ON p.Id = ps.PanelId
                     WHERE p.DetectionDate BETWEEN @Start AND @End";
 
-                    using (var cmd = new SQLiteCommand(sql, connection))
+                    using (var cmd = new NpgsqlCommand(sql, connection))
                     {
                         cmd.Parameters.AddWithValue("@Start", start);
                         cmd.Parameters.AddWithValue("@End", end);
@@ -959,7 +1037,7 @@ namespace DeepSightDB
                     JOIN PanelSides ps ON p.Id = ps.PanelId
                     WHERE p.LotNumber = @LotNumber";
 
-                    using (var cmd = new SQLiteCommand(sql, connection))
+                    using (var cmd = new NpgsqlCommand(sql, connection))
                     {
                         cmd.Parameters.AddWithValue("@LotNumber", lotNumber);
                         using (var reader = cmd.ExecuteReader())
@@ -1029,7 +1107,7 @@ namespace DeepSightDB
                     JOIN PanelSides ps ON p.Id = ps.PanelId
                     WHERE p.DetectionDate BETWEEN @Start AND @End";
 
-                    using (var cmd = new SQLiteCommand(sql, connection))
+                    using (var cmd = new NpgsqlCommand(sql, connection))
                     {
                         cmd.Parameters.AddWithValue("@Start", start);
                         cmd.Parameters.AddWithValue("@End", end);
@@ -1101,7 +1179,7 @@ namespace DeepSightDB
             {
                 try
                 {
-                    using (var cmd = new SQLiteCommand("SELECT LotNumber, ProductSerial FROM Panels WHERE MachineId = @MachineId ORDER BY DetectionDate DESC LIMIT 1", connection))
+                    using (var cmd = new NpgsqlCommand("SELECT LotNumber, ProductSerial FROM Panels WHERE MachineId = @MachineId ORDER BY DetectionDate DESC LIMIT 1", connection))
                     {
                         cmd.Parameters.AddWithValue("@MachineId", machineId);
                         using (var reader = cmd.ExecuteReader())
@@ -1144,7 +1222,7 @@ namespace DeepSightDB
                         sqlBuilder.Append(" AND MachineId = @MachineId");
                     }
 
-                    using (var cmd = new SQLiteCommand(sqlBuilder.ToString(), connection))
+                    using (var cmd = new NpgsqlCommand(sqlBuilder.ToString(), connection))
                     {
                         cmd.Parameters.AddWithValue("@LotNumber", lotNumber);
                         if (!string.IsNullOrWhiteSpace(machineId))
@@ -1176,7 +1254,7 @@ namespace DeepSightDB
                     {
                         // 填充 sides
                         var sidesSql = "SELECT Side, HeatPoints, AviState, AiState, VvsState, VrsState, FinalState FROM PanelSides WHERE PanelId = @PanelId";
-                        using (var sidesCmd = new SQLiteCommand(sidesSql, connection))
+                        using (var sidesCmd = new NpgsqlCommand(sidesSql, connection))
                         {
                             sidesCmd.Parameters.AddWithValue("@PanelId", record.Id);
                             using (var sidesReader = sidesCmd.ExecuteReader())
@@ -1205,9 +1283,6 @@ namespace DeepSightDB
                                 }
                             }
                         }
-
-                        // 衍生 IsAIOk
-                        record.IsAIOk = record.Sides.Count == 2 && record.Sides.All(s => s.AiState == 1);
                     }
                     tcs.SetResult(panelRecords);
                 }
@@ -1241,7 +1316,7 @@ namespace DeepSightDB
                         sqlBuilder.Append(" AND ProductSerial = @ProductSerial");
                     }
 
-                    using (var cmd = new SQLiteCommand(sqlBuilder.ToString(), connection))
+                    using (var cmd = new NpgsqlCommand(sqlBuilder.ToString(), connection))
                     {
                         cmd.Parameters.AddWithValue("@Start", start);
                         cmd.Parameters.AddWithValue("@End", end);
@@ -1273,7 +1348,7 @@ namespace DeepSightDB
                     foreach (var record in panelRecords)
                     {
                         var sidesSql = "SELECT Side, HeatPoints, AviState, AiState, VvsState, VrsState, FinalState FROM PanelSides WHERE PanelId = @PanelId";
-                        using (var sidesCmd = new SQLiteCommand(sidesSql, connection))
+                        using (var sidesCmd = new NpgsqlCommand(sidesSql, connection))
                         {
                             sidesCmd.Parameters.AddWithValue("@PanelId", record.Id);
                             using (var sidesReader = sidesCmd.ExecuteReader())
@@ -1302,9 +1377,6 @@ namespace DeepSightDB
                                 }
                             }
                         }
-
-                        // 衍生 IsAIOk
-                        record.IsAIOk = record.Sides.Count == 2 && record.Sides.All(s => s.AiState == 1);
                     }
                     tcs.SetResult(panelRecords);
                 }
@@ -1340,6 +1412,75 @@ namespace DeepSightDB
                 report.EndTime = report.StartTime.AddMinutes(random.Next(5, 60));
                 dbHelper.SaveEmployeeReport(report);
             }
+        }
+
+        /// <summary>
+        /// 清空数据库所有表的数据
+        /// </summary>
+        public Task<bool> ClearAllData()
+        {
+            var tcs = new TaskCompletionSource<bool>();
+            _dbQueue.Add(connection =>
+            {
+                try
+                {
+                    using (var transaction = connection.BeginTransaction())
+                    {
+                        try
+                        {
+                            // 按照外键依赖顺序删除数据
+                            // 先删除子表 PanelSides 和 EmployeeReports
+                            using (var cmd1 = new NpgsqlCommand("DELETE FROM PanelSides", connection, transaction))
+                            {
+                                cmd1.ExecuteNonQuery();
+                            }
+
+                            using (var cmd2 = new NpgsqlCommand("DELETE FROM EmployeeReports", connection, transaction))
+                            {
+                                cmd2.ExecuteNonQuery();
+                            }
+
+                            // 再删除主表 Panels
+                            using (var cmd3 = new NpgsqlCommand("DELETE FROM Panels", connection, transaction))
+                            {
+                                cmd3.ExecuteNonQuery();
+                            }
+
+                            // 重置序列（自增ID）
+                            using (var cmd4 = new NpgsqlCommand("ALTER SEQUENCE panels_id_seq RESTART WITH 1", connection, transaction))
+                            {
+                                cmd4.ExecuteNonQuery();
+                            }
+
+                            using (var cmd5 = new NpgsqlCommand("ALTER SEQUENCE panelsides_id_seq RESTART WITH 1", connection, transaction))
+                            {
+                                cmd5.ExecuteNonQuery();
+                            }
+
+                            using (var cmd6 = new NpgsqlCommand("ALTER SEQUENCE employeereports_id_seq RESTART WITH 1", connection, transaction))
+                            {
+                                cmd6.ExecuteNonQuery();
+                            }
+
+                            transaction.Commit();
+                            LogTextHelper.Info("数据库清空成功");
+                            tcs.SetResult(true);
+                        }
+                        catch (Exception ex)
+                        {
+                            transaction.Rollback();
+                            LogTextHelper.Error($"清空数据库失败: {ex.Message}");
+                            tcs.SetException(ex);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error($"清空数据库时发生错误: {ex.Message}");
+                    tcs.SetException(ex);
+                }
+            });
+            return tcs.Task;
         }
     }
 }

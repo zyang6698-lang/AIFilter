@@ -148,6 +148,33 @@
     <value>uiGroupBox1</value>
   </data>
   <data name="&gt;&gt;btnZipPic.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="btnClearDatabase.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnClearDatabase.Location" type="System.Drawing.Point, System.Drawing">
+    <value>39, 320</value>
+  </data>
+  <data name="btnClearDatabase.Size" type="System.Drawing.Size, System.Drawing">
+    <value>336, 56</value>
+  </data>
+  <data name="btnClearDatabase.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="btnClearDatabase.Text" xml:space="preserve">
+    <value>清空数据库</value>
+  </data>
+  <data name="&gt;&gt;btnClearDatabase.Name" xml:space="preserve">
+    <value>btnClearDatabase</value>
+  </data>
+  <data name="&gt;&gt;btnClearDatabase.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnClearDatabase.Parent" xml:space="preserve">
+    <value>uiGroupBox1</value>
+  </data>
+  <data name="&gt;&gt;btnClearDatabase.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="btn_selectA.Location" type="System.Drawing.Point, System.Drawing">
@@ -172,7 +199,7 @@
     <value>uiGroupBox1</value>
   </data>
   <data name="&gt;&gt;btn_selectA.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="btn_selectB.Location" type="System.Drawing.Point, System.Drawing">
     <value>39, 149</value>
@@ -196,7 +223,7 @@
     <value>uiGroupBox1</value>
   </data>
   <data name="&gt;&gt;btn_selectB.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="uiGroupBox1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>

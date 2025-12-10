@@ -20,10 +20,6 @@ namespace DeepSightAI
     public partial class FrHome : Form
     {
 
-        /// <summary>
-        /// 显示控件的数量
-        /// </summary>
-        private int Num = 0;
 
         public Dictionary<string, List<RootPanelInfoWithIP>> dic_Infos = new Dictionary<string, List<RootPanelInfoWithIP>>();
         public Dictionary<string, List<string>> dic_Results = new Dictionary<string, List<string>>();
@@ -280,42 +276,7 @@ namespace DeepSightAI
         {
             try
             {
-                #region 大图显示 //屏蔽
-                //DispWin1 = new CvDisplay[1];
-                //布局
-                //table_show.Controls.Clear();
-                //table_show.RowStyles.Clear();
-                //table_show.ColumnStyles.Clear();
 
-                //table_show.ColumnCount = 1;
-                //table_show.RowCount = 1;
-                //布局
-
-                //int index = 0;
-                //for (int i = 0; i < 1; i++)
-                //{
-                //    table_show.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, (100F / 1)));
-
-                //    for (int j = 0; j < 1; j++)
-                //    {
-                //        table_show.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F / 1));
-
-                //        DispWin1[index] = new CvDisplay
-                //        {
-                //            Margin = new System.Windows.Forms.Padding(1),
-                //            BackColor = ColorTranslator.FromHtml("#374c50"),//System.Drawing.SystemColors.ActiveCaptionText,//ActiveCaptionText,//Highlight,//
-                //            Dock = System.Windows.Forms.DockStyle.Fill,
-                //            Name = "Display" + index,
-                //            AutoDisplay = CvDisplay.AutoDisplayMode.Fit,
-                //        };
-                //        DispWin1[index].OnCallBackFullShowPro -= FrHome_OnCallBackFullShowPro;
-                //        DispWin1[index].OnCallBackFullShowPro += FrHome_OnCallBackFullShowPro;
-
-                //        table_show.Controls.Add(DispWin1[index], j, i);
-                //        index++;
-                //    }
-                //}
-                #endregion
                 //DispWin2 = new CvDisplay[20];
                 DispWin2 = new CvDisplay[10];
                 //布局
@@ -334,14 +295,6 @@ namespace DeepSightAI
 
                     for (int j = 0; j < table_Small.ColumnCount; j++)
                     {
-                        //if (j == 1 || j == 2)
-                        //{
-                        //    table_Small.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F / 15));
-                        //}
-                        //else
-                        //{
-                        //    table_Small.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F / 20));
-                        //}
                         table_Small.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F / 20));
 
                         DispWin2[index] = new CvDisplay
@@ -549,8 +502,6 @@ namespace DeepSightAI
                         {
                             DispWin2[(index + 1) * 2 - 2].DrawStation($"");
                             DispWin2[(index + 1) * 2 - 1].DrawStation($"");
-                            //DispWin2[index].Image = null;
-                            //DispWin2[index].Clear(); 
                         }
                         index++;
                     }
@@ -567,60 +518,7 @@ namespace DeepSightAI
         {
             try
             {
-                //if (DispWin2[index - 1].Image == null)
-                //{
-                //    MessageBox.Show("图像为空，请检查！", "警告", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                //    return;
-                //}
-                //if (info == null)
-                //{
-                //    MessageBox.Show("信息为空，请检查！", "警告", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                //    return;
-                //}
-
-                //this.lbl_defectName.Text = $"AVI缺陷名:{info.defect_code}";
-                //this.lbl_liaohao.Text = $"料号名:{info.product_serial}";
-                //this.lbl_dianwei.Text = $"点位号:{info.defect_location}";
-                //this.lbl_gongdan.Text = $"工单号:{info.lot_id}";
-                //this.lbl_batch.Text = $"批次号:{info.lot_batch}";
-                //this.lbl_pcsIndex.Text = $"PCS号:{info.pcs_index}";
-                //this.lbl_sn.Text = $"二维码:{info.sn}";//{info.sn.Split('_').ToArray()[0].ToString()}";
-                //this.lbl_defectIndex.Text = $"缺陷号:{info.defect_index}";
-                //this.lbl_time.Text = $"过站时间:{info.process_time}";
-                //List<string> result = null;
-                //if (dic_Results.TryGetValue(info.sn, out result))
-                //{
-                //    string res = Convert.ToInt32(result[(currentPage - 1) * 5 + index / 2]) == 1 ? "NG" : "OK";
-                //    this.lbl_result.Text = $"AI结果:{res}";
-                //}
-                //else
-                //{
-                //    this.lbl_result.Text = $"AI结果:未处理";
-                //}
-
-                //this.lbl_station.Text = $"站别名:{info.station_name}";
-                //this.lbl_details.Text = $"AI详情:{info.dateil}";
-                //this.lbl_sideIndex.Text = $"面次信息:{info.side_index}";
-
-                //显示Details
-                // 清空 TreeView 
-                //ATS 取消此显示
-                //treeViewJson.Nodes.Clear();
-                //// 解析 JSON 并填充 TreeView
-                //try
-                //{
-                //    List<string> details = null;
-                //    if (dic_Details.TryGetValue(info.sn, out details))
-                //    {
-                //        string res = details[(currentPage - 1) * 10 + index / 2];
-                //        JToken rootToken = JToken.Parse(res);
-                //        LoadJsonToTreeView(rootToken, treeViewJson.Nodes);
-                //    }
-                //}
-                //catch (Exception ex)
-                //{
-                //    MessageBox.Show($"JSON 解析错误: {ex.Message}");
-                //}
+              
             }
             catch (Exception ex)
             {

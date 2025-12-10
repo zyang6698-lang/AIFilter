@@ -267,5 +267,57 @@ namespace DeepSightAI.SettingPages
             }
             return null;
         }
+
+        private async void btnClearDatabase_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // 弹出确认对话框
+                DialogResult result = MessageBox.Show(
+                    "确定要清空数据库吗？此操作将删除所有数据且不可恢复！",
+                    "警告",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning,
+                    MessageBoxDefaultButton.Button2);
+
+                if (result == DialogResult.Yes)
+                {
+                    // 禁用按钮，防止重复点击
+                    btnClearDatabase.Enabled = false;
+                    btnClearDatabase.Text = "清空中...";
+
+                    try
+                    {
+                        // 调用清空数据库方法
+                        bool success = await Machine.master.workClass.ClearAllDatabaseData();
+
+                        if (success)
+                        {
+                            MessageBox.Show("数据库清空成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        else
+                        {
+                            MessageBox.Show("数据库清空失败！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        LogTextHelper.Error($"清空数据库时发生错误: {ex}");
+                        MessageBox.Show($"清空数据库时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    finally
+                    {
+                        // 恢复按钮状态
+                        btnClearDatabase.Enabled = true;
+                        btnClearDatabase.Text = "清空数据库";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error(ex.ToString());
+                MessageBox.Show("处理过程中发生错误: " + ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
     }
 }
