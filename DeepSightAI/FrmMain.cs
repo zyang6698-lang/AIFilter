@@ -282,6 +282,30 @@ namespace DeepSightAI
             int ok = 0;
             int ng = 0;
             int byPass = 0;
+            int aDefectCount = 0;
+            int bDefectCount = 0;
+
+            // 获取A/B面缺陷数
+            if (FrHome.Instance.dic_Infos.TryGetValue(sn, out List<RootPanelInfoWithIP> infos))
+            {
+                foreach (var info in infos)
+                {
+                    int sideDefectCount = 0;
+                    foreach (var pcsInfo in info.rootInfo.PcsInfo.Values)
+                    {
+                        sideDefectCount += pcsInfo.DefectInfo?.Count ?? 0;
+                    }
+
+                    if (info.rootInfo.SideIndex == "A")
+                    {
+                        aDefectCount = sideDefectCount;
+                    }
+                    else if (info.rootInfo.SideIndex == "B")
+                    {
+                        bDefectCount = sideDefectCount;
+                    }
+                }
+            }
 
             if (FrHome.Instance.dic_Results.TryGetValue(sn, out List<string> res_lbl))
             {
@@ -289,7 +313,7 @@ namespace DeepSightAI
                 ok = res_lbl.Count(o => o.Contains("0"));
                 ng = res_lbl.Count(o => o.Contains("1"));
                 byPass = res_lbl.Count(o => o.Contains("2"));
-                msg = $"{msg}_图片一致_OK:{ok} NG:{ng} ByPass:{byPass}";
+                msg = $"{msg}_A面:{aDefectCount} B面:{bDefectCount}_OK:{ok} NG:{ng} ByPass:{byPass}";
             }
 
             row.Cells[1].Value = count;

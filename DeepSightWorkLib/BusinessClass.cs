@@ -69,6 +69,18 @@ namespace DeepSightWorkLib
         private readonly ConcurrentDictionary<string, DsCenterInfo> _dsCenterInfoDict = new ConcurrentDictionary<string, DsCenterInfo>();
 
         /// <summary>
+        /// 正在处理的SN+Side集合（防止重复检测）
+        /// Key格式："{SerialNumber}_{Side}"
+        /// Value：入队时间戳
+        /// </summary>
+        private readonly ConcurrentDictionary<string, DateTime> _processingSnSet = new ConcurrentDictionary<string, DateTime>();
+
+        /// <summary>
+        /// 缓存过期时间（分钟），超过此时间自动清理，防止内存泄漏
+        /// </summary>
+        private const int CACHE_EXPIRE_MINUTES = 30;
+
+        /// <summary>
         /// 游标索引
         /// </summary>
         public string Index { get; set; } = "";
@@ -199,6 +211,12 @@ namespace DeepSightWorkLib
             _defectTask = Task.Run(() => ThreadDefect(token), token);
             _returnAviTask = Task.Run(() => ThreadReturnAVI(token), token);
             _postProcessTask = Task.Run(() => ThreadPostProcess(token), token);
+
+            // ⭐ 关键修改点7：启动清理线程
+            _cleanupTask = Task.Factory.StartNew(() => ThreadCleanupProcessingCache(token),
+                token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+
+            LogTextHelper.Info("BusinessClass 初始化完成，所有线程已启动");
         }
 
         /// <summary>
@@ -280,6 +298,7 @@ namespace DeepSightWorkLib
         private Task _returnAviTask;
         private Task _imageLoadTask;
         private Task _postProcessTask;
+        private Task _cleanupTask;
 
 
 
@@ -410,11 +429,32 @@ namespace DeepSightWorkLib
                 if (resultInfo == null) continue;
 
                 string side = resultInfo.Side;
+                string snKey = $"{serialNumber}_{side}";
+
+                // ⭐ 关键修改点1：检查是否已在处理中
+                if (_processingSnSet.ContainsKey(snKey))
+                {
+                    LogTextHelper.Warn($"SN:{serialNumber} Side:{side} 正在处理中，跳过重复请求");
+                    continue;
+                }
+
+                // ⭐ 关键修改点2：标记为处理中
+                if (!_processingSnSet.TryAdd(snKey, DateTime.Now))
+                {
+                    LogTextHelper.Warn($"SN:{serialNumber} Side:{side} 添加到处理集合失败，可能已被其他线程处理");
+                    continue;
+                }
+
+                LogTextHelper.Info($"SN:{serialNumber} Side:{side} 已标记为处理中，当前处理集合大小：{_processingSnSet.Count}");
+
                 string minioIp = resultInfo.MinioIp;
                 string minioPort = resultInfo.MinioPort.ToString();
 
                 if (string.IsNullOrEmpty(minioIp) || resultInfo.MinioPort == 0)
                 {
+                    // ⭐ 关键修改点3：异常情况需要移除标记
+                    _processingSnSet.TryRemove(snKey, out _);
+
                     Thread.Sleep(500);
                     SystemEvent.SendTaskMsg(serialNumber, $"{side}面Minio格式错误");
                     SystemEvent.SendAlarmMsg($"SN:{serialNumber} {side}面 Minio格式错误;具体信息 MinioIP:{minioIp} MinioPort:{minioPort}");
@@ -422,12 +462,26 @@ namespace DeepSightWorkLib
                 }
 
                 string resultPath = resultInfo.ResultPath;
-                if (string.IsNullOrEmpty(resultPath)) continue;
+                if (string.IsNullOrEmpty(resultPath))
+                {
+                    // ⭐ 关键修改点4：异常情况需要移除标记
+                    _processingSnSet.TryRemove(snKey, out _);
+                    continue;
+                }
 
-                ParseMinioPath(resultPath, out string path, out string result);
-                LogTextHelper.Info($"SN:{serialNumber} 解析Minio路径完成");
-                ReadJsonByMinio(minioIp, minioPort, dataItem.Key, result, serialNumber, side, path);
-                LogTextHelper.Info($"SN:{serialNumber} 通过Minio读取Json完成");
+                try
+                {
+                    ParseMinioPath(resultPath, out string path, out string result);
+                    LogTextHelper.Info($"SN:{serialNumber} 解析Minio路径完成");
+                    ReadJsonByMinio(minioIp, minioPort, dataItem.Key, result, serialNumber, side, path);
+                    LogTextHelper.Info($"SN:{serialNumber} 通过Minio读取Json完成");
+                }
+                catch (Exception ex)
+                {
+                    // ⭐ 关键修改点5：异常时移除标记
+                    _processingSnSet.TryRemove(snKey, out _);
+                    LogTextHelper.Error($"SN:{serialNumber} Side:{side} 处理异常: {ex}");
+                }
             }
         }
 
@@ -512,7 +566,7 @@ namespace DeepSightWorkLib
                     {
                         try
                         {
-                            SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面开始AI检测");
+                            SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面开始AI检测(缺陷数:{info.Mats.Count})");
 
                             //调用算法处理
                             LogTextHelper.Info($"准备DefectMethod，SN:{info.SN}，图片数量:{info.Mats.Count}");
@@ -625,7 +679,7 @@ namespace DeepSightWorkLib
                 {
                     SystemEvent.SendTaskMsg(sn);
                 }
-                LogTextHelper.Info($"{sn} 开始将json转为vbinfo");
+                LogTextHelper.Info($"{sn} {side} 开始将json转为vbinfo");
                 RootVBInfo vbInfo = PanelJsonToVBInfo(ip, port, head, obj, ref defectIndex, ref pcsList,out bool isByPass);
 
                 //考虑用Model方式
@@ -691,6 +745,7 @@ namespace DeepSightWorkLib
                 else
                 {
                     isByPass = true;
+                    LogTextHelper.Warn($"料号 {info.ProductSerial} 未配置，使用默认方案，标记为ByPass");
                     var defaultSolutionFlow = SolConfig.solus.FirstOrDefault(o => o.ProductSerial.ToUpper() == "DEFAULT");
                     if (defaultSolutionFlow != null)
                     {
@@ -916,6 +971,7 @@ namespace DeepSightWorkLib
                 // 异步保存到数据库
                 EnqueuePostProcess(vBModel, "", false);
                 LogTextHelper.Info($"{vBModel.SN},图片数量为0，跳过vb检测流程");
+                SystemEvent.SendTaskMsg(vBModel.SN, $"{vBModel.Side}面缺陷数为0，跳过AI检测");
                 return true;
             }
 
@@ -924,6 +980,7 @@ namespace DeepSightWorkLib
                 // 异步保存到数据库
                 EnqueuePostProcess(vBModel, "", false);
                 LogTextHelper.Info($"{vBModel.SN},图片数量大于{SysConfig.MaxDefectCount}，跳过vb检测流程");
+                SystemEvent.SendTaskMsg(vBModel.SN, $"{vBModel.Side}面缺陷数({vBModel.Mats.Count})>{SysConfig.MaxDefectCount}，跳过AI检测");
                 return true;
             }
 
@@ -959,11 +1016,13 @@ namespace DeepSightWorkLib
                 if (obj == null)
                 {
                     LogTextHelper.Error($"算法返回结果反序列化失败 for Side {panelInfo.SideIndex}，原始消息: {msg}");
+                    SystemEvent.SendTaskMsg(vBModel.SN, $"{vBModel.Side}面算法返回结果反序列化失败");
                     return false;
                 }
                 string code = obj.Code.ToString();
                 string message = obj.Message.ToString();
 
+                LogTextHelper.Info($"{vBModel.SN} 算法返回码: {code}, 消息: {message}");
 
                 // 快速构建返回结果（用于界面显示）
                 if (code == "200")
@@ -1032,16 +1091,26 @@ namespace DeepSightWorkLib
                         }
                         pcsResult.vb_List.Add(vBRcv);
                     }
+
+                    // 如果是ByPass，添加状态消息
+                    if (vBModel.isByPass)
+                    {
+                        LogTextHelper.Info($"{vBModel.SN} {vBModel.Side}面使用默认方案，结果标记为ByPass");
+                    }
+
                     vbJson = msg;
                     result = true;
                 }
                 else if (code == "600")
                 {
+                    LogTextHelper.Info($"{vBModel.SN} 算法返回码600: {message}");
+                    SystemEvent.SendTaskMsg(vBModel.SN, $"{vBModel.Side}面算法返回(Code:600, {message})");
                     result = true;
                 }
                 else
                 {
-                    LogTextHelper.Warn($"算法调用失败 for Side {panelInfo.SideIndex}，返回码: {code}，返回信息：{message}"); // <-- 增加此行日志
+                    LogTextHelper.Warn($"算法调用失败 for Side {panelInfo.SideIndex}，返回码: {code}，返回信息：{message}");
+                    SystemEvent.SendTaskMsg(vBModel.SN, $"{vBModel.Side}面算法调用失败(Code:{code}, {message})");
                     result = false;
                 }
             }
@@ -1807,9 +1876,8 @@ namespace DeepSightWorkLib
         {
             try
             {
-                string result = "";
                 SystemEvent.SendTaskMsg(info.Item2, $"{info.Item3}面已完成");
-                if (HttpDb.HttpPostMethod(URL, info.Item4, 1, out result))
+                if (HttpDb.HttpPostMethod(URL, info.Item4, 1, out string result))
                 {
                     //返回更新界面信息
                     SystemEvent.SendTaskMsg(info.Item2, $"{info.Item3}面已完成");
@@ -1862,6 +1930,94 @@ namespace DeepSightWorkLib
         }
 
         /// <summary>
+        /// 定期清理过期的处理标记（防止内存泄漏）
+        /// </summary>
+        private void ThreadCleanupProcessingCache(CancellationToken token)
+        {
+            LogTextHelper.Info("处理缓存清理线程已启动");
+
+            while (!token.IsCancellationRequested)
+            {
+                try
+                {
+                    Thread.Sleep(60000); // 每分钟清理一次
+
+                    if (token.IsCancellationRequested) break;
+
+                    var now = DateTime.Now;
+                    var expiredKeys = _processingSnSet
+                        .Where(kvp => (now - kvp.Value).TotalMinutes > CACHE_EXPIRE_MINUTES)
+                        .Select(kvp => kvp.Key)
+                        .ToList();
+
+                    foreach (var key in expiredKeys)
+                    {
+                        if (_processingSnSet.TryRemove(key, out DateTime addTime))
+                        {
+                            var duration = now - addTime;
+                            LogTextHelper.Warn($"清理过期处理标记：{key}，已超时 {duration.TotalMinutes:F1} 分钟");
+                        }
+                    }
+
+                    if (expiredKeys.Count > 0)
+                    {
+                        LogTextHelper.Info($"清理了 {expiredKeys.Count} 个过期处理标记，当前集合大小：{_processingSnSet.Count}");
+                    }
+
+                    // 输出统计信息
+                    LogProcessingStatistics();
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error($"清理处理缓存异常: {ex}");
+                }
+            }
+
+            LogTextHelper.Info("处理缓存清理线程已停止");
+        }
+
+        /// <summary>
+        /// 定期输出处理统计信息
+        /// </summary>
+        private void LogProcessingStatistics()
+        {
+            try
+            {
+                LogTextHelper.Info($"处理统计 - 处理中:{_processingSnSet.Count}, " +
+                                  $"图片加载队列:{_imageLoadQueue.Count}, " +
+                                  $"推理队列:{_aviQueue.Count}, " +
+                                  $"后处理队列:{_inferencePostProcessQueue.Count}, " +
+                                  $"结果队列:{_aiResultQueue.Count}");
+
+                // 告警：如果处理集合持续增长超过阈值
+                if (_processingSnSet.Count > 100)
+                {
+                    LogTextHelper.Warn($"⚠️ 处理集合过大({_processingSnSet.Count})，可能存在处理阻塞或标记未清理！");
+
+                    // 输出前10个最老的处理项
+                    var oldestItems = _processingSnSet
+                        .OrderBy(kvp => kvp.Value)
+                        .Take(10)
+                        .ToList();
+
+                    foreach (var item in oldestItems)
+                    {
+                        var duration = DateTime.Now - item.Value;
+                        LogTextHelper.Warn($"  - {item.Key}: 已处理 {duration.TotalMinutes:F1} 分钟");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"输出统计信息异常: {ex}");
+            }
+        }
+
+        /// <summary>
         /// 处理推理结果（从 DefectMethod 中提取的后处理逻辑）
         /// </summary>
         private void ProcessInferenceResult(InferenceResultModel resultModel)
@@ -1870,8 +2026,12 @@ namespace DeepSightWorkLib
             string msg = resultModel.RawJsonResult;
             RootPanelInfo panelInfo = vBModel.panelInfo;
 
-            // 如果不需要处理（例如图片数量为0或超过最大值）
-            if (!resultModel.NeedsProcessing)
+            string snKey = $"{vBModel.SN}_{vBModel.Side}";
+
+            try
+            {
+                // 如果不需要处理（例如图片数量为0或超过最大值）
+                if (!resultModel.NeedsProcessing)
             {
                 if (vBModel.Mats.Count == 0)
                 {
@@ -1978,6 +2138,20 @@ namespace DeepSightWorkLib
             {
                 LogTextHelper.Warn($"算法调用失败 for Side {panelInfo.SideIndex}，返回码: {code}，返回信息：{message}");
             }
+            }
+            finally
+            {
+                // ⭐ 关键修改点6：无论成功失败，都要移除标记
+                if (_processingSnSet.TryRemove(snKey, out DateTime addTime))
+                {
+                    var duration = DateTime.Now - addTime;
+                    LogTextHelper.Info($"SN:{vBModel.SN} Side:{vBModel.Side} 处理完成，耗时：{duration.TotalSeconds:F2}秒，已从处理集合移除");
+                }
+                else
+                {
+                    LogTextHelper.Warn($"SN:{vBModel.SN} Side:{vBModel.Side} 未在处理集合中找到，可能已被清理或未正确添加");
+                }
+            }
         }
 
         /// <summary>
@@ -2007,8 +2181,15 @@ namespace DeepSightWorkLib
                     _cancellationTokenSource.Cancel();
                     try
                     {
-                        // 等待所有任务完成，包括 _imageLoadTask 和 _postProcessTask
-                        Task.WaitAll(new[] { _readAviTask, _imageLoadTask, _defectTask, _returnAviTask, _postProcessTask }, 5000);
+                        // ⭐ 关键修改点8：等待所有任务完成，包括清理线程
+                        Task.WaitAll(new[] {
+                            _readAviTask,
+                            _imageLoadTask,
+                            _defectTask,
+                            _returnAviTask,
+                            _postProcessTask,
+                            _cleanupTask  // 新增
+                        }, 5000);
                     }
                     catch (AggregateException)
                     {
@@ -2049,6 +2230,10 @@ namespace DeepSightWorkLib
                     // 仅清空队列，不需要释放资源
                 }
                 LogTextHelper.Info("后处理队列已清空");
+
+                // ⭐ 关键修改点9：清理处理集合
+                _processingSnSet.Clear();
+                LogTextHelper.Info($"已清理处理集合，释放资源完成");
             }
             catch (Exception ex)
             {

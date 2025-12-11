@@ -1,4 +1,5 @@
 ﻿using DeepSightModel;
+using DeepSightTool;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,7 +39,8 @@ namespace DeepSightEvent
         /// <param name="task"></param>
         public static void SendTaskMsg(object task, string msg = "")
         {
-            EventSendTaskToUI?.Invoke(task, msg);
+            EventSendTaskToUI?.Invoke(task, msg);  
+            LogTextHelper.Info($"{task} {msg}");
         }
 
         public static event SendException EventSendExceptionToUI;

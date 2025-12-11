@@ -53,6 +53,10 @@
       <Project>{C3032123-71AF-4B9F-AAF1-5FDBB73274B0}</Project>
       <Name>DeepSightModel</Name>
     </ProjectReference>
+    <ProjectReference Include="..\DeepSightTool\DeepSightTool.csproj">
+      <Project>{57CA0C29-06A8-4ACC-B6EB-7BF1BF6CF1B3}</Project>
+      <Name>DeepSightTool</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
