@@ -71,12 +71,11 @@ namespace DeepSightAI
                 {
                     List<string> result = new List<string>();
                     result.AddRange(msg);
-                    FrHome.Instance.dic_Results.Add(sn, result);
+                    FrHome.Instance.dic_Results.TryAdd(sn, result);
                 }
                 else
                 {
-                    List<string> result = null;
-                    FrHome.Instance.dic_Results.TryGetValue(sn, out result);
+                    FrHome.Instance.dic_Results.TryGetValue(sn, out List<string> result);
                     result.AddRange(msg);
                 }
                 //细节信息
@@ -88,16 +87,17 @@ namespace DeepSightAI
                 }
                 else
                 {
-                    List<string> result = null;
-                    FrHome.Instance.dic_Details.TryGetValue(sn, out result);
+                    FrHome.Instance.dic_Details.TryGetValue(sn, out List<string> result);
                     result.AddRange(details);
                 }
 
                 //PCS缺陷坐标
                 if (!FrHome.Instance.dic_PcsResult.ContainsKey(sn))
                 {
-                    PcsResult result = new PcsResult();
-                    result.vb_List = new List<VBRcvInfp>();
+                    PcsResult result = new PcsResult
+                    {
+                        vb_List = new List<VBRcvInfp>()
+                    };
                     if (pcsResult?.vb_List != null)
                     {
                         result.vb_List.AddRange(pcsResult.vb_List);
@@ -106,8 +106,7 @@ namespace DeepSightAI
                 }
                 else
                 {
-                    PcsResult result;
-                    FrHome.Instance.dic_PcsResult.TryGetValue(sn, out result);
+                    FrHome.Instance.dic_PcsResult.TryGetValue(sn, out PcsResult result);
                     if (pcsResult?.vb_List != null)
                     {
                         result.vb_List.AddRange(pcsResult.vb_List);
@@ -134,8 +133,7 @@ namespace DeepSightAI
                 }
                 else
                 {
-                    List<RootPanelInfoWithIP> resInfo = null;
-                    FrHome.Instance.dic_Infos.TryGetValue(sn, out resInfo);
+                    FrHome.Instance.dic_Infos.TryGetValue(sn, out List<RootPanelInfoWithIP> resInfo);
                     resInfo.Add(info);
                     //客户要求先屏蔽
                     //AddOrUpdateMachineData(info.rootInfo.StationName, info.rootInfo.ProductSerial, $"{info.rootInfo.LotId}_{info.rootInfo.LotBatch}");
@@ -174,95 +172,177 @@ namespace DeepSightAI
         public static object Locker = new object();
         private void SystemEvent_EventSendTaskToUI(object task, string msg = "")
         {
+            if (task == null) return;
+
             try
             {
+                string sn = task.ToString();
+
+                // 确保在 UI 线程上执行
+                if (FrHome.Instance.dataGridViewData.InvokeRequired)
+                {
+                    FrHome.Instance.dataGridViewData.Invoke(new MethodInvoker(() => SystemEvent_EventSendTaskToUI(task, msg)));
+                    return;
+                }
+
                 lock (Locker)
                 {
-                    if (msg == "")
+                    if (string.IsNullOrEmpty(msg))
                     {
-                        FrHome.Instance.dataGridViewData.Invoke(new MethodInvoker(() =>
-                        {
-                            FrHome.Instance.dataGridViewData.Rows.Insert(0, new List<string> { task.ToString(), "0", "0", "排队中" }.ToArray());
-                            FrHome.Instance.dataGridViewData.Rows[0].DefaultCellStyle.ForeColor = Color.Yellow;
-                        }));
+                        // 添加新任务
+                        AddNewTaskRow(sn);
                     }
                     else
                     {
-                        for (int i = 0; i < FrHome.Instance.dataGridViewData.Rows.Count; i++)
-                        {
-                            string sn = FrHome.Instance.dataGridViewData.Rows[i].Cells[0].Value.ToString();
-                            if (sn == task.ToString())
-                            {
-                                //FrHome.Instance.dataGridViewData.Rows[i].Cells[1].Value = msg;
-                                if (msg.Contains("已完成"))
-                                {
-                                    FrHome.Instance.dataGridViewData.Rows[i].DefaultCellStyle.ForeColor = Color.Green;
-                                    //0808增加需求
-                                    if (msg.Contains("B面"))
-                                    {
-                                        List<string> res_lbl = null;
-                                        int Count = 0;
-                                        int OK = 0;
-                                        int NG = 0;
-                                        int ByPass = 0;
-                                        if (FrHome.Instance.dic_Results.TryGetValue(sn, out res_lbl))
-                                        {
-                                            Count = res_lbl.Count();
-                                            OK = res_lbl.Where(o => o.Contains("0")).Count();
-                                            NG = res_lbl.Where(o => o.Contains("1")).Count();
-                                            ByPass = res_lbl.Where(o => o.Contains("2")).Count();
-                                            msg = $"{msg}_{"图片一致"}_OK:{OK} NG:{NG} ByPass{ByPass}";
-                                        }
-                                        FrHome.Instance.dataGridViewData.Rows[i].Cells[1].Value = Count;
-                                        FrHome.Instance.dataGridViewData.Rows[i].Cells[2].Value = Count;
-                                        FrHome.Instance.dataGridViewData.Rows[i].Cells[3].Value = msg;
-                                        FrHome.Instance.str_SN = sn;
-                                        FrHome.Instance.dataGridViewData_CellClick(null, null);
-                                    }
-                                }
-                                else if (msg.Contains("处理"))
-                                {
-                                    FrHome.Instance.dataGridViewData.Rows[i].Cells[3].Value = msg;
-                                    FrHome.Instance.dataGridViewData.Rows[i].DefaultCellStyle.ForeColor = Color.Blue;
-                                }
-                                else
-                                {
-                                    FrHome.Instance.dataGridViewData.Rows[i].Cells[3].Value = msg;
-                                    FrHome.Instance.dataGridViewData.Rows[i].DefaultCellStyle.ForeColor = Color.Red;
-                                }
-                            }
-                        }
+                        // 更新现有任务状态
+                        UpdateTaskRow(sn, msg);
                     }
 
-                    if (FrHome.Instance.dataGridViewData.Rows.Count > 27)
-                    {
-                        //保证有8行已经处理的给用户查看 不然每次用户看到的都是正在处理的数据  看不到已完成的数据
-                        if (FrHome.Instance.dataGridViewData.Rows[FrHome.Instance.dataGridViewData.Rows.Count - 8].Cells[3].Value.ToString().Contains("已完成"))
-                        {
-                            string SN = FrHome.Instance.dataGridViewData.Rows[FrHome.Instance.dataGridViewData.Rows.Count - 1].Cells[0].Value?.ToString() ?? "空值";
-                            FrHome.Instance.dataGridViewData.Invoke(new MethodInvoker(() =>
-                            {
-                                FrHome.Instance.dataGridViewData.Rows.RemoveAt(FrHome.Instance.dataGridViewData.Rows.Count - 1);
-                            }));
-                            //移除显示信息
-                            FrHome.Instance.dic_Infos.Remove(SN);
-                            FrHome.Instance.dic_Paths.Remove(SN);
-                            FrHome.Instance.dic_Results.Remove(SN);
-                            FrHome.Instance.dic_PcsResult.Remove(SN);
-                            FrHome.Instance.dic_Details.Remove(SN);
-                        }
-                        Machine.master.workClass.IsAllow = false;
-                    }
-                    else
-                    {
-                        Machine.master.workClass.IsAllow = true;
-                    }
+                    // 清理超出限制的行
+                    CleanupExcessRows();
                 }
             }
             catch (Exception ex)
             {
-                LogTextHelper.Error(ex.ToString());
+                LogTextHelper.Error($"SystemEvent_EventSendTaskToUI 异常: {ex}");
             }
+        }
+
+        /// <summary>
+        /// 添加新任务行
+        /// </summary>
+        private void AddNewTaskRow(string sn)
+        {
+            FrHome.Instance.dataGridViewData.Rows.Insert(0, new object[] { sn, "0", "0", "排队中" });
+            FrHome.Instance.dataGridViewData.Rows[0].DefaultCellStyle.ForeColor = Color.Yellow;
+        }
+
+        /// <summary>
+        /// 更新任务行状态
+        /// </summary>
+        private void UpdateTaskRow(string sn, string msg)
+        {
+            // 查找对应的行
+            DataGridViewRow targetRow = null;
+            foreach (DataGridViewRow row in FrHome.Instance.dataGridViewData.Rows)
+            {
+                if (row.Cells[0].Value?.ToString() == sn)
+                {
+                    targetRow = row;
+                    break;
+                }
+            }
+
+            if (targetRow == null) return;
+
+            // 根据消息内容设置颜色和更新数据
+            Color statusColor = GetStatusColor(msg);
+            targetRow.DefaultCellStyle.ForeColor = statusColor;
+
+            // 处理 B 面完成的特殊逻辑
+            if (msg.Contains("已完成") && msg.Contains("B面"))
+            {
+                UpdateBSideCompletedRow(targetRow, sn, ref msg);
+            }
+            else
+            {
+                targetRow.Cells[3].Value = msg;
+            }
+        }
+
+        /// <summary>
+        /// 根据消息内容获取状态颜色
+        /// </summary>
+        private Color GetStatusColor(string msg)
+        {
+            if (msg.Contains("已完成"))
+                return Color.Green;
+            else if (msg.Contains("正在读取数据") || msg.Contains("正在加载图片"))
+                return Color.Orange;
+            else if (msg.Contains("图片加载完成"))
+                return Color.DarkOrange;
+            else if (msg.Contains("开始AI检测") || msg.Contains("处理中"))
+                return Color.White;
+            else if (msg.Contains("AI检测完成"))
+                return Color.DarkCyan;
+            else if (msg.Contains("正在回写结果"))
+                return Color.Purple;
+            else if (msg.Contains("错误") || msg.Contains("失败") || msg.Contains("异常"))
+                return Color.Red;
+            else
+                return Color.Gray;
+        }
+
+        /// <summary>
+        /// 更新 B 面完成的行数据
+        /// </summary>
+        private void UpdateBSideCompletedRow(DataGridViewRow row, string sn, ref string msg)
+        {
+            int count = 0;
+            int ok = 0;
+            int ng = 0;
+            int byPass = 0;
+
+            if (FrHome.Instance.dic_Results.TryGetValue(sn, out List<string> res_lbl))
+            {
+                count = res_lbl.Count;
+                ok = res_lbl.Count(o => o.Contains("0"));
+                ng = res_lbl.Count(o => o.Contains("1"));
+                byPass = res_lbl.Count(o => o.Contains("2"));
+                msg = $"{msg}_图片一致_OK:{ok} NG:{ng} ByPass:{byPass}";
+            }
+
+            row.Cells[1].Value = count;
+            row.Cells[2].Value = count;
+            row.Cells[3].Value = msg;
+            FrHome.Instance.str_SN = sn;
+            FrHome.Instance.dataGridViewData_CellClick(null, null);
+        }
+
+        /// <summary>
+        /// 清理超出限制的行
+        /// </summary>
+        private void CleanupExcessRows()
+        {
+            const int MAX_ROWS = 27;
+            const int KEEP_COMPLETED_ROWS = 8;
+
+            if (FrHome.Instance.dataGridViewData.Rows.Count > MAX_ROWS)
+            {
+                int checkIndex = FrHome.Instance.dataGridViewData.Rows.Count - KEEP_COMPLETED_ROWS;
+                if (checkIndex >= 0 && checkIndex < FrHome.Instance.dataGridViewData.Rows.Count)
+                {
+                    string status = FrHome.Instance.dataGridViewData.Rows[checkIndex].Cells[3].Value?.ToString() ?? "";
+                    if (status.Contains("已完成"))
+                    {
+                        int lastIndex = FrHome.Instance.dataGridViewData.Rows.Count - 1;
+                        string snToRemove = FrHome.Instance.dataGridViewData.Rows[lastIndex].Cells[0].Value?.ToString() ?? "空值";
+
+                        // 移除行
+                        FrHome.Instance.dataGridViewData.Rows.RemoveAt(lastIndex);
+
+                        // 清理相关数据
+                        CleanupTaskData(snToRemove);
+                    }
+                }
+                Machine.master.workClass.IsAllow = false;
+            }
+            else
+            {
+                Machine.master.workClass.IsAllow = true;
+            }
+        }
+
+        /// <summary>
+        /// 清理任务相关数据
+        /// </summary>
+        private void CleanupTaskData(string sn)
+        {
+            FrHome.Instance.dic_Infos.Remove(sn);
+            FrHome.Instance.dic_Paths.Remove(sn);
+            FrHome.Instance.dic_Results.TryRemove(sn, out _);
+            FrHome.Instance.dic_PcsResult.Remove(sn);
+            FrHome.Instance.dic_Details.Remove(sn);
         }
         internal void LoadMethod()
         {

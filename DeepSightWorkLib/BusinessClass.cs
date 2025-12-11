@@ -512,12 +512,13 @@ namespace DeepSightWorkLib
                     {
                         try
                         {
-                            SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面处理中");
+                            SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面开始AI检测");
 
                             //调用算法处理
                             LogTextHelper.Info($"准备DefectMethod，SN:{info.SN}，图片数量:{info.Mats.Count}");
                             if (DefectMethod(info, out List<string> msg, out List<string> details, out PcsResult pcsResult, out string vbJson))
                             {
+                                SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面AI检测完成");
                                 SystemEvent.SendResultInfo(info.SN, msg, details, pcsResult);
                                 if (TestFlag)
                                 {
@@ -526,6 +527,7 @@ namespace DeepSightWorkLib
                                 }
                                 else
                                 {
+                                    SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面正在回写结果");
                                     RootAIResult data = new RootAIResult
                                     {
                                         DbName = "filter_time_to_airesults",
@@ -609,6 +611,7 @@ namespace DeepSightWorkLib
             try
             {
                 LogTextHelper.Info($"{sn} 准备ReadJsonByMinio");
+                SystemEvent.SendTaskMsg(sn, $"{side}面正在读取数据");
                 Minio.BuildClient(ip, port);
                 string json = Minio.ReadJsonSync("deepiresults", path, ip);
                 var obj = JsonConvert.DeserializeObject<RootPanelInfo>(json);
@@ -1720,6 +1723,7 @@ namespace DeepSightWorkLib
                     try
                     {
                         LogTextHelper.Info($"开始加载图片，SN:{loadModel.Model.SN}，数量：{loadModel.ImageKeys.Count}");
+                        SystemEvent.SendTaskMsg(loadModel.Model.SN, $"{loadModel.Model.Side}面正在加载图片");
 
                         // 并行加载图片提高效率
                         loadModel.Model.Mats = loadModel.ImageKeys
@@ -1752,6 +1756,7 @@ namespace DeepSightWorkLib
                         // 发送 PanelInfo 事件
                         SystemEvent.SendPanelInfo(loadModel.Model.SN, loadModel.RootPanelInfo);
 
+                        SystemEvent.SendTaskMsg(loadModel.Model.SN, $"{loadModel.Model.Side}面图片加载完成");
                         LogTextHelper.Info($"图片加载完成，SN:{loadModel.Model.SN}，实际加载:{loadModel.Model.Mats.Count}张，入队列_aviQueue成功");
                     }
                     catch (Exception ex)

@@ -22,7 +22,7 @@ namespace DeepSightAI
 
 
         public Dictionary<string, List<RootPanelInfoWithIP>> dic_Infos = new Dictionary<string, List<RootPanelInfoWithIP>>();
-        public Dictionary<string, List<string>> dic_Results = new Dictionary<string, List<string>>();
+        public ConcurrentDictionary<string, List<string>> dic_Results = new ConcurrentDictionary<string, List<string>>();
         public Dictionary<string, List<string>> dic_Details = new Dictionary<string, List<string>>();
         public Dictionary<string, PcsResult> dic_PcsResult = new Dictionary<string, PcsResult>();
         public Dictionary<string, List<string>> dic_Paths = new Dictionary<string, List<string>>();

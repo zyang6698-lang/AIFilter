@@ -54,7 +54,7 @@ namespace DeepSightModel
         /// <summary>
         /// 最大缺陷数
         /// </summary>
-        public int MaxDefectCount { get; set; } = 200;
+        public int MaxDefectCount { get; set; } 
 
         public ConfigurationClass()
         {
