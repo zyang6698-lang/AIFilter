@@ -78,10 +78,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AviResponseModel.cs" />
     <Compile Include="ConfigurationClass.cs" />
     <Compile Include="DisPlayInfo.cs" />
     <Compile Include="DsCenterInfo.cs" />
     <Compile Include="ImageDataInfo.cs" />
+    <Compile Include="InferenceResultModel.cs" />
     <Compile Include="PanelInfo.cs" />
     <Compile Include="ProductModeConfig.cs" />
     <Compile Include="ProductState.cs" />

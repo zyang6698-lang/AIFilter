@@ -1215,6 +1215,14 @@ namespace DeepSightDB
                 try
                 {
                     var panelRecords = new List<PanelDataRecord>();
+
+                    // 如果 lotNumber 为空，直接返回空列表
+                    if (string.IsNullOrWhiteSpace(lotNumber))
+                    {
+                        tcs.SetResult(panelRecords);
+                        return;
+                    }
+
                     var sqlBuilder = new System.Text.StringBuilder("SELECT Id, MachineId, SerialNumber, LotNumber, ProductSerial, DetectionDate, PathIndex, AviCreationTime FROM Panels WHERE LotNumber = @LotNumber");
 
                     if (!string.IsNullOrWhiteSpace(machineId))

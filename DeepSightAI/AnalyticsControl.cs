@@ -1,6 +1,7 @@
 ﻿using DeepSightDB;
 using DeepSightModel;
 using DeepSightTool;
+using DeepSightWorkLib;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -102,7 +103,6 @@ namespace DeepSightAI
 
         private void btnTest_Click(object sender, EventArgs e)
         {
-            Machine.master.workClass.TestDatabaseWrite();
 
         }
     }
