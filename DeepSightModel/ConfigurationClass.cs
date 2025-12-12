@@ -36,10 +36,6 @@ namespace DeepSightModel
         /// </summary>
         public string ServerPort { get; set; }
         /// <summary>
-        /// 存储游标
-        /// </summary>
-        public string Index { get; set; }
-        /// <summary>
         /// minioIP
         /// </summary>
         public string endpoint_address { get; set; }
@@ -87,7 +83,6 @@ namespace DeepSightModel
                     ServerIP = "http://",
                     ServerPort = "2000",
                     LogDay = 7,
-                    Index = "20250514111732556",
                     endpoint_address = "127.0.0.1",
                     MinioPort = "9102",
                     DsCenterUrl = "http://dp55.local:82/api/zmq/dataImport",

@@ -41,7 +41,7 @@ namespace DeepSightAI
         }
         public void InitWork()
         {
-            workClass.InitWork($"{Machine.sysConfig.ServerIP}:{Machine.sysConfig.ServerPort}", Machine.sysConfig.Index);
+            workClass.InitWork($"{Machine.sysConfig.ServerIP}:{Machine.sysConfig.ServerPort}");
         }
         public async Task<MemoryStream> ReadImageToMemoryAsync(string bucketName, string objectName)
         {

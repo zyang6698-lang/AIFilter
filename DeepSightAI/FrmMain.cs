@@ -127,8 +127,10 @@ namespace DeepSightAI
             {
                 if (!FrHome.Instance.dic_Infos.ContainsKey(sn))
                 {
-                    List<RootPanelInfoWithIP> resInfo = new List<RootPanelInfoWithIP>();
-                    resInfo.Add(info);
+                    List<RootPanelInfoWithIP> resInfo = new List<RootPanelInfoWithIP>
+                    {
+                        info
+                    };
                     FrHome.Instance.dic_Infos.Add(sn, resInfo);
                 }
                 else
@@ -138,7 +140,6 @@ namespace DeepSightAI
                     //客户要求先屏蔽
                     //AddOrUpdateMachineData(info.rootInfo.StationName, info.rootInfo.ProductSerial, $"{info.rootInfo.LotId}_{info.rootInfo.LotBatch}");
                 }
-                Machine.sysConfig.Index = Machine.master.workClass.Index;
                 Machine.config_class.Save(Machine.sysConfig);
             }
             catch (Exception ex)
@@ -421,7 +422,6 @@ namespace DeepSightAI
             }
             try
             {
-                Machine.sysConfig.Index = Machine.master.workClass.Index;
                 Machine.config_class.Save(Machine.sysConfig);
                 Application.DoEvents();
                 Thread.Sleep(100);
