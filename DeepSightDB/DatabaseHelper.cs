@@ -19,6 +19,10 @@ namespace DeepSightDB
         private readonly Thread _dbThread;
         private bool _disposed = false;
 
+        // 预编译的 SQL 命令（用于提高性能）
+        private NpgsqlCommand _upsertPanelCmd;
+        private NpgsqlCommand _upsertPanelSideCmd;
+
         public DatabaseHelper()
         {
             _dbThread = new Thread(ProcessQueue)
@@ -29,13 +33,60 @@ namespace DeepSightDB
             _dbThread.Start();
         }
 
+        /// <summary>
+        /// 初始化预编译命令
+        /// </summary>
+        private void InitializePreparedCommands(NpgsqlConnection connection)
+        {
+            // 预编译 Panel UPSERT 命令
+            _upsertPanelCmd = new NpgsqlCommand(
+                @"INSERT INTO Panels (MachineId, SerialNumber, LotNumber, DetectionDate, ProductSerial, PathIndex, AviCreationTime)
+                  VALUES (@MachineId, @SN, @Lot, @Date, @ProductSerial, @PathIndex, @AviCreationTime)
+                  ON CONFLICT (SerialNumber) DO UPDATE SET DetectionDate = EXCLUDED.DetectionDate
+                  RETURNING Id",
+                connection);
+            _upsertPanelCmd.Parameters.Add(new NpgsqlParameter("@MachineId", NpgsqlTypes.NpgsqlDbType.Text));
+            _upsertPanelCmd.Parameters.Add(new NpgsqlParameter("@SN", NpgsqlTypes.NpgsqlDbType.Text));
+            _upsertPanelCmd.Parameters.Add(new NpgsqlParameter("@Lot", NpgsqlTypes.NpgsqlDbType.Text));
+            _upsertPanelCmd.Parameters.Add(new NpgsqlParameter("@Date", NpgsqlTypes.NpgsqlDbType.Timestamp));
+            _upsertPanelCmd.Parameters.Add(new NpgsqlParameter("@ProductSerial", NpgsqlTypes.NpgsqlDbType.Text) { IsNullable = true });
+            _upsertPanelCmd.Parameters.Add(new NpgsqlParameter("@PathIndex", NpgsqlTypes.NpgsqlDbType.Text) { IsNullable = true });
+            _upsertPanelCmd.Parameters.Add(new NpgsqlParameter("@AviCreationTime", NpgsqlTypes.NpgsqlDbType.Timestamp) { IsNullable = true });
+            _upsertPanelCmd.Prepare();
+
+            // 预编译 PanelSide UPSERT 命令
+            _upsertPanelSideCmd = new NpgsqlCommand(
+                @"INSERT INTO PanelSides (PanelId, Side, HeatPoints, AviState, AiState, VvsState, VrsState, FinalState)
+                  VALUES (@PanelId, @Side, @HeatPoints, @AviState, @AiState, @VvsState, @VrsState, @FinalState)
+                  ON CONFLICT (PanelId, Side) DO UPDATE SET
+                  HeatPoints = EXCLUDED.HeatPoints,
+                  AviState = EXCLUDED.AviState,
+                  AiState = EXCLUDED.AiState,
+                  VvsState = EXCLUDED.VvsState,
+                  VrsState = EXCLUDED.VrsState,
+                  FinalState = EXCLUDED.FinalState",
+                connection);
+            _upsertPanelSideCmd.Parameters.Add(new NpgsqlParameter("@PanelId", NpgsqlTypes.NpgsqlDbType.Bigint));
+            _upsertPanelSideCmd.Parameters.Add(new NpgsqlParameter("@Side", NpgsqlTypes.NpgsqlDbType.Text));
+            _upsertPanelSideCmd.Parameters.Add(new NpgsqlParameter("@HeatPoints", NpgsqlTypes.NpgsqlDbType.Text));
+            _upsertPanelSideCmd.Parameters.Add(new NpgsqlParameter("@AviState", NpgsqlTypes.NpgsqlDbType.Integer));
+            _upsertPanelSideCmd.Parameters.Add(new NpgsqlParameter("@AiState", NpgsqlTypes.NpgsqlDbType.Integer));
+            _upsertPanelSideCmd.Parameters.Add(new NpgsqlParameter("@VvsState", NpgsqlTypes.NpgsqlDbType.Integer));
+            _upsertPanelSideCmd.Parameters.Add(new NpgsqlParameter("@VrsState", NpgsqlTypes.NpgsqlDbType.Integer));
+            _upsertPanelSideCmd.Parameters.Add(new NpgsqlParameter("@FinalState", NpgsqlTypes.NpgsqlDbType.Integer));
+            _upsertPanelSideCmd.Prepare();
+
+            LogTextHelper.Info("PostgreSQL 预编译命令初始化完成");
+        }
+
         private void ProcessQueue()
         {
             using (var connection = new NpgsqlConnection(connectionString))
             {
                 connection.Open();
 
-                // PostgreSQL 不需要 PRAGMA 设置，连接池和性能由 Npgsql 自动管理
+                // 初始化预编译命令
+                InitializePreparedCommands(connection);
 
                 foreach (var action in _dbQueue.GetConsumingEnumerable())
                 {
@@ -50,6 +101,10 @@ namespace DeepSightDB
                         LogTextHelper.Error($"Exception in database queue: {ex}");
                     }
                 }
+
+                // 清理预编译命令
+                _upsertPanelCmd?.Dispose();
+                _upsertPanelSideCmd?.Dispose();
             }
         }
 
@@ -62,6 +117,165 @@ namespace DeepSightDB
                 _dbThread.Join();
                 _dbQueue.Dispose();
             }
+        }
+
+        /// <summary>
+        /// 获取当前数据库队列长度（待处理的操作数）
+        /// </summary>
+        public int GetQueueLength() => _dbQueue.Count;
+
+        /// <summary>
+        /// 获取数据库统计指标
+        /// </summary>
+        public Task<DatabaseStats> GetDatabaseStats()
+        {
+            var tcs = new TaskCompletionSource<DatabaseStats>();
+            _dbQueue.Add(connection =>
+            {
+                try
+                {
+                    var stats = new DatabaseStats
+                    {
+                        QueueLength = _dbQueue.Count,
+                        CollectedAt = DateTime.Now
+                    };
+
+                    // 1. 获取数据库大小
+                    using (var cmd = new NpgsqlCommand($"SELECT pg_database_size('{_config.Database}')", connection))
+                    {
+                        stats.DatabaseSizeBytes = Convert.ToInt64(cmd.ExecuteScalar() ?? 0);
+                    }
+
+                    // 2. 获取活动连接数
+                    using (var cmd = new NpgsqlCommand(@"
+                        SELECT count(*) FROM pg_stat_activity
+                        WHERE datname = @dbname AND state = 'active'", connection))
+                    {
+                        cmd.Parameters.AddWithValue("@dbname", _config.Database);
+                        stats.ActiveConnections = Convert.ToInt32(cmd.ExecuteScalar() ?? 0);
+                    }
+
+                    // 3. 获取总连接数
+                    using (var cmd = new NpgsqlCommand(@"
+                        SELECT count(*) FROM pg_stat_activity
+                        WHERE datname = @dbname", connection))
+                    {
+                        cmd.Parameters.AddWithValue("@dbname", _config.Database);
+                        stats.TotalConnections = Convert.ToInt32(cmd.ExecuteScalar() ?? 0);
+                    }
+
+                    // 4. 获取表统计信息
+                    using (var cmd = new NpgsqlCommand(@"
+                        SELECT
+                            relname as table_name,
+                            n_live_tup as row_count,
+                            n_dead_tup as dead_rows,
+                            seq_scan,
+                            idx_scan,
+                            n_tup_ins as inserts,
+                            n_tup_upd as updates,
+                            n_tup_del as deletes
+                        FROM pg_stat_user_tables
+                        WHERE schemaname = 'public'
+                        ORDER BY n_live_tup DESC", connection))
+                    {
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                stats.TableStats.Add(new TableStats
+                                {
+                                    TableName = reader.GetString(0),
+                                    RowCount = reader.IsDBNull(1) ? 0 : reader.GetInt64(1),
+                                    DeadRows = reader.IsDBNull(2) ? 0 : reader.GetInt64(2),
+                                    SequentialScans = reader.IsDBNull(3) ? 0 : reader.GetInt64(3),
+                                    IndexScans = reader.IsDBNull(4) ? 0 : reader.GetInt64(4),
+                                    Inserts = reader.IsDBNull(5) ? 0 : reader.GetInt64(5),
+                                    Updates = reader.IsDBNull(6) ? 0 : reader.GetInt64(6),
+                                    Deletes = reader.IsDBNull(7) ? 0 : reader.GetInt64(7)
+                                });
+                            }
+                        }
+                    }
+
+                    // 5. 获取索引使用情况
+                    using (var cmd = new NpgsqlCommand(@"
+                        SELECT
+                            indexrelname as index_name,
+                            relname as table_name,
+                            idx_scan as scans,
+                            idx_tup_read as tuples_read,
+                            idx_tup_fetch as tuples_fetched
+                        FROM pg_stat_user_indexes
+                        WHERE schemaname = 'public'
+                        ORDER BY idx_scan DESC", connection))
+                    {
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                stats.IndexStats.Add(new IndexStats
+                                {
+                                    IndexName = reader.GetString(0),
+                                    TableName = reader.GetString(1),
+                                    Scans = reader.IsDBNull(2) ? 0 : reader.GetInt64(2),
+                                    TuplesRead = reader.IsDBNull(3) ? 0 : reader.GetInt64(3),
+                                    TuplesFetched = reader.IsDBNull(4) ? 0 : reader.GetInt64(4)
+                                });
+                            }
+                        }
+                    }
+
+                    // 6. 获取缓存命中率
+                    using (var cmd = new NpgsqlCommand(@"
+                        SELECT
+                            ROUND(100.0 * sum(blks_hit) / NULLIF(sum(blks_hit) + sum(blks_read), 0), 2) as cache_hit_ratio
+                        FROM pg_stat_database
+                        WHERE datname = @dbname", connection))
+                    {
+                        cmd.Parameters.AddWithValue("@dbname", _config.Database);
+                        var result = cmd.ExecuteScalar();
+                        stats.CacheHitRatio = result == DBNull.Value ? 0 : Convert.ToDouble(result);
+                    }
+
+                    // 7. 获取事务统计
+                    using (var cmd = new NpgsqlCommand(@"
+                        SELECT
+                            xact_commit,
+                            xact_rollback,
+                            tup_returned,
+                            tup_fetched,
+                            tup_inserted,
+                            tup_updated,
+                            tup_deleted
+                        FROM pg_stat_database
+                        WHERE datname = @dbname", connection))
+                    {
+                        cmd.Parameters.AddWithValue("@dbname", _config.Database);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                stats.TransactionsCommitted = reader.IsDBNull(0) ? 0 : reader.GetInt64(0);
+                                stats.TransactionsRolledBack = reader.IsDBNull(1) ? 0 : reader.GetInt64(1);
+                                stats.TuplesReturned = reader.IsDBNull(2) ? 0 : reader.GetInt64(2);
+                                stats.TuplesFetched = reader.IsDBNull(3) ? 0 : reader.GetInt64(3);
+                                stats.TuplesInserted = reader.IsDBNull(4) ? 0 : reader.GetInt64(4);
+                                stats.TuplesUpdated = reader.IsDBNull(5) ? 0 : reader.GetInt64(5);
+                                stats.TuplesDeleted = reader.IsDBNull(6) ? 0 : reader.GetInt64(6);
+                            }
+                        }
+                    }
+
+                    tcs.SetResult(stats);
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error($"获取数据库统计信息失败: {ex.Message}");
+                    tcs.SetException(ex);
+                }
+            });
+            return tcs.Task;
         }
 
         /// <summary>
@@ -191,6 +405,30 @@ namespace DeepSightDB
                 string createPanelsLotNumberIndex = @"
                 CREATE INDEX IF NOT EXISTS idx_panels_lotnumber ON Panels (LotNumber);";
 
+                // EmployeeReports 表的索引，优化时间范围查询
+                string createEmployeeReportsStartTimeIndex = @"
+                CREATE INDEX IF NOT EXISTS idx_employeereports_starttime ON EmployeeReports (StartTime);";
+
+                string createEmployeeReportsEndTimeIndex = @"
+                CREATE INDEX IF NOT EXISTS idx_employeereports_endtime ON EmployeeReports (EndTime);";
+
+                // 性能优化索引 - 复合索引支持常用查询模式
+                // 1. 支持按 MachineId + DetectionDate 排序查询 (GetLatestPanelInfoByMachineId)
+                string createPanelsMachineIdDetectionDateIndex = @"
+                CREATE INDEX IF NOT EXISTS idx_panels_machineid_detectiondate ON Panels (MachineId, DetectionDate DESC);";
+
+                // 2. PanelSides 的 PanelId 索引优化 JOIN 查询
+                string createPanelSidesPanelIdIndex = @"
+                CREATE INDEX IF NOT EXISTS idx_panelsides_panelid ON PanelSides (PanelId);";
+
+                // 3. PanelSides 状态字段复合索引，优化聚合查询
+                string createPanelSidesStatesIndex = @"
+                CREATE INDEX IF NOT EXISTS idx_panelsides_states ON PanelSides (PanelId, AviState, FinalState);";
+
+                // 4. ProductSerial 索引，优化按料号查询
+                string createPanelsProductSerialIndex = @"
+                CREATE INDEX IF NOT EXISTS idx_panels_productserial ON Panels (ProductSerial) WHERE ProductSerial IS NOT NULL;";
+
                 using (var command = new NpgsqlCommand())
                 {
                     command.Connection = connection;
@@ -209,6 +447,20 @@ namespace DeepSightDB
                     command.CommandText = createPanelsMachineIdIndex;
                     command.ExecuteNonQuery();
                     command.CommandText = createPanelsLotNumberIndex;
+                    command.ExecuteNonQuery();
+                    command.CommandText = createEmployeeReportsStartTimeIndex;
+                    command.ExecuteNonQuery();
+                    command.CommandText = createEmployeeReportsEndTimeIndex;
+                    command.ExecuteNonQuery();
+
+                    // 性能优化索引
+                    command.CommandText = createPanelsMachineIdDetectionDateIndex;
+                    command.ExecuteNonQuery();
+                    command.CommandText = createPanelSidesPanelIdIndex;
+                    command.ExecuteNonQuery();
+                    command.CommandText = createPanelSidesStatesIndex;
+                    command.ExecuteNonQuery();
+                    command.CommandText = createPanelsProductSerialIndex;
                     command.ExecuteNonQuery();
                 }
             }
@@ -250,115 +502,32 @@ namespace DeepSightDB
                 try
                 {
                     transaction = connection.BeginTransaction();
-                    long panelId;
-                    bool isNewPanel;
 
-                    // 1. 使用 INSERT ON CONFLICT DO NOTHING + SELECT 获取 PanelId
-                    using (var insertCmd = new NpgsqlCommand(
-                        "INSERT INTO Panels (MachineId, SerialNumber, LotNumber, DetectionDate, ProductSerial, PathIndex, AviCreationTime) VALUES (@MachineId, @SN, @Lot, @Date, @ProductSerial, @PathIndex, @AviCreationTime) ON CONFLICT (SerialNumber) DO NOTHING",
-                        connection, transaction))
-                    {
-                        insertCmd.Parameters.AddWithValue("@MachineId", record.MachineId ?? string.Empty);
-                        insertCmd.Parameters.AddWithValue("@SN", record.SerialNumber);
-                        insertCmd.Parameters.AddWithValue("@Lot", record.LotNumber ?? string.Empty);
-                        insertCmd.Parameters.AddWithValue("@Date", record.DetectionDate);
-                        insertCmd.Parameters.AddWithValue("@ProductSerial", (object)record.ProductSerial ?? DBNull.Value);
-                        insertCmd.Parameters.AddWithValue("@PathIndex", (object)record.PathIndex ?? DBNull.Value);
-                        insertCmd.Parameters.AddWithValue("@AviCreationTime", (object)record.AviCreationTime ?? DBNull.Value);
-                        // ExecuteNonQuery 返回受影响的行数，0 表示 SN 重复被忽略
-                        int rowsAffected = insertCmd.ExecuteNonQuery();
-                        isNewPanel = rowsAffected > 0;
-                    }
+                    // 使用预编译命令提高性能
+                    _upsertPanelCmd.Transaction = transaction;
+                    _upsertPanelCmd.Parameters["@MachineId"].Value = record.MachineId ?? string.Empty;
+                    _upsertPanelCmd.Parameters["@SN"].Value = record.SerialNumber;
+                    _upsertPanelCmd.Parameters["@Lot"].Value = record.LotNumber ?? string.Empty;
+                    _upsertPanelCmd.Parameters["@Date"].Value = record.DetectionDate;
+                    _upsertPanelCmd.Parameters["@ProductSerial"].Value = (object)record.ProductSerial ?? DBNull.Value;
+                    _upsertPanelCmd.Parameters["@PathIndex"].Value = (object)record.PathIndex ?? DBNull.Value;
+                    _upsertPanelCmd.Parameters["@AviCreationTime"].Value = (object)record.AviCreationTime ?? DBNull.Value;
+                    long panelId = Convert.ToInt64(_upsertPanelCmd.ExecuteScalar());
 
-                    using (var selectCmd = new NpgsqlCommand("SELECT Id FROM Panels WHERE SerialNumber = @SN", connection, transaction))
-                    {
-                        selectCmd.Parameters.AddWithValue("@SN", record.SerialNumber);
-                        panelId = Convert.ToInt64(selectCmd.ExecuteScalar());
-                    }
-
-                    // 检查当前 Side 是否已存在数据
-                    bool sideExists = false;
-                    if (!isNewPanel)
-                    {
-                        using (var checkSideCmd = new NpgsqlCommand(
-                            "SELECT COUNT(*) FROM PanelSides WHERE PanelId = @PanelId AND Side = @Side",
-                            connection, transaction))
-                        {
-                            checkSideCmd.Parameters.AddWithValue("@PanelId", panelId);
-                            checkSideCmd.Parameters.AddWithValue("@Side", record.Side);
-                            sideExists = Convert.ToInt32(checkSideCmd.ExecuteScalar()) > 0;
-                        }
-                    }
-
-                    // 如果是重复数据写入（SN存在且当前面数据也已存在），更新 DetectionDate 为最新时间
-                    if (!isNewPanel && sideExists)
-                    {
-                        using (var updateDateCmd = new NpgsqlCommand(
-                            "UPDATE Panels SET DetectionDate = @Date WHERE Id = @PanelId",
-                            connection, transaction))
-                        {
-                            updateDateCmd.Parameters.AddWithValue("@Date", record.DetectionDate);
-                            updateDateCmd.Parameters.AddWithValue("@PanelId", panelId);
-                            updateDateCmd.ExecuteNonQuery();
-                        }
-                    }
-
-                    // 2. 使用 INSERT ON CONFLICT DO UPDATE 一条语句搞定插入或更新
-                    using (var upsertCmd = new NpgsqlCommand(
-                        @"INSERT INTO PanelSides (PanelId, Side, HeatPoints, AviState, AiState, VvsState, VrsState, FinalState)
-                          VALUES (@PanelId, @Side, @HeatPoints, @AviState, @AiState, @VvsState, @VrsState, @FinalState)
-                          ON CONFLICT (PanelId, Side) DO UPDATE SET
-                          HeatPoints = EXCLUDED.HeatPoints,
-                          AviState = EXCLUDED.AviState,
-                          AiState = EXCLUDED.AiState,
-                          VvsState = EXCLUDED.VvsState,
-                          VrsState = EXCLUDED.VrsState,
-                          FinalState = EXCLUDED.FinalState",
-                        connection, transaction))
-                    {
-                        upsertCmd.Parameters.AddWithValue("@PanelId", panelId);
-                        upsertCmd.Parameters.AddWithValue("@Side", record.Side);
-                        upsertCmd.Parameters.AddWithValue("@HeatPoints", heatPointsJson);
-                        upsertCmd.Parameters.AddWithValue("@AviState", record.Data.AviState);
-                        upsertCmd.Parameters.AddWithValue("@AiState", record.Data.AiState);
-                        upsertCmd.Parameters.AddWithValue("@VvsState", record.Data.VvsState);
-                        upsertCmd.Parameters.AddWithValue("@VrsState", record.Data.VrsState);
-                        upsertCmd.Parameters.AddWithValue("@FinalState", record.Data.FinalState);
-                        upsertCmd.ExecuteNonQuery();
-                    }
-
-                    // 3. 检查是否双面数据都已存在（用于日志记录和验证）
-                    int sidesCount = 0;
-                    using (var checkSidesCmd = new NpgsqlCommand(
-                        "SELECT COUNT(*) FROM PanelSides WHERE PanelId = @PanelId",
-                        connection, transaction))
-                    {
-                        checkSidesCmd.Parameters.AddWithValue("@PanelId", panelId);
-                        sidesCount = Convert.ToInt32(checkSidesCmd.ExecuteScalar());
-                    }
+                    // 使用预编译命令插入 PanelSide
+                    _upsertPanelSideCmd.Transaction = transaction;
+                    _upsertPanelSideCmd.Parameters["@PanelId"].Value = panelId;
+                    _upsertPanelSideCmd.Parameters["@Side"].Value = record.Side;
+                    _upsertPanelSideCmd.Parameters["@HeatPoints"].Value = heatPointsJson;
+                    _upsertPanelSideCmd.Parameters["@AviState"].Value = record.Data.AviState;
+                    _upsertPanelSideCmd.Parameters["@AiState"].Value = record.Data.AiState;
+                    _upsertPanelSideCmd.Parameters["@VvsState"].Value = record.Data.VvsState;
+                    _upsertPanelSideCmd.Parameters["@VrsState"].Value = record.Data.VrsState;
+                    _upsertPanelSideCmd.Parameters["@FinalState"].Value = record.Data.FinalState;
+                    _upsertPanelSideCmd.ExecuteNonQuery();
 
                     transaction.Commit();
-
-                    if (isNewPanel)
-                    {
-                        LogTextHelper.Info($"SavePanelSide: 成功保存 SN={record.SerialNumber}, Side={record.Side}");
-                    }
-                    else if (sideExists)
-                    {
-                        // SN存在且当前面数据也已存在，警告覆盖
-                        LogTextHelper.Warn($"SavePanelSide: SN={record.SerialNumber} 的 Side={record.Side} 数据已存在，正在覆盖");
-                    }
-                    else
-                    {
-                        // SN存在但是存的是另一面的数据，正常情况
-                        LogTextHelper.Info($"SavePanelSide: 成功保存 SN={record.SerialNumber}, Side={record.Side} (另一面已存在)");
-                    }
-
-                    // 如果双面数据都已存在，记录日志
-                    if (sidesCount == 2)
-                    {
-                        LogTextHelper.Info($"SavePanelSide: SN={record.SerialNumber} 的 A、B 两面数据已完整");
-                    }
+                    LogTextHelper.Info($"SavePanelSide: 成功保存 SN={record.SerialNumber}, Side={record.Side}");
                 }
                 catch (Exception ex)
                 {
@@ -380,33 +549,100 @@ namespace DeepSightDB
             });
         }
 
-        // 查询逻辑 1: 根据 lot 号获取所有 sn
-        public Task<List<string>> GetSerialNumbersByLot(string lotNumber)
+        /// <summary>
+        /// 批量存储面板数据 - 用于大量数据导入场景
+        /// 使用单个事务提交多条记录，显著提升插入性能
+        /// </summary>
+        /// <param name="records">要保存的记录列表</param>
+        /// <param name="batchSize">每批次提交的记录数，默认100</param>
+        public Task SavePanelSidesBatch(IEnumerable<PanelSideRecord> records, int batchSize = 100)
         {
-            var tcs = new TaskCompletionSource<List<string>>();
+            var tcs = new TaskCompletionSource<bool>();
+            var recordList = records?.ToList();
+
+            if (recordList == null || recordList.Count == 0)
+            {
+                tcs.SetResult(true);
+                return tcs.Task;
+            }
+
+            // 预先序列化所有 HeatPoints
+            var serializedRecords = recordList
+                .Where(r => r != null && !string.IsNullOrEmpty(r.SerialNumber) && !string.IsNullOrEmpty(r.Side) && r.Data != null)
+                .Select(r => new
+                {
+                    Record = r,
+                    HeatPointsJson = JsonConvert.SerializeObject(r.Data.DetectPoints ?? new List<DetectInfo>())
+                })
+                .ToList();
+
             _dbQueue.Add(connection =>
             {
-                try
+                int totalSaved = 0;
+                int totalFailed = 0;
+
+                // 分批处理
+                for (int i = 0; i < serializedRecords.Count; i += batchSize)
                 {
-                    var serialNumbers = new List<string>();
-                    using (var cmd = new NpgsqlCommand("SELECT SerialNumber FROM Panels WHERE LotNumber = @Lot", connection))
+                    var batch = serializedRecords.Skip(i).Take(batchSize).ToList();
+                    NpgsqlTransaction transaction = null;
+
+                    try
                     {
-                        cmd.Parameters.AddWithValue("@Lot", lotNumber);
-                        using (var reader = cmd.ExecuteReader())
+                        transaction = connection.BeginTransaction();
+
+                        foreach (var item in batch)
                         {
-                            while (reader.Read())
-                            {
-                                serialNumbers.Add(reader.GetString(0));
-                            }
+                            var record = item.Record;
+
+                            _upsertPanelCmd.Transaction = transaction;
+                            _upsertPanelCmd.Parameters["@MachineId"].Value = record.MachineId ?? string.Empty;
+                            _upsertPanelCmd.Parameters["@SN"].Value = record.SerialNumber;
+                            _upsertPanelCmd.Parameters["@Lot"].Value = record.LotNumber ?? string.Empty;
+                            _upsertPanelCmd.Parameters["@Date"].Value = record.DetectionDate;
+                            _upsertPanelCmd.Parameters["@ProductSerial"].Value = (object)record.ProductSerial ?? DBNull.Value;
+                            _upsertPanelCmd.Parameters["@PathIndex"].Value = (object)record.PathIndex ?? DBNull.Value;
+                            _upsertPanelCmd.Parameters["@AviCreationTime"].Value = (object)record.AviCreationTime ?? DBNull.Value;
+                            long panelId = Convert.ToInt64(_upsertPanelCmd.ExecuteScalar());
+
+                            _upsertPanelSideCmd.Transaction = transaction;
+                            _upsertPanelSideCmd.Parameters["@PanelId"].Value = panelId;
+                            _upsertPanelSideCmd.Parameters["@Side"].Value = record.Side;
+                            _upsertPanelSideCmd.Parameters["@HeatPoints"].Value = item.HeatPointsJson;
+                            _upsertPanelSideCmd.Parameters["@AviState"].Value = record.Data.AviState;
+                            _upsertPanelSideCmd.Parameters["@AiState"].Value = record.Data.AiState;
+                            _upsertPanelSideCmd.Parameters["@VvsState"].Value = record.Data.VvsState;
+                            _upsertPanelSideCmd.Parameters["@VrsState"].Value = record.Data.VrsState;
+                            _upsertPanelSideCmd.Parameters["@FinalState"].Value = record.Data.FinalState;
+                            _upsertPanelSideCmd.ExecuteNonQuery();
+                        }
+
+                        transaction.Commit();
+                        totalSaved += batch.Count;
+                    }
+                    catch (Exception ex)
+                    {
+                        LogTextHelper.Error($"SavePanelSidesBatch: 批量保存失败，批次 {i / batchSize + 1}, 错误: {ex.Message}");
+                        totalFailed += batch.Count;
+                        try
+                        {
+                            transaction?.Rollback();
+                        }
+                        catch (Exception rollbackEx)
+                        {
+                            LogTextHelper.Error($"SavePanelSidesBatch: 回滚事务失败: {rollbackEx.Message}");
                         }
                     }
-                    tcs.SetResult(serialNumbers);
+                    finally
+                    {
+                        transaction?.Dispose();
+                    }
                 }
-                catch (Exception ex)
-                {
-                    tcs.SetException(ex);
-                }
+
+                LogTextHelper.Info($"SavePanelSidesBatch: 批量保存完成，成功 {totalSaved} 条，失败 {totalFailed} 条");
+                tcs.SetResult(totalFailed == 0);
             });
+
             return tcs.Task;
         }
 
@@ -510,49 +746,26 @@ namespace DeepSightDB
                     long totalDefects = 0;
                     long aiOkDefects = 0;
 
-                    // 首先获取所有 Panel 及其 AiOkBothSides 状态
-                    var panelAiOkSql = @"
-                        SELECT PanelId,
-                               CASE WHEN COUNT(*) = 2 AND SUM(CASE WHEN AiState = 1 THEN 1 ELSE 0 END) = 2 THEN 1 ELSE 0 END AS AiOkBothSides
-                        FROM PanelSides ps
-                        JOIN Panels p ON ps.PanelId = p.Id
-                        WHERE p.DetectionDate BETWEEN @Start AND @End" + (string.IsNullOrEmpty(machineId) ? string.Empty : " AND p.MachineId = @MachineId") + @"
-                        GROUP BY PanelId";
-
-                    var panelAiOkDict = new Dictionary<long, bool>();
-                    using (var cmd = new NpgsqlCommand(panelAiOkSql, connection))
-                    {
-                        cmd.Parameters.AddWithValue("@Start", start);
-                        cmd.Parameters.AddWithValue("@End", end);
-                        if (!string.IsNullOrEmpty(machineId)) cmd.Parameters.AddWithValue("@MachineId", machineId);
-                        using (var reader = cmd.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                long panelId = reader.GetInt64(0);
-                                bool isAiOk = reader.GetInt32(1) == 1;
-                                panelAiOkDict[panelId] = isAiOk;
-                            }
-                        }
-                    }
-
-                    // 然后获取每个 PanelSide 的 HeatPoints 并计算缺陷数
-                    var sidesSql = @"
-                        SELECT ps.PanelId, ps.HeatPoints
+                    // 使用窗口函数一次性查询所有数据，避免两次查询
+                    // 计算每个 Panel 是否两面都 AI OK，并同时获取 HeatPoints
+                    var sql = @"
+                        SELECT ps.PanelId, ps.HeatPoints,
+                               (SELECT CASE WHEN COUNT(*) = 2 AND SUM(CASE WHEN AiState = 1 THEN 1 ELSE 0 END) = 2 THEN 1 ELSE 0 END
+                                FROM PanelSides ps2 WHERE ps2.PanelId = ps.PanelId) AS AiOkBothSides
                         FROM PanelSides ps
                         JOIN Panels p ON ps.PanelId = p.Id
                         WHERE p.DetectionDate BETWEEN @Start AND @End" + (string.IsNullOrEmpty(machineId) ? string.Empty : " AND p.MachineId = @MachineId");
 
-                    using (var cmd = new NpgsqlCommand(sidesSql, connection))
+                    using (var cmd = new NpgsqlCommand(sql, connection))
                     {
                         cmd.Parameters.AddWithValue("@Start", start);
                         cmd.Parameters.AddWithValue("@End", end);
                         if (!string.IsNullOrEmpty(machineId)) cmd.Parameters.AddWithValue("@MachineId", machineId);
+
                         using (var reader = cmd.ExecuteReader())
                         {
                             while (reader.Read())
                             {
-                                long panelId = reader.GetInt64(0);
                                 int defectCount = 0;
 
                                 if (!reader.IsDBNull(1))
@@ -563,7 +776,9 @@ namespace DeepSightDB
                                 }
 
                                 totalDefects += defectCount;
-                                if (panelAiOkDict.TryGetValue(panelId, out bool isAiOk) && isAiOk)
+
+                                bool isAiOk = reader.GetInt32(2) == 1;
+                                if (isAiOk)
                                 {
                                     aiOkDefects += defectCount;
                                 }
@@ -641,6 +856,7 @@ namespace DeepSightDB
 
         /// <summary>
         /// 获取数据库中所有唯一的 MachineId
+        /// 优化: 使用递归 CTE 进行索引跳跃扫描，避免全表扫描
         /// </summary>
         public Task<List<string>> GetAllMachineIds()
         {
@@ -650,7 +866,18 @@ namespace DeepSightDB
                 try
                 {
                     var machineIds = new List<string>();
-                    using (var cmd = new NpgsqlCommand("SELECT DISTINCT MachineId FROM Panels", connection))
+                    // 使用递归 CTE 实现索引跳跃扫描 (Index Skip Scan)
+                    // 对于 MachineId 基数较低的情况，性能远优于 DISTINCT
+                    const string sql = @"
+                        WITH RECURSIVE machine_cte AS (
+                            (SELECT MachineId FROM Panels ORDER BY MachineId LIMIT 1)
+                            UNION ALL
+                            SELECT (SELECT MachineId FROM Panels WHERE MachineId > machine_cte.MachineId ORDER BY MachineId LIMIT 1)
+                            FROM machine_cte
+                            WHERE machine_cte.MachineId IS NOT NULL
+                        )
+                        SELECT MachineId FROM machine_cte WHERE MachineId IS NOT NULL";
+                    using (var cmd = new NpgsqlCommand(sql, connection))
                     {
                         using (var reader = cmd.ExecuteReader())
                         {
@@ -670,24 +897,6 @@ namespace DeepSightDB
             return tcs.Task;
         }
 
-        /// <summary>
-        /// 获取每个机台在时间段内的报点数统计
-        /// </summary>
-        public async Task<Dictionary<string, (long TotalDefects, long AIOkDefects)>> GetDefectCountsPerMachine(DateTime start, DateTime end)
-        {
-            var results = new Dictionary<string, (long TotalDefects, long AIOkDefects)>();
-            var machineIds = await GetAllMachineIds();
-
-            foreach (var machineId in machineIds)
-            {
-                var counts = await GetDefectCounts(start, end, machineId);
-                if (counts.TotalDefects > 0) // 只添加有数据的机台
-                {
-                    results[machineId] = counts;
-                }
-            }
-            return results;
-        }
 
         /// <summary>
         /// 获取一个时间段内所有的 DetectionDate
@@ -765,179 +974,11 @@ namespace DeepSightDB
         }
 
         /// <summary>
-        /// 生成测试数据
-        /// </summary>
-        public static void GenerateTestData()
-        {
-            var dbHelper = new DatabaseHelper();
-            var random = new Random();
-            var startDate = DateTime.Now.AddMonths(-3);
-            var endDate = DateTime.Now;
-
-            for (var date = startDate.Date; date <= endDate.Date; date = date.AddDays(1))
-            {
-                int numberOfEntries = random.Next(50, 101);
-                for (int i = 0; i < numberOfEntries; i++)
-                {
-                    string machineId = $"Machine-{random.Next(1, 4)}";
-                    string lotNumber = $"Lot-{date:yyyyMMdd}";
-                    string serialNumber = $"{lotNumber}-SN{i:D3}";
-                    string ProductSerial = $"ProductSerial-{random.Next(1, 5)}";
-                    string pathIndex = $"Path/Index/{Guid.NewGuid().ToString().Substring(0, 8)}";
-                    DateTime detectionDate = date.AddHours(random.Next(0, 24)).AddMinutes(random.Next(0, 60));
-                    DateTime? aviCreationTime = detectionDate.AddSeconds(-random.Next(30, 300));
-
-                    // Side A
-                    int totalDefectsCountA = random.Next(0, 10);
-                    var sideAData = new SideData
-                    {
-                        Side = "A",
-                        DetectPoints = new List<DetectInfo>()
-                    };
-
-                    // 生成缺陷点
-                    for (int j = 0; j < totalDefectsCountA; j++)
-                    {
-                        sideAData.DetectPoints.Add(new DetectInfo
-                        {
-                            DefectName = $"Defect-{j}",
-                            DefectType = $"Type-{random.Next(1, 5)}",
-                            AIStatus = random.Next(0, 3),
-                            VVSStatus = random.Next(0, 3),
-                            VrsState = random.Next(0, 3),
-                            FinalState = random.Next(0, 3)
-                        });
-                    }
-
-                    // 根据缺陷数生成 State
-                    if (totalDefectsCountA == 0)
-                    {
-                        sideAData.AviState = 1; // AVI OK
-                        sideAData.AiState = 1; // AI 默认也 OK
-                        sideAData.FinalState = 1; // 最终 OK
-                    }
-                    else
-                    {
-                        sideAData.AviState = 2; // AVI NG
-                        // 模拟AI处理
-                        int remainingA = sideAData.DetectPoints.Count(d => d.AIStatus != 1);
-                        if (remainingA == 0)
-                        {
-                            sideAData.AiState = 1; // AI OK
-                            sideAData.FinalState = 1; // 最终 OK
-                        }
-                        else
-                        {
-                            sideAData.AiState = 2; // AI NG
-                            // 模拟VVS/VRS
-                            if (random.Next(0, 2) == 0) // 50% 概率 VVS/VRS OK
-                            {
-                                sideAData.VvsState = 1;
-                                sideAData.VrsState = 1;
-                                sideAData.FinalState = 1; // 最终 OK
-                            }
-                            else
-                            {
-                                sideAData.VvsState = 2;
-                                sideAData.VrsState = 2;
-                                sideAData.FinalState = 2; // 最终 NG
-                            }
-                        }
-                    }
-
-                    var recordA = new PanelSideRecord
-                    {
-                        MachineId = machineId,
-                        DetectionDate = detectionDate,
-                        SerialNumber = serialNumber,
-                        LotNumber = lotNumber,
-                        ProductSerial = ProductSerial,
-                        PathIndex = pathIndex,
-                        Side = "A",
-                        Data = sideAData,
-                        AviCreationTime = aviCreationTime
-                    };
-                    dbHelper.SavePanelSide(recordA);
-
-                    // Side B
-                    int totalDefectsCountB = random.Next(0, 10);
-                    var sideBData = new SideData
-                    {
-                        Side = "B",
-                        DetectPoints = new List<DetectInfo>()
-                    };
-
-                    // 生成缺陷点
-                    for (int j = 0; j < totalDefectsCountB; j++)
-                    {
-                        sideBData.DetectPoints.Add(new DetectInfo
-                        {
-                            DefectName = $"Defect-{j}",
-                            DefectType = $"Type-{random.Next(1, 5)}",
-                            AIStatus = random.Next(0, 3),
-                            VVSStatus = random.Next(0, 3),
-                            VrsState = random.Next(0, 3),
-                            FinalState = random.Next(0, 3)
-                        });
-                    }
-
-                    // 根据缺陷数生成 State
-                    if (totalDefectsCountB == 0)
-                    {
-                        sideBData.AviState = 1; // AVI OK
-                        sideBData.AiState = 1; // AI 默认也 OK
-                        sideBData.FinalState = 1; // 最终 OK
-                    }
-                    else
-                    {
-                        sideBData.AviState = 2; // AVI NG
-                        // 模拟AI处理
-                        int remainingB = sideBData.DetectPoints.Count(d => d.AIStatus != 1);
-                        if (remainingB == 0)
-                        {
-                            sideBData.AiState = 1; // AI OK
-                            sideBData.FinalState = 1; // 最终 OK
-                        }
-                        else
-                        {
-                            sideBData.AiState = 2; // AI NG
-                            // 模拟VVS/VRS
-                            if (random.Next(0, 2) == 0) // 50% 概率 VVS/VRS OK
-                            {
-                                sideBData.VvsState = 1;
-                                sideBData.VrsState = 1;
-                                sideBData.FinalState = 1; // 最终 OK
-                            }
-                            else
-                            {
-                                sideBData.VvsState = 2;
-                                sideBData.VrsState = 2;
-                                sideBData.FinalState = 2; // 最终 NG
-                            }
-                        }
-                    }
-
-                    var recordB = new PanelSideRecord
-                    {
-                        MachineId = machineId,
-                        DetectionDate = detectionDate,
-                        SerialNumber = serialNumber,
-                        LotNumber = lotNumber,
-                        ProductSerial = ProductSerial,
-                        PathIndex = pathIndex,
-                        Side = "B",
-                        Data = sideBData,
-                        AviCreationTime = aviCreationTime
-                    };
-                    dbHelper.SavePanelSide(recordB);
-                }
-            }
-        }
-        /// <summary>
-        /// 1.	如果有一个state为3，则添加到未检测结果数
-        /// 2.	如果有一个state为2，则添加到过滤后仍NG结果数
-        /// 3.	如果有两个state为0，则添加到AVI OK的结果数
+        /// 1.	如果有一个 FinalState 为3，则添加到未检测结果数
+        /// 2.	如果有一个 FinalState 为2，则添加到过滤后仍NG结果数
+        /// 3.	如果有两个 AviState 为1 (AVI OK)，则添加到AVI OK的结果数
         /// 4.	剩余情况，添加到过滤后OK的数 所以总共获取5个数字
+        /// 优化: 使用 SQL 聚合在数据库端完成统计，避免传输大量数据到内存
         /// </summary>
         /// <param name="start"></param>
         /// <param name="end"></param>
@@ -949,12 +990,26 @@ namespace DeepSightDB
             {
                 try
                 {
-                    var snStates = new Dictionary<string, List<int?>>();
-                    var sql = @"
-                    SELECT p.SerialNumber, ps.State
-                    FROM Panels p
-                    JOIN PanelSides ps ON p.Id = ps.PanelId
-                    WHERE p.DetectionDate BETWEEN @Start AND @End";
+                    // 使用 SQL 聚合在数据库端完成所有统计
+                    const string sql = @"
+                    WITH panel_stats AS (
+                        SELECT
+                            p.Id,
+                            COUNT(ps.Id) AS side_count,
+                            MAX(CASE WHEN ps.FinalState = 3 THEN 1 ELSE 0 END) AS has_uninspected,
+                            MAX(CASE WHEN ps.FinalState = 2 THEN 1 ELSE 0 END) AS has_ng,
+                            SUM(CASE WHEN ps.AviState = 1 THEN 1 ELSE 0 END) AS avi_ok_count
+                        FROM Panels p
+                        JOIN PanelSides ps ON p.Id = ps.PanelId
+                        WHERE p.DetectionDate BETWEEN @Start AND @End
+                        GROUP BY p.Id
+                    )
+                    SELECT
+                        COUNT(*) AS total_sn_count,
+                        SUM(CASE WHEN has_uninspected = 1 THEN 1 ELSE 0 END) AS uninspected_count,
+                        SUM(CASE WHEN has_uninspected = 0 AND has_ng = 1 THEN 1 ELSE 0 END) AS still_ng_count,
+                        SUM(CASE WHEN has_uninspected = 0 AND has_ng = 0 AND avi_ok_count = 2 THEN 1 ELSE 0 END) AS avi_ok_count
+                    FROM panel_stats";
 
                     using (var cmd = new NpgsqlCommand(sql, connection))
                     {
@@ -962,48 +1017,21 @@ namespace DeepSightDB
                         cmd.Parameters.AddWithValue("@End", end);
                         using (var reader = cmd.ExecuteReader())
                         {
-                            while (reader.Read())
+                            if (reader.Read())
                             {
-                                string sn = reader.GetString(0);
-                                int? state = reader.IsDBNull(1) ? (int?)null : reader.GetInt32(1);
-
-                                if (!snStates.ContainsKey(sn))
-                                {
-                                    snStates[sn] = new List<int?>();
-                                }
-                                snStates[sn].Add(state);
+                                int totalSnCount = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
+                                int uninspectedCount = reader.IsDBNull(1) ? 0 : Convert.ToInt32(reader.GetInt64(1));
+                                int stillNgCount = reader.IsDBNull(2) ? 0 : Convert.ToInt32(reader.GetInt64(2));
+                                int aviOkCount = reader.IsDBNull(3) ? 0 : Convert.ToInt32(reader.GetInt64(3));
+                                int filteredOkCount = totalSnCount - uninspectedCount - stillNgCount - aviOkCount;
+                                tcs.SetResult((totalSnCount, uninspectedCount, stillNgCount, aviOkCount, filteredOkCount));
+                            }
+                            else
+                            {
+                                tcs.SetResult((0, 0, 0, 0, 0));
                             }
                         }
                     }
-
-                    int totalSnCount = snStates.Count;
-                    int uninspectedCount = 0;
-                    int stillNgCount = 0;
-                    int aviOkCount = 0;
-
-                    foreach (var states in snStates.Values)
-                    {
-                        // 1. 如果有一个state为3，则添加到未检测结果数
-                        if (states.Any(s => s == 3))
-                        {
-                            uninspectedCount++;
-                        }
-                        // 2. 如果有一个state为2，则添加到过滤后仍NG结果数
-                        else if (states.Any(s => s == 2))
-                        {
-                            stillNgCount++;
-                        }
-                        // 3. 如果有两个state为0，则添加到AVI OK的结果数
-                        else if (states.Count(s => s == 0) == 2)
-                        {
-                            aviOkCount++;
-                        }
-                    }
-
-                    // 4. 剩余情况，添加到过滤后OK的数
-                    int filteredOkCount = totalSnCount - uninspectedCount - stillNgCount - aviOkCount;
-
-                    tcs.SetResult((totalSnCount, uninspectedCount, stillNgCount, aviOkCount, filteredOkCount));
                 }
                 catch (Exception ex)
                 {
@@ -1012,87 +1040,10 @@ namespace DeepSightDB
             });
             return tcs.Task;
         }
-
 
         /// <summary>
-        /// 根据 LotNumber 获取 SN 状态统计
-        /// 1.	如果有一个state为3，则添加到未检测结果数
-        /// 2.	如果有一个state为2，则添加到过滤后仍NG结果数
-        /// 3.	如果有两个state为0，则添加到AVI OK的结果数
-        /// 4.	剩余情况，添加到过滤后OK的数 所以总共获取5个数字
+        /// 优化: 使用 SQL 聚合在数据库端完成统计，避免传输大量数据到内存
         /// </summary>
-        /// <param name="lotNumber"></param>
-        /// <returns></returns>
-        public Task<(int totalSnCount, int uninspectedCount, int stillNgCount, int aviOkCount, int filteredOkCount)> GetSnStateCountsByLot(string lotNumber)
-        {
-            var tcs = new TaskCompletionSource<(int, int, int, int, int)>();
-            _dbQueue.Add(connection =>
-            {
-                try
-                {
-                    var snStates = new Dictionary<string, List<int?>>();
-                    var sql = @"
-                    SELECT p.SerialNumber, ps.State
-                    FROM Panels p
-                    JOIN PanelSides ps ON p.Id = ps.PanelId
-                    WHERE p.LotNumber = @LotNumber";
-
-                    using (var cmd = new NpgsqlCommand(sql, connection))
-                    {
-                        cmd.Parameters.AddWithValue("@LotNumber", lotNumber);
-                        using (var reader = cmd.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                string sn = reader.GetString(0);
-                                int? state = reader.IsDBNull(1) ? (int?)null : reader.GetInt32(1);
-
-                                if (!snStates.ContainsKey(sn))
-                                {
-                                    snStates[sn] = new List<int?>();
-                                }
-                                snStates[sn].Add(state);
-                            }
-                        }
-                    }
-
-                    int totalSnCount = snStates.Count;
-                    int uninspectedCount = 0;
-                    int stillNgCount = 0;
-                    int aviOkCount = 0;
-
-                    foreach (var states in snStates.Values)
-                    {
-                        // 1. 如果有一个state为3，则添加到未检测结果数
-                        if (states.Any(s => s == 3))
-                        {
-                            uninspectedCount++;
-                        }
-                        // 2. 如果有一个state为2，则添加到过滤后仍NG结果数
-                        else if (states.Any(s => s == 2))
-                        {
-                            stillNgCount++;
-                        }
-                        // 3. 如果有两个state为0，则添加到AVI OK的结果数
-                        else if (states.Count(s => s == 0) == 2)
-                        {
-                            aviOkCount++;
-                        }
-                    }
-
-                    // 4. 剩余情况，添加到过滤后OK的数
-                    int filteredOkCount = totalSnCount - uninspectedCount - stillNgCount - aviOkCount;
-
-                    tcs.SetResult((totalSnCount, uninspectedCount, stillNgCount, aviOkCount, filteredOkCount));
-                }
-                catch (Exception ex)
-                {
-                    tcs.SetException(ex);
-                }
-            });
-            return tcs.Task;
-        }
-
         public Task<(int totalSnCount, int aviOkCount, int aiOkCount, int aiNgCount, int uninspectedCount)> GetSnStateCountsByTime(DateTime start, DateTime end)
         {
             var tcs = new TaskCompletionSource<(int, int, int, int, int)>();
@@ -1100,12 +1051,27 @@ namespace DeepSightDB
             {
                 try
                 {
-                    var snStates = new Dictionary<string, List<(int AviState, int FinalState)>>();
-                    var sql = @"
-                    SELECT p.SerialNumber, ps.AviState, ps.FinalState
-                    FROM Panels p
-                    JOIN PanelSides ps ON p.Id = ps.PanelId
-                    WHERE p.DetectionDate BETWEEN @Start AND @End";
+                    // 使用 SQL 聚合在数据库端完成所有统计
+                    const string sql = @"
+                    WITH panel_stats AS (
+                        SELECT
+                            p.Id,
+                            COUNT(ps.Id) AS side_count,
+                            SUM(CASE WHEN ps.AviState = 0 THEN 1 ELSE 0 END) AS uninspected_sides,
+                            SUM(CASE WHEN ps.AviState = 1 THEN 1 ELSE 0 END) AS avi_ok_sides,
+                            MAX(CASE WHEN ps.FinalState = 2 THEN 1 ELSE 0 END) AS has_final_ng
+                        FROM Panels p
+                        JOIN PanelSides ps ON p.Id = ps.PanelId
+                        WHERE p.DetectionDate BETWEEN @Start AND @End
+                        GROUP BY p.Id
+                    )
+                    SELECT
+                        COUNT(*) AS total_sn_count,
+                        SUM(CASE WHEN side_count = 2 AND avi_ok_sides = 2 THEN 1 ELSE 0 END) AS avi_ok_count,
+                        SUM(CASE WHEN uninspected_sides = 0 AND avi_ok_sides < 2 AND has_final_ng = 0 THEN 1 ELSE 0 END) AS ai_ok_count,
+                        SUM(CASE WHEN uninspected_sides = 0 AND avi_ok_sides < 2 AND has_final_ng = 1 THEN 1 ELSE 0 END) AS ai_ng_count,
+                        SUM(CASE WHEN uninspected_sides > 0 THEN 1 ELSE 0 END) AS uninspected_count
+                    FROM panel_stats";
 
                     using (var cmd = new NpgsqlCommand(sql, connection))
                     {
@@ -1113,56 +1079,21 @@ namespace DeepSightDB
                         cmd.Parameters.AddWithValue("@End", end);
                         using (var reader = cmd.ExecuteReader())
                         {
-                            while (reader.Read())
+                            if (reader.Read())
                             {
-                                string sn = reader.GetString(0);
-                                int aviState = reader.IsDBNull(1) ? 0 : reader.GetInt32(1);
-                                int finalState = reader.IsDBNull(2) ? 0 : reader.GetInt32(2);
-
-                                if (!snStates.ContainsKey(sn))
-                                {
-                                    snStates[sn] = new List<(int, int)>();
-                                }
-                                snStates[sn].Add((aviState, finalState));
+                                int totalSnCount = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
+                                int aviOkCount = reader.IsDBNull(1) ? 0 : Convert.ToInt32(reader.GetInt64(1));
+                                int aiOkCount = reader.IsDBNull(2) ? 0 : Convert.ToInt32(reader.GetInt64(2));
+                                int aiNgCount = reader.IsDBNull(3) ? 0 : Convert.ToInt32(reader.GetInt64(3));
+                                int uninspectedCount = reader.IsDBNull(4) ? 0 : Convert.ToInt32(reader.GetInt64(4));
+                                tcs.SetResult((totalSnCount, aviOkCount, aiOkCount, aiNgCount, uninspectedCount));
+                            }
+                            else
+                            {
+                                tcs.SetResult((0, 0, 0, 0, 0));
                             }
                         }
                     }
-
-                    int totalSnCount = snStates.Count;
-                    int aviOkCount = 0;
-                    int aiOkCount = 0;
-                    int aiNgCount = 0;
-                    int uninspectedCount = 0;
-
-                    foreach (var states in snStates.Values)
-                    {
-                        // 检查未检测: 只要有一个面的 AviState 是 0 (未运行)
-                        if (states.Any(s => s.AviState == 0))
-                        {
-                            uninspectedCount++;
-                            continue;
-                        }
-
-                        // 检查AVI OK: 两面都必须是 AVI OK (AviState = 1)
-                        if (states.Count == 2 && states.All(s => s.AviState == 1))
-                        {
-                            aviOkCount++;
-                            continue;
-                        }
-
-                        // 剩下的都是 AVI NG 的板
-                        // 检查最终状态: 只要有一个面最终是 NG (FinalState = 2)，整个板就是 NG
-                        if (states.Any(s => s.FinalState == 2))
-                        {
-                            aiNgCount++;
-                        }
-                        else // 否则，所有面最终都是 OK
-                        {
-                            aiOkCount++;
-                        }
-                    }
-
-                    tcs.SetResult((totalSnCount, aviOkCount, aiOkCount, aiNgCount, uninspectedCount));
                 }
                 catch (Exception ex)
                 {
@@ -1214,21 +1145,28 @@ namespace DeepSightDB
             {
                 try
                 {
-                    var panelRecords = new List<PanelDataRecord>();
+                    var panelRecords = new Dictionary<int, PanelDataRecord>();
 
                     // 如果 lotNumber 为空，直接返回空列表
                     if (string.IsNullOrWhiteSpace(lotNumber))
                     {
-                        tcs.SetResult(panelRecords);
+                        tcs.SetResult(new List<PanelDataRecord>());
                         return;
                     }
 
-                    var sqlBuilder = new System.Text.StringBuilder("SELECT Id, MachineId, SerialNumber, LotNumber, ProductSerial, DetectionDate, PathIndex, AviCreationTime FROM Panels WHERE LotNumber = @LotNumber");
+                    // 使用 LEFT JOIN 一次性查询所有数据，避免 N+1 问题
+                    var sqlBuilder = new System.Text.StringBuilder(@"
+                        SELECT p.Id, p.MachineId, p.SerialNumber, p.LotNumber, p.ProductSerial, p.DetectionDate, p.PathIndex, p.AviCreationTime,
+                               ps.Side, ps.HeatPoints, ps.AviState, ps.AiState, ps.VvsState, ps.VrsState, ps.FinalState
+                        FROM Panels p
+                        LEFT JOIN PanelSides ps ON p.Id = ps.PanelId
+                        WHERE p.LotNumber = @LotNumber");
 
                     if (!string.IsNullOrWhiteSpace(machineId))
                     {
-                        sqlBuilder.Append(" AND MachineId = @MachineId");
+                        sqlBuilder.Append(" AND p.MachineId = @MachineId");
                     }
+                    sqlBuilder.Append(" ORDER BY p.Id");
 
                     using (var cmd = new NpgsqlCommand(sqlBuilder.ToString(), connection))
                     {
@@ -1242,57 +1180,54 @@ namespace DeepSightDB
                         {
                             while (reader.Read())
                             {
-                                panelRecords.Add(new PanelDataRecord
-                                {
-                                    Id = reader.GetInt32(0),
-                                    MachineId = reader.GetString(1),
-                                    SerialNumber = reader.GetString(2),
-                                    LotNumber = reader.GetString(3),
-                                    ProductSerial = reader.IsDBNull(4) ? null : reader.GetString(4),
-                                    DetectionDate = reader.GetDateTime(5),
-                                    PathIndex = reader.IsDBNull(6) ? null : reader.GetString(6),
-                                    AviCreationTime = reader.IsDBNull(7) ? (DateTime?)null : reader.GetDateTime(7),
-                                    Sides = new List<SideData>()
-                                });
-                            }
-                        }
-                    }
+                                int panelId = reader.GetInt32(0);
 
-                    foreach (var record in panelRecords)
-                    {
-                        // 填充 sides
-                        var sidesSql = "SELECT Side, HeatPoints, AviState, AiState, VvsState, VrsState, FinalState FROM PanelSides WHERE PanelId = @PanelId";
-                        using (var sidesCmd = new NpgsqlCommand(sidesSql, connection))
-                        {
-                            sidesCmd.Parameters.AddWithValue("@PanelId", record.Id);
-                            using (var sidesReader = sidesCmd.ExecuteReader())
-                            {
-                                while (sidesReader.Read())
+                                // 如果 Panel 不存在，创建新的
+                                if (!panelRecords.TryGetValue(panelId, out var panelRecord))
+                                {
+                                    panelRecord = new PanelDataRecord
+                                    {
+                                        Id = panelId,
+                                        MachineId = reader.GetString(1),
+                                        SerialNumber = reader.GetString(2),
+                                        LotNumber = reader.GetString(3),
+                                        ProductSerial = reader.IsDBNull(4) ? null : reader.GetString(4),
+                                        DetectionDate = reader.GetDateTime(5),
+                                        PathIndex = reader.IsDBNull(6) ? null : reader.GetString(6),
+                                        AviCreationTime = reader.IsDBNull(7) ? (DateTime?)null : reader.GetDateTime(7),
+                                        Sides = new List<SideData>()
+                                    };
+                                    panelRecords[panelId] = panelRecord;
+                                }
+
+                                // 如果有 Side 数据，添加到 Sides 列表
+                                if (!reader.IsDBNull(8))
                                 {
                                     var sideData = new SideData
                                     {
-                                        Side = sidesReader.GetString(0),
-                                        AviState = sidesReader.IsDBNull(2) ? 0 : sidesReader.GetInt32(2),
-                                        AiState = sidesReader.IsDBNull(3) ? 0 : sidesReader.GetInt32(3),
-                                        VvsState = sidesReader.IsDBNull(4) ? 0 : sidesReader.GetInt32(4),
-                                        VrsState = sidesReader.IsDBNull(5) ? 0 : sidesReader.GetInt32(5),
-                                        FinalState = sidesReader.IsDBNull(6) ? 0 : sidesReader.GetInt32(6)
+                                        Side = reader.GetString(8),
+                                        AviState = reader.IsDBNull(10) ? 0 : reader.GetInt32(10),
+                                        AiState = reader.IsDBNull(11) ? 0 : reader.GetInt32(11),
+                                        VvsState = reader.IsDBNull(12) ? 0 : reader.GetInt32(12),
+                                        VrsState = reader.IsDBNull(13) ? 0 : reader.GetInt32(13),
+                                        FinalState = reader.IsDBNull(14) ? 0 : reader.GetInt32(14)
                                     };
 
-                                    if (!sidesReader.IsDBNull(1))
+                                    if (!reader.IsDBNull(9))
                                     {
-                                        sideData.DetectPoints = JsonConvert.DeserializeObject<List<DetectInfo>>(sidesReader.GetString(1));
+                                        sideData.DetectPoints = JsonConvert.DeserializeObject<List<DetectInfo>>(reader.GetString(9));
                                     }
                                     else
                                     {
                                         sideData.DetectPoints = new List<DetectInfo>();
                                     }
-                                    record.Sides.Add(sideData);
+                                    panelRecord.Sides.Add(sideData);
                                 }
                             }
                         }
                     }
-                    tcs.SetResult(panelRecords);
+
+                    tcs.SetResult(panelRecords.Values.ToList());
                 }
                 catch (Exception ex)
                 {
@@ -1316,13 +1251,21 @@ namespace DeepSightDB
             {
                 try
                 {
-                    var panelRecords = new List<PanelDataRecord>();
-                    var sqlBuilder = new System.Text.StringBuilder("SELECT Id, MachineId, SerialNumber, LotNumber, ProductSerial, DetectionDate, PathIndex, avicreationtime FROM Panels WHERE DetectionDate BETWEEN @Start AND @End");
+                    var panelRecords = new Dictionary<int, PanelDataRecord>();
+
+                    // 使用 LEFT JOIN 一次性查询所有数据，避免 N+1 问题
+                    var sqlBuilder = new System.Text.StringBuilder(@"
+                        SELECT p.Id, p.MachineId, p.SerialNumber, p.LotNumber, p.ProductSerial, p.DetectionDate, p.PathIndex, p.AviCreationTime,
+                               ps.Side, ps.HeatPoints, ps.AviState, ps.AiState, ps.VvsState, ps.VrsState, ps.FinalState
+                        FROM Panels p
+                        LEFT JOIN PanelSides ps ON p.Id = ps.PanelId
+                        WHERE p.DetectionDate BETWEEN @Start AND @End");
 
                     if (!string.IsNullOrWhiteSpace(partNumber))
                     {
-                        sqlBuilder.Append(" AND ProductSerial = @ProductSerial");
+                        sqlBuilder.Append(" AND p.ProductSerial = @ProductSerial");
                     }
+                    sqlBuilder.Append(" ORDER BY p.Id");
 
                     using (var cmd = new NpgsqlCommand(sqlBuilder.ToString(), connection))
                     {
@@ -1337,56 +1280,54 @@ namespace DeepSightDB
                         {
                             while (reader.Read())
                             {
-                                panelRecords.Add(new PanelDataRecord
-                                {
-                                    Id = reader.GetInt32(0),
-                                    MachineId = reader.GetString(1),
-                                    SerialNumber = reader.GetString(2),
-                                    LotNumber = reader.GetString(3),
-                                    ProductSerial = reader.IsDBNull(4) ? null : reader.GetString(4),
-                                    DetectionDate = reader.GetDateTime(5),
-                                    PathIndex = reader.IsDBNull(6) ? null : reader.GetString(6),
-                                    AviCreationTime = reader.IsDBNull(7) ? (DateTime?)null : reader.GetDateTime(7),
-                                    Sides = new List<SideData>()
-                                });
-                            }
-                        }
-                    }
+                                int panelId = reader.GetInt32(0);
 
-                    foreach (var record in panelRecords)
-                    {
-                        var sidesSql = "SELECT Side, HeatPoints, AviState, AiState, VvsState, VrsState, FinalState FROM PanelSides WHERE PanelId = @PanelId";
-                        using (var sidesCmd = new NpgsqlCommand(sidesSql, connection))
-                        {
-                            sidesCmd.Parameters.AddWithValue("@PanelId", record.Id);
-                            using (var sidesReader = sidesCmd.ExecuteReader())
-                            {
-                                while (sidesReader.Read())
+                                // 如果 Panel 不存在，创建新的
+                                if (!panelRecords.TryGetValue(panelId, out var panelRecord))
+                                {
+                                    panelRecord = new PanelDataRecord
+                                    {
+                                        Id = panelId,
+                                        MachineId = reader.GetString(1),
+                                        SerialNumber = reader.GetString(2),
+                                        LotNumber = reader.GetString(3),
+                                        ProductSerial = reader.IsDBNull(4) ? null : reader.GetString(4),
+                                        DetectionDate = reader.GetDateTime(5),
+                                        PathIndex = reader.IsDBNull(6) ? null : reader.GetString(6),
+                                        AviCreationTime = reader.IsDBNull(7) ? (DateTime?)null : reader.GetDateTime(7),
+                                        Sides = new List<SideData>()
+                                    };
+                                    panelRecords[panelId] = panelRecord;
+                                }
+
+                                // 如果有 Side 数据，添加到 Sides 列表
+                                if (!reader.IsDBNull(8))
                                 {
                                     var sideData = new SideData
                                     {
-                                        Side = sidesReader.GetString(0),
-                                        AviState = sidesReader.IsDBNull(2) ? 0 : sidesReader.GetInt32(2),
-                                        AiState = sidesReader.IsDBNull(3) ? 0 : sidesReader.GetInt32(3),
-                                        VvsState = sidesReader.IsDBNull(4) ? 0 : sidesReader.GetInt32(4),
-                                        VrsState = sidesReader.IsDBNull(5) ? 0 : sidesReader.GetInt32(5),
-                                        FinalState = sidesReader.IsDBNull(6) ? 0 : sidesReader.GetInt32(6)
+                                        Side = reader.GetString(8),
+                                        AviState = reader.IsDBNull(10) ? 0 : reader.GetInt32(10),
+                                        AiState = reader.IsDBNull(11) ? 0 : reader.GetInt32(11),
+                                        VvsState = reader.IsDBNull(12) ? 0 : reader.GetInt32(12),
+                                        VrsState = reader.IsDBNull(13) ? 0 : reader.GetInt32(13),
+                                        FinalState = reader.IsDBNull(14) ? 0 : reader.GetInt32(14)
                                     };
 
-                                    if (!sidesReader.IsDBNull(1))
+                                    if (!reader.IsDBNull(9))
                                     {
-                                        sideData.DetectPoints = JsonConvert.DeserializeObject<List<DetectInfo>>(sidesReader.GetString(1));
+                                        sideData.DetectPoints = JsonConvert.DeserializeObject<List<DetectInfo>>(reader.GetString(9));
                                     }
                                     else
                                     {
                                         sideData.DetectPoints = new List<DetectInfo>();
                                     }
-                                    record.Sides.Add(sideData);
+                                    panelRecord.Sides.Add(sideData);
                                 }
                             }
                         }
                     }
-                    tcs.SetResult(panelRecords);
+
+                    tcs.SetResult(panelRecords.Values.ToList());
                 }
                 catch (Exception ex)
                 {

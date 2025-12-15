@@ -3,11 +3,13 @@ using System.Drawing;
 using System.IO;
 using System.Text;
 using Newtonsoft.Json;
+using Serilog;
+using Serilog.Core;
 
 namespace DeepSightTool
 {
     /// <summary>
-    /// 文本日志记录辅助类
+    /// 文本日志记录辅助类 - 集成 Serilog 优化日志性能
     /// </summary>
     public class LogTextHelper
     {
@@ -29,6 +31,11 @@ namespace DeepSightTool
         /// </summary>
         public static bool Enable = true;
 
+        // Serilog 日志记录器
+        private static Logger _infoLogger;
+        private static Logger _warnLogger;
+        private static Logger _errorLogger;
+
         static LogTextHelper()
         {
             if (!Directory.Exists(LogFolder))
@@ -39,10 +46,88 @@ namespace DeepSightTool
             {
                 Directory.CreateDirectory(VBresult);
             }
+
+            // 初始化 Serilog 日志记录器，使用异步写入提升性能
+            InitializeSerilog();
         }
 
         /// <summary>
-        /// 记录信息
+        /// 初始化 Serilog 日志记录器 - 高性能配置
+        /// </summary>
+        private static void InitializeSerilog()
+        {
+            var outputTemplate = "[{Timestamp:yyyy-MM-dd HH:mm:ss,fff}]---->  {Message:lj}{NewLine}{NewLine}";
+            var encoding = Encoding.GetEncoding("GB2312");
+
+            // 高性能配置参数
+            const int asyncBufferSize = 10000;          // 异步队列大小，默认10000
+            const int fileSizeLimitBytes = 100 * 1024 * 1024; // 单个文件100MB
+            const bool blockWhenFull = false;           // 队列满时不阻塞，直接丢弃（高性能模式）
+
+            // Info 日志 - 普通日志 (高性能异步写入)
+            _infoLogger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.Async(a => a.File(
+                    Path.Combine(LogFolder, ".log"),
+                    outputTemplate: outputTemplate,
+                    encoding: encoding,
+                    rollingInterval: RollingInterval.Hour,
+                    retainedFileCountLimit: null,
+                    fileSizeLimitBytes: fileSizeLimitBytes,
+                    rollOnFileSizeLimit: true,
+                    buffered: true,
+                    flushToDiskInterval: TimeSpan.FromSeconds(2)),
+                    bufferSize: asyncBufferSize,
+                    blockWhenFull: blockWhenFull)
+                .CreateLogger();
+
+            // Warn 日志 (高性能异步写入)
+            _warnLogger = new LoggerConfiguration()
+                .MinimumLevel.Warning()
+                .WriteTo.Async(a => a.File(
+                    Path.Combine(LogFolder, "_Warn.log"),
+                    outputTemplate: outputTemplate,
+                    encoding: encoding,
+                    rollingInterval: RollingInterval.Hour,
+                    retainedFileCountLimit: null,
+                    fileSizeLimitBytes: fileSizeLimitBytes,
+                    rollOnFileSizeLimit: true,
+                    buffered: true,
+                    flushToDiskInterval: TimeSpan.FromSeconds(2)),
+                    bufferSize: asyncBufferSize,
+                    blockWhenFull: blockWhenFull)
+                .CreateLogger();
+
+            // Error 日志 (高性能异步写入)
+            _errorLogger = new LoggerConfiguration()
+                .MinimumLevel.Error()
+                .WriteTo.Async(a => a.File(
+                    Path.Combine(LogFolder, "_Err.log"),
+                    outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss,fff}]---->  {Message:lj}{NewLine}{Exception}{NewLine}",
+                    encoding: encoding,
+                    rollingInterval: RollingInterval.Hour,
+                    retainedFileCountLimit: null,
+                    fileSizeLimitBytes: fileSizeLimitBytes,
+                    rollOnFileSizeLimit: true,
+                    buffered: true,
+                    flushToDiskInterval: TimeSpan.FromSeconds(2)),
+                    bufferSize: asyncBufferSize,
+                    blockWhenFull: blockWhenFull)
+                .CreateLogger();
+        }
+
+        /// <summary>
+        /// 关闭并刷新日志 (应用退出时调用)
+        /// </summary>
+        public static void CloseAndFlush()
+        {
+            _infoLogger?.Dispose();
+            _warnLogger?.Dispose();
+            _errorLogger?.Dispose();
+        }
+
+        /// <summary>
+        /// 记录信息 (使用 Serilog 异步写入)
         /// </summary>
         /// <param name="message">错误信息</param>
         public static void WriteLine(string message)
@@ -51,42 +136,27 @@ namespace DeepSightTool
             {
                 return;
             }
-            string temp = "";
-            if (message.Contains("---->"))
-            {
-                temp = string.Format("{0} \r\n\r\n", message);
-            }
-            else
-            {
-                temp = string.Format("[{0}]---->  {1} \r\n\r\n", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss,fff"), message);
-            }
-            //string temp = string.Format("[{0}]---->  {1} \r\n\r\n", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss,fff"), message);
 
-            //string temp = DateTime.Now.ToString("[yyyy-MM-dd HH:mm:ss,fff]---->  ") + message + "\r\n\r\n";
-            string fileName = DateTime.Now.ToString("yyyyMMddHH") + ".log";
             try
             {
                 if (RecordLog)
                 {
-                    File.AppendAllText(Path.Combine(LogFolder, fileName), temp, Encoding.GetEncoding("GB2312"));
+                    // 使用 Serilog 异步写入日志
+                    _infoLogger?.Information(message);
                 }
                 if (DebugLog)
                 {
-                    Console.WriteLine(temp);
+                    Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss,fff}]---->  {message}");
                 }
             }
             catch
             {
-            }
-            finally
-            {
-                temp = null;
-                fileName = null;
+                // 忽略日志写入异常
             }
         }
 
         /// <summary>
-        /// 记录信息
+        /// 记录警告信息 (使用 Serilog 异步写入)
         /// </summary>
         /// <param name="message">错误信息</param>
         public static void WriteLine2(string message)
@@ -95,42 +165,27 @@ namespace DeepSightTool
             {
                 return;
             }
-            string temp = "";
-            if (message.Contains("---->"))
-            {
-                temp = string.Format("{0} \r\n\r\n", message);
-            }
-            else
-            {
-                temp = string.Format("[{0}]---->  {1} \r\n\r\n", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss,fff"), message);
-            }
-            //string temp = string.Format("[{0}]---->  {1} \r\n\r\n", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss,fff"), message);
 
-            //string temp = DateTime.Now.ToString("[yyyy-MM-dd HH:mm:ss,fff]---->  ") + message + "\r\n\r\n";
-            string fileName = DateTime.Now.ToString("yyyyMMddHH") + "_Warn.log";
             try
             {
                 if (RecordLog)
                 {
-                    File.AppendAllText(Path.Combine(LogFolder, fileName), temp, Encoding.GetEncoding("GB2312"));
+                    // 使用 Serilog 异步写入警告日志
+                    _warnLogger?.Warning(message);
                 }
                 if (DebugLog)
                 {
-                    Console.WriteLine(temp);
+                    Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss,fff}]---->  {message}");
                 }
             }
             catch
             {
-            }
-            finally
-            {
-                temp = null;
-                fileName = null;
+                // 忽略日志写入异常
             }
         }
 
         /// <summary>
-        /// 记录信息
+        /// 记录错误信息和异常 (使用 Serilog 异步写入)
         /// </summary>
         /// <param name="message">错误信息</param>
         /// <param name="ex">异常信息</param>
@@ -140,33 +195,24 @@ namespace DeepSightTool
             {
                 return;
             }
-            string temp = string.Format("[{0}]---->  {1} \r\n {2} \r\n\r\n", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss,fff"), message, ex.ToString());
-            //string temp = DateTime.Now.ToString("[yyyy-MM-dd HH:mm:ss,fff]---->  ") + message + "\r\n"
-            //    + ex.ToString() + "\r\n\r\n";
-            string fileName = DateTime.Now.ToString("yyyyMMddHH") + "_Err.log";
+
             try
             {
                 if (RecordLog)
                 {
-                    File.AppendAllText(Path.Combine(LogFolder, fileName), temp, Encoding.GetEncoding("GB2312"));
+                    // 使用 Serilog 异步写入错误日志
+                    _errorLogger?.Error(ex, message);
                 }
                 if (DebugLog)
                 {
-                    Console.WriteLine(temp);
+                    Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss,fff}]---->  {message}\r\n{ex}");
                 }
 
-                if (OnCallBackLogProc != null)
-                {
-                    OnCallBackLogProc(string.Format("{0}:{1}", message, ex.ToString()), Color.Red);
-                }
+                OnCallBackLogProc?.Invoke($"{message}:{ex}", Color.Red);
             }
             catch
             {
-            }
-            finally
-            {
-                temp = null;
-                fileName = null;
+                // 忽略日志写入异常
             }
         }
 
@@ -186,7 +232,7 @@ namespace DeepSightTool
         }
 
         /// <summary>
-        /// 记录信息
+        /// 记录调试信息
         /// </summary>
         /// <param name="ex">错误信息</param>
         public static void Debug(object ex)
@@ -195,15 +241,13 @@ namespace DeepSightTool
             {
                 return;
             }
-            WriteLine(ex.ToString());
-            if (OnCallBackLogProc != null)
-            {
-                OnCallBackLogProc(ex.ToString(), Color.Green);
-            }
+            var msg = ex?.ToString() ?? string.Empty;
+            _infoLogger?.Debug(msg);
+            OnCallBackLogProc?.Invoke(msg, Color.Green);
         }
 
         /// <summary>
-        /// 记录信息
+        /// 记录警告信息
         /// </summary>
         /// <param name="ex">错误信息</param>
         public static void Warn(object ex)
@@ -212,15 +256,13 @@ namespace DeepSightTool
             {
                 return;
             }
-            WriteLine2(ex.ToString());
-            if (OnCallBackLogProc != null)
-            {
-                OnCallBackLogProc(ex.ToString(), Color.Red);
-            }
+            var msg = ex?.ToString() ?? string.Empty;
+            _warnLogger?.Warning(msg);
+            OnCallBackLogProc?.Invoke(msg, Color.Red);
         }
 
         /// <summary>
-        /// 记录信息
+        /// 记录错误信息
         /// </summary>
         /// <param name="ex">错误信息</param>
         public static void Error(object ex)
@@ -229,15 +271,13 @@ namespace DeepSightTool
             {
                 return;
             }
-            WriteLine2(ex.ToString());
-            if (OnCallBackLogProc != null)
-            {
-                OnCallBackLogProc(ex.ToString(), Color.Red);
-            }
+            var msg = ex?.ToString() ?? string.Empty;
+            _errorLogger?.Error(msg);
+            OnCallBackLogProc?.Invoke(msg, Color.Red);
         }
 
         /// <summary>
-        /// 记录信息
+        /// 记录普通信息
         /// </summary>
         /// <param name="ex">错误信息</param>
         public static void Info(object ex)
@@ -246,11 +286,9 @@ namespace DeepSightTool
             {
                 return;
             }
-            WriteLine(ex.ToString());
-            if (OnCallBackLogProc != null)
-            {
-                OnCallBackLogProc(ex.ToString(), Color.Green);
-            }
+            var msg = ex?.ToString() ?? string.Empty;
+            _infoLogger?.Information(msg);
+            OnCallBackLogProc?.Invoke(msg, Color.Green);
         }
 
         /// <summary>

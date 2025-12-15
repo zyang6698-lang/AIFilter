@@ -15,6 +15,7 @@ namespace DeepSightModel
         public List<int> DefectIndex { get; set; }
         public List<int> PcsIndex { get; set; }
         public List<Mat> Mats { get;set; }
+        public List<string > ImageKeys { get; set; }
 
         public RootVBInfo VbInfo;
         //2025/08/21/增加minio路径信息
@@ -34,10 +35,6 @@ namespace DeepSightModel
         /// </summary>
         public VBModel Model { get; set; }
 
-        /// <summary>
-        /// Minio图片路径列表（格式：endpoint:objectKey）
-        /// </summary>
-        public List<string> ImageKeys { get; set; }
 
         /// <summary>
         /// 用于发送PanelInfo的对象

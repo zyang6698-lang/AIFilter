@@ -8,15 +8,14 @@ using Minio;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OpenCvSharp;
-using OpenCvSharp.Extensions;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reactive.Concurrency;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -35,9 +34,9 @@ namespace DeepSightWorkLib
         private readonly ConcurrentQueue<VBModel> _aviQueue = new ConcurrentQueue<VBModel>();
 
         /// <summary>
-        /// 算法处理结果存储对象队列
+        /// 算法处理结果存储对象队列 (Key, SN, Side, RootAIResult, DsCenterInfo)
         /// </summary>
-        private readonly ConcurrentQueue<Tuple<string, string, string, RootAIResult>> _aiResultQueue = new ConcurrentQueue<Tuple<string, string, string, RootAIResult>>();
+        private readonly ConcurrentQueue<Tuple<string, string, string, RootAIResult, DsCenterInfo>> _aiResultQueue = new ConcurrentQueue<Tuple<string, string, string, RootAIResult, DsCenterInfo>>();
 
         /// <summary>
         /// 图片加载队列（解耦图片读取和推理）
@@ -73,7 +72,7 @@ namespace DeepSightWorkLib
 
         private DateTime fetchTime = DateTime.Now;
         private const string FixedTimeFormat = "yyyyMMddHHmmssfff";
-
+        private Stopwatch AIStopwatch;
 
 
         // Task-based management（线程管理）
@@ -104,6 +103,11 @@ namespace DeepSightWorkLib
         /// </summary>
         public MinioClass Minio { get; private set; }
 
+        /// <summary>
+        /// 图像显示服务
+        /// </summary>
+        public ImageDisplayService ImageDisplay { get; private set; }
+
 
         /// <summary>
         /// 开始/停止作业标志
@@ -130,9 +134,19 @@ namespace DeepSightWorkLib
         }
 
         /// <summary>
-        /// 是否显示检测框
+        /// 是否显示检测框（同步到 ImageDisplayService）
         /// </summary>
-        public bool IsShowBox { get; set; } = false;
+        public bool IsShowBox
+        {
+            get => ImageDisplay?.IsShowBox ?? false;
+            set
+            {
+                if (ImageDisplay != null)
+                {
+                    ImageDisplay.IsShowBox = value;
+                }
+            }
+        }
 
         /// <summary>
         /// 是否允许处理
@@ -225,6 +239,7 @@ namespace DeepSightWorkLib
             Defect = new DefectClass();
             HttpDb = new HttpClass();
             Minio = new MinioClass();
+            ImageDisplay = new ImageDisplayService(Minio);
             // 先初始化数据库（确保数据库和表存在），然后再创建 DatabaseHelper 实例
             DatabaseHelper.InitializeDatabase();
             _databaseHelper = new DatabaseHelper();
@@ -247,7 +262,7 @@ namespace DeepSightWorkLib
             _defectTask = Task.Run(() => ThreadDefect(token), token);
             _returnAviTask = Task.Run(() => ThreadReturnAVI(token), token);
             _postProcessTask = Task.Run(() => ThreadPostProcess(token), token);
-
+            AIStopwatch = new Stopwatch();
             // ⭐ 关键修改点7：启动清理线程
             _cleanupTask = Task.Factory.StartNew(() => ThreadCleanupProcessingCache(token),
                 token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
@@ -256,40 +271,21 @@ namespace DeepSightWorkLib
         }
 
         /// <summary>
-        /// 设置显示窗口列表
+        /// 设置显示窗口列表（委托给 ImageDisplayService）
         /// </summary>
         public void SetHWindow(List<CvDisplay> displaysList)
         {
-            DisplaysList = SetDisplayList(displaysList, DisplaysList);
+            ImageDisplay.SetDisplayList(displaysList);
+            DisplaysList = ImageDisplay.DisplaysList;
         }
 
         /// <summary>
-        /// 设置显示窗口列表2
+        /// 设置显示窗口列表2（委托给 ImageDisplayService）
         /// </summary>
         public void SetHWindow2(List<CvDisplay> displaysList)
         {
-            DisplaysList2 = SetDisplayList(displaysList, DisplaysList2);
-        }
-
-        /// <summary>
-        /// 通用设置显示列表方法
-        /// </summary>
-        private List<CvDisplay> SetDisplayList(List<CvDisplay> source, List<CvDisplay> target)
-        {
-            try
-            {
-                if (target == null)
-                {
-                    target = new List<CvDisplay>();
-                }
-                target.Clear();
-                target.AddRange(source);
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error("异常", ex);
-            }
-            return target;
+            ImageDisplay.SetDisplayList2(displaysList);
+            DisplaysList2 = ImageDisplay.DisplaysList2;
         }
 
         #region 兼容性方法（已弃用）
@@ -297,35 +293,22 @@ namespace DeepSightWorkLib
         [Obsolete("请使用 SetHWindow 方法")]
         public void setHWindow(List<CvDisplay> displaysList) => SetHWindow(displaysList);
 
-        [Obsolete("请使用 ShowImage 方法")]
+        [Obsolete("请使用 ImageDisplay.ShowImage 方法")]
         public void showImage(string path, int index, string result = "", VBRcvInfp box = null) => ShowImage(path, index, result, box);
+
+        /// <summary>
+        /// 显示图片（委托给 ImageDisplayService）
+        /// </summary>
+        public void ShowImage(string path, int index, string result = "", VBRcvInfp box = null)
+        {
+            ImageDisplay.ShowImage(path, index, result, box);
+        }
 
         #endregion
 
         #endregion
 
         #region 辅助方法
-
-        /// <summary>
-        /// 将 AI 结果代码转换为显示文本
-        /// </summary>
-        /// <param name="resultCode">结果代码字符串 (0=OK, 1=NG, 2=ByPass)</param>
-        /// <returns>转换后的文本</returns>
-        private static string ConvertResultCodeToText(string resultCode)
-        {
-            if (string.IsNullOrEmpty(resultCode)) return resultCode;
-            if (int.TryParse(resultCode, out int code))
-            {
-                switch (code)
-                {
-                    case 0: return "OK";
-                    case 1: return "NG";
-                    case 2: return "ByPass";
-                    default: return resultCode;
-                }
-            }
-            return resultCode;
-        }
 
         #endregion
 
@@ -619,6 +602,7 @@ namespace DeepSightWorkLib
                             }
 
                             SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面开始AI检测(缺陷数:{info.Mats.Count})");
+                            AIStopwatch.Restart();
 
                             //调用算法处理
                             LogTextHelper.Info($"准备DefectMethod，SN:{info.SN}，图片数量:{info.Mats.Count}");
@@ -652,9 +636,13 @@ namespace DeepSightWorkLib
 
 
                                     List<ResultInfo> results = new List<ResultInfo>();
-
+                                    if (msg.Count == 0)
+                                    {
+                                        msg = Enumerable.Repeat("1", info.DefectIndex.Count).ToList();
+                                    }
                                     for (int i = 0; i < info.DefectIndex.Count; i++)
                                     {
+                                        
                                         ResultInfo res = new ResultInfo
                                         {
                                             ResultInfos = $"{info.Side}_{info.PcsIndex[i]}_{info.DefectIndex[i]}_{msg[i]}",
@@ -675,17 +663,16 @@ namespace DeepSightWorkLib
                                     JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };//去掉空值NULL
                                     data.Value = JsonConvert.SerializeObject(writeBackData, Formatting.None, jsonSetting);
 
-                                    Tuple<string, string, string, RootAIResult> dbTub = Tuple.Create(info.Key, info.SN, info.Side, data);
+                                    // 在 B 面时获取中台数据，一起放入队列处理
+                                    DsCenterInfo dsinfo = null;
+                                    if (info.Side == "B")
+                                    {
+                                        _dsCenterInfoDict.TryRemove($"{info.panelInfo.LotId}_{info.panelInfo.SerialNumber}", out dsinfo);
+                                    }
+
+                                    Tuple<string, string, string, RootAIResult, DsCenterInfo> dbTub = Tuple.Create(info.Key, info.SN, info.Side, data, dsinfo);
                                     // 存储算法处理的结果
                                     _aiResultQueue.Enqueue(dbTub);
-                                }
-                                LogTextHelper.SaveVBResultInfo($"{info.SN}：{string.Join(",", msg)}");
-                                if (info.Side == "B")
-                                {
-                                    // 中台
-                                    _dsCenterInfoDict.TryRemove($"{info.panelInfo.LotId}_{info.panelInfo.SerialNumber}", out DsCenterInfo dsinfo);
-                                    HttpDb.HttpPostMethod2(SysConfig.DsCenterUrl, dsinfo, 0, out string outInfo);
-                                    LogTextHelper.Info($"sn:{info.SN}_中台数据返回信息:{outInfo}");
                                 }
                             }
                             else
@@ -701,6 +688,8 @@ namespace DeepSightWorkLib
                         }
                         finally
                         {
+                            AIStopwatch.Stop();
+                            LogTextHelper.Info($"{info.SN} {info.Side} AI花费时间{AIStopwatch.ElapsedMilliseconds}ms");
                             // 释放 Mat 资源，防止内存泄漏
                             if (info?.Mats != null)
                             {
@@ -745,6 +734,15 @@ namespace DeepSightWorkLib
                 LogTextHelper.Info($"{sn} {side} 开始将json转为vbinfo");
                 RootVBInfo vbInfo = PanelJsonToVBInfo(ip, port, head, obj, ref defectIndex, ref pcsList, out bool isByPass);
 
+                RootPanelInfoWithIP rootobj = new RootPanelInfoWithIP()
+                {
+                    IP = ip,
+                    rootInfo = obj,
+                };
+
+                // 解耦：先获取图片Key列表，入图片加载队列，非阻塞
+                var imageKeys = GetAllMinioImageKeys(rootobj);
+
                 //考虑用Model方式
                 VBModel model = new VBModel
                 {
@@ -756,22 +754,13 @@ namespace DeepSightWorkLib
                     VbInfo = vbInfo,
                     minioPath = head,
                     panelInfo = obj,
-                    isByPass = isByPass
+                    isByPass = isByPass,
+                    ImageKeys=imageKeys
                 };
 
-
-                RootPanelInfoWithIP rootobj = new RootPanelInfoWithIP()
-                {
-                    IP = ip,
-                    rootInfo = obj,
-                };
-
-                // 解耦：先获取图片Key列表，入图片加载队列，非阻塞
-                var imageKeys = GetAllMinioImageKeys(rootobj);
                 var loadModel = new ImageLoadModel
                 {
                     Model = model,
-                    ImageKeys = imageKeys,
                     RootPanelInfo = rootobj
                 };
                 _imageLoadQueue.Enqueue(loadModel);
@@ -1480,293 +1469,19 @@ namespace DeepSightWorkLib
 
         #endregion
 
-        #region 图像显示
+        #region 图像显示（委托给 ImageDisplayService）
 
         /// <summary>
-        /// 显示图片
-        /// </summary>
-        public void ShowImage(string path, int index, string result = "", VBRcvInfp box = null)
-        {
-            Task.Run(() =>
-            {
-                Mat mt = null;
-                try
-                {
-                    if (string.IsNullOrEmpty(path))
-                    {
-                        DisplaysList[index].Image = null;
-                        DisplaysList[index].Clear();
-                        return;
-                    }
-                    string[] str = path.Split(':').ToArray();
-                    using (var stream = Minio.GetImageStreamSync("deepiresults", str[0], str[1]))
-                    {
-                        if (stream.Length == 0)
-                        {
-                            Console.WriteLine("图片数据为空");
-                            return;
-                        }
-                        mt = Cv2.ImDecode(stream.ToArray(), ImreadModes.Color);
-
-                        if (IsShowBox)
-                        {
-                            if (box != null)
-                            {
-                                List<string> content = new List<string>();
-                                List<System.Drawing.Point> location = new List<System.Drawing.Point>();
-                                for (int i = 0; i < box.bbox.Count(); i++)
-                                {
-                                    Rect rect = new Rect((int)box.bbox[i][0], (int)box.bbox[i][1], (int)box.bbox[i][2], (int)box.bbox[i][3]);
-                                    location.Add(new System.Drawing.Point((int)box.bbox[i][0] + 10, (int)box.bbox[i][1] + 30));
-                                    mt.Rectangle(rect, Scalar.Red, 2);
-                                }
-                                content.AddRange(box.sub_DefectNames);
-                                PutTextAll(ref mt, content.ToArray(), location.ToArray(), Color.Yellow, 24);
-                            }
-                        }
-                        // 注意：DisplaysList[index].Image 赋值后，旧的 Image 应由 CvDisplay 内部管理释放
-                        // 新的 mt 所有权转移给 DisplaysList[index].Image，此处不再释放
-                        DisplaysList[index].Image = mt;
-                        mt = null; // 所有权已转移，置空防止 finally 中误释放
-                        string displayText = ConvertResultCodeToText(result);
-                        DisplaysList[index].DrawStatus(string.IsNullOrEmpty(displayText) ? "" : $"AI结果:{displayText}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    LogTextHelper.Error("异常(可能未找到Minio路径图像),Index为" + index.ToString() + "\n" + ex.ToString());
-                }
-                finally
-                {
-                    // 如果发生异常且 mt 未被成功赋值给 DisplaysList，则释放
-                    mt?.Dispose();
-                }
-            });
-        }
-
-
-        /// <summary>
-        /// 显示图片（支持多图拼接）
+        /// 显示图片（支持多图拼接）- 委托给 ImageDisplayService
         /// </summary>
         public void ShowImage2(int index, List<string> paths, string result = "", VBRcvInfp box = null)
         {
-            Task.Run(() =>
-            {
-                Mat[] mats = new Mat[paths.Count];
-                Mat resultMat = null;
-                try
-                {
-                    if (paths.Count <= 0)
-                    {
-                        DisplaysList2[index].Image = null;
-                        DisplaysList2[index].Clear();
-                        return;
-                    }
-                    if (paths.Count == 1)
-                    {
-                        string[] str = paths[0].Split(':').ToArray();
-                        using (var stream = Minio.GetImageStreamSync("deepiresults", str[0], str[1]))
-                        {
-                            if (stream.Length == 0)
-                            {
-                                Console.WriteLine("图片数据为空");
-                                return;
-                            }
-                            resultMat = Cv2.ImDecode(stream.ToArray(), ImreadModes.Color);
-
-                            // 在查询时显示结果
-                            if (box != null)
-                            {
-                                List<string> content = new List<string>();
-                                List<System.Drawing.Point> location = new List<System.Drawing.Point>();
-                                for (int i = 0; i < box.bbox.Count(); i++)
-                                {
-                                    Rect rect = new Rect((int)box.bbox[i][0], (int)box.bbox[i][1], (int)box.bbox[i][2], (int)box.bbox[i][3]);
-                                    resultMat.Rectangle(rect, Scalar.Red, 2);
-                                }
-                                PutTextAll(ref resultMat, content.ToArray(), location.ToArray(), Color.Yellow, 30);
-                            }
-                            DisplaysList2[index].Image = resultMat;
-                            resultMat = null; // 所有权已转移
-                            string displayText = ConvertResultCodeToText(result);
-                            DisplaysList2[index].DrawStatus(string.IsNullOrEmpty(displayText) ? "" : $"AI结果:{displayText}");
-                        }
-                    }
-                    else if (paths.Count > 1) // 拼接显示
-                    {
-                        for (int i = 0; i < paths.Count; i++)
-                        {
-                            string[] str = paths[i].Split(':').ToArray();
-                            using (var stream = Minio.GetImageStreamSync("deepiresults", str[0], str[1]))
-                            {
-
-                                if (stream.Length == 0)
-                                {
-                                    Console.WriteLine("图片数据为空");
-                                    return;
-                                }
-                                mats[i] = Cv2.ImDecode(stream.ToArray(), ImreadModes.Color);
-                                if (i == 0)
-                                {
-                                    if (box != null)
-                                    {
-                                        List<string> content = new List<string>();
-                                        List<System.Drawing.Point> location = new List<System.Drawing.Point>();
-                                        for (int j = 0; j < box.bbox.Count(); j++)
-                                        {
-                                            Rect rect = new Rect((int)box.bbox[j][0], (int)box.bbox[j][1], (int)box.bbox[j][2], (int)box.bbox[j][3]);
-                                            mats[i].Rectangle(rect, Scalar.Red, 2);
-                                        }
-                                        PutTextAll(ref mats[i], content.ToArray(), location.ToArray(), Color.Yellow, 30);
-                                    }
-                                }
-                            }
-                        }
-                        resultMat = new Mat();
-                        Cv2.HConcat(mats, resultMat);
-                        // 拼接完成后释放源 Mat 数组
-                        for (int i = 0; i < mats.Length; i++)
-                        {
-                            mats[i]?.Dispose();
-                            mats[i] = null;
-                        }
-                        DisplaysList2[index].Image = resultMat;
-                        resultMat = null; // 所有权已转移
-                        string displayText2 = ConvertResultCodeToText(result);
-                        DisplaysList2[index].DrawStatus(string.IsNullOrEmpty(displayText2) ? "" : $"AI结果:{displayText2}");
-                    }
-
-                }
-                catch (Exception ex)
-                {
-                    // 异常时尝试拼接已加载的图片
-                    Mat errorMat = null;
-                    try
-                    {
-                        List<Mat> mts_list = new List<Mat>();
-                        for (int i = 0; i < mats.Length; i++)
-                        {
-                            if (mats[i] != null)
-                            {
-                                mts_list.Add(mats[i]);
-                            }
-                        }
-                        if (mts_list.Count > 0)
-                        {
-                            errorMat = new Mat();
-                            Cv2.HConcat(mts_list.ToArray(), errorMat);
-                            DisplaysList2[index].Image = errorMat;
-                            errorMat = null; // 所有权已转移
-                        }
-                    }
-                    finally
-                    {
-                        errorMat?.Dispose();
-                    }
-                    LogTextHelper.Error("异常(可能未找到Minio路径图像),Index为" + index.ToString() + "\n" + ex.ToString());
-                }
-                finally
-                {
-                    // 释放未转移所有权的 Mat
-                    resultMat?.Dispose();
-                    for (int i = 0; i < mats.Length; i++)
-                    {
-                        mats[i]?.Dispose();
-                    }
-                }
-            });
-        }
-        public void PutTextAll(ref Mat mat, string[] content, System.Drawing.Point[] location,
-        Color color, float fontSzie = 8, string familyName = "宋体")
-        {
-            try
-            {
-                using (Bitmap bit = mat.ToBitmap())
-                {
-                    using (Image tempImg = (Image)bit)
-                    {
-                        for (int i = 0; i < content.Length; i++)
-                        {
-                            DrawString(tempImg, content[i], location[i], color, fontSzie, familyName);
-                        }
-                        var tempMat = ToMat(tempImg);
-                        tempMat.CopyTo(mat);
-                        tempMat.Dispose();
-                        //2024/1/7
-                        tempImg.Dispose();
-                        bit.Dispose();
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error("Error", ex);
-            }
-        }
-
-        public void DrawString(Image image, string content, System.Drawing.Point location,
-            Color color, float fontSzie = 10, string familyName = "宋体")
-        {
-            try
-            {
-                using (Graphics g = Graphics.FromImage(image))
-                {
-                    Font font = new Font(familyName, fontSzie, FontStyle.Regular, GraphicsUnit.Pixel);
-                    g.DrawString(content, font, new SolidBrush(color), location);
-                }
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error(ex.ToString());
-            }
-        }
-
-        public Mat ToMat(Image image)
-        {
-            try
-            {
-                return image == null ? null : Cv2.ImDecode(ToBinary(image), ImreadModes.Color);
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error(ex.ToString());
-                return new Mat();
-            }
-        }
-
-        public byte[] ToBinary(Image image)
-        {
-            try
-            {
-                if (image == null)
-                    return new byte[0];
-                using (MemoryStream stream = new MemoryStream())
-                {
-                    image.Save(stream, ImageFormat.Bmp);
-                    BinaryReader reader = new BinaryReader(stream);
-                    return stream.ToArray();
-                }
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error(ex.ToString());
-                return new MemoryStream().ToArray();
-            }
+            ImageDisplay.ShowImage2(index, paths, result, box);
         }
 
         #endregion
 
         #region 数据库操作
-
-        /// <summary>
-        /// 用于测试数据库读写功能的方法
-        /// </summary>
-        public void TestDatabaseWrite()
-        {
-            DatabaseHelper.GenerateTestData();
-        }
-        public Task<Dictionary<string, (long TotalDefects, long AIOkDefects)>> GetDefectCountsPerMachine(DateTime start, DateTime end) =>
-            _databaseHelper.GetDefectCountsPerMachine(start, end);
 
         public void GenerateVRSTestData() => DatabaseHelper.GenerateEmployeeReportTestData(5000);
 
@@ -1827,10 +1542,6 @@ namespace DeepSightWorkLib
                 PathIndex = panelInfo.PathIndex
             });
         }
-
-        public Task<(int totalSnCount, int uninspectedCount, int stillNgCount, int aviOkCount, int filteredOkCount)> GetSnStateCountsByLot(string lotNumber) =>
-            _databaseHelper.GetSnStateCountsByLot(lotNumber);
-
         public Task<List<PanelDataRecord>> GetPanelsData(DateTime start, DateTime end, string partnumber = null) =>
             _databaseHelper.GetPanelsData(start, end, partnumber);
 
@@ -1840,8 +1551,6 @@ namespace DeepSightWorkLib
         public Task<List<PanelDataRecord>> GetPanelsDataByMachineAndLot(string machineId, string lotNumber) =>
             _databaseHelper.GetPanelsDataByMachineAndLot(machineId, lotNumber);
 
-        public Task<List<string>> GetSerialNumbersByLot(string lotNumber) =>
-            _databaseHelper.GetSerialNumbersByLot(lotNumber);
 
         #endregion
 
@@ -1891,11 +1600,11 @@ namespace DeepSightWorkLib
                             continue;
                         }
 
-                        LogTextHelper.Info($"开始加载图片，SN:{loadModel.Model.SN}，数量：{loadModel.ImageKeys.Count}");
+                        LogTextHelper.Info($"开始加载图片，SN:{loadModel.Model.SN}，数量：{loadModel.Model.ImageKeys.Count}");
                         SystemEvent.SendTaskMsg(loadModel.Model.SN, $"{loadModel.Model.Side}面正在加载图片");
 
                         // 并行加载图片提高效率
-                        loadModel.Model.Mats = loadModel.ImageKeys
+                        loadModel.Model.Mats = loadModel.Model.ImageKeys
                             .AsParallel()
                             .AsOrdered()
                             .Select(t => LoadMinioImage(t))
@@ -1920,7 +1629,7 @@ namespace DeepSightWorkLib
                         }
 
                         // 检查加载结果
-                        int expectedCount = loadModel.ImageKeys.Count;
+                        int expectedCount = loadModel.Model.ImageKeys.Count;
                         int actualCount = loadModel.Model.Mats.Count;
                         if (expectedCount == 0)
                         {
@@ -1980,7 +1689,7 @@ namespace DeepSightWorkLib
                 {
                     if (_aiResultQueue.Count > 0)
                     {
-                        if (_aiResultQueue.TryDequeue(out Tuple<string, string, string, RootAIResult> info))
+                        if (_aiResultQueue.TryDequeue(out Tuple<string, string, string, RootAIResult, DsCenterInfo> info))
                         {
                             // 检查点：出队后检查是否应该中止
                             if (!IsStart)
@@ -1991,6 +1700,7 @@ namespace DeepSightWorkLib
                             }
                             // 回写处理
                             ReturnAVI(info);
+
                         }
                     }
                 }
@@ -2001,7 +1711,7 @@ namespace DeepSightWorkLib
             }
         }
 
-        public bool ReturnAVI(Tuple<string, string, string, RootAIResult> info)
+        public bool ReturnAVI(Tuple<string, string, string, RootAIResult, DsCenterInfo> info)
         {
             try
             {
@@ -2022,6 +1732,13 @@ namespace DeepSightWorkLib
                     else
                     {
                         LogTextHelper.Warn($"SN:{info.Item2} Side:{info.Item3} 未在处理集合中找到，可能已被清理或未正确添加");
+                    }
+
+                    // 处理中台数据推送（B面时 Item5 不为空）
+                    if (info.Item5 != null)
+                    {
+                        HttpDb.HttpPostMethod2(SysConfig.DsCenterUrl, info.Item5, 0, out string outInfo);
+                        LogTextHelper.Info($"sn:{info.Item2}_中台数据返回信息:{outInfo}");
                     }
 
                     return true;
@@ -2144,7 +1861,8 @@ namespace DeepSightWorkLib
                                   $"图片加载队列:{_imageLoadQueue.Count}, " +
                                   $"推理队列:{_aviQueue.Count}, " +
                                   $"后处理队列:{_inferencePostProcessQueue.Count}, " +
-                                  $"结果队列:{_aiResultQueue.Count}");
+                                  $"结果队列:{_aiResultQueue.Count}"+
+                                  $"数据库队列{_databaseHelper.GetQueueLength()}");
 
                 // 告警：如果处理集合持续增长超过阈值
                 if (_processingSnSet.Count > 100)
@@ -2193,7 +1911,8 @@ namespace DeepSightWorkLib
                     }
                     else if (vBModel.Mats.Count > SysConfig.MaxDefectCount)
                     {
-                        SavePanelSideToDatabase(panelInfo, new List<DetectInfo>(), 2, 3);
+                        var imageKeys=vBModel.ImageKeys.Select(t=>new DetectInfo() { ImagePath=t, AIStatus=3}).ToList();
+                        SavePanelSideToDatabase(panelInfo, imageKeys, 2, 3);
                         LogTextHelper.Info($"后处理完成(图片超限): SN={vBModel.SN}");
                     }
                     return;

@@ -54,7 +54,19 @@ namespace DeepSightDB
         /// </summary>
         public string GetConnectionString()
         {
-            return $"Host={Host};Port={Port};Database={Database};Username={Username};Password={Password};Timeout={Timeout};Maximum Pool Size={MaxPoolSize};Minimum Pool Size={MinPoolSize};Encoding=UTF8;Client Encoding=UTF8;";
+            // 性能优化参数:
+            // - Pooling=true: 启用连接池
+            // - No Reset On Close=true: 关闭连接时不重置连接状态，提高性能
+            // - Write Buffer Size: 增大写缓冲区
+            // - Read Buffer Size: 增大读缓冲区
+            // - Socket Receive Buffer Size / Socket Send Buffer Size: 增大 Socket 缓冲区
+            // - Tcp Keepalive: 保持连接活跃
+            // - Keepalive: 连接保活间隔（秒）
+            return $"Host={Host};Port={Port};Database={Database};Username={Username};Password={Password};" +
+                   $"Timeout={Timeout};Maximum Pool Size={MaxPoolSize};Minimum Pool Size={MinPoolSize};" +
+                   $"Pooling=true;No Reset On Close=true;" +
+                   $"Write Buffer Size=16384;Read Buffer Size=16384;" +
+                   $"Tcp Keepalive=true;Keepalive=60;";
         }
 
         /// <summary>

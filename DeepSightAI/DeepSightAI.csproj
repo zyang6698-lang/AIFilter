@@ -61,6 +61,7 @@
     <Prefer32Bit>true</Prefer32Bit>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <OutputPath>bin\x64\Release\</OutputPath>
