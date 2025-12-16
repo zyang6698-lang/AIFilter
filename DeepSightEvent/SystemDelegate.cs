@@ -27,7 +27,9 @@ namespace DeepSightEvent
     /// 发送任务信息
     /// </summary>
     /// <param name="task">具体任务</param>
-    public delegate void SendTask(object task,string msg="");
+    /// <param name="msg">消息</param>
+    /// <param name="timeMs">AI处理时间(毫秒)</param>
+    public delegate void SendTask(object task, string msg = "", long timeMs = 0);
     /// <summary>
     /// 发送缺陷小图个数
     /// </summary>

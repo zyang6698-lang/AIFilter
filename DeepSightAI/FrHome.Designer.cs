@@ -37,10 +37,6 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.splitContainer4 = new System.Windows.Forms.SplitContainer();
             this.dataGridViewData = new System.Windows.Forms.DataGridView();
-            this.Code = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.AVI = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.AI = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Status = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.rich_log = new System.Windows.Forms.RichTextBox();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.btnClearLog = new System.Windows.Forms.ToolStripMenuItem();
@@ -64,6 +60,11 @@
             this.lbl_aiFilterOKCount = new System.Windows.Forms.Label();
             this.lbl_aviPassRateCount = new System.Windows.Forms.Label();
             this.lbl_filteredOkCount = new System.Windows.Forms.Label();
+            this.Code = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.AVI = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.AI = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Time = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Status = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.table_main.SuspendLayout();
             this.panel_show.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -172,6 +173,7 @@
             this.Code,
             this.AVI,
             this.AI,
+            this.Time,
             this.Status});
             dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
@@ -206,43 +208,6 @@
             this.dataGridViewData.Size = new System.Drawing.Size(420, 550);
             this.dataGridViewData.TabIndex = 2;
             this.dataGridViewData.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewData_CellClick);
-            // 
-            // Code
-            // 
-            this.Code.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Code.DataPropertyName = "Code";
-            this.Code.FillWeight = 180F;
-            this.Code.HeaderText = "SN任务队列";
-            this.Code.MinimumWidth = 6;
-            this.Code.Name = "Code";
-            this.Code.ReadOnly = true;
-            this.Code.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            // 
-            // AVI
-            // 
-            this.AVI.HeaderText = "AVI";
-            this.AVI.MinimumWidth = 6;
-            this.AVI.Name = "AVI";
-            this.AVI.ReadOnly = true;
-            this.AVI.Width = 50;
-            // 
-            // AI
-            // 
-            this.AI.HeaderText = "AI";
-            this.AI.MinimumWidth = 6;
-            this.AI.Name = "AI";
-            this.AI.ReadOnly = true;
-            this.AI.Width = 50;
-            // 
-            // Status
-            // 
-            this.Status.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Status.FillWeight = 150F;
-            this.Status.HeaderText = "状态";
-            this.Status.MinimumWidth = 8;
-            this.Status.Name = "Status";
-            this.Status.ReadOnly = true;
-            this.Status.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             // 
             // rich_log
             // 
@@ -545,6 +510,51 @@
             this.lbl_filteredOkCount.Text = "-";
             this.lbl_filteredOkCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
+            // Code
+            // 
+            this.Code.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.Code.DataPropertyName = "Code";
+            this.Code.FillWeight = 180F;
+            this.Code.HeaderText = "SN任务队列";
+            this.Code.MinimumWidth = 6;
+            this.Code.Name = "Code";
+            this.Code.ReadOnly = true;
+            this.Code.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            // 
+            // AVI
+            // 
+            this.AVI.HeaderText = "AVI";
+            this.AVI.MinimumWidth = 6;
+            this.AVI.Name = "AVI";
+            this.AVI.ReadOnly = true;
+            this.AVI.Width = 50;
+            // 
+            // AI
+            // 
+            this.AI.HeaderText = "AI";
+            this.AI.MinimumWidth = 6;
+            this.AI.Name = "AI";
+            this.AI.ReadOnly = true;
+            this.AI.Width = 50;
+            // 
+            // Time
+            // 
+            this.Time.HeaderText = "时间(ms)";
+            this.Time.MinimumWidth = 6;
+            this.Time.Name = "Time";
+            this.Time.ReadOnly = true;
+            this.Time.Width = 120;
+            // 
+            // Status
+            // 
+            this.Status.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.Status.FillWeight = 150F;
+            this.Status.HeaderText = "状态";
+            this.Status.MinimumWidth = 8;
+            this.Status.Name = "Status";
+            this.Status.ReadOnly = true;
+            this.Status.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            // 
             // FrHome
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
@@ -606,10 +616,6 @@
         private System.Windows.Forms.Button btnNext;
         public System.Windows.Forms.DataGridView dataGridViewData;
         private System.Windows.Forms.Panel avi_panel;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Code;
-        private System.Windows.Forms.DataGridViewTextBoxColumn AVI;
-        private System.Windows.Forms.DataGridViewTextBoxColumn AI;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Status;
         private System.Windows.Forms.Panel panel1;
         private SettingPages.AviCtr2Container aviCtr2Container;
         private System.Windows.Forms.Label lbl_totalDefectCount;
@@ -621,5 +627,10 @@
         private System.Windows.Forms.Label lbl_boardAiPassRate;
         private System.Windows.Forms.Label lbl_utilizationRate;
         private System.Windows.Forms.Label lbl_CountPerPanel;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Code;
+        private System.Windows.Forms.DataGridViewTextBoxColumn AVI;
+        private System.Windows.Forms.DataGridViewTextBoxColumn AI;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Time;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Status;
     }
 }

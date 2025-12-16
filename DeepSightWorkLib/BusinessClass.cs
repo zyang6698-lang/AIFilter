@@ -75,6 +75,8 @@ namespace DeepSightWorkLib
         private Stopwatch AIStopwatch;
 
 
+
+
         // Task-based management（线程管理）
         private CancellationTokenSource _cancellationTokenSource;
         private Task _readAviTask;
@@ -625,60 +627,15 @@ namespace DeepSightWorkLib
                                 }
                                 else
                                 {
-                                    SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面正在回写结果");
-                                    RootAIResult data = new RootAIResult
-                                    {
-                                        DbName = "filter_time_to_airesults",
-                                        Operation = "put",
-                                        OpMode = info.Side == "A" ? "all_ow" : "ap",
-                                        Key = info.Key,
-                                    };
-
-
-                                    List<ResultInfo> results = new List<ResultInfo>();
-                                    if (msg.Count == 0)
-                                    {
-                                        msg = Enumerable.Repeat("1", info.DefectIndex.Count).ToList();
-                                    }
-                                    for (int i = 0; i < info.DefectIndex.Count; i++)
-                                    {
-                                        
-                                        ResultInfo res = new ResultInfo
-                                        {
-                                            ResultInfos = $"{info.Side}_{info.PcsIndex[i]}_{info.DefectIndex[i]}_{msg[i]}",
-                                            Details = new Details()
-                                            {
-
-                                            }
-                                        };
-                                        results.Add(res);
-                                    }
-                                    WriteBackData writeBackData = new WriteBackData()
-                                    {
-                                        ResultInfos = results,
-                                        SerialNumber = info.SN,
-                                        PanelJsonPath = info.panelInfo.LocalDescribePath,
-                                    };
-
-                                    JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };//去掉空值NULL
-                                    data.Value = JsonConvert.SerializeObject(writeBackData, Formatting.None, jsonSetting);
-
-                                    // 在 B 面时获取中台数据，一起放入队列处理
-                                    DsCenterInfo dsinfo = null;
-                                    if (info.Side == "B")
-                                    {
-                                        _dsCenterInfoDict.TryRemove($"{info.panelInfo.LotId}_{info.panelInfo.SerialNumber}", out dsinfo);
-                                    }
-
-                                    Tuple<string, string, string, RootAIResult, DsCenterInfo> dbTub = Tuple.Create(info.Key, info.SN, info.Side, data, dsinfo);
-                                    // 存储算法处理的结果
-                                    _aiResultQueue.Enqueue(dbTub);
+                                    EnqueueAIResult(info, msg);
                                 }
                             }
                             else
                             {
                                 LogTextHelper.Warn($"KEY:{info.Key} SN:{info.SN}检测失败！");
                                 SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面已完成");
+                                EnqueueAIResult(info, msg);
+
                             }
                         }
                         catch (Exception ex)
@@ -689,7 +646,10 @@ namespace DeepSightWorkLib
                         finally
                         {
                             AIStopwatch.Stop();
-                            LogTextHelper.Info($"{info.SN} {info.Side} AI花费时间{AIStopwatch.ElapsedMilliseconds}ms");
+                            var elapsedMs = AIStopwatch.ElapsedMilliseconds;
+                            LogTextHelper.Info($"{info.SN} {info.Side} 图片数量{info?.Mats.Count} AI花费时间{elapsedMs}ms");
+                            // 发送AI处理时间到任务队列
+                            SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面AI耗时:{elapsedMs}ms", elapsedMs);
                             // 释放 Mat 资源，防止内存泄漏
                             if (info?.Mats != null)
                             {
@@ -703,6 +663,60 @@ namespace DeepSightWorkLib
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// 将AI处理结果封装并入队，等待回写
+        /// </summary>
+        /// <param name="info">VB模型信息</param>
+        /// <param name="msg">检测结果消息列表</param>
+        private void EnqueueAIResult(VBModel info, List<string> msg)
+        {
+            SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面正在回写结果");
+            RootAIResult data = new RootAIResult
+            {
+                DbName = "filter_time_to_airesults",
+                Operation = "put",
+                OpMode = info.Side == "A" ? "all_ow" : "ap",
+                Key = info.Key,
+            };
+
+            List<ResultInfo> results = new List<ResultInfo>();
+            if (msg.Count == 0)
+            {
+                msg = Enumerable.Repeat("1", info.DefectIndex.Count).ToList();
+            }
+            for (int i = 0; i < info.DefectIndex.Count; i++)
+            {
+                ResultInfo res = new ResultInfo
+                {
+                    ResultInfos = $"{info.Side}_{info.PcsIndex[i]}_{info.DefectIndex[i]}_{msg[i]}",
+                    Details = new Details()
+                    {
+                    }
+                };
+                results.Add(res);
+            }
+            WriteBackData writeBackData = new WriteBackData()
+            {
+                ResultInfos = results,
+                SerialNumber = info.SN,
+                PanelJsonPath = info.panelInfo.LocalDescribePath,
+            };
+
+            JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }; // 去掉空值NULL
+            data.Value = JsonConvert.SerializeObject(writeBackData, Formatting.None, jsonSetting);
+
+            // 在 B 面时获取中台数据，一起放入队列处理
+            DsCenterInfo dsinfo = null;
+            if (info.Side == "B")
+            {
+                _dsCenterInfoDict.TryRemove($"{info.panelInfo.LotId}_{info.panelInfo.SerialNumber}", out dsinfo);
+            }
+
+            Tuple<string, string, string, RootAIResult, DsCenterInfo> dbTub = Tuple.Create(info.Key, info.SN, info.Side, data, dsinfo);
+            // 存储算法处理的结果
+            _aiResultQueue.Enqueue(dbTub);
         }
 
         #endregion
@@ -1030,7 +1044,7 @@ namespace DeepSightWorkLib
             {
                 // 异步保存到数据库
                 EnqueuePostProcess(vBModel, "", false);
-                LogTextHelper.Info($"{vBModel.SN} {vBModel.Side},图片数量为0，跳过vb检测流程");
+               // LogTextHelper.Info($"{vBModel.SN} {vBModel.Side},图片数量为0，跳过vb检测流程");
                 SystemEvent.SendTaskMsg(vBModel.SN, $"{vBModel.Side}面缺陷数为0，跳过AI检测");
                 return true;
             }

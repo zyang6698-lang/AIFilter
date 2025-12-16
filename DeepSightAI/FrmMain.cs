@@ -171,7 +171,7 @@ namespace DeepSightAI
             LogTextHelper.Warn($"收到异常消息：{massage},任务已停止");
         }
         public static object Locker = new object();
-        private void SystemEvent_EventSendTaskToUI(object task, string msg = "")
+        private void SystemEvent_EventSendTaskToUI(object task, string msg = "", long timeMs = 0)
         {
             if (task == null) return;
 
@@ -182,7 +182,7 @@ namespace DeepSightAI
                 // 确保在 UI 线程上执行
                 if (FrHome.Instance.dataGridViewData.InvokeRequired)
                 {
-                    FrHome.Instance.dataGridViewData.Invoke(new MethodInvoker(() => SystemEvent_EventSendTaskToUI(task, msg)));
+                    FrHome.Instance.dataGridViewData.Invoke(new MethodInvoker(() => SystemEvent_EventSendTaskToUI(task, msg, timeMs)));
                     return;
                 }
 
@@ -196,7 +196,7 @@ namespace DeepSightAI
                     else
                     {
                         // 更新现有任务状态
-                        UpdateTaskRow(sn, msg);
+                        UpdateTaskRow(sn, msg, timeMs);
                     }
 
                     // 清理超出限制的行
@@ -214,14 +214,15 @@ namespace DeepSightAI
         /// </summary>
         private void AddNewTaskRow(string sn)
         {
-            FrHome.Instance.dataGridViewData.Rows.Insert(0, new object[] { sn, "0", "0", "排队中" });
+            FrHome.Instance.dataGridViewData.Rows.Insert(0, new object[] { sn, "0", "0", "", "排队中" });
             FrHome.Instance.dataGridViewData.Rows[0].DefaultCellStyle.ForeColor = Color.Yellow;
         }
 
         /// <summary>
         /// 更新任务行状态
         /// </summary>
-        private void UpdateTaskRow(string sn, string msg)
+        /// <param name="timeMs">AI处理时间(毫秒)</param>
+        private void UpdateTaskRow(string sn, string msg, long timeMs = 0)
         {
             // 查找对应的行
             DataGridViewRow targetRow = null;
@@ -240,6 +241,21 @@ namespace DeepSightAI
             Color statusColor = GetStatusColor(msg);
             targetRow.DefaultCellStyle.ForeColor = statusColor;
 
+            // 更新时间列（如果有传入时间）
+            if (timeMs > 0)
+            {
+                // 拼接显示时间，如 A面100ms + B面100ms 显示为 "100+100"
+                string existingTime = targetRow.Cells[3].Value?.ToString();
+                if (!string.IsNullOrEmpty(existingTime))
+                {
+                    targetRow.Cells[3].Value = $"{existingTime}+{timeMs}";
+                }
+                else
+                {
+                    targetRow.Cells[3].Value = timeMs.ToString();
+                }
+            }
+
             // 处理 B 面完成的特殊逻辑
             if (msg.Contains("已完成") && msg.Contains("B面"))
             {
@@ -247,7 +263,7 @@ namespace DeepSightAI
             }
             else
             {
-                targetRow.Cells[3].Value = msg;
+                targetRow.Cells[4].Value = msg;
             }
         }
 
@@ -319,7 +335,7 @@ namespace DeepSightAI
 
             row.Cells[1].Value = count;
             row.Cells[2].Value = count;
-            row.Cells[3].Value = msg;
+            row.Cells[4].Value = msg;
             FrHome.Instance.str_SN = sn;
             FrHome.Instance.dataGridViewData_CellClick(null, null);
         }
@@ -337,7 +353,7 @@ namespace DeepSightAI
                 int checkIndex = FrHome.Instance.dataGridViewData.Rows.Count - KEEP_COMPLETED_ROWS;
                 if (checkIndex >= 0 && checkIndex < FrHome.Instance.dataGridViewData.Rows.Count)
                 {
-                    string status = FrHome.Instance.dataGridViewData.Rows[checkIndex].Cells[3].Value?.ToString() ?? "";
+                    string status = FrHome.Instance.dataGridViewData.Rows[checkIndex].Cells[4].Value?.ToString() ?? "";
                     if (status.Contains("已完成"))
                     {
                         int lastIndex = FrHome.Instance.dataGridViewData.Rows.Count - 1;

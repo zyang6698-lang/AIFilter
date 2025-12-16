@@ -37,9 +37,11 @@ namespace DeepSightEvent
         /// 订阅任务
         /// </summary>
         /// <param name="task"></param>
-        public static void SendTaskMsg(object task, string msg = "")
+        /// <param name="msg"></param>
+        /// <param name="timeMs">AI处理时间(毫秒)</param>
+        public static void SendTaskMsg(object task, string msg = "", long timeMs = 0)
         {
-            EventSendTaskToUI?.Invoke(task, msg);  
+            EventSendTaskToUI?.Invoke(task, msg, timeMs);
             LogTextHelper.Info($"{task} {msg}");
         }
 

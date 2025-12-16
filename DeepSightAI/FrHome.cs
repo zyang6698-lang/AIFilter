@@ -111,7 +111,8 @@ namespace DeepSightAI
         {
             try
             {
-                rich_log.Invoke(new MethodInvoker(() =>
+                // 使用 BeginInvoke 异步更新 UI，避免阻塞工作线程
+                rich_log.BeginInvoke(new MethodInvoker(() =>
                 {
                     if (rich_log.Lines.Length > 300)
                     {
