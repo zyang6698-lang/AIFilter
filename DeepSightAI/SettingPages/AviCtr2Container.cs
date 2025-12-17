@@ -262,66 +262,57 @@ namespace DeepSightAI.SettingPages
             }
         }
 
-        public void UpdateAllAviCtrLotSn(Func<string, Task<(string SerialNumber, string LotNumber, string ProductSerial, string PathIndex)>> getLatestPanelInfo)
+
+
+        // 从缓存更新所有机台的 Lot/SN（不访问数据库）
+        public void UpdateAllAviCtrLotSnFromCache()
         {
             if (this.IsHandleCreated)
             {
-                this.BeginInvoke(new Action(async () =>
+                this.BeginInvoke(new Action(() =>
                 {
-                    // 并行获取减少多次 UI 刷新
-                    var tasks = aviCtr2Controls
-                        .Where(c => c.ctrConfig.IsEnable)
-                        .Select(async c => (c, info: await getLatestPanelInfo(c.ctrConfig.AviName)))
-                        .ToList();
-                    var results = await Task.WhenAll(tasks);
-                    foreach (var tuple in results)
+                    foreach (var ctr in aviCtr2Controls.Where(c => c.ctrConfig.IsEnable))
                     {
-                        var ctr = tuple.c;
-                        var tmp = tuple.info;
-                        if (tmp.LotNumber != null && tmp.SerialNumber != null)
+                        var (lot, sn, productSerial, pathIndex) = BoardStatCache.GetLatestLotSn(ctr.ctrConfig.AviName);
+                        if (!string.IsNullOrEmpty(lot) || !string.IsNullOrEmpty(sn) || !string.IsNullOrEmpty(productSerial) || !string.IsNullOrEmpty(pathIndex))
                         {
-                            ctr.LotId = tmp.LotNumber;
-                            ctr.ProductSerial = tmp.ProductSerial;
-                            ctr.PathIndex = tmp.PathIndex;
+                            ctr.LotId = lot;
+                            ctr.ProductSerial = productSerial;
+                            ctr.PathIndex = pathIndex;
                         }
                     }
                 }));
             }
         }
 
-        public async Task UpdateMachineBoard(Func<string, Task<(string, string)>> GetLatestLotAndProductSerial, Func<string, string, Task<List<PanelDataRecord>>> getLatestPanelData)
+
+        // 使用缓存统计更新机台面板（不访问数据库）
+        public async Task UpdateMachineBoardFromCache()
         {
             if (this.IsHandleCreated)
             {
-                this.BeginInvoke(new Action(async () =>
+                this.BeginInvoke(new Action(() =>
                 {
-                    // 并行收集所有需要的数据，减少 UI 线程切换
-                    var lotTasks = aviCtr2Controls
-                        .Where(c => c.ctrConfig.IsEnable)
-                        .Select(async c => (c, lotAndSerial: await GetLatestLotAndProductSerial(c.ctrConfig.AviName)))
-                        .ToList();
-                    var lotResults = await Task.WhenAll(lotTasks);
-
-                    // 获取 panel 数据
-                    var panelTasks = lotResults.Select(async r => (r.c, r.lotAndSerial, data: await getLatestPanelData(r.c.ctrConfig.AviName, r.lotAndSerial.Item1))).ToList();
-                    var panelResults = await Task.WhenAll(panelTasks);
-
-                    foreach (var (c, lotAndSerial, data) in panelResults)
+                    foreach (var ctr in aviCtr2Controls.Where(c => c.ctrConfig.IsEnable))
                     {
-                        var ctr = c;
-                        var tmp = lotAndSerial;
-                        ctr.LotId = tmp.Item1;
-                        ctr.ProductSerial = tmp.Item2;
-                        var boardStat = PanelDataRecord.GetBoardStat(data);
-                        ctr.AiOkImages = boardStat.AiFilterOKCount;
-                        ctr.AiFilterCount = boardStat.AiFilterCount;
-                        ctr.AviPassRate = boardStat.AviPanelCount == 0 ? 0 : (double)boardStat.AviPanelOKCount / boardStat.AviPanelCount;
-                        ctr.Utilization = MathHelper.CalculateUtilizationRatePercent(
-                        data.Where(t => t.AviCreationTime.HasValue && t.AviCreationTime.Value.Date == DateTime.Now.Date)
-                            .Select(t => t.AviCreationTime.Value));
+                        var machineId = ctr.ctrConfig.AviName;
+                        var stat = BoardStatCache.GetTodayStatForMachine(machineId);
+                        ctr.AiOkImages = stat.AiFilterOKCount;
+                        ctr.AiFilterCount = stat.AiFilterCount;
+                        ctr.AviPassRate = stat.AviPanelCount == 0 ? 0 : (double)stat.AviPanelOKCount / stat.AviPanelCount;
+                        ctr.Utilization = stat.Utilization;
+
+                        var (lot, sn, productSerial, pathIndex) = BoardStatCache.GetLatestLotSn(machineId);
+                        if (!string.IsNullOrEmpty(lot) || !string.IsNullOrEmpty(sn) || !string.IsNullOrEmpty(productSerial) || !string.IsNullOrEmpty(pathIndex))
+                        {
+                            ctr.LotId = lot;
+                            ctr.ProductSerial = productSerial;
+                            ctr.PathIndex = pathIndex;
+                        }
                     }
                 }));
             }
+            await Task.CompletedTask;
         }
     }
 }

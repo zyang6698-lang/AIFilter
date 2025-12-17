@@ -27,6 +27,9 @@ namespace DeepSightWorkLib
         #region 私有字段
 
         private readonly DatabaseHelper _databaseHelper;
+        private const int PanelSideBatchSize = 100;
+        private readonly object _panelRecordLock = new object();
+        private readonly List<PanelSideRecord> _pendingPanelSideRecords = new List<PanelSideRecord>();
 
         /// <summary>
         /// 读取 AVI 存储对象队列
@@ -73,7 +76,7 @@ namespace DeepSightWorkLib
         private DateTime fetchTime = DateTime.Now;
         private const string FixedTimeFormat = "yyyyMMddHHmmssfff";
         private Stopwatch AIStopwatch;
-
+        private List<PanelSideRecord> TmpRecords = new List<PanelSideRecord>();
 
 
 
@@ -126,6 +129,7 @@ namespace DeepSightWorkLib
                 if (previousValue && !value)
                 {
                     ClearAllProcessingQueues();
+                    FlushPendingPanelSideRecords();
                 }
                 // 当从 false 变为 true 时，更新推理请求开始时间
                 if (!previousValue && value)
@@ -327,7 +331,7 @@ namespace DeepSightWorkLib
                 try
                 {
                     // 使用 Thread.Sleep 替代 Task.Delay().Wait()，避免阻塞线程池线程
-                    Thread.Sleep(500);
+                    Thread.Sleep(100);
                     if (token.IsCancellationRequested) break;
                 }
                 catch (OperationCanceledException)
@@ -647,9 +651,10 @@ namespace DeepSightWorkLib
                         {
                             AIStopwatch.Stop();
                             var elapsedMs = AIStopwatch.ElapsedMilliseconds;
-                            LogTextHelper.Info($"{info.SN} {info.Side} 图片数量{info?.Mats.Count} AI花费时间{elapsedMs}ms");
-                            // 发送AI处理时间到任务队列
-                            SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面AI耗时:{elapsedMs}ms", elapsedMs);
+                            if (elapsedMs>20)
+                            {
+                                SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面AI耗时:{elapsedMs}ms", elapsedMs);
+                            }
                             // 释放 Mat 资源，防止内存泄漏
                             if (info?.Mats != null)
                             {
@@ -1044,7 +1049,6 @@ namespace DeepSightWorkLib
             {
                 // 异步保存到数据库
                 EnqueuePostProcess(vBModel, "", false);
-               // LogTextHelper.Info($"{vBModel.SN} {vBModel.Side},图片数量为0，跳过vb检测流程");
                 SystemEvent.SendTaskMsg(vBModel.SN, $"{vBModel.Side}面缺陷数为0，跳过AI检测");
                 return true;
             }
@@ -1499,9 +1503,6 @@ namespace DeepSightWorkLib
 
         public void GenerateVRSTestData() => DatabaseHelper.GenerateEmployeeReportTestData(5000);
 
-        public Task<(string SerialNumber, string LotNumber, string ProductSerial, string PathIndex)> GetLatestPanelInfoByMachineId(string machineId) =>
-            _databaseHelper.GetLatestPanelInfoByMachineId(machineId);
-
         public void SaveEmployeeReport(EmployeeReport report) =>
             _databaseHelper.SaveEmployeeReport(report);
 
@@ -1534,7 +1535,7 @@ namespace DeepSightWorkLib
             }
 
             LogTextHelper.Info($"存储 SN={panelInfo.SerialNumber}, Side={panelInfo.SideIndex}, AviState={aviState}, AiState={aiState}, DefectCount={detectPoints?.Count ?? 0} 到数据库...");
-            _databaseHelper.SavePanelSide(new PanelSideRecord()
+            var record = new PanelSideRecord()
             {
                 Data = new SideData()
                 {
@@ -1554,13 +1555,45 @@ namespace DeepSightWorkLib
                 MachineId = panelInfo.StationName,
                 Side = panelInfo.SideIndex,
                 PathIndex = panelInfo.PathIndex
-            });
+            };
+            BoardStatCache.Update(record);
+            List<PanelSideRecord> batchToFlush = null;
+            lock (_panelRecordLock)
+            {
+                _pendingPanelSideRecords.Add(record);
+                if (_pendingPanelSideRecords.Count >= PanelSideBatchSize)
+                {
+                    batchToFlush = new List<PanelSideRecord>(_pendingPanelSideRecords);
+                    _pendingPanelSideRecords.Clear();
+                }
+            }
+
+            if (batchToFlush != null)
+            {
+                _databaseHelper.SavePanelSidesBatch(batchToFlush);
+            }
         }
+
+        private void FlushPendingPanelSideRecords()
+        {
+            List<PanelSideRecord> snapshot = null;
+            lock (_panelRecordLock)
+            {
+                if (_pendingPanelSideRecords.Count > 0)
+                {
+                    snapshot = new List<PanelSideRecord>(_pendingPanelSideRecords);
+                    _pendingPanelSideRecords.Clear();
+                }
+            }
+
+            if (snapshot != null)
+            {
+                _databaseHelper.SavePanelSidesBatch(snapshot);
+            }
+        }
+
         public Task<List<PanelDataRecord>> GetPanelsData(DateTime start, DateTime end, string partnumber = null) =>
             _databaseHelper.GetPanelsData(start, end, partnumber);
-
-        public Task<(string LotNumber, string ProductSerial)> GetLatestLotAndProductSerial(string machineId) =>
-            _databaseHelper.GetLatestLotAndProductSerial(machineId);
 
         public Task<List<PanelDataRecord>> GetPanelsDataByMachineAndLot(string machineId, string lotNumber) =>
             _databaseHelper.GetPanelsDataByMachineAndLot(machineId, lotNumber);
@@ -2188,6 +2221,8 @@ namespace DeepSightWorkLib
                     }
                     _cancellationTokenSource.Dispose();
                 }
+
+                FlushPendingPanelSideRecords();
 
                 // 清理队列中残留的 Mat 资源
                 while (_aviQueue.TryDequeue(out var vbModel))

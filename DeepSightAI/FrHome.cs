@@ -77,8 +77,8 @@ namespace DeepSightAI
 
         private void FrHome_Load(object sender, EventArgs e)
         {
-            LogTextHelper.OnCallBackLogProc -= Log_single_OnCallBackLogProc;
-            LogTextHelper.OnCallBackLogProc += Log_single_OnCallBackLogProc;
+           // LogTextHelper.OnCallBackLogProc -= Log_single_OnCallBackLogProc;
+           // LogTextHelper.OnCallBackLogProc += Log_single_OnCallBackLogProc;
         }
 
 
@@ -227,7 +227,9 @@ namespace DeepSightAI
         {
             try
             {
+                //更新右下角统计信息
                 UpdateMainBorad();
+                //更新机台看板
                 UpdateMachineBoard();
                 UpdateLotSn();
             }
@@ -237,38 +239,51 @@ namespace DeepSightAI
             }
         }
 
-        private async void UpdateMainBorad()
+        private void UpdateMainBorad()
         {
-            var today = DateTime.Today;
-            var AllData = await Machine.master.workClass.GetPanelsData(today, today.AddDays(1).AddTicks(-1));
-            var boardStat =PanelDataRecord.GetBoardStat(AllData);
+            var boardStat = BoardStatCache.GetTodayStat();
 
             if (this.IsHandleCreated)
             {
+                string FormatPercent(int numerator, int denominator)
+                {
+                    if (denominator <= 0)
+                    {
+                        return "0.0%";
+                    }
+                    return ((double)numerator / denominator).ToString("P1");
+                }
+
+                int aiProcessedCount = Math.Max(0, boardStat.AiFilterCount - boardStat.AiFilterUninspectedCount);
+                string avgDefectText = boardStat.AviPanelCount > 0
+                    ? ((double)boardStat.AiFilterCount / boardStat.AviPanelCount).ToString("0.0")
+                    : "0.0";
+                string aviPassRateBefore = FormatPercent(boardStat.AviPanelOKCount, boardStat.AviPanelCount);
+                string aviPassRateAfter = FormatPercent(boardStat.AiPanelOKCount, boardStat.AviPanelCount);
+                string aiPassRate = FormatPercent(boardStat.AiFilterOKCount, aiProcessedCount);
+
                 this.BeginInvoke(new Action(() =>
                 {
                     lbl_SnTotalCount.Text = $"今日产量Array\n{boardStat.AviPanelCount}";
                     lbl_totalDefectCount.Text = $"AVI产生图片数\n{boardStat.AiFilterCount}";
-                    lbl_AiAllCount.Text = $"AI推理图片数\n{boardStat.AiFilterCount - boardStat.AiFilterUninspectedCount}";
+                    lbl_AiAllCount.Text = $"AI推理图片数\n{aiProcessedCount}";
 
                     lbl_aiFilterOKCount.Text = $"AI Pass 图片数\n{boardStat.AiFilterOKCount}";
-                    lbl_aviPassRateCount.Text = $"AVI Pass Rate_AI前\n{(double)boardStat.AviPanelOKCount / (boardStat.AviPanelCount):P1}";
-                    lbl_filteredOkCount.Text = $"AI Pass Rate\n{(double)boardStat.AiFilterOKCount / (boardStat.AiFilterCount - boardStat.AiFilterUninspectedCount):P1}";
+                    lbl_aviPassRateCount.Text = $"AVI Pass Rate_AI前\n{aviPassRateBefore}";
+                    lbl_filteredOkCount.Text = $"AI Pass Rate\n{aiPassRate}";
 
-                    lbl_utilizationRate.Text= $"今日机台利用率\n{boardStat.Utilization:P1}";
-                    lbl_boardAiPassRate.Text=$"AVI Pass Rate_AI后\n{(double)(boardStat.AiPanelOKCount) / (boardStat.AviPanelCount):P1}";
-                    lbl_CountPerPanel.Text=$"平均报点数\n{(double)boardStat.AiFilterCount/boardStat.AviPanelCount:0.0}";
+                    lbl_utilizationRate.Text = $"今日机台利用率\n{boardStat.Utilization:P1}";
+                    lbl_boardAiPassRate.Text = $"AVI Pass Rate_AI后\n{aviPassRateAfter}";
+                    lbl_CountPerPanel.Text = $"平均报点数\n{avgDefectText}";
                 }));
             }
         }
 
         private async Task UpdateMachineBoard()
         {
-           await aviCtr2Container.UpdateMachineBoard(Machine.master.workClass.GetLatestLotAndProductSerial, Machine.master.workClass.GetPanelsDataByMachineAndLot);
+            await aviCtr2Container.UpdateMachineBoardFromCache();
         }
 
-
-        //public CvDisplay[] DispWin1 = null;
         public CvDisplay[] DispWin2 = null;
         /// <summary>
         /// 窗体初始化
@@ -358,10 +373,11 @@ namespace DeepSightAI
 
 
                 //传图给VB
-                RootVBInfo vBInfo = new RootVBInfo();
-
-                vBInfo.MessageType = "visionbuilder_inference";
-                vBInfo.paramsData = new ParamsData();
+                RootVBInfo vBInfo = new RootVBInfo
+                {
+                    MessageType = "visionbuilder_inference",
+                    paramsData = new ParamsData()
+                };
                 //同一个任务的UUID是否要保持一致；
                 vBInfo.paramsData.InferResUuid = Guid.NewGuid().ToString();
                 vBInfo.paramsData.InferWholeData = new InferWholeData();
@@ -378,6 +394,7 @@ namespace DeepSightAI
                   });
 
                 vBInfo.paramsData.InferWholeData.ImageData = new ImageData();
+
                 //#使⽤minio获取 则固定字段"minio"
                 vBInfo.paramsData.InferWholeData.ImageData.DataType = "minio";
                 vBInfo.paramsData.InferWholeData.ImageData.DataValue = new DataValue();
@@ -474,7 +491,6 @@ namespace DeepSightAI
                 LogTextHelper.Error("单图处理异常" + ex.ToString());
             }
         }
-
         /// <summary>
         /// 重置panel
         /// </summary>
@@ -588,7 +604,6 @@ namespace DeepSightAI
             }
 
         }
-
         public void dataGridViewData_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             //此标志打开，手动点击才生效，否则，不允许手动点击，只允许自动生产的刷新
@@ -634,8 +649,7 @@ namespace DeepSightAI
                     {
                         if (Machine.master.workClass.TestFlag)
                         {
-                            List<string> paths = null;
-                            if (dic_Paths.TryGetValue(SN, out paths))
+                            if (dic_Paths.TryGetValue(SN, out List<string> paths))
                             {
                                 info[i].rootInfo.LocalDescribePath = paths[i];
                             }
@@ -646,8 +660,7 @@ namespace DeepSightAI
 
                         for (int j = 0; j < info[i].rootInfo.PcsInfo.Count; j++)
                         {
-                            PcsInfo pcsInfo = null;
-                            if (info[i].rootInfo.PcsInfo.TryGetValue((j + 1).ToString(), out pcsInfo))
+                            if (info[i].rootInfo.PcsInfo.TryGetValue((j + 1).ToString(), out PcsInfo pcsInfo))
                             {
                                 for (int k = 0; k < pcsInfo.DefectInfo.Count; k++)
                                 {
@@ -694,7 +707,6 @@ namespace DeepSightAI
             }
 
         }
-
         private void btnNext_Click(object sender, EventArgs e)
         {
             try
@@ -714,7 +726,6 @@ namespace DeepSightAI
                 throw;
             }
         }
-
         private void btnPrevious_Click(object sender, EventArgs e)
         {
             try
@@ -868,20 +879,10 @@ namespace DeepSightAI
                 LogTextHelper.Info("更新上下页异常" + ex.ToString());
             }
         }
-        public void UpdateAviCtrInfo(string aviName, string productSerial, string lotId, double utilization)
-        {
-            aviCtr2Container.UpdateAviCtrInfo(aviName, productSerial, lotId, utilization);
-        }
-
-        public void UpdateAviCtrStats(string aviName, int totalImages, int aiOkImages)
-        {
-            aviCtr2Container.UpdateAviCtrStats(aviName, totalImages, aiOkImages);
-        }
         private void UpdateLotSn()
         {
-            aviCtr2Container.UpdateAllAviCtrLotSn(Machine.master.workClass.GetLatestPanelInfoByMachineId);
+            aviCtr2Container.UpdateAllAviCtrLotSnFromCache();
         }
-
         /// <summary>
         /// 更新所有AviCtr控件的配置（保存机台配置后调用）
         /// </summary>

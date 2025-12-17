@@ -41,8 +41,21 @@ namespace DeepSightEvent
         /// <param name="timeMs">AI处理时间(毫秒)</param>
         public static void SendTaskMsg(object task, string msg = "", long timeMs = 0)
         {
-            EventSendTaskToUI?.Invoke(task, msg, timeMs);
-            LogTextHelper.Info($"{task} {msg}");
+            var handler = EventSendTaskToUI;
+            if (handler != null)
+            {
+                Task.Run(() =>
+                {
+                    try { handler(task, msg, timeMs); }
+                    catch (Exception ex) { LogTextHelper.Error($"EventSendTaskToUI handler error: {ex}"); }
+                });
+            }
+
+            Task.Run(() =>
+            {
+                try { LogTextHelper.Info($"{task} {msg}"); }
+                catch { }
+            });
         }
 
         public static event SendException EventSendExceptionToUI;

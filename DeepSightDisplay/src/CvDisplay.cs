@@ -836,34 +836,38 @@ namespace DeepSightDisplay
         /// </summary>
         public virtual void Fit()
         {
-            if (Image == null)
+            // 获取一次快照
+            Mat img = _cdgMat.Image; // 返回的是克隆副本，线程安全
+            if (img == null) return;
+
+            try
             {
-                return;
+                Size2d newsize = new Size2d();
+                double hvScale1 = Width / (double)Height;
+                double hvScale2 = img.Width / (double)img.Height;
+
+                if (hvScale1 > hvScale2)
+                {
+                    newsize.Height = Height;
+                    newsize.Width = (img.Width * ((double)newsize.Height / img.Height));
+                }
+                else
+                {
+                    newsize.Width = Width;
+                    newsize.Height = (img.Height * ((double)newsize.Width / img.Width));
+                }
+
+                _cdgMat.PixelSize = new Size2d(newsize.Width / (double)img.Width, newsize.Height / (double)img.Height);
+
+                SyncUpdateOrigin(new Point2d((Width - _cdgMat.DispRect.Width) / 2,
+                    (Height - _cdgMat.DispRect.Height) / 2));
+
+                Refresh();
             }
-
-            Size2d newsize = new Size2d();
-            double hvScale1 = Width / (double)Height,//控件横纵比
-            hvScale2 = Image.Width / (double)Image.Height;//图片横纵比
-
-            //根据横纵比算出实际上画图的大小
-            if (hvScale1 > hvScale2)
+            finally
             {
-                newsize.Height = Height;
-                newsize.Width = (Image.Width * ((double)newsize.Height / Image.Height));
+                img.Dispose();
             }
-            else
-            {
-                newsize.Width = Width;
-                newsize.Height = (Image.Height * ((double)newsize.Width / Image.Width));
-            }
-
-            //计算单像素尺寸
-            _cdgMat.PixelSize = new Size2d(newsize.Width / (double)Image.Width, newsize.Height / (double)Image.Height);
-
-            SyncUpdateOrigin(new Point2d((Width - _cdgMat.DispRect.Width) / 2,
-                (Height - _cdgMat.DispRect.Height) / 2));
-
-            Refresh();
         }
 
         /// <summary>

@@ -179,10 +179,10 @@ namespace DeepSightAI
             {
                 string sn = task.ToString();
 
-                // 确保在 UI 线程上执行
+                // 确保在 UI 线程上执行（使用 BeginInvoke 避免阻塞）
                 if (FrHome.Instance.dataGridViewData.InvokeRequired)
                 {
-                    FrHome.Instance.dataGridViewData.Invoke(new MethodInvoker(() => SystemEvent_EventSendTaskToUI(task, msg, timeMs)));
+                    FrHome.Instance.dataGridViewData.BeginInvoke(new MethodInvoker(() => SystemEvent_EventSendTaskToUI(task, msg, timeMs)));
                     return;
                 }
 
@@ -354,8 +354,7 @@ namespace DeepSightAI
                 if (checkIndex >= 0 && checkIndex < FrHome.Instance.dataGridViewData.Rows.Count)
                 {
                     string status = FrHome.Instance.dataGridViewData.Rows[checkIndex].Cells[4].Value?.ToString() ?? "";
-                    if (status.Contains("已完成"))
-                    {
+
                         int lastIndex = FrHome.Instance.dataGridViewData.Rows.Count - 1;
                         string snToRemove = FrHome.Instance.dataGridViewData.Rows[lastIndex].Cells[0].Value?.ToString() ?? "空值";
 
@@ -364,7 +363,7 @@ namespace DeepSightAI
 
                         // 清理相关数据
                         CleanupTaskData(snToRemove);
-                    }
+                    
                 }
                 Machine.master.workClass.IsAllow = false;
             }
