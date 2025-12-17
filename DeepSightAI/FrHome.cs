@@ -208,7 +208,7 @@ namespace DeepSightAI
                     {
                         DisplaysList.Add(DispWin2[j]);
                     }
-                    Machine.master.workClass.setHWindow(DisplaysList);
+                    Machine.master.workClass.SetHWindow(DisplaysList);
                 }
                 catch (Exception ex)
                 {
@@ -345,11 +345,7 @@ namespace DeepSightAI
         {
             try
             {
-                if (!Machine.master.workClass.TestFlag)
-                {
-                    MessageBox.Show("当前系统处于生产模式,请切换为样品板测试模式", "模式提示", MessageBoxButtons.OK, MessageBoxIcon.Question);
-                    return;
-                }
+
                 if (Machine.master.workClass.isStart)
                 {
                     MessageBox.Show("当前系统正在运行中,请先点击暂停", "运行提示", MessageBoxButtons.OK, MessageBoxIcon.Question);
@@ -647,13 +643,6 @@ namespace DeepSightAI
                     int index = 0;
                     for (int i = 0; i < info.Count; i++)
                     {
-                        if (Machine.master.workClass.TestFlag)
-                        {
-                            if (dic_Paths.TryGetValue(SN, out List<string> paths))
-                            {
-                                info[i].rootInfo.LocalDescribePath = paths[i];
-                            }
-                        }
                         string path = string.Empty;
                         string result = string.Empty;
                         Machine.master.workClass.ParseMinioPath(info[i].rootInfo.LocalDescribePath, out path, out result);

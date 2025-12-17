@@ -75,7 +75,7 @@ namespace DeepSightDB
         public string PathIndex { get; set; }
         public DateTime? AviCreationTime { get; set; }
         public List<SideData> Sides { get; set; }
-
+        //尽量少用，数据库负担会比较大
         public static BoardStat GetBoardStat(List<PanelDataRecord> records)
         {
             if (records == null || records.Count == 0)
