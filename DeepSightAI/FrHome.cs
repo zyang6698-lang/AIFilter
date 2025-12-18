@@ -70,6 +70,7 @@ namespace DeepSightAI
             InitializeUI();
             Load += FrHome_Load;
 
+            aviCtr2Container.ShowDeleteButtons = false;
             uph_timer.Interval = 1000 * 6;
             uph_timer.Enabled = true;
             uph_timer.Elapsed += Uph_timer_Elapsed;

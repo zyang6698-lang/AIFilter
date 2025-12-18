@@ -125,15 +125,16 @@
             this.panel13.Size = new System.Drawing.Size(400, 512);
             this.panel13.TabIndex = 1;
             // 
-            // heatMapQueryControl
+            // queryControl
             // 
             this.queryControl.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.queryControl.EndDate = new System.DateTime(2025, 11, 19, 10, 53, 0, 0);
             this.queryControl.IsDateChecked = false;
-            this.queryControl.Location = new System.Drawing.Point(3, 227);
+            this.queryControl.Location = new System.Drawing.Point(19, 199);
             this.queryControl.LotNumber = "";
+            this.queryControl.MachineID = "";
             this.queryControl.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.queryControl.Name = "heatMapQueryControl";
+            this.queryControl.Name = "queryControl";
             this.queryControl.PartNumber = "";
             this.queryControl.SelectedSide = "A";
             this.queryControl.Size = new System.Drawing.Size(350, 290);
@@ -155,7 +156,7 @@
             this.groupBox1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.groupBox1.Size = new System.Drawing.Size(327, 198);
+            this.groupBox1.Size = new System.Drawing.Size(327, 171);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "显示模式";
@@ -165,7 +166,7 @@
             this.btn_Select.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.btn_Select.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
             this.btn_Select.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.btn_Select.Location = new System.Drawing.Point(171, 142);
+            this.btn_Select.Location = new System.Drawing.Point(171, 115);
             this.btn_Select.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btn_Select.Name = "btn_Select";
             this.btn_Select.Size = new System.Drawing.Size(141, 32);
@@ -179,7 +180,7 @@
             this.btnClip.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.btnClip.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
             this.btnClip.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.btnClip.Location = new System.Drawing.Point(16, 142);
+            this.btnClip.Location = new System.Drawing.Point(16, 115);
             this.btnClip.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btnClip.Name = "btnClip";
             this.btnClip.Size = new System.Drawing.Size(141, 32);
@@ -192,7 +193,7 @@
             // 
             this.rbn_Panel.AutoSize = true;
             this.rbn_Panel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.rbn_Panel.Location = new System.Drawing.Point(97, 41);
+            this.rbn_Panel.Location = new System.Drawing.Point(90, 22);
             this.rbn_Panel.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.rbn_Panel.Name = "rbn_Panel";
             this.rbn_Panel.Size = new System.Drawing.Size(68, 19);
@@ -206,7 +207,7 @@
             this.rbn_Array.AutoSize = true;
             this.rbn_Array.Checked = true;
             this.rbn_Array.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.rbn_Array.Location = new System.Drawing.Point(23, 41);
+            this.rbn_Array.Location = new System.Drawing.Point(16, 22);
             this.rbn_Array.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.rbn_Array.Name = "rbn_Array";
             this.rbn_Array.Size = new System.Drawing.Size(68, 19);
@@ -218,7 +219,7 @@
             // 
             // txt_Row
             // 
-            this.txt_Row.Location = new System.Drawing.Point(199, 41);
+            this.txt_Row.Location = new System.Drawing.Point(192, 22);
             this.txt_Row.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.txt_Row.Name = "txt_Row";
             this.txt_Row.Size = new System.Drawing.Size(55, 25);
@@ -228,7 +229,7 @@
             // 
             // txt_Column
             // 
-            this.txt_Column.Location = new System.Drawing.Point(259, 41);
+            this.txt_Column.Location = new System.Drawing.Point(252, 22);
             this.txt_Column.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.txt_Column.Name = "txt_Column";
             this.txt_Column.Size = new System.Drawing.Size(55, 25);
@@ -238,9 +239,10 @@
             // 
             // btn_setPanel
             // 
+            this.btn_setPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.btn_setPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
             this.btn_setPanel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.btn_setPanel.Location = new System.Drawing.Point(171, 91);
+            this.btn_setPanel.Location = new System.Drawing.Point(171, 64);
             this.btn_setPanel.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btn_setPanel.Name = "btn_setPanel";
             this.btn_setPanel.Size = new System.Drawing.Size(141, 32);
@@ -251,9 +253,10 @@
             // 
             // btn_loadArryImage
             // 
+            this.btn_loadArryImage.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.btn_loadArryImage.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
             this.btn_loadArryImage.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.btn_loadArryImage.Location = new System.Drawing.Point(16, 91);
+            this.btn_loadArryImage.Location = new System.Drawing.Point(16, 64);
             this.btn_loadArryImage.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btn_loadArryImage.Name = "btn_loadArryImage";
             this.btn_loadArryImage.Size = new System.Drawing.Size(141, 32);

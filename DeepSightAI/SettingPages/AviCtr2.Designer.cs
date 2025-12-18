@@ -44,7 +44,9 @@
             this.lblAiPassRate = new System.Windows.Forms.Label();
             this.lblAviPassRate = new System.Windows.Forms.Label();
             this.pictureBoxStatus = new System.Windows.Forms.PictureBox();
+            this.btnDelete = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxStatus)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.btnDelete)).BeginInit();
             this.SuspendLayout();
             // 
             // labelLineName
@@ -134,11 +136,25 @@
             this.pictureBoxStatus.TabIndex = 8;
             this.pictureBoxStatus.TabStop = false;
             // 
+            // btnDelete
+            // 
+            this.btnDelete.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnDelete.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnDelete.Location = new System.Drawing.Point(252, 60);
+            this.btnDelete.Margin = new System.Windows.Forms.Padding(2);
+            this.btnDelete.Name = "btnDelete";
+            this.btnDelete.Size = new System.Drawing.Size(20, 20);
+            this.btnDelete.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.btnDelete.TabIndex = 21;
+            this.btnDelete.TabStop = false;
+            this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
+            // 
             // AviCtr2
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(57)))), ((int)(((byte)(69)))));
+            this.Controls.Add(this.btnDelete);
             this.Controls.Add(this.lblAviPassRate);
             this.Controls.Add(this.lblAiPassRate);
             this.Controls.Add(this.lblOperatingRate);
@@ -150,6 +166,7 @@
             this.Name = "AviCtr2";
             this.Size = new System.Drawing.Size(278, 87);
             this.DoubleClick += new System.EventHandler(this.AviCtr2_DoubleClick);
+            ((System.ComponentModel.ISupportInitialize)(this.btnDelete)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxStatus)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -164,5 +181,6 @@
         private System.Windows.Forms.Label lblOperatingRate;
         private System.Windows.Forms.Label lblAiPassRate;
         private System.Windows.Forms.Label lblAviPassRate;
+        private System.Windows.Forms.PictureBox btnDelete;
     }
 }

@@ -72,6 +72,25 @@ namespace DeepSightAI
         }
 
         /// <summary>
+        /// 获取或设置机台号
+        /// </summary>
+        public string MachineID
+        {
+            get => cmb_MachineID.Text == "全部" ? "" : cmb_MachineID.Text;
+            set => cmb_MachineID.Text = value;
+        }
+
+        /// <summary>
+        /// 获取机台号列表
+        /// </summary>
+        public ComboBox.ObjectCollection MachineIDItems => cmb_MachineID.Items;
+
+        /// <summary>
+        /// 获取机台号下拉框
+        /// </summary>
+        public ComboBox MachineIDComboBox => cmb_MachineID;
+
+        /// <summary>
         /// 获取料号列表
         /// </summary>
         public ComboBox.ObjectCollection PartNumberItems => cmb_PartNumber.Items;
@@ -123,6 +142,12 @@ namespace DeepSightAI
             if (!string.IsNullOrEmpty(PartNumber))
             {
                 query = query.Where(t => t.ProductSerial == PartNumber);
+            }
+
+            // 根据机台号进行筛选
+            if (!string.IsNullOrEmpty(MachineID))
+            {
+                query = query.Where(t => t.MachineId == MachineID);
             }
 
             // 然后根据选择的面筛选每个记录的Sides列表
@@ -230,6 +255,9 @@ namespace DeepSightAI
                 {
                     QueryResult = new List<PanelDataRecord>();
                 }
+
+                // 填充机台号列表
+                UpdateMachineIDList();
             }
             catch (Exception ex)
             {
@@ -240,11 +268,40 @@ namespace DeepSightAI
         }
 
         /// <summary>
+        /// 更新机台号下拉列表
+        /// </summary>
+        private void UpdateMachineIDList()
+        {
+            MachineIDItems.Clear();
+            MachineIDItems.Add("全部");
+
+            if (QueryResult != null && QueryResult.Count > 0)
+            {
+                // 从查询结果中提取唯一的机台号
+                var machineIds = QueryResult
+                    .Where(r => !string.IsNullOrEmpty(r.MachineId))
+                    .Select(r => r.MachineId)
+                    .Distinct()
+                    .OrderBy(m => m);
+
+                foreach (var machineId in machineIds)
+                {
+                    MachineIDItems.Add(machineId);
+                }
+            }
+
+            // 默认选择"全部"
+            MachineIDComboBox.SelectedIndex = 0;
+        }
+
+        /// <summary>
         /// 清空输入内容
         /// </summary>
         public void ClearInputs()
         {
             txt_Lot.Clear();
+            cmb_MachineID.Items.Clear();
+            cmb_MachineID.Text = string.Empty;
             cmb_PartNumber.Items.Clear();
             cmb_PartNumber.Text = string.Empty;
             timePicker.Checked = false;

@@ -14,6 +14,31 @@ namespace DeepSightAI.SettingPages
     public partial class AviCtr2 : UserControl
     {
         /// <summary>
+        /// 删除请求事件，当用户点击删除按钮时触发
+        /// </summary>
+        public event EventHandler DeleteRequested;
+
+        /// <summary>
+        /// 控制删除按钮是否可见
+        /// </summary>
+        private bool _showDeleteButton = true;
+        public bool ShowDeleteButton
+        {
+            get => _showDeleteButton;
+            set
+            {
+                if (_showDeleteButton != value)
+                {
+                    _showDeleteButton = value;
+                    if (btnDelete != null)
+                    {
+                        btnDelete.Visible = value;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// 控件状态枚举
         /// </summary>
         public enum ControlStatus
@@ -188,6 +213,7 @@ namespace DeepSightAI.SettingPages
             SetTransparentBackground(this);
 
             InitializeToolTip();
+            InitializeDeleteButton();
             ctrConfig = _config;
             SetName(ctrConfig.AviName);
             UpdateDisplay();
@@ -260,6 +286,80 @@ namespace DeepSightAI.SettingPages
         private void InitializeToolTip()
         {
             toolTip = new ToolTip();
+        }
+
+        /// <summary>
+        /// 初始化删除按钮图标
+        /// </summary>
+        private void InitializeDeleteButton()
+        {
+            // 创建垃圾桶图标
+            btnDelete.Image = CreateTrashIcon(btnDelete.Width, btnDelete.Height);
+            btnDelete.BackColor = Color.Transparent;
+            btnDelete.Visible = _showDeleteButton;
+            if (toolTip != null)
+            {
+                toolTip.SetToolTip(btnDelete, "删除此机台");
+            }
+        }
+
+        /// <summary>
+        /// 创建垃圾桶图标
+        /// </summary>
+        private Bitmap CreateTrashIcon(int width, int height)
+        {
+            Bitmap bmp = new Bitmap(width, height);
+            using (Graphics g = Graphics.FromImage(bmp))
+            {
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                g.Clear(Color.Transparent);
+
+                Color iconColor = Color.FromArgb(200, 220, 220, 220);
+                using (Pen pen = new Pen(iconColor, 1.5f))
+                using (SolidBrush brush = new SolidBrush(iconColor))
+                {
+                    // 绘制垃圾桶图标
+                    int padding = 2;
+                    int w = width - padding * 2;
+                    int h = height - padding * 2;
+
+                    // 垃圾桶盖
+                    g.DrawLine(pen, padding + 2, padding + 3, padding + w - 2, padding + 3);
+                    g.DrawLine(pen, padding + w / 2 - 2, padding + 1, padding + w / 2 + 2, padding + 1);
+                    g.DrawLine(pen, padding + w / 2 - 2, padding + 1, padding + w / 2 - 2, padding + 3);
+                    g.DrawLine(pen, padding + w / 2 + 2, padding + 1, padding + w / 2 + 2, padding + 3);
+
+                    // 垃圾桶身体
+                    g.DrawLine(pen, padding + 3, padding + 4, padding + 4, padding + h - 1);
+                    g.DrawLine(pen, padding + w - 3, padding + 4, padding + w - 4, padding + h - 1);
+                    g.DrawLine(pen, padding + 4, padding + h - 1, padding + w - 4, padding + h - 1);
+
+                    // 垃圾桶内部线条
+                    g.DrawLine(pen, padding + w / 2, padding + 6, padding + w / 2, padding + h - 3);
+                    g.DrawLine(pen, padding + w / 2 - 3, padding + 6, padding + w / 2 - 3, padding + h - 3);
+                    g.DrawLine(pen, padding + w / 2 + 3, padding + 6, padding + w / 2 + 3, padding + h - 3);
+                }
+            }
+            return bmp;
+        }
+
+        /// <summary>
+        /// 删除按钮点击事件处理
+        /// </summary>
+        private void btnDelete_Click(object sender, EventArgs e)
+        {
+            // 弹出确认对话框
+            DialogResult result = MessageBox.Show(
+                $"确定要删除机台 \"{ctrConfig?.AviName}\" 吗？",
+                "确认删除",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (result == DialogResult.Yes)
+            {
+                // 触发删除事件
+                DeleteRequested?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         /// <summary>

@@ -42,6 +42,8 @@ namespace DeepSightAI
             this.rbn_Front = new System.Windows.Forms.RadioButton();
             this.rbn_Back = new System.Windows.Forms.RadioButton();
             this.rbn_All = new System.Windows.Forms.RadioButton();
+            this.label_MachineID = new System.Windows.Forms.Label();
+            this.cmb_MachineID = new System.Windows.Forms.ComboBox();
             this.btn_queryHeatPoint = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
@@ -49,10 +51,9 @@ namespace DeepSightAI
             // 
             this.label79.AutoSize = true;
             this.label79.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label79.Location = new System.Drawing.Point(11, 12);
-            this.label79.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label79.Location = new System.Drawing.Point(15, 15);
             this.label79.Name = "label79";
-            this.label79.Size = new System.Drawing.Size(65, 12);
+            this.label79.Size = new System.Drawing.Size(82, 15);
             this.label79.TabIndex = 0;
             this.label79.Text = "查询信息：";
             // 
@@ -60,19 +61,18 @@ namespace DeepSightAI
             // 
             this.label82.AutoSize = true;
             this.label82.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label82.Location = new System.Drawing.Point(8, 37);
-            this.label82.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label82.Location = new System.Drawing.Point(11, 46);
             this.label82.Name = "label82";
-            this.label82.Size = new System.Drawing.Size(65, 12);
+            this.label82.Size = new System.Drawing.Size(82, 15);
             this.label82.TabIndex = 1;
             this.label82.Text = "起始日期：";
             // 
             // timePicker
             // 
-            this.timePicker.Location = new System.Drawing.Point(67, 33);
-            this.timePicker.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.timePicker.Location = new System.Drawing.Point(89, 41);
+            this.timePicker.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.timePicker.Name = "timePicker";
-            this.timePicker.Size = new System.Drawing.Size(182, 21);
+            this.timePicker.Size = new System.Drawing.Size(241, 25);
             this.timePicker.TabIndex = 2;
             this.timePicker.Value = new System.DateTime(2025, 11, 19, 10, 53, 0, 0);
             // 
@@ -80,19 +80,18 @@ namespace DeepSightAI
             // 
             this.labelEndDate.AutoSize = true;
             this.labelEndDate.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.labelEndDate.Location = new System.Drawing.Point(8, 70);
-            this.labelEndDate.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.labelEndDate.Location = new System.Drawing.Point(11, 88);
             this.labelEndDate.Name = "labelEndDate";
-            this.labelEndDate.Size = new System.Drawing.Size(65, 12);
+            this.labelEndDate.Size = new System.Drawing.Size(82, 15);
             this.labelEndDate.TabIndex = 12;
             this.labelEndDate.Text = "结束日期：";
             // 
             // timePickerEnd
             // 
-            this.timePickerEnd.Location = new System.Drawing.Point(67, 66);
-            this.timePickerEnd.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.timePickerEnd.Location = new System.Drawing.Point(89, 82);
+            this.timePickerEnd.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.timePickerEnd.Name = "timePickerEnd";
-            this.timePickerEnd.Size = new System.Drawing.Size(182, 21);
+            this.timePickerEnd.Size = new System.Drawing.Size(241, 25);
             this.timePickerEnd.TabIndex = 13;
             this.timePickerEnd.Value = new System.DateTime(2025, 11, 19, 10, 53, 0, 0);
             // 
@@ -100,30 +99,28 @@ namespace DeepSightAI
             // 
             this.label81.AutoSize = true;
             this.label81.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label81.Location = new System.Drawing.Point(8, 102);
-            this.label81.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label81.Location = new System.Drawing.Point(11, 128);
             this.label81.Name = "label81";
-            this.label81.Size = new System.Drawing.Size(41, 12);
+            this.label81.Size = new System.Drawing.Size(52, 15);
             this.label81.TabIndex = 3;
             this.label81.Text = "料号：";
             // 
             // cmb_PartNumber
             // 
             this.cmb_PartNumber.FormattingEnabled = true;
-            this.cmb_PartNumber.Location = new System.Drawing.Point(67, 99);
-            this.cmb_PartNumber.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.cmb_PartNumber.Location = new System.Drawing.Point(89, 124);
+            this.cmb_PartNumber.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.cmb_PartNumber.Name = "cmb_PartNumber";
-            this.cmb_PartNumber.Size = new System.Drawing.Size(182, 20);
+            this.cmb_PartNumber.Size = new System.Drawing.Size(241, 23);
             this.cmb_PartNumber.TabIndex = 4;
             // 
             // label2
             // 
             this.label2.AutoSize = true;
             this.label2.ForeColor = System.Drawing.Color.Snow;
-            this.label2.Location = new System.Drawing.Point(11, 126);
-            this.label2.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label2.Location = new System.Drawing.Point(15, 158);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(239, 12);
+            this.label2.Size = new System.Drawing.Size(319, 15);
             this.label2.TabIndex = 5;
             this.label2.Text = "---------------------------------------";
             // 
@@ -131,29 +128,27 @@ namespace DeepSightAI
             // 
             this.label80.AutoSize = true;
             this.label80.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label80.Location = new System.Drawing.Point(11, 154);
-            this.label80.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label80.Location = new System.Drawing.Point(15, 192);
             this.label80.Name = "label80";
-            this.label80.Size = new System.Drawing.Size(35, 12);
+            this.label80.Size = new System.Drawing.Size(46, 15);
             this.label80.TabIndex = 6;
             this.label80.Text = "Lot：";
             // 
             // txt_Lot
             // 
-            this.txt_Lot.Location = new System.Drawing.Point(67, 151);
-            this.txt_Lot.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.txt_Lot.Location = new System.Drawing.Point(89, 189);
+            this.txt_Lot.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.txt_Lot.Name = "txt_Lot";
-            this.txt_Lot.Size = new System.Drawing.Size(182, 21);
+            this.txt_Lot.Size = new System.Drawing.Size(241, 25);
             this.txt_Lot.TabIndex = 7;
             // 
             // label83
             // 
             this.label83.AutoSize = true;
             this.label83.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label83.Location = new System.Drawing.Point(11, 188);
-            this.label83.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label83.Location = new System.Drawing.Point(11, 269);
             this.label83.Name = "label83";
-            this.label83.Size = new System.Drawing.Size(53, 12);
+            this.label83.Size = new System.Drawing.Size(67, 15);
             this.label83.TabIndex = 8;
             this.label83.Text = "正反面：";
             // 
@@ -162,48 +157,67 @@ namespace DeepSightAI
             this.rbn_Front.AutoSize = true;
             this.rbn_Front.Checked = true;
             this.rbn_Front.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.rbn_Front.Location = new System.Drawing.Point(68, 188);
-            this.rbn_Front.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.rbn_Front.Location = new System.Drawing.Point(87, 269);
+            this.rbn_Front.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.rbn_Front.Name = "rbn_Front";
-            this.rbn_Front.Size = new System.Drawing.Size(47, 16);
+            this.rbn_Front.Size = new System.Drawing.Size(58, 19);
             this.rbn_Front.TabIndex = 9;
             this.rbn_Front.TabStop = true;
             this.rbn_Front.Text = "正面";
             this.rbn_Front.TextAlign = System.Drawing.ContentAlignment.TopLeft;
             this.rbn_Front.UseVisualStyleBackColor = true;
-            //
+            // 
             // rbn_Back
-            //
+            // 
             this.rbn_Back.AutoSize = true;
             this.rbn_Back.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.rbn_Back.Location = new System.Drawing.Point(119, 188);
-            this.rbn_Back.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.rbn_Back.Location = new System.Drawing.Point(155, 269);
+            this.rbn_Back.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.rbn_Back.Name = "rbn_Back";
-            this.rbn_Back.Size = new System.Drawing.Size(47, 16);
+            this.rbn_Back.Size = new System.Drawing.Size(58, 19);
             this.rbn_Back.TabIndex = 10;
             this.rbn_Back.Text = "反面";
             this.rbn_Back.UseVisualStyleBackColor = true;
-            //
+            // 
             // rbn_All
-            //
+            // 
             this.rbn_All.AutoSize = true;
             this.rbn_All.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.rbn_All.Location = new System.Drawing.Point(170, 188);
-            this.rbn_All.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.rbn_All.Location = new System.Drawing.Point(223, 269);
+            this.rbn_All.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.rbn_All.Name = "rbn_All";
-            this.rbn_All.Size = new System.Drawing.Size(47, 16);
+            this.rbn_All.Size = new System.Drawing.Size(58, 19);
             this.rbn_All.TabIndex = 13;
             this.rbn_All.Text = "全选";
             this.rbn_All.UseVisualStyleBackColor = true;
-            //
+            // 
+            // label_MachineID
+            // 
+            this.label_MachineID.AutoSize = true;
+            this.label_MachineID.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.label_MachineID.Location = new System.Drawing.Point(11, 235);
+            this.label_MachineID.Name = "label_MachineID";
+            this.label_MachineID.Size = new System.Drawing.Size(67, 15);
+            this.label_MachineID.TabIndex = 14;
+            this.label_MachineID.Text = "机台号：";
+            // 
+            // cmb_MachineID
+            // 
+            this.cmb_MachineID.FormattingEnabled = true;
+            this.cmb_MachineID.Location = new System.Drawing.Point(89, 231);
+            this.cmb_MachineID.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.cmb_MachineID.Name = "cmb_MachineID";
+            this.cmb_MachineID.Size = new System.Drawing.Size(241, 23);
+            this.cmb_MachineID.TabIndex = 15;
+            // 
             // btn_queryHeatPoint
             // 
             this.btn_queryHeatPoint.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
             this.btn_queryHeatPoint.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.btn_queryHeatPoint.Location = new System.Drawing.Point(142, 217);
-            this.btn_queryHeatPoint.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btn_queryHeatPoint.Location = new System.Drawing.Point(189, 306);
+            this.btn_queryHeatPoint.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btn_queryHeatPoint.Name = "btn_queryHeatPoint";
-            this.btn_queryHeatPoint.Size = new System.Drawing.Size(106, 26);
+            this.btn_queryHeatPoint.Size = new System.Drawing.Size(141, 32);
             this.btn_queryHeatPoint.TabIndex = 11;
             this.btn_queryHeatPoint.Text = "查询";
             this.btn_queryHeatPoint.UseVisualStyleBackColor = false;
@@ -211,9 +225,11 @@ namespace DeepSightAI
             // 
             // QueryControl
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.Controls.Add(this.cmb_MachineID);
+            this.Controls.Add(this.label_MachineID);
             this.Controls.Add(this.timePickerEnd);
             this.Controls.Add(this.labelEndDate);
             this.Controls.Add(this.btn_queryHeatPoint);
@@ -229,9 +245,9 @@ namespace DeepSightAI
             this.Controls.Add(this.timePicker);
             this.Controls.Add(this.label82);
             this.Controls.Add(this.label79);
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "QueryControl";
-            this.Size = new System.Drawing.Size(262, 256);
+            this.Size = new System.Drawing.Size(349, 356);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -253,6 +269,8 @@ namespace DeepSightAI
         private System.Windows.Forms.RadioButton rbn_Front;
         private System.Windows.Forms.RadioButton rbn_Back;
         private System.Windows.Forms.RadioButton rbn_All;
+        private System.Windows.Forms.Label label_MachineID;
+        private System.Windows.Forms.ComboBox cmb_MachineID;
         private System.Windows.Forms.Button btn_queryHeatPoint;
     }
 }
