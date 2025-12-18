@@ -64,6 +64,10 @@ namespace DeepSightWorkLib
         /// </summary>
         private readonly ConcurrentDictionary<string, DateTime> _processingSnSet = new ConcurrentDictionary<string, DateTime>();
 
+        /// <summary>
+        /// 图像显示服务
+        /// </summary>
+        private ImageDisplayService ImageDisplay { get; set; }
         // services
         private AviReaderService _aviReaderService;
         private ImageLoaderService _imageLoaderService;
@@ -108,12 +112,6 @@ namespace DeepSightWorkLib
         /// Minio 对象存储服务
         /// </summary>
         public MinioClass Minio { get; private set; }
-
-        /// <summary>
-        /// 图像显示服务
-        /// </summary>
-        public ImageDisplayService ImageDisplay { get; private set; }
-
 
         /// <summary>
         /// 开始/停止作业标志
@@ -212,15 +210,6 @@ namespace DeepSightWorkLib
 
         [Obsolete("请使用 IsShowBox 属性")]
         public bool isShowBox { get => IsShowBox; set => IsShowBox = value; }
-
-        [Obsolete("请使用 SolConfig 属性")]
-        public SolutionConfig solconfig { get => SolConfig; set => SolConfig = value; }
-
-        [Obsolete("请使用 AviConfig 属性")]
-        public AVIConfig aviconfig { get => AviConfig; set => AviConfig = value; }
-
-        [Obsolete("请使用 SysConfig 属性")]
-        public ConfigurationClass sysConfig { get => SysConfig; set => SysConfig = value; }
 
         /// <summary>
         /// 小图显示集合

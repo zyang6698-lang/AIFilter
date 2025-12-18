@@ -12,7 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DeepSightWorkLib
+namespace DeepSightWorkLib.Services
 {
     /// <summary>
     /// 图像显示服务 - 负责图像的显示、绘制和转换

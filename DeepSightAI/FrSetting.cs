@@ -315,7 +315,7 @@ namespace DeepSightAI
                     FrBaseConfig.Instance.GetBaseParams();
                     if (Machine.config_class.Save(Machine.sysConfig))
                     {
-                        Machine.master.workClass.sysConfig = Machine.sysConfig;
+                        Machine.master.workClass.SysConfig = Machine.sysConfig;
                         MessageBox.Show("保存配置文件成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
@@ -332,7 +332,7 @@ namespace DeepSightAI
                     if (Machine.avi_class.Save(Machine.aviconfig))
                     {
                         RestartApplication(appPath, appExe);
-                        Machine.master.workClass.aviconfig = Machine.aviconfig;
+                        Machine.master.workClass.AviConfig = Machine.aviconfig;
                         // 更新FrHome中的AviCtr状态
                         FrHome.Instance.RefreshAviCtrConfigs();
                         MessageBox.Show("保存Agent配置文件成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -343,7 +343,7 @@ namespace DeepSightAI
                 {
                     if (FrAIConfig.Instance.SaveParam())
                     {
-                        Machine.master.workClass.solconfig = Machine.solconfig;
+                        Machine.master.workClass.SolConfig = Machine.solconfig;
                         MessageBox.Show("方案及流程配置保存成功", "保存成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
 

@@ -44,7 +44,7 @@ namespace DeepSightModel
         [XmlElementAttribute("SolutionConfig", IsNullable = false)]
         public List<SolutionAndFlow> solus { get; set; }
         [XmlElementAttribute("PartNumberImagesLoc", IsNullable = false)]
-        public string PartNumberImagesLoc { get; set; }=@"D:\ATS_AI_INSTALL\TemplateImages";
+        public string PartNumberImagesLoc { get; set;} = @"D:\ATS_AI_INSTALL\TemplateImages";
 
         public SolutionConfig()
         {
@@ -97,13 +97,19 @@ namespace DeepSightModel
     [Serializable]
     public class DeepSight_Solution
     {
+        private static readonly string BaseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+        private static readonly string NewConfigDirectory = Path.Combine(BaseDirectory, "configs");
+        private static readonly string NewConfigFileName = "aisolution.config.xml";
+        private static readonly string NewConfigPath = Path.Combine(NewConfigDirectory, NewConfigFileName);
+        private static readonly string LegacyConfigDirectory = Path.Combine(BaseDirectory, "AISolutionAndFlow");
+        private static readonly string LegacyConfigPath = Path.Combine(LegacyConfigDirectory, "config.xml");
+
         public DeepSight_Solution()
         {
-            if (!Directory.Exists(System.AppDomain.CurrentDomain.BaseDirectory + "AISolutionAndFlow"))
-            {
-                Directory.CreateDirectory(System.AppDomain.CurrentDomain.BaseDirectory + "AISolutionAndFlow");
-            }
-            if (!File.Exists(System.AppDomain.CurrentDomain.BaseDirectory + "AISolutionAndFlow\\config.xml"))
+            EnsureConfigDirectory();
+            TryMigrateLegacyConfig();
+
+            if (!File.Exists(NewConfigPath))
             {
                 default_dat_config();
             }
@@ -156,16 +162,18 @@ namespace DeepSightModel
             sol_config = new SolutionConfig();
             try
             {
-                if (!File.Exists(System.AppDomain.CurrentDomain.BaseDirectory + "AISolutionAndFlow\\config.xml"))
+                string configPath = ResolveReadableConfigPath();
+                if (!File.Exists(configPath))
                 {
                     result = false;
                 }
                 else
                 {
-                    FileStream stream = new FileStream(System.AppDomain.CurrentDomain.BaseDirectory + "AISolutionAndFlow\\config.xml", FileMode.Open, FileAccess.Read, FileShare.Read);
-                    XmlSerializer xs = new XmlSerializer(typeof(SolutionConfig));
-                    sol_config = (SolutionConfig)xs.Deserialize(stream);
-                    stream.Close();
+                    using (FileStream stream = new FileStream(configPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    {
+                        XmlSerializer xs = new XmlSerializer(typeof(SolutionConfig));
+                        sol_config = (SolutionConfig)xs.Deserialize(stream);
+                    }
                     result = true;
                 }
             }
@@ -188,13 +196,8 @@ namespace DeepSightModel
             bool result = false;
             try
             {
-                string path = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "AISolutionAndFlow");
-                if (!Directory.Exists(path))
-                {
-                    Directory.CreateDirectory(path);
-                }
-                path = Path.Combine(path, "config.xml");
-                using (TextWriter sw = System.IO.StreamWriter.Synchronized(new System.IO.StreamWriter(path, false, Encoding.UTF8)))
+                EnsureConfigDirectory();
+                using (TextWriter sw = TextWriter.Synchronized(new StreamWriter(NewConfigPath, false, Encoding.UTF8)))
                 {
                     XmlSerializer xml = new System.Xml.Serialization.XmlSerializer(typeof(SolutionConfig));
                     xml.Serialize(sw, sol_config);
@@ -207,6 +210,44 @@ namespace DeepSightModel
                 result = false;
             }
             return result;
+        }
+
+        private static void EnsureConfigDirectory()
+        {
+            if (!Directory.Exists(NewConfigDirectory))
+            {
+                Directory.CreateDirectory(NewConfigDirectory);
+            }
+        }
+
+        private static void TryMigrateLegacyConfig()
+        {
+            if (!File.Exists(NewConfigPath) && File.Exists(LegacyConfigPath))
+            {
+                try
+                {
+                    File.Copy(LegacyConfigPath, NewConfigPath, true);
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error("迁移AISolution配置失败", ex);
+                }
+            }
+        }
+
+        private static string ResolveReadableConfigPath()
+        {
+            if (File.Exists(NewConfigPath))
+            {
+                return NewConfigPath;
+            }
+
+            if (File.Exists(LegacyConfigPath))
+            {
+                return LegacyConfigPath;
+            }
+
+            return NewConfigPath;
         }
     }
 }

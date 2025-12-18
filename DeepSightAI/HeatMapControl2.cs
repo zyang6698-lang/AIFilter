@@ -70,7 +70,7 @@ namespace DeepSightAI
         private void InitializeQueryControl()
         {
             // 订阅查询控件的事件
-            heatMapQueryControl.QueryClicked += HeatMapQueryControl_QueryClicked;
+            queryControl.QueryClicked += HeatMapQueryControl_QueryClicked;
         }
 
         private void HeatMapControl2_VisibleChanged(object sender, EventArgs e)
@@ -182,7 +182,7 @@ namespace DeepSightAI
             sn_list.ForEach(sn => GenerateMockHeatPoints(sn));
 #else
 
-            foreach (var res in heatMapQueryControl.GetQueryResult())
+            foreach (var res in queryControl.GetQueryResult())
             {
                 if (!dic_heatPints.ContainsKey(res.SerialNumber))
                 {
@@ -893,7 +893,7 @@ namespace DeepSightAI
                 // 异步查询所有符合条件的点
                 _pointsInSelection = await Task.Run(() =>
                 {
-                    string sideFilter = heatMapQueryControl.SelectedSide;
+                    string sideFilter = queryControl.SelectedSide;
                     var selectedDefectNames = new HashSet<string>(
                         flowLayoutPanel_Defects.Controls.OfType<CheckBox>()
                                                 .Where(cb => cb.Checked)

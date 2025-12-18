@@ -29,18 +29,16 @@ namespace DeepSightAI.SettingPages
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrHWConfig));
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.panel2 = new System.Windows.Forms.Panel();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.uiGroupBox1 = new Sunny.UI.UIGroupBox();
+            this.aviCtr2Container1 = new DeepSightAI.SettingPages.AviCtr2Container();
             this.grpAxisOfSelection = new Sunny.UI.UIGroupBox();
             this.label20 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
             this.label10 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
-            this.btn_KillAgent = new System.Windows.Forms.Button();
-            this.btn_RunAgent = new System.Windows.Forms.Button();
             this.txt_temporary_file_storage_area_B = new System.Windows.Forms.TextBox();
             this.label13 = new System.Windows.Forms.Label();
             this.txt_temporary_file_storage_area_A = new System.Windows.Forms.TextBox();
@@ -65,7 +63,6 @@ namespace DeepSightAI.SettingPages
             this.lblstationcount = new System.Windows.Forms.Label();
             this.txt_station_count = new System.Windows.Forms.NumericUpDown();
             this.label2 = new System.Windows.Forms.Label();
-            this.aviCtr2Container1 = new DeepSightAI.SettingPages.AviCtr2Container();
             this.tableLayoutPanel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
@@ -139,14 +136,21 @@ namespace DeepSightAI.SettingPages
             this.uiGroupBox1.Text = "AVI配置";
             this.uiGroupBox1.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
             // 
+            // aviCtr2Container1
+            // 
+            this.aviCtr2Container1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.aviCtr2Container1.Location = new System.Drawing.Point(27, 25);
+            this.aviCtr2Container1.Margin = new System.Windows.Forms.Padding(14, 29, 14, 29);
+            this.aviCtr2Container1.Name = "aviCtr2Container1";
+            this.aviCtr2Container1.Size = new System.Drawing.Size(830, 679);
+            this.aviCtr2Container1.TabIndex = 0;
+            // 
             // grpAxisOfSelection
             // 
             this.grpAxisOfSelection.Controls.Add(this.label20);
             this.grpAxisOfSelection.Controls.Add(this.label11);
             this.grpAxisOfSelection.Controls.Add(this.label10);
             this.grpAxisOfSelection.Controls.Add(this.label1);
-            this.grpAxisOfSelection.Controls.Add(this.btn_KillAgent);
-            this.grpAxisOfSelection.Controls.Add(this.btn_RunAgent);
             this.grpAxisOfSelection.Controls.Add(this.txt_temporary_file_storage_area_B);
             this.grpAxisOfSelection.Controls.Add(this.label13);
             this.grpAxisOfSelection.Controls.Add(this.txt_temporary_file_storage_area_A);
@@ -227,44 +231,6 @@ namespace DeepSightAI.SettingPages
             this.label1.Size = new System.Drawing.Size(35, 24);
             this.label1.TabIndex = 252;
             this.label1.Text = "ms";
-            // 
-            // btn_KillAgent
-            // 
-            this.btn_KillAgent.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("btn_KillAgent.BackgroundImage")));
-            this.btn_KillAgent.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.btn_KillAgent.FlatAppearance.BorderSize = 0;
-            this.btn_KillAgent.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
-            this.btn_KillAgent.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
-            this.btn_KillAgent.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btn_KillAgent.Font = new System.Drawing.Font("微软雅黑", 9F);
-            this.btn_KillAgent.ForeColor = System.Drawing.Color.White;
-            this.btn_KillAgent.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btn_KillAgent.Location = new System.Drawing.Point(503, 488);
-            this.btn_KillAgent.Name = "btn_KillAgent";
-            this.btn_KillAgent.Size = new System.Drawing.Size(115, 36);
-            this.btn_KillAgent.TabIndex = 249;
-            this.btn_KillAgent.Text = "关闭Agent";
-            this.btn_KillAgent.UseVisualStyleBackColor = true;
-            this.btn_KillAgent.Visible = false;
-            // 
-            // btn_RunAgent
-            // 
-            this.btn_RunAgent.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("btn_RunAgent.BackgroundImage")));
-            this.btn_RunAgent.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.btn_RunAgent.FlatAppearance.BorderSize = 0;
-            this.btn_RunAgent.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
-            this.btn_RunAgent.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
-            this.btn_RunAgent.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btn_RunAgent.Font = new System.Drawing.Font("微软雅黑", 9F);
-            this.btn_RunAgent.ForeColor = System.Drawing.Color.White;
-            this.btn_RunAgent.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btn_RunAgent.Location = new System.Drawing.Point(343, 488);
-            this.btn_RunAgent.Name = "btn_RunAgent";
-            this.btn_RunAgent.Size = new System.Drawing.Size(115, 36);
-            this.btn_RunAgent.TabIndex = 250;
-            this.btn_RunAgent.Text = "开启Agent";
-            this.btn_RunAgent.UseVisualStyleBackColor = true;
-            this.btn_RunAgent.Visible = false;
             // 
             // txt_temporary_file_storage_area_B
             // 
@@ -523,15 +489,6 @@ namespace DeepSightAI.SettingPages
             this.label2.Text = "AVI工站数量：";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // aviCtr2Container1
-            // 
-            this.aviCtr2Container1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.aviCtr2Container1.Location = new System.Drawing.Point(27, 25);
-            this.aviCtr2Container1.Margin = new System.Windows.Forms.Padding(9, 16, 9, 16);
-            this.aviCtr2Container1.Name = "aviCtr2Container1";
-            this.aviCtr2Container1.Size = new System.Drawing.Size(830, 679);
-            this.aviCtr2Container1.TabIndex = 0;
-            // 
             // FrHWConfig
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
@@ -570,8 +527,6 @@ namespace DeepSightAI.SettingPages
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.Label label1;
-        internal System.Windows.Forms.Button btn_KillAgent;
-        internal System.Windows.Forms.Button btn_RunAgent;
         internal System.Windows.Forms.TextBox txt_temporary_file_storage_area_B;
         internal System.Windows.Forms.Label label13;
         internal System.Windows.Forms.TextBox txt_temporary_file_storage_area_A;

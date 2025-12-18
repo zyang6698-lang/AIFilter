@@ -60,13 +60,19 @@ namespace DeepSightModel
 
     public class DeepSight_Config_class
     {
+        private static readonly string BaseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+        private static readonly string NewConfigDirectory = Path.Combine(BaseDirectory, "configs");
+        private static readonly string NewConfigFileName = "general.config.xml";
+        private static readonly string NewConfigPath = Path.Combine(NewConfigDirectory, NewConfigFileName);
+        private static readonly string LegacyConfigDirectory = Path.Combine(BaseDirectory, "config");
+        private static readonly string LegacyConfigPath = Path.Combine(LegacyConfigDirectory, "config.xml");
+
         public DeepSight_Config_class()
         {
-            if (!Directory.Exists(System.AppDomain.CurrentDomain.BaseDirectory + "config"))
-            {
-                Directory.CreateDirectory(System.AppDomain.CurrentDomain.BaseDirectory + "config");
-            }
-            if (!File.Exists(System.AppDomain.CurrentDomain.BaseDirectory + "config\\config.xml"))
+            EnsureConfigDirectory();
+            TryMigrateLegacyConfig();
+
+            if (!File.Exists(NewConfigPath))
             {
                 default_dat_config();
             }
@@ -106,16 +112,18 @@ namespace DeepSightModel
             system_config = new ConfigurationClass();
             try
             {
-                if (!File.Exists(System.AppDomain.CurrentDomain.BaseDirectory + "config\\config.xml"))
+                string configPath = ResolveReadableConfigPath();
+                if (!File.Exists(configPath))
                 {
                     result = false;
                 }
                 else
                 {
-                    FileStream stream = new FileStream(System.AppDomain.CurrentDomain.BaseDirectory + "config\\config.xml", FileMode.Open, FileAccess.Read, FileShare.Read);
-                    XmlSerializer xs = new XmlSerializer(typeof(ConfigurationClass));
-                    system_config = (ConfigurationClass)xs.Deserialize(stream);
-                    stream.Close();
+                    using (FileStream stream = new FileStream(configPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    {
+                        XmlSerializer xs = new XmlSerializer(typeof(ConfigurationClass));
+                        system_config = (ConfigurationClass)xs.Deserialize(stream);
+                    }
                     result = true;
                 }
             }
@@ -137,15 +145,12 @@ namespace DeepSightModel
             bool result = false;
             try
             {
-                if (File.Exists(System.AppDomain.CurrentDomain.BaseDirectory + "config\\config.xml"))
+                EnsureConfigDirectory();
+                using (FileStream stream = new FileStream(NewConfigPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
                 {
-                    File.Delete(System.AppDomain.CurrentDomain.BaseDirectory + "config\\config.xml");
+                    XmlSerializer xs = new XmlSerializer(typeof(ConfigurationClass));
+                    xs.Serialize(stream, system_config);
                 }
-                FileStream stream = new FileStream(System.AppDomain.CurrentDomain.BaseDirectory + "config\\config.xml", FileMode.OpenOrCreate, FileAccess.ReadWrite);
-
-                XmlSerializer xs = new XmlSerializer(typeof(ConfigurationClass));
-                xs.Serialize(stream, system_config);
-                stream.Close();
                 result = true;
             }
             catch (Exception ex)
@@ -156,6 +161,43 @@ namespace DeepSightModel
             return result;
         }
 
+        private static void EnsureConfigDirectory()
+        {
+            if (!Directory.Exists(NewConfigDirectory))
+            {
+                Directory.CreateDirectory(NewConfigDirectory);
+            }
+        }
+
+        private static void TryMigrateLegacyConfig()
+        {
+            if (!File.Exists(NewConfigPath) && File.Exists(LegacyConfigPath))
+            {
+                try
+                {
+                    File.Copy(LegacyConfigPath, NewConfigPath, true);
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error("迁移旧常规配置失败", ex);
+                }
+            }
+        }
+
+        private static string ResolveReadableConfigPath()
+        {
+            if (File.Exists(NewConfigPath))
+            {
+                return NewConfigPath;
+            }
+
+            if (File.Exists(LegacyConfigPath))
+            {
+                return LegacyConfigPath;
+            }
+
+            return NewConfigPath;
+        }
     }
 
     public class WatchPathConfig

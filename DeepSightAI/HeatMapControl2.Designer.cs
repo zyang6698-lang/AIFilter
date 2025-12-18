@@ -33,6 +33,7 @@
             this.table_HeatMap = new System.Windows.Forms.TableLayoutPanel();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.panel13 = new System.Windows.Forms.Panel();
+            this.queryControl = new DeepSightAI.QueryControl();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.btn_Select = new System.Windows.Forms.Button();
             this.btnClip = new System.Windows.Forms.Button();
@@ -42,7 +43,6 @@
             this.txt_Column = new System.Windows.Forms.TextBox();
             this.btn_setPanel = new System.Windows.Forms.Button();
             this.btn_loadArryImage = new System.Windows.Forms.Button();
-            this.heatMapQueryControl = new DeepSightAI.QueryControl();
             this.flowLayoutPanel_Defects = new System.Windows.Forms.FlowLayoutPanel();
             this.tableLayoutPanel6.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -54,9 +54,9 @@
             // 
             this.tableLayoutPanel6.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.tableLayoutPanel6.ColumnCount = 3;
-            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 377F));
+            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 412F));
             this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 319F));
+            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 284F));
             this.tableLayoutPanel6.Controls.Add(this.flowLayoutPanel_Details, 2, 0);
             this.tableLayoutPanel6.Controls.Add(this.table_HeatMap, 1, 0);
             this.tableLayoutPanel6.Controls.Add(this.tableLayoutPanel1, 0, 0);
@@ -75,11 +75,11 @@
             this.flowLayoutPanel_Details.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.flowLayoutPanel_Details.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel_Details.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
-            this.flowLayoutPanel_Details.Location = new System.Drawing.Point(1493, 2);
+            this.flowLayoutPanel_Details.Location = new System.Drawing.Point(1528, 2);
             this.flowLayoutPanel_Details.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.flowLayoutPanel_Details.Name = "flowLayoutPanel_Details";
             this.flowLayoutPanel_Details.Padding = new System.Windows.Forms.Padding(20, 0, 0, 0);
-            this.flowLayoutPanel_Details.Size = new System.Drawing.Size(313, 901);
+            this.flowLayoutPanel_Details.Size = new System.Drawing.Size(278, 901);
             this.flowLayoutPanel_Details.TabIndex = 141;
             this.flowLayoutPanel_Details.WrapContents = false;
             // 
@@ -89,7 +89,7 @@
             this.table_HeatMap.ColumnCount = 1;
             this.table_HeatMap.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.table_HeatMap.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.table_HeatMap.Location = new System.Drawing.Point(380, 2);
+            this.table_HeatMap.Location = new System.Drawing.Point(415, 2);
             this.table_HeatMap.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.table_HeatMap.Name = "table_HeatMap";
             this.table_HeatMap.RowCount = 1;
@@ -110,20 +110,35 @@
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(371, 901);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(406, 901);
             this.tableLayoutPanel1.TabIndex = 3;
             // 
             // panel13
             // 
             this.panel13.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.panel13.Controls.Add(this.heatMapQueryControl);
+            this.panel13.Controls.Add(this.queryControl);
             this.panel13.Controls.Add(this.groupBox1);
             this.panel13.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel13.Location = new System.Drawing.Point(3, 2);
             this.panel13.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panel13.Name = "panel13";
-            this.panel13.Size = new System.Drawing.Size(365, 512);
+            this.panel13.Size = new System.Drawing.Size(400, 512);
             this.panel13.TabIndex = 1;
+            // 
+            // heatMapQueryControl
+            // 
+            this.queryControl.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.queryControl.EndDate = new System.DateTime(2025, 11, 19, 10, 53, 0, 0);
+            this.queryControl.IsDateChecked = false;
+            this.queryControl.Location = new System.Drawing.Point(3, 227);
+            this.queryControl.LotNumber = "";
+            this.queryControl.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.queryControl.Name = "heatMapQueryControl";
+            this.queryControl.PartNumber = "";
+            this.queryControl.SelectedSide = "A";
+            this.queryControl.Size = new System.Drawing.Size(350, 290);
+            this.queryControl.StartDate = new System.DateTime(2025, 11, 19, 10, 53, 0, 0);
+            this.queryControl.TabIndex = 1;
             // 
             // groupBox1
             // 
@@ -247,19 +262,6 @@
             this.btn_loadArryImage.UseVisualStyleBackColor = false;
             this.btn_loadArryImage.Click += new System.EventHandler(this.btn_loadArryImage_Click);
             // 
-            // heatMapQueryControl
-            // 
-            this.heatMapQueryControl.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.heatMapQueryControl.IsDateChecked = false;
-            this.heatMapQueryControl.Location = new System.Drawing.Point(3, 227);
-            this.heatMapQueryControl.LotNumber = "";
-            this.heatMapQueryControl.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.heatMapQueryControl.Name = "heatMapQueryControl";
-            this.heatMapQueryControl.PartNumber = "";
-            this.heatMapQueryControl.SelectedSide = "A";
-            this.heatMapQueryControl.Size = new System.Drawing.Size(350, 290);
-            this.heatMapQueryControl.TabIndex = 1;
-            // 
             // flowLayoutPanel_Defects
             // 
             this.flowLayoutPanel_Defects.AutoScroll = true;
@@ -270,7 +272,7 @@
             this.flowLayoutPanel_Defects.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.flowLayoutPanel_Defects.Name = "flowLayoutPanel_Defects";
             this.flowLayoutPanel_Defects.Padding = new System.Windows.Forms.Padding(20, 0, 0, 0);
-            this.flowLayoutPanel_Defects.Size = new System.Drawing.Size(365, 381);
+            this.flowLayoutPanel_Defects.Size = new System.Drawing.Size(400, 381);
             this.flowLayoutPanel_Defects.TabIndex = 140;
             this.flowLayoutPanel_Defects.WrapContents = false;
             // 
@@ -308,6 +310,6 @@
         private System.Windows.Forms.Button btn_Select;
         private System.Windows.Forms.Button btnClip;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel_Details;
-        private QueryControl heatMapQueryControl;
+        private QueryControl queryControl;
     }
 }
