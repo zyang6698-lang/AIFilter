@@ -399,21 +399,17 @@ namespace DeepSightWorkLib
                                     SystemEvent.SendTaskMsg(info.SN, "暂停-AI检测已中止（结果未回写）");
                                     continue; // finally 会释放资源
                                 }
-
                                 SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面AI检测完成");
                                 SystemEvent.SendResultInfo(info.SN, msg, details, pcsResult);
-
-                                
-                                    _defectProcessor.EnqueueAIResult(info, msg);
-                                
                             }
                             else
                             {
                                 LogTextHelper.Warn($"KEY:{info.Key} SN:{info.SN}检测失败！");
                                 SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面已完成");
-                                _defectProcessor.EnqueueAIResult(info, msg);
 
                             }
+                            _defectProcessor.EnqueueAIResult(info, msg);
+
                         }
                         catch (Exception ex)
                         {

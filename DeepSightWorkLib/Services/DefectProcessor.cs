@@ -8,6 +8,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using DeepSightDB;
 using DeepSightTool;
 
@@ -54,7 +55,7 @@ namespace DeepSightWorkLib.Services
                 return true;
             }
 
-            if (vBModel.Mats.Count > maxCount /* placeholder, original used SysConfig.MaxDefectCount */)
+            if (vBModel.Mats.Count > maxCount )
             {
                 // To keep minimal change, do not enforce max here. Caller can handle.
                 EnqueuePostProcess(vBModel, "", false);
@@ -71,8 +72,34 @@ namespace DeepSightWorkLib.Services
                 string infoJson = JsonConvert.SerializeObject(info, Formatting.None, jsonSetting);
                 LogTextHelper.Info($"{vBModel.SN} {vBModel.Side}  准备调用算法,参数为：" + infoJson);
 
-                // 调用算法
-                _defect.DefectMethodWithImages(info, vBModel.Mats, out string msg);
+                // 计算超时时间：图片数量 * 2秒
+                int timeoutSeconds = vBModel.Mats.Count * 2;
+                string msg = null;
+                bool timedOut = false;
+
+                // 使用Task包装算法调用以实现超时控制
+                var task = Task.Run(() =>
+                {
+                    _defect.DefectMethodWithImages(info, vBModel.Mats, out string outMsg);
+                    return outMsg;
+                });
+
+                if (task.Wait(TimeSpan.FromSeconds(timeoutSeconds)))
+                {
+                    msg = task.Result;
+                }
+                else
+                {
+                    timedOut = true;
+                    LogTextHelper.Warn($"{vBModel.SN} {vBModel.Side} 算法调用超时 (超过 {timeoutSeconds}秒)");
+                }
+
+                if (timedOut)
+                {
+                    EnqueuePostProcess(vBModel, "", false);
+                    SystemEvent.SendTaskMsg(vBModel.SN, $"{vBModel.Side}面算法调用超时，跳过AI检测");
+                    return true;
+                }
 
                 LogTextHelper.Info($"{vBModel.SN} {vBModel.Side} 算法返回原始结果: {msg}");
 

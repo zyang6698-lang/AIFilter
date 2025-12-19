@@ -368,7 +368,11 @@ namespace DeepSightDB
                         {
                             continue;
                         }
-                        MachineTimestamps[m.MachineId] = m.Timestamps ?? new List<DateTime>();
+                        // 只保留当天的时间戳，过滤掉前几天的数据
+                        var todayTimestamps = (m.Timestamps ?? new List<DateTime>())
+                            .Where(t => t.Date == date.Date)
+                            .ToList();
+                        MachineTimestamps[m.MachineId] = todayTimestamps;
                     }
                 }
 

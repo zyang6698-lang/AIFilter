@@ -427,11 +427,22 @@ namespace DeepSightAI.SettingPages
             int index = this.dataPost.Rows.Add();
             dataPost.Rows[index].Cells["Index"].Value = index + 1;
             dataPost.Rows[index].Cells[1].Value = newMaterialCode;
-            var firstSolution = dic_solutionAndFlow.First();
-            dataPost.Rows[index].Cells[2].Value = firstSolution.Key;
-            dataPost.Rows[index].Cells[3].Value = firstSolution.Value.FirstOrDefault() ?? "(空流程)";
-            dataPost.Rows[index].Cells[4].Value = firstSolution.Key;
-            dataPost.Rows[index].Cells[5].Value = firstSolution.Value.FirstOrDefault() ?? "(空流程)";
+            
+            // 优先使用名为 "default" 的方案，找不到再用第一个
+            KeyValuePair<string, List<string>> defaultSolution;
+            if (dic_solutionAndFlow.TryGetValue("default", out var defaultFlows))
+            {
+                defaultSolution = new KeyValuePair<string, List<string>>("default", defaultFlows);
+            }
+            else
+            {
+                defaultSolution = dic_solutionAndFlow.First();
+            }
+            
+            dataPost.Rows[index].Cells[2].Value = defaultSolution.Key;
+            dataPost.Rows[index].Cells[3].Value = defaultSolution.Value.FirstOrDefault() ?? "(空流程)";
+            dataPost.Rows[index].Cells[4].Value = defaultSolution.Key;
+            dataPost.Rows[index].Cells[5].Value = defaultSolution.Value.FirstOrDefault() ?? "(空流程)";
             dataPost.Rows[index].Cells[6].Value = false;
             if (dataPost.Columns.Contains("Mode"))
             {
@@ -540,9 +551,18 @@ namespace DeepSightAI.SettingPages
                 return;
             }
 
-            var firstSolutionPair = dic_solutionAndFlow.First();
-            string solKey = firstSolutionPair.Key;
-            string firstFlow = firstSolutionPair.Value.FirstOrDefault() ?? "(空流程)";
+            // 优先使用名为 "default" 的方案，找不到再用第一个
+            KeyValuePair<string, List<string>> defaultSolutionPair;
+            if (dic_solutionAndFlow.TryGetValue("default", out var defaultFlows))
+            {
+                defaultSolutionPair = new KeyValuePair<string, List<string>>("default", defaultFlows);
+            }
+            else
+            {
+                defaultSolutionPair = dic_solutionAndFlow.First();
+            }
+            string solKey = defaultSolutionPair.Key;
+            string firstFlow = defaultSolutionPair.Value.FirstOrDefault() ?? "(空流程)";
 
             int added = 0;
             int skipped = 0;
