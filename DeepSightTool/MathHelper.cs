@@ -53,7 +53,8 @@ namespace DeepSightTool
             }
 
             // 计算总时间跨度（首尾时间差）
-            TimeSpan totalTime = sortedTimestamps.Last() - sortedTimestamps.Last().Date;
+            TimeSpan totalTime = DateTime.Now- DateTime.Now.Date;
+           // TimeSpan totalTime = sortedTimestamps.Last() - sortedTimestamps.Last().Date;
 
             // 计算稼动率
             double utilizationRate = totalTime.TotalSeconds > 0

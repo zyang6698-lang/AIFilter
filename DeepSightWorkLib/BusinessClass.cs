@@ -1115,7 +1115,7 @@ namespace DeepSightWorkLib
                                   $"图片加载队列:{_imageLoadQueue.Count}, " +
                                   $"推理队列:{_aviQueue.Count}, " +
                                   $"后处理队列:{_inferencePostProcessQueue.Count}, " +
-                                  $"结果队列:{_aiResultQueue.Count}"+
+                                  $"回写结果队列:{_aiResultQueue.Count}"+
                                   $"数据库队列{_databaseHelper.GetQueueLength()}");
 
                 // 告警：如果处理集合持续增长超过阈值
