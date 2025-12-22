@@ -39,6 +39,9 @@ namespace DeepSightDB
             private SideSnapshot _sideA;
             private SideSnapshot _sideB;
             private BoardStat _contribution = new BoardStat();
+            
+            // 记录该面板首次被记录的小时
+            public int Hour { get; set; } = -1;
 
             public bool IsEmpty => _sideA == null && _sideB == null;
 
@@ -135,6 +138,7 @@ namespace DeepSightDB
         public class BoardStatCacheState
         {
             public DateTime Date { get; set; }
+            public int Hour { get; set; }
             public List<PanelEntryState> Panels { get; set; }
             public List<MachineTimestampsState> Machines { get; set; }
         }
@@ -144,6 +148,7 @@ namespace DeepSightDB
             public string SerialNumber { get; set; }
             public SideSnapshot SideA { get; set; }
             public SideSnapshot SideB { get; set; }
+            public int Hour { get; set; }
         }
 
         public class MachineTimestampsState
@@ -284,30 +289,45 @@ namespace DeepSightDB
             return dir;
         }
 
-        private static string GetStateFilePath(DateTime date)
+        private static string GetStateFilePath(DateTime date, int hour)
         {
-            return Path.Combine(GetStateDirectory(), date.ToString("yyyyMMdd") + ".xml");
+            return Path.Combine(GetStateDirectory(), date.ToString("yyyyMMdd") + "_" + hour.ToString("D2") + ".xml");
         }
 
         private static void SaveStateInternal(DateTime date)
         {
-            var state = new BoardStatCacheState
-            {
-                Date = date,
-                Panels = PanelEntries.Select(kvp => new PanelEntryState
+            var currentHour = DateTime.Now.Hour;
+            
+            // 只保存属于当前小时的面板数据
+            var panelsForCurrentHour = PanelEntries
+                .Where(kvp => kvp.Value.Hour == currentHour)
+                .Select(kvp => new PanelEntryState
                 {
                     SerialNumber = kvp.Key,
                     SideA = kvp.Value.SideA,
-                    SideB = kvp.Value.SideB
-                }).ToList(),
-                Machines = MachineTimestamps.Select(kvp => new MachineTimestampsState
+                    SideB = kvp.Value.SideB,
+                    Hour = kvp.Value.Hour
+                }).ToList();
+            
+            // 只保存当前小时的机台时间戳
+            var machinesForCurrentHour = MachineTimestamps
+                .Select(kvp => new MachineTimestampsState
                 {
                     MachineId = kvp.Key,
-                    Timestamps = kvp.Value.ToList()
-                }).ToList()
+                    Timestamps = kvp.Value.Where(t => t.Hour == currentHour && t.Date == date.Date).ToList()
+                })
+                .Where(m => m.Timestamps.Count > 0)
+                .ToList();
+
+            var state = new BoardStatCacheState
+            {
+                Date = date,
+                Hour = currentHour,
+                Panels = panelsForCurrentHour,
+                Machines = machinesForCurrentHour
             };
 
-            var path = GetStateFilePath(date);
+            var path = GetStateFilePath(date, currentHour);
             using (var fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read))
             {
                 var serializer = new XmlSerializer(typeof(BoardStatCacheState));
@@ -317,67 +337,97 @@ namespace DeepSightDB
 
         private static void LoadStateInternal(DateTime date)
         {
-            var path = GetStateFilePath(date);
-            if (!File.Exists(path))
-            {
-                return;
-            }
+            PanelEntries.Clear();
+            MachineTimestamps.Clear();
+            MachineTotals.Clear();
+            SerialToMachine.Clear();
+            MachineLatestLotSn.Clear();
 
-            using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            // 加载当天所有小时的文件
+            for (int hour = 0; hour < 24; hour++)
             {
-                var serializer = new XmlSerializer(typeof(BoardStatCacheState));
-                var obj = serializer.Deserialize(fs) as BoardStatCacheState;
-                if (obj == null)
+                var path = GetStateFilePath(date, hour);
+                if (!File.Exists(path))
                 {
-                    return;
+                    continue;
                 }
 
-                PanelEntries.Clear();
-                MachineTimestamps.Clear();
-                MachineTotals.Clear();
-                SerialToMachine.Clear();
-                MachineLatestLotSn.Clear();
-
-                if (obj.Panels != null)
+                try
                 {
-                    foreach (var p in obj.Panels)
+                    using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
                     {
-                        if (string.IsNullOrWhiteSpace(p.SerialNumber))
+                        var serializer = new XmlSerializer(typeof(BoardStatCacheState));
+                        if (!(serializer.Deserialize(fs) is BoardStatCacheState obj))
                         {
                             continue;
                         }
 
-                        var entry = new PanelStatEntry();
-                        if (p.SideA != null)
+                        // 合并面板数据
+                        if (obj.Panels != null)
                         {
-                            entry.Update("A", p.SideA);
+                            foreach (var p in obj.Panels)
+                            {
+                                if (string.IsNullOrWhiteSpace(p.SerialNumber))
+                                {
+                                    continue;
+                                }
+
+                                // 如果已存在，合并数据；否则创建新条目
+                                if (!PanelEntries.TryGetValue(p.SerialNumber, out var entry))
+                                {
+                                    entry = new PanelStatEntry();
+                                    entry.Hour = p.Hour > 0 ? p.Hour : hour;
+                                    PanelEntries[p.SerialNumber] = entry;
+                                }
+                                
+                                if (p.SideA != null)
+                                {
+                                    entry.Update("A", p.SideA);
+                                }
+                                if (p.SideB != null)
+                                {
+                                    entry.Update("B", p.SideB);
+                                }
+                            }
                         }
-                        if (p.SideB != null)
+
+                        // 合并机台时间戳
+                        if (obj.Machines != null)
                         {
-                            entry.Update("B", p.SideB);
+                            foreach (var m in obj.Machines)
+                            {
+                                if (string.IsNullOrWhiteSpace(m.MachineId))
+                                {
+                                    continue;
+                                }
+
+                                if (!MachineTimestamps.TryGetValue(m.MachineId, out var timestamps))
+                                {
+                                    timestamps = new List<DateTime>();
+                                    MachineTimestamps[m.MachineId] = timestamps;
+                                }
+
+                                // 只保留当天的时间戳，过滤掉前几天的数据
+                                var todayTimestamps = (m.Timestamps ?? new List<DateTime>())
+                                    .Where(t => t.Date == date.Date);
+                                timestamps.AddRange(todayTimestamps);
+                            }
                         }
-                        PanelEntries[p.SerialNumber] = entry;
                     }
                 }
-
-                if (obj.Machines != null)
+                catch
                 {
-                    foreach (var m in obj.Machines)
-                    {
-                        if (string.IsNullOrWhiteSpace(m.MachineId))
-                        {
-                            continue;
-                        }
-                        // 只保留当天的时间戳，过滤掉前几天的数据
-                        var todayTimestamps = (m.Timestamps ?? new List<DateTime>())
-                            .Where(t => t.Date == date.Date)
-                            .ToList();
-                        MachineTimestamps[m.MachineId] = todayTimestamps;
-                    }
+                    // 忽略单个文件的加载失败，继续加载其他小时的文件
                 }
-
-                RecomputeTotals();
             }
+
+            // 对每个机台的时间戳去重并排序
+            foreach (var kvp in MachineTimestamps.ToList())
+            {
+                MachineTimestamps[kvp.Key] = kvp.Value.Distinct().OrderBy(t => t).ToList();
+            }
+
+            RecomputeTotals();
         }
 
         public static void Update(PanelSideRecord record)
@@ -397,9 +447,12 @@ namespace DeepSightDB
             {
                 EnsureStateForToday();
 
+                var currentHour = DateTime.Now.Hour;
+                
                 if (!PanelEntries.TryGetValue(record.SerialNumber, out var entry))
                 {
                     entry = new PanelStatEntry();
+                    entry.Hour = currentHour;
                     PanelEntries[record.SerialNumber] = entry;
                 }
 

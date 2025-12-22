@@ -64,6 +64,15 @@ namespace DeepSightAI.SettingPages
             stationConfig.BPathIndexTimestamp = this.txt_B_path_index_timestamp.Text;
             stationConfig.BLotTimestamp = this.txt_B_lot_timestamp.Text;
             stationConfig.BPanelIndexTimestamp = this.txt_B_panel_index_timestamp.Text;
+            //active_or_passive字段
+            if (radioActive.Checked)
+            {
+                stationConfig.ActiveOrPassive = "active";
+            }
+            if (radioPassive.Checked)
+            {
+                stationConfig.ActiveOrPassive = "passive";
+            }
             this.DialogResult = DialogResult.OK;
         }
 
@@ -108,6 +117,15 @@ namespace DeepSightAI.SettingPages
             this.txt_B_path_index_timestamp.Text = stationConfig.BPathIndexTimestamp;
             this.txt_B_lot_timestamp.Text = stationConfig.BLotTimestamp;
             this.txt_B_panel_index_timestamp.Text = stationConfig.BPanelIndexTimestamp;
+            //active_or_passive字段
+            if (stationConfig.ActiveOrPassive == "passive")
+            {
+                this.radioPassive.Checked = true;
+            }
+            else
+            {
+                this.radioActive.Checked = true;
+            }
         }
     }
 }

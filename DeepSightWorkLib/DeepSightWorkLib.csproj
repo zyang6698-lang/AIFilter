@@ -174,6 +174,7 @@
     <Compile Include="Services\ImageLoaderService.cs" />
     <Compile Include="Services\PostProcessService.cs" />
     <Compile Include="Services\ResultWriterService.cs" />
+    <Compile Include="Services\TaskStatusSender.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DeepSightCommunication\DeepSightCommunication.csproj">
@@ -203,7 +204,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="MIGRATION_REPORT.md" />
     <None Include="packages.config" />
+    <None Include="README_TaskStatus.md" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

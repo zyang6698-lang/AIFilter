@@ -23,21 +23,7 @@ namespace DeepSightAI
         public MasterWorkClass()
         {
             workClass = new BusinessClass();
-            
-            // var endpoint = "127.0.0.1:9102";
-            // var accessKey = "deepiobjectdata";
-            // var secretKey = "deepiobject2019";
-            // // //var clientBuilder = new MinioClient()
-            // // //.WithEndpoint(endpoint)
-            // // //.WithCredentials(accessKey, secretKey);
-            // _minioClient = (MinioClient)new MinioClient()
-            //.WithEndpoint(endpoint)
-            //.WithCredentials(accessKey, secretKey)
-            //.WithSSL()
-            //.Build();
-
-            //  ReadImageToMemoryAsync("deepiresults", "20250508152421059165/discolor/20250508152421059165-A-discolor-pcs-X1Y1-vrs0-0.jpg");
-
+           
         }
         public void InitWork()
         {

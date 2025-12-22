@@ -30,6 +30,10 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrStationCofig));
             this.grpAxisOfSelection = new Sunny.UI.UIGroupBox();
+            this.panel4 = new System.Windows.Forms.Panel();
+            this.radioActive = new System.Windows.Forms.RadioButton();
+            this.radioPassive = new System.Windows.Forms.RadioButton();
+            this.label18 = new System.Windows.Forms.Label();
             this.panel3 = new System.Windows.Forms.Panel();
             this.radiomode1 = new System.Windows.Forms.RadioButton();
             this.radiomode2 = new System.Windows.Forms.RadioButton();
@@ -62,11 +66,14 @@
             this.label17 = new System.Windows.Forms.Label();
             this.txt_B_panel_index_timestamp = new System.Windows.Forms.TextBox();
             this.grpAxisOfSelection.SuspendLayout();
+            this.panel4.SuspendLayout();
             this.panel3.SuspendLayout();
             this.SuspendLayout();
             // 
             // grpAxisOfSelection
             // 
+            this.grpAxisOfSelection.Controls.Add(this.panel4);
+            this.grpAxisOfSelection.Controls.Add(this.label18);
             this.grpAxisOfSelection.Controls.Add(this.panel3);
             this.grpAxisOfSelection.Controls.Add(this.label16);
             this.grpAxisOfSelection.Controls.Add(this.txt_deepsight_agent_data_workspace);
@@ -107,11 +114,63 @@
             this.grpAxisOfSelection.Name = "grpAxisOfSelection";
             this.grpAxisOfSelection.Padding = new System.Windows.Forms.Padding(540, 250, 540, 250);
             this.grpAxisOfSelection.RectColor = System.Drawing.Color.FromArgb(((int)(((byte)(110)))), ((int)(((byte)(190)))), ((int)(((byte)(40)))));
-            this.grpAxisOfSelection.Size = new System.Drawing.Size(1045, 685);
+            this.grpAxisOfSelection.Size = new System.Drawing.Size(1017, 756);
             this.grpAxisOfSelection.Style = Sunny.UI.UIStyle.Custom;
             this.grpAxisOfSelection.TabIndex = 30;
             this.grpAxisOfSelection.Text = "机台配置";
             this.grpAxisOfSelection.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // panel4
+            // 
+            this.panel4.BackColor = System.Drawing.Color.Transparent;
+            this.panel4.Controls.Add(this.radioActive);
+            this.panel4.Controls.Add(this.radioPassive);
+            this.panel4.Location = new System.Drawing.Point(216, 477);
+            this.panel4.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.panel4.Name = "panel4";
+            this.panel4.Size = new System.Drawing.Size(287, 29);
+            this.panel4.TabIndex = 265;
+            // 
+            // radioActive
+            // 
+            this.radioActive.AutoSize = true;
+            this.radioActive.Checked = true;
+            this.radioActive.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.radioActive.ImeMode = System.Windows.Forms.ImeMode.NoControl;
+            this.radioActive.Location = new System.Drawing.Point(0, 0);
+            this.radioActive.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.radioActive.Name = "radioActive";
+            this.radioActive.Size = new System.Drawing.Size(67, 28);
+            this.radioActive.TabIndex = 19;
+            this.radioActive.TabStop = true;
+            this.radioActive.Text = "在线";
+            this.radioActive.UseVisualStyleBackColor = true;
+            // 
+            // radioPassive
+            // 
+            this.radioPassive.AutoSize = true;
+            this.radioPassive.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.radioPassive.ImeMode = System.Windows.Forms.ImeMode.NoControl;
+            this.radioPassive.Location = new System.Drawing.Point(157, 0);
+            this.radioPassive.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.radioPassive.Name = "radioPassive";
+            this.radioPassive.Size = new System.Drawing.Size(67, 28);
+            this.radioPassive.TabIndex = 20;
+            this.radioPassive.Text = "离线";
+            this.radioPassive.UseVisualStyleBackColor = true;
+            // 
+            // label18
+            // 
+            this.label18.BackColor = System.Drawing.Color.Transparent;
+            this.label18.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label18.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.label18.Location = new System.Drawing.Point(42, 482);
+            this.label18.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(168, 19);
+            this.label18.TabIndex = 264;
+            this.label18.Text = "运行模式：";
+            this.label18.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
             // panel3
             // 
@@ -130,7 +189,7 @@
             this.radiomode1.Checked = true;
             this.radiomode1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.radiomode1.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.radiomode1.Location = new System.Drawing.Point(0, 0);
+            this.radiomode1.Location = new System.Drawing.Point(3, 0);
             this.radiomode1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.radiomode1.Name = "radiomode1";
             this.radiomode1.Size = new System.Drawing.Size(73, 28);
@@ -261,7 +320,7 @@
             this.btn_Close.Font = new System.Drawing.Font("微软雅黑", 9F);
             this.btn_Close.ForeColor = System.Drawing.Color.White;
             this.btn_Close.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btn_Close.Location = new System.Drawing.Point(578, 472);
+            this.btn_Close.Location = new System.Drawing.Point(578, 565);
             this.btn_Close.Name = "btn_Close";
             this.btn_Close.Size = new System.Drawing.Size(115, 36);
             this.btn_Close.TabIndex = 251;
@@ -281,7 +340,7 @@
             this.btn_OK.Font = new System.Drawing.Font("微软雅黑", 9F);
             this.btn_OK.ForeColor = System.Drawing.Color.White;
             this.btn_OK.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btn_OK.Location = new System.Drawing.Point(216, 472);
+            this.btn_OK.Location = new System.Drawing.Point(216, 565);
             this.btn_OK.Name = "btn_OK";
             this.btn_OK.Size = new System.Drawing.Size(115, 36);
             this.btn_OK.TabIndex = 252;
@@ -484,7 +543,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(120F, 120F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.BackColor = System.Drawing.SystemColors.Control;
-            this.ClientSize = new System.Drawing.Size(1045, 685);
+            this.ClientSize = new System.Drawing.Size(1017, 756);
             this.Controls.Add(this.grpAxisOfSelection);
             this.DoubleBuffered = true;
             this.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
@@ -496,6 +555,8 @@
             this.Shown += new System.EventHandler(this.FrStationCofig_Shown);
             this.grpAxisOfSelection.ResumeLayout(false);
             this.grpAxisOfSelection.PerformLayout();
+            this.panel4.ResumeLayout(false);
+            this.panel4.PerformLayout();
             this.panel3.ResumeLayout(false);
             this.panel3.PerformLayout();
             this.ResumeLayout(false);
@@ -504,6 +565,10 @@
 
         #endregion
         private Sunny.UI.UIGroupBox grpAxisOfSelection;
+        private System.Windows.Forms.Panel panel4;
+        internal System.Windows.Forms.RadioButton radioActive;
+        internal System.Windows.Forms.RadioButton radioPassive;
+        internal System.Windows.Forms.Label label18;
         private System.Windows.Forms.Panel panel3;
         internal System.Windows.Forms.RadioButton radiomode1;
         internal System.Windows.Forms.RadioButton radiomode2;

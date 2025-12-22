@@ -32,9 +32,37 @@ namespace DeepSightEvent
             EventSendProcessToUI?.Invoke(id, isOk);
         }
 
+        public static event SendTaskStatus EventSendTaskStatusToUI;
         public static event SendTask EventSendTaskToUI;
+        
         /// <summary>
-        /// 订阅任务
+        /// 发送任务状态（推荐使用，结构化方式）
+        /// </summary>
+        /// <param name="statusInfo">任务状态信息</param>
+        public static void SendTaskStatus(TaskStatusInfo statusInfo)
+        {
+            var handler = EventSendTaskStatusToUI;
+            if (handler != null)
+            {
+                try 
+                { 
+                    handler(statusInfo); 
+                }
+                catch (Exception ex) 
+                { 
+                    LogTextHelper.Error($"EventSendTaskStatusToUI handler error: {ex}"); 
+                }
+            }
+
+            Task.Run(() =>
+            {
+                try { LogTextHelper.Info(statusInfo.ToString()); }
+                catch { }
+            });
+        }
+        
+        /// <summary>
+        /// 订阅任务（已过时，建议使用 SendTaskStatus）
         /// </summary>
         /// <param name="task"></param>
         /// <param name="msg"></param>

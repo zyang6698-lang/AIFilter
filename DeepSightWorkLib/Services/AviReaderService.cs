@@ -205,7 +205,7 @@ namespace DeepSightWorkLib.Services
                     _processingSnSet.TryRemove(snKey, out _);
 
                     Thread.Sleep(500);
-                    SystemEvent.SendTaskMsg(serialNumber, $"{side}面Minio格式错误");
+                    TaskStatusSender.SendFailed(serialNumber, side, "Minio格式错误");
                     SystemEvent.SendAlarmMsg($"SN:{serialNumber} {side}面 Minio格式错误;具体信息 MinioIP:{minioIp} MinioPort:{minioPort}");
                     continue;
                 }

@@ -27,16 +27,16 @@ namespace DeepSightWorkLib.Services
         {
             try
             {
-                SystemEvent.SendTaskMsg(info.Item2, $"{info.Item3}面已完成");
+                TaskStatusSender.SendWritingResults(info.Item2, info.Item3);
                 if (_httpDb.HttpPostMethod(_url, info.Item4, 1, out string result))
                 {
-                    SystemEvent.SendTaskMsg(info.Item2, $"{info.Item3}面已完成");
+                    TaskStatusSender.SendCompleted(info.Item2, info.Item3);
 
                     string snKey = $"{info.Item2}_{info.Item3}";
                     if (_processingSnSet.TryRemove(snKey, out DateTime addTime))
                     {
                         var duration = DateTime.Now - addTime;
-                        LogTextHelper.Info($"SN:{info.Item2} Side:{info.Item3} 处理完成，耗时：{duration.TotalSeconds:F2}秒，已从处理集合移除");
+                        LogTextHelper.Info($"SN:{info.Item2} Side:{info.Item3} 处理完成，用时：{duration.TotalSeconds:F2}秒，已从处理集合中移除");
                     }
                     else
                     {
@@ -46,7 +46,7 @@ namespace DeepSightWorkLib.Services
                     if (info.Item5 != null)
                     {
                         _httpDb.HttpPostMethod2(_dsCenterUrl, info.Item5, 0, out string outInfo);
-                        LogTextHelper.Info($"sn:{info.Item2}_中台数据返回信息:{outInfo}");
+                        LogTextHelper.Info($"sn:{info.Item2}_中台数据发送，信息:{outInfo}");
                     }
 
                     return true;

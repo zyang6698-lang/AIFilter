@@ -234,6 +234,8 @@ namespace DeepSightModel
         public string BLotTimestamp { get; set; }
         [JsonProperty("B_panel_index_timestamp")]
         public string BPanelIndexTimestamp { get; set; }
+        [JsonProperty("active_or_passive")]
+        public string ActiveOrPassive { get; set; }
     }
 
     public class AVIConfig

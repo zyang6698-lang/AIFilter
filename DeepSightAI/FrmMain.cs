@@ -45,8 +45,8 @@ namespace DeepSightAI
             Control.CheckForIllegalCrossThreadCalls = false;
             MaximizedBounds = SystemInformation.WorkingArea;//Screen.PrimaryScreen.WorkingArea;
             SetStyle(ControlStyles.UserPaint, true);
-            SetStyle(ControlStyles.AllPaintingInWmPaint, true); // 禁止擦除背景.
-            SetStyle(ControlStyles.DoubleBuffer, true); // 双缓冲
+            SetStyle(ControlStyles.AllPaintingInWmPaint, true); // 禁止擦除背景.
+            SetStyle(ControlStyles.DoubleBuffer, true); // 双缓冲
             //MaximizedBounds = Screen.PrimaryScreen.Bounds;
             WindowState = FormWindowState.Maximized;
             btnMax.BackgroundImage = Resources.min;
@@ -54,6 +54,7 @@ namespace DeepSightAI
             this.FormClosing += FrMain_FormClosing;
 
 
+            SystemEvent.EventSendTaskStatusToUI += new SendTaskStatus(SystemEvent_EventSendTaskStatusToUI);
             SystemEvent.EventSendTaskToUI += new SendTask(SystemEvent_EventSendTaskToUI);
             SystemEvent.EventSendAlarmToUI += new SendAlarm(SystemEvent_EventSendAlarmToUI);
             SystemEvent.EventSendDefectNumToUI += new SendDefectNum(SystemEvent_EventSendDefectNumToUI);
@@ -171,6 +172,46 @@ namespace DeepSightAI
             LogTextHelper.Warn($"收到异常消息：{massage},任务已停止");
         }
         public static object Locker = new object();
+        
+        /// <summary>
+        /// 新的任务状态事件处理（推荐使用）
+        /// </summary>
+        private void SystemEvent_EventSendTaskStatusToUI(TaskStatusInfo statusInfo)
+        {
+            if (statusInfo == null) return;
+
+            try
+            {
+                // 确保在 UI 线程上执行
+                if (FrHome.Instance.dataGridViewData.InvokeRequired)
+                {
+                    FrHome.Instance.dataGridViewData.BeginInvoke(new MethodInvoker(() => SystemEvent_EventSendTaskStatusToUI(statusInfo)));
+                    return;
+                }
+
+                lock (Locker)
+                {
+                    if (statusInfo.Status == DeepSightModel.TaskStatus.Queued)
+                    {
+                        // 添加新任务
+                        AddNewTaskRow(statusInfo.SerialNumber);
+                    }
+                    else
+                    {
+                        // 更新现有任务状态
+                        UpdateTaskRowWithStatus(statusInfo);
+                    }
+
+                    // 清理超出限制的行
+                    CleanupExcessRows();
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"SystemEvent_EventSendTaskStatusToUI 异常: {ex}");
+            }
+        }
+        
         private void SystemEvent_EventSendTaskToUI(object task, string msg = "", long timeMs = 0)
         {
             if (task == null) return;
@@ -216,6 +257,54 @@ namespace DeepSightAI
         {
             FrHome.Instance.dataGridViewData.Rows.Insert(0, new object[] { sn, "0", "0", "", "排队中" });
             FrHome.Instance.dataGridViewData.Rows[0].DefaultCellStyle.ForeColor = Color.Yellow;
+        }
+
+        /// <summary>
+        /// 更新任务行状态（使用结构化状态）
+        /// </summary>
+        private void UpdateTaskRowWithStatus(TaskStatusInfo statusInfo)
+        {
+            // 查找对应的行
+            DataGridViewRow targetRow = null;
+            foreach (DataGridViewRow row in FrHome.Instance.dataGridViewData.Rows)
+            {
+                if (row.Cells[0].Value?.ToString() == statusInfo.SerialNumber)
+                {
+                    targetRow = row;
+                    break;
+                }
+            }
+
+            if (targetRow == null) return;
+
+            // 设置颜色
+            Color statusColor = TaskStatusHelper.GetStatusColor(statusInfo.Status);
+            targetRow.DefaultCellStyle.ForeColor = statusColor;
+
+            // 更新时间列（如果有传入时间）
+            if (statusInfo.ProcessingTimeMs > 0)
+            {
+                string existingTime = targetRow.Cells[3].Value?.ToString();
+                if (!string.IsNullOrEmpty(existingTime))
+                {
+                    targetRow.Cells[3].Value = $"{existingTime}+{statusInfo.ProcessingTimeMs}";
+                }
+                else
+                {
+                    targetRow.Cells[3].Value = statusInfo.ProcessingTimeMs.ToString();
+                }
+            }
+
+            // 处理 B 面完成的特殊逻辑
+            if (statusInfo.Status == DeepSightModel.TaskStatus.Completed && statusInfo.Side == "B")
+            {
+                string displayMsg = statusInfo.GetFullDisplayMessage();
+                UpdateBSideCompletedRow(targetRow, statusInfo.SerialNumber, ref displayMsg);
+            }
+            else
+            {
+                targetRow.Cells[4].Value = statusInfo.GetFullDisplayMessage();
+            }
         }
 
         /// <summary>
@@ -445,7 +534,7 @@ namespace DeepSightAI
                     Machine.master.Dispose();
                 }
                 LogTextHelper.Info("程序关闭");
-
+                LogTextHelper.CloseAndFlush();
                 Process process = Process.GetCurrentProcess();
                 process.Kill();
                 process.Dispose();

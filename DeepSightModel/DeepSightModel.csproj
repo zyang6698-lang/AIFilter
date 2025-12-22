@@ -91,6 +91,8 @@
     <Compile Include="ResultJsonInfo.cs" />
     <Compile Include="SolutionConfig.cs" />
     <Compile Include="SysAdmins.cs" />
+    <Compile Include="TaskStatus.cs" />
+    <Compile Include="TaskStatusInfo.cs" />
     <Compile Include="VBInfo.cs" />
     <Compile Include="VBModel.cs" />
     <Compile Include="VBOutInfo.cs" />

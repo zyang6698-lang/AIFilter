@@ -24,6 +24,11 @@ namespace DeepSightEvent
     /// <param name="isOK">任务当前进度  0:</param>
     public delegate void SendProcess(string id, int isOK);
     /// <summary>
+    /// 发送任务状态信息（新版本，使用结构化模型）
+    /// </summary>
+    /// <param name="statusInfo">任务状态信息</param>
+    public delegate void SendTaskStatus(TaskStatusInfo statusInfo);
+    /// <summary>
     /// 发送任务信息
     /// </summary>
     /// <param name="task">具体任务</param>

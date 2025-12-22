@@ -51,15 +51,18 @@ namespace DeepSightWorkLib.Services
             if (vBModel.Mats == null || vBModel.Mats.Count == 0)
             {
                 EnqueuePostProcess(vBModel, "", false);
-                SystemEvent.SendTaskMsg(vBModel.SN, $"{vBModel.Side}面缺陷数为0，跳过AI检测");
+                // 使用新的状态发送方式（推荐）
+                TaskStatusSender.SendSkipped(vBModel.SN, vBModel.Side, "缺陷数为0");
+                // 或者继续使用旧方式（向后兼容）
+                // SystemEvent.SendTaskMsg(vBModel.SN, $"{vBModel.Side}面缺陷数为0，跳过AI检测");
                 return true;
             }
 
             if (vBModel.Mats.Count > maxCount )
             {
-                // To keep minimal change, do not enforce max here. Caller can handle.
                 EnqueuePostProcess(vBModel, "", false);
-                SystemEvent.SendTaskMsg(vBModel.SN, $"{vBModel.Side}面图片数量超过限制，跳过AI检测");
+                // 使用新的状态发送方式
+                TaskStatusSender.SendSkipped(vBModel.SN, vBModel.Side, $"图片数量超过限制({vBModel.Mats.Count}>{maxCount})");
                 return true;
             }
 
@@ -97,7 +100,7 @@ namespace DeepSightWorkLib.Services
                 if (timedOut)
                 {
                     EnqueuePostProcess(vBModel, "", false);
-                    SystemEvent.SendTaskMsg(vBModel.SN, $"{vBModel.Side}面算法调用超时，跳过AI检测");
+                    TaskStatusSender.SendFailed(vBModel.SN, vBModel.Side, $"算法调用超时(>{timeoutSeconds}秒)");
                     return true;
                 }
 
@@ -115,7 +118,7 @@ namespace DeepSightWorkLib.Services
                 if (obj == null)
                 {
                     LogTextHelper.Error($"算法返回结果反序列化失败 for Side {panelInfo.SideIndex}，原始消息: {msg}");
-                    SystemEvent.SendTaskMsg(vBModel.SN, $"{vBModel.Side}面算法返回结果反序列化失败");
+                    TaskStatusSender.SendFailed(vBModel.SN, vBModel.Side, "算法返回结果反序列化失败");
                     return false;
                 }
                 string code = obj.Code.ToString();
@@ -189,13 +192,13 @@ namespace DeepSightWorkLib.Services
                 else if (code == "600")
                 {
                     LogTextHelper.Info($"{vBModel.SN} 算法返回码600: {message}");
-                    SystemEvent.SendTaskMsg(vBModel.SN, $"{vBModel.Side}面算法返回(Code:600, {message})");
+                    TaskStatusSender.SendSkipped(vBModel.SN, vBModel.Side, $"Code:600, {message}");
                     result = true;
                 }
                 else
                 {
                     LogTextHelper.Warn($"算法调用失败 for Side {panelInfo.SideIndex}，返回码: {code}，返回信息：{message}");
-                    SystemEvent.SendTaskMsg(vBModel.SN, $"{vBModel.Side}面算法调用失败(Code:{code}, {message})");
+                    TaskStatusSender.SendFailed(vBModel.SN, vBModel.Side, $"Code:{code}, {message}");
                     result = false;
                 }
             }
@@ -227,7 +230,11 @@ namespace DeepSightWorkLib.Services
 
         public void EnqueueAIResult(VBModel info, List<string> msg)
         {
-            SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面正在回写结果");
+            // 使用新的状态发送方式
+            TaskStatusSender.SendWritingResults(info.SN, info.Side);
+            // 或者继续使用旧方式
+            // SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面正在回写结果");
+            
             RootAIResult data = new RootAIResult
             {
                 DbName = "filter_time_to_airesults",

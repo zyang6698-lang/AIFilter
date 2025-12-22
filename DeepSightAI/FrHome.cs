@@ -224,19 +224,83 @@ namespace DeepSightAI
 
 
         public System.Timers.Timer uph_timer = new System.Timers.Timer();
+        
+        /// <summary>
+        /// 用于防止定时器重入的标志和同步锁
+        /// </summary>
+        private volatile bool _isUpdateRunning = false;
+        private object _updateLock = new object();
+        
         private void Uph_timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
+            // 防止重入：如果上一次更新还在运行，则跳过本次更新
+            if (!Monitor.TryEnter(_updateLock))
+            {
+                LogTextHelper.Info("定时器更新被跳过，因为上一次更新仍在进行中");
+                return;
+            }
+
             try
             {
-                //更新右下角统计信息
-                UpdateMainBorad();
-                //更新机台看板
-                UpdateMachineBoard();
-                UpdateLotSn();
+                _isUpdateRunning = true;
+                
+                // 使用Task.Run在后台线程执行异步操作，避免阻塞定时器线程
+                Task.Run(async () => await Uph_timer_UpdateAsync());
             }
             catch (Exception ex)
             {
                 LogTextHelper.Error("Error", ex);
+            }
+            finally
+            {
+                _isUpdateRunning = false;
+                Monitor.Exit(_updateLock);
+            }
+        }
+
+        /// <summary>
+        /// 定时器更新的异步处理逻辑，包含超时保护
+        /// </summary>
+        private async Task Uph_timer_UpdateAsync()
+        {
+            // 使用CancellationToken实现超时保护（5秒内必须完成）
+            using (var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            {
+                try
+                {
+                    // 更新右下角统计信息
+                    UpdateMainBorad();
+                    
+                    // 更新机台看板（异步操作）
+                    await UpdateMachineBoardWithTimeout(cts.Token);
+                    
+                    // 更新LotSn
+                    UpdateLotSn();
+                }
+                catch (OperationCanceledException)
+                {
+                    LogTextHelper.Warn("定时器更新超时（超过5秒），本次更新被中止");
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error("定时器更新异常", ex);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 带超时保护的机台看板更新
+        /// </summary>
+        private async Task UpdateMachineBoardWithTimeout(CancellationToken cancellationToken)
+        {
+            try
+            {
+                await UpdateMachineBoard().ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                LogTextHelper.Warn("机台看板更新超时");
+                throw;
             }
         }
 

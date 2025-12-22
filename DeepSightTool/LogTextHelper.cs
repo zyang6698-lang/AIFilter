@@ -16,7 +16,6 @@ namespace DeepSightTool
         public string NewLogFolder = string.Empty;
 
         private static string LogFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Log");
-        private static string VBresult = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "VB结果统计");
         private static string LogFolderConfig = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "人员操作配置记录");
 
         public static bool RecordLog = true;
@@ -42,10 +41,7 @@ namespace DeepSightTool
             {
                 Directory.CreateDirectory(LogFolder);
             }
-            if (!Directory.Exists(VBresult))
-            {
-                Directory.CreateDirectory(VBresult);
-            }
+
 
             // 初始化 Serilog 日志记录器，使用异步写入提升性能
             InitializeSerilog();
@@ -216,20 +212,6 @@ namespace DeepSightTool
             }
         }
 
-        /// <summary>
-        /// 记录类名、消息等信息到日志文件
-        /// </summary>
-        /// <param name="className">类名</param>
-        /// <param name="funName">全名</param>
-        /// <param name="message">错误信息</param>
-        public static void WriteLine(string className, string funName, string message)
-        {
-            if (!Enable)
-            {
-                return;
-            }
-            WriteLine(string.Format("{0}：{1}\r\n{2}", className, funName, message));
-        }
 
         /// <summary>
         /// 记录调试信息

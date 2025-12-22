@@ -292,10 +292,6 @@ namespace DeepSightWorkLib
 
         #endregion
 
-        #region 辅助方法
-
-        #endregion
-
         #region 线程管理
 
 
@@ -389,7 +385,8 @@ namespace DeepSightWorkLib
                             AIStopwatch.Restart();
 
                             //调用算法处理
-                            LogTextHelper.Info($"准备DefectMethod，SN:{info.SN}，图片数量:{info.Mats.Count}");
+
+                            SystemEvent.SendTaskMsg(info.SN,$"准备DefectMethod，Side:{info.Side}，图片数量:{info.Mats.Count}");
                             if (_defectProcessor.DefectMethod(info,SysConfig.MaxDefectCount, out List<string> msg, out List<string> details, out PcsResult pcsResult, out string vbJson))
                             {
                                 // 检查点2：推理完成后检查是否应该中止（不再回写结果）
@@ -450,8 +447,7 @@ namespace DeepSightWorkLib
         {
             try
             {
-                LogTextHelper.Info($"{sn} 准备ReadJsonByMinio");
-                SystemEvent.SendTaskMsg(sn, $"{side}面正在读取数据");
+                SystemEvent.SendTaskMsg(sn, $"{side}面正在读取Minio数据");
                 Minio.BuildClient(ip, port);
                 string json = Minio.ReadJsonSync("deepiresults", path, ip);
                 var obj = JsonConvert.DeserializeObject<RootPanelInfo>(json);
@@ -459,7 +455,7 @@ namespace DeepSightWorkLib
                 List<int> pcsList = new List<int>();
                 if (side == "A")
                 {
-                    SystemEvent.SendTaskMsg(sn);
+                    TaskStatusSender.SendQueued(sn);
                 }
                 LogTextHelper.Info($"{sn} {side} 开始将json转为vbinfo");
                 RootVBInfo vbInfo = PanelJsonToVBInfo(ip, port, head, obj, ref defectIndex, ref pcsList, out bool isByPass);
@@ -886,7 +882,7 @@ namespace DeepSightWorkLib
                         if (!IsStart)
                         {
                             LogTextHelper.Info($"图片加载任务被暂停中止，SN:{loadModel.Model?.SN}");
-                            SystemEvent.SendTaskMsg(loadModel.Model?.SN, "暂停-图片加载已中止");
+                            TaskStatusSender.SendSkipped(loadModel.Model?.SN, loadModel.Model?.Side, "任务已暂停");
                             // 清理已加载的资源
                             if (loadModel.Model?.Mats != null)
                             {
@@ -900,7 +896,7 @@ namespace DeepSightWorkLib
                         }
 
                         LogTextHelper.Info($"开始加载图片，SN:{loadModel.Model.SN}，数量：{loadModel.Model.ImageKeys.Count}");
-                        SystemEvent.SendTaskMsg(loadModel.Model.SN, $"{loadModel.Model.Side}面正在加载图片");
+                        TaskStatusSender.SendLoadingImages(loadModel.Model.SN, loadModel.Model.Side);
 
                         // 使用 ImageLoaderService 并行加载图片
                         loadModel.Model.Mats = _imageLoaderService.LoadImages(loadModel.Model.ImageKeys);
@@ -909,7 +905,7 @@ namespace DeepSightWorkLib
                         if (!IsStart)
                         {
                             LogTextHelper.Info($"图片加载后任务被暂停中止，SN:{loadModel.Model.SN}");
-                            SystemEvent.SendTaskMsg(loadModel.Model.SN, "暂停-图片加载后已中止");
+                            TaskStatusSender.SendSkipped(loadModel.Model.SN, loadModel.Model.Side, "任务已暂停");
                             // 释放已加载的图片资源
                             if (loadModel.Model.Mats != null)
                             {
@@ -945,8 +941,9 @@ namespace DeepSightWorkLib
                         // 发送 PanelInfo 事件
                         SystemEvent.SendPanelInfo(loadModel.Model.SN, loadModel.RootPanelInfo);
 
-                        SystemEvent.SendTaskMsg(loadModel.Model.SN, $"{loadModel.Model.Side}面图片加载完成");
+                        TaskStatusSender.SendImagesLoaded(loadModel.Model.SN, loadModel.Model.Side, loadModel.Model.Mats.Count);
                         LogTextHelper.Info($"图片加载完成，SN:{loadModel.Model.SN}，实际加载:{loadModel.Model.Mats.Count}张，入队列_aviQueue成功");
+
                     }
                     catch (Exception ex)
                     {
@@ -989,7 +986,7 @@ namespace DeepSightWorkLib
                             if (!IsStart)
                             {
                                 LogTextHelper.Info($"结果回写任务被暂停中止，SN:{info?.Item2}");
-                                SystemEvent.SendTaskMsg(info?.Item2, "暂停-结果回写已中止");
+                                TaskStatusSender.SendSkipped(info?.Item2, info?.Item3, "任务已暂停");
                                 continue;
                             }
                             // 回写处理
@@ -1028,7 +1025,7 @@ namespace DeepSightWorkLib
                             if (!IsStart)
                             {
                                 LogTextHelper.Info($"后处理任务被暂停中止，SN:{resultModel.VBModel?.SN}");
-                                SystemEvent.SendTaskMsg(resultModel.VBModel?.SN, "暂停-后处理已中止");
+                                TaskStatusSender.SendSkipped(resultModel.VBModel?.SN, resultModel.VBModel?.panelInfo?.SideIndex, "任务已暂停");
                                 continue;
                             }
                             // Delegate to PostProcessService
