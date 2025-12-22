@@ -122,63 +122,6 @@ namespace DeepSightTool
             _errorLogger?.Dispose();
         }
 
-        /// <summary>
-        /// 记录信息 (使用 Serilog 异步写入)
-        /// </summary>
-        /// <param name="message">错误信息</param>
-        public static void WriteLine(string message)
-        {
-            if (!Enable)
-            {
-                return;
-            }
-
-            try
-            {
-                if (RecordLog)
-                {
-                    // 使用 Serilog 异步写入日志
-                    _infoLogger?.Information(message);
-                }
-                if (DebugLog)
-                {
-                    Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss,fff}]---->  {message}");
-                }
-            }
-            catch
-            {
-                // 忽略日志写入异常
-            }
-        }
-
-        /// <summary>
-        /// 记录警告信息 (使用 Serilog 异步写入)
-        /// </summary>
-        /// <param name="message">错误信息</param>
-        public static void WriteLine2(string message)
-        {
-            if (!Enable)
-            {
-                return;
-            }
-
-            try
-            {
-                if (RecordLog)
-                {
-                    // 使用 Serilog 异步写入警告日志
-                    _warnLogger?.Warning(message);
-                }
-                if (DebugLog)
-                {
-                    Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss,fff}]---->  {message}");
-                }
-            }
-            catch
-            {
-                // 忽略日志写入异常
-            }
-        }
 
         /// <summary>
         /// 记录错误信息和异常 (使用 Serilog 异步写入)
@@ -270,7 +213,7 @@ namespace DeepSightTool
             }
             var msg = ex?.ToString() ?? string.Empty;
             _infoLogger?.Information(msg);
-            OnCallBackLogProc?.Invoke(msg, Color.Green);
+           // OnCallBackLogProc?.Invoke(msg, Color.Green);
         }
 
         /// <summary>
@@ -362,37 +305,6 @@ namespace DeepSightTool
                 throw;
             }
         }
-        public static void SaveVBResultInfo(string str)
-        {
-            try
-            {
-                string yearStr = DateTime.Now.Year.ToString();
-                string monthStr = DateTime.Now.Month.ToString();
-                string dayStr = DateTime.Now.Day.ToString();
-
-                string secStr = DateTime.Now.Second.ToString("00");
-                string minStr = DateTime.Now.Minute.ToString("00");
-                string hourStr = DateTime.Now.Hour.ToString("00");
-
-                string dateStr = yearStr + monthStr + dayStr + "结果统计";
-                string timeStr = hourStr + ":" + minStr + ":" + secStr + "  " + str;
-
-                //如果没有文件夹则创建
-                if (!Directory.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"VB结果统计")))
-                {
-                    Directory.CreateDirectory(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "VB结果统计"));
-                }
-
-                StreamWriter sw = File.AppendText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "VB结果统计")+ "\\" +dateStr + ".txt");
-                sw.WriteLine(timeStr);
-                sw.Flush();
-                sw.Close();
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
         public static void WriteJsonFile(string path, object jsonInfo)
         {
             try
@@ -403,7 +315,7 @@ namespace DeepSightTool
             }
             catch (Exception ex)
             {
-                LogTextHelper.Error($"写Json文件异常：{ex.ToString()}");
+                LogTextHelper.Error($"写Json文件异常：{ex}");
             }
         }
 

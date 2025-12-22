@@ -36,19 +36,9 @@
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.panel2 = new System.Windows.Forms.Panel();
             this.btnAutoAdd = new System.Windows.Forms.Button();
-            this.lbl_Bflow = new System.Windows.Forms.Label();
-            this.lbl_Bsolution = new System.Windows.Forms.Label();
-            this.label6 = new System.Windows.Forms.Label();
-            this.label7 = new System.Windows.Forms.Label();
             this.btn_Delete = new System.Windows.Forms.Button();
             this.btn_Add = new System.Windows.Forms.Button();
-            this.lbl_ProductSerial = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
             this.btn_setSolution = new System.Windows.Forms.Button();
-            this.lbl_flow = new System.Windows.Forms.Label();
-            this.lbl_solution = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
             this.btn_GetAgain = new System.Windows.Forms.Button();
             this.panel3 = new System.Windows.Forms.Panel();
             this.dataPost = new System.Windows.Forms.DataGridView();
@@ -86,19 +76,9 @@
             // 
             this.panel2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.panel2.Controls.Add(this.btnAutoAdd);
-            this.panel2.Controls.Add(this.lbl_Bflow);
-            this.panel2.Controls.Add(this.lbl_Bsolution);
-            this.panel2.Controls.Add(this.label6);
-            this.panel2.Controls.Add(this.label7);
             this.panel2.Controls.Add(this.btn_Delete);
             this.panel2.Controls.Add(this.btn_Add);
-            this.panel2.Controls.Add(this.lbl_ProductSerial);
-            this.panel2.Controls.Add(this.label3);
             this.panel2.Controls.Add(this.btn_setSolution);
-            this.panel2.Controls.Add(this.lbl_flow);
-            this.panel2.Controls.Add(this.lbl_solution);
-            this.panel2.Controls.Add(this.label1);
-            this.panel2.Controls.Add(this.label4);
             this.panel2.Controls.Add(this.btn_GetAgain);
             resources.ApplyResources(this.panel2, "panel2");
             this.panel2.Name = "panel2";
@@ -113,26 +93,6 @@
             this.btnAutoAdd.Name = "btnAutoAdd";
             this.btnAutoAdd.UseVisualStyleBackColor = true;
             this.btnAutoAdd.Click += new System.EventHandler(this.btnAutoAdd_Click);
-            // 
-            // lbl_Bflow
-            // 
-            resources.ApplyResources(this.lbl_Bflow, "lbl_Bflow");
-            this.lbl_Bflow.Name = "lbl_Bflow";
-            // 
-            // lbl_Bsolution
-            // 
-            resources.ApplyResources(this.lbl_Bsolution, "lbl_Bsolution");
-            this.lbl_Bsolution.Name = "lbl_Bsolution";
-            // 
-            // label6
-            // 
-            resources.ApplyResources(this.label6, "label6");
-            this.label6.Name = "label6";
-            // 
-            // label7
-            // 
-            resources.ApplyResources(this.label7, "label7");
-            this.label7.Name = "label7";
             // 
             // btn_Delete
             // 
@@ -156,16 +116,6 @@
             this.btn_Add.UseVisualStyleBackColor = true;
             this.btn_Add.Click += new System.EventHandler(this.btn_Add_Click);
             // 
-            // lbl_ProductSerial
-            // 
-            resources.ApplyResources(this.lbl_ProductSerial, "lbl_ProductSerial");
-            this.lbl_ProductSerial.Name = "lbl_ProductSerial";
-            // 
-            // label3
-            // 
-            resources.ApplyResources(this.label3, "label3");
-            this.label3.Name = "label3";
-            // 
             // btn_setSolution
             // 
             resources.ApplyResources(this.btn_setSolution, "btn_setSolution");
@@ -176,26 +126,6 @@
             this.btn_setSolution.Name = "btn_setSolution";
             this.btn_setSolution.UseVisualStyleBackColor = true;
             this.btn_setSolution.Click += new System.EventHandler(this.btn_setSolution_Click);
-            // 
-            // lbl_flow
-            // 
-            resources.ApplyResources(this.lbl_flow, "lbl_flow");
-            this.lbl_flow.Name = "lbl_flow";
-            // 
-            // lbl_solution
-            // 
-            resources.ApplyResources(this.lbl_solution, "lbl_solution");
-            this.lbl_solution.Name = "lbl_solution";
-            // 
-            // label1
-            // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
-            // 
-            // label4
-            // 
-            resources.ApplyResources(this.label4, "label4");
-            this.label4.Name = "label4";
             // 
             // btn_GetAgain
             // 
@@ -261,24 +191,20 @@
             this.dataPost.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.dataPost.RowHeadersVisible = false;
             this.dataPost.RowTemplate.Height = 23;
-            this.dataPost.Size = new System.Drawing.Size(1184, 549);
-            this.dataPost.TabIndex = 0;
             this.dataPost.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataPost_CellClick);
             this.dataPost.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataPost_CellValueChanged);
             // 
             // Index
             // 
-            this.Index.HeaderText = "Index";
+            resources.ApplyResources(this.Index, "Index");
             this.Index.Name = "Index";
             this.Index.ReadOnly = true;
-            this.Index.Width = 60;
             // 
             // liaohao
             // 
-            this.liaohao.HeaderText = "PartNumber";
+            resources.ApplyResources(this.liaohao, "liaohao");
             this.liaohao.Name = "liaohao";
             this.liaohao.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.liaohao.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
             // A_solution
             // 
@@ -316,12 +242,12 @@
             // 
             // Mode
             // 
-            this.Mode.DataSource = new string[] {
-        "by_machine",
-        "copy",
-        "cut"};
             this.Mode.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
             resources.ApplyResources(this.Mode, "Mode");
+            this.Mode.Items.AddRange(new object[] {
+            "by_machine",
+            "copy",
+            "cut"});
             this.Mode.Name = "Mode";
             this.Mode.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
@@ -337,7 +263,6 @@
             this.panel1.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.panel2.ResumeLayout(false);
-            this.panel2.PerformLayout();
             this.panel3.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dataPost)).EndInit();
             this.ResumeLayout(false);
@@ -350,19 +275,9 @@
         private System.Windows.Forms.DataGridViewComboBoxColumn Code;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Panel panel2;
-        internal System.Windows.Forms.Label lbl_Bflow;
-        internal System.Windows.Forms.Label lbl_Bsolution;
-        internal System.Windows.Forms.Label label6;
-        internal System.Windows.Forms.Label label7;
         internal System.Windows.Forms.Button btn_Delete;
         internal System.Windows.Forms.Button btn_Add;
-        internal System.Windows.Forms.Label lbl_ProductSerial;
-        internal System.Windows.Forms.Label label3;
         internal System.Windows.Forms.Button btn_setSolution;
-        internal System.Windows.Forms.Label lbl_flow;
-        internal System.Windows.Forms.Label lbl_solution;
-        internal System.Windows.Forms.Label label1;
-        internal System.Windows.Forms.Label label4;
         internal System.Windows.Forms.Button btn_GetAgain;
         private System.Windows.Forms.Panel panel3;
         public System.Windows.Forms.DataGridView dataPost;

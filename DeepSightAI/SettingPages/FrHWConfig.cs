@@ -172,67 +172,23 @@ namespace DeepSightAI.SettingPages
         {
             try
             {
-                //List<WatchPathConfig> list_stationParams = new List<WatchPathConfig>();
-                //list_stationParams.AddRange(Machine.aviconfig.WatchPaths);
-
                 Machine.aviconfig.WatchPaths.Clear();
                 //公共参数
-                //Machine.aviconfig.Depth = Convert.ToInt32(FrHWConfig.Instance.txt_depth_from_watch_path_to_result_ini.Text);
                 Machine.aviconfig.MaxWaitTime = Convert.ToInt32(FrHWConfig.Instance.txt_max_wait_time.Text);
-                //FrHWConfig.Instance.txt_depth_from_watch_path_to_result_ini.Text = Machine.aviconfig.WaitFlag;
-                //FrHWConfig.Instance.txt_depth_from_watch_path_to_result_ini.Text = Machine.aviconfig.Finishflag;
-                //Machine.aviconfig.AMinioConfig = FrHWConfig.Instance.txt_A_minio_config.Text;
-                //Machine.aviconfig.BMinioConfig = FrHWConfig.Instance.txt_B_minio_config.Text;
                 Machine.aviconfig.LDBEndpoint = FrHWConfig.Instance.txt_LDB_endpoint.Text;
                 Machine.aviconfig.GetInferResultInterval = Convert.ToInt32(FrHWConfig.Instance.txt_get_infer_result_interval.Text);
                 Machine.aviconfig.InferRequestTimeout = Convert.ToInt32(FrHWConfig.Instance.txt_infer_request_timeout.Text);
                 Machine.aviconfig.GetInferResultTimeout = Convert.ToInt32(FrHWConfig.Instance.txt_get_infer_result_timeout.Text);
-                //Machine.aviconfig.CopyOrCutMode = FrHWConfig.Instance.txt_copy_or_cut_mode.Text;
-                //Machine.aviconfig.DeepsightAgentDataWorkspace = FrHWConfig.Instance.txt_deepsight_agent_data_workspace.Text;
-                //Machine.aviconfig.TemporaryFileStorageArea_A = FrHWConfig.Instance.txt_temporary_file_storage_area_A.Text;
-                //Machine.aviconfig.TemporaryFileStorageArea_B = FrHWConfig.Instance.txt_temporary_file_storage_area_B.Text;
 
                 var watchPaths = aviCtr2Container1.GetAllConfigs();
 
                 for (int i = 0; i < FrHWConfig.Instance.txt_station_count.Value; i++)
                 {
-
                     //工站信息
                     WatchPathConfig stationParam = watchPaths[i];
                     Machine.aviconfig.WatchPaths.Add(stationParam);
-
                 }
 
-                //for (int i = 0; i < FrHWConfig.Instance.txt_station_count.Value; i++)
-                //{
-                //    TabPage tabPage = FrHWConfig.Instance.tabControl.Controls[i] as TabPage;
-                //    if (tabPage.Controls.Count > 0)
-                //    {
-                //        //工站信息
-                //        Panel panel1 = tabPage.Controls[0] as Panel;
-                //        if (panel1.Controls.Count > 0)
-                //        {
-                //            //工站信息
-                //            WatchPathConfig stationParam = new WatchPathConfig();
-                //            FrStationCofig frStationCofig = panel1.Controls[0] as FrStationCofig;
-                //            stationParam.APath = frStationCofig.txt_APath.Text;
-
-                //            stationParam.BPath = frStationCofig.txt_BPath.Text;
-                //            stationParam.Depth = Convert.ToInt32(frStationCofig.txt_Depth.Text);
-
-                //            if (frStationCofig.radiotcp1.Checked)
-                //            {
-                //                stationParam.IsEnable = true;
-                //            }
-                //            else if (frStationCofig.radiotcp2.Checked)
-                //            {
-                //                stationParam.IsEnable = false;
-                //            }
-
-                //            Machine.aviconfig.WatchPaths.Add(stationParam);
-                //        }
-                //    }
-                //}
             }
             catch (Exception ex)
             {
@@ -240,15 +196,5 @@ namespace DeepSightAI.SettingPages
             }
         }
 
-        private void btn_RunAgent_Click(object sender, EventArgs e)
-        {
-            //开启Gennt
-            FrSetting.Instance.RestartApplication(FrSetting.Instance.appPath, FrSetting.Instance.appExe, true);
-        }
-        private void btn_KillAgent_Click(object sender, EventArgs e)
-        {
-            //关闭Gennt
-            FrSetting.Instance.KillProcessInDirectory(FrSetting.Instance.appPath, FrSetting.Instance.appExe);
-        }
     }
 }

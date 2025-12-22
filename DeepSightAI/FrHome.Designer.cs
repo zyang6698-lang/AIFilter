@@ -37,6 +37,11 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.splitContainer4 = new System.Windows.Forms.SplitContainer();
             this.dataGridViewData = new System.Windows.Forms.DataGridView();
+            this.Code = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.AVI = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.AI = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Time = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Status = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.rich_log = new System.Windows.Forms.RichTextBox();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.btnClearLog = new System.Windows.Forms.ToolStripMenuItem();
@@ -60,11 +65,6 @@
             this.lbl_aiFilterOKCount = new System.Windows.Forms.Label();
             this.lbl_aviPassRateCount = new System.Windows.Forms.Label();
             this.lbl_filteredOkCount = new System.Windows.Forms.Label();
-            this.Code = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.AVI = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.AI = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Time = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Status = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.table_main.SuspendLayout();
             this.panel_show.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -209,6 +209,51 @@
             this.dataGridViewData.TabIndex = 2;
             this.dataGridViewData.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewData_CellClick);
             // 
+            // Code
+            // 
+            this.Code.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.Code.DataPropertyName = "Code";
+            this.Code.FillWeight = 180F;
+            this.Code.HeaderText = "SN任务队列";
+            this.Code.MinimumWidth = 6;
+            this.Code.Name = "Code";
+            this.Code.ReadOnly = true;
+            this.Code.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            // 
+            // AVI
+            // 
+            this.AVI.HeaderText = "AVI";
+            this.AVI.MinimumWidth = 6;
+            this.AVI.Name = "AVI";
+            this.AVI.ReadOnly = true;
+            this.AVI.Width = 50;
+            // 
+            // AI
+            // 
+            this.AI.HeaderText = "AI";
+            this.AI.MinimumWidth = 6;
+            this.AI.Name = "AI";
+            this.AI.ReadOnly = true;
+            this.AI.Width = 50;
+            // 
+            // Time
+            // 
+            this.Time.HeaderText = "时间(ms)";
+            this.Time.MinimumWidth = 6;
+            this.Time.Name = "Time";
+            this.Time.ReadOnly = true;
+            this.Time.Width = 120;
+            // 
+            // Status
+            // 
+            this.Status.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.Status.FillWeight = 150F;
+            this.Status.HeaderText = "状态";
+            this.Status.MinimumWidth = 8;
+            this.Status.Name = "Status";
+            this.Status.ReadOnly = true;
+            this.Status.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            // 
             // rich_log
             // 
             this.rich_log.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
@@ -281,6 +326,7 @@
             this.aviCtr2Container.Location = new System.Drawing.Point(0, 0);
             this.aviCtr2Container.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.aviCtr2Container.Name = "aviCtr2Container";
+            this.aviCtr2Container.ShowDeleteButtons = true;
             this.aviCtr2Container.Size = new System.Drawing.Size(1331, 564);
             this.aviCtr2Container.TabIndex = 0;
             // 
@@ -403,7 +449,7 @@
             this.lbl_CountPerPanel.Name = "lbl_CountPerPanel";
             this.lbl_CountPerPanel.Size = new System.Drawing.Size(218, 77);
             this.lbl_CountPerPanel.TabIndex = 9;
-            this.lbl_CountPerPanel.Text = "平均报点数\n-";
+            this.lbl_CountPerPanel.Text = "-";
             this.lbl_CountPerPanel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // lbl_utilizationRate
@@ -416,7 +462,7 @@
             this.lbl_utilizationRate.Name = "lbl_utilizationRate";
             this.lbl_utilizationRate.Size = new System.Drawing.Size(218, 77);
             this.lbl_utilizationRate.TabIndex = 8;
-            this.lbl_utilizationRate.Text = "稼动率\n-";
+            this.lbl_utilizationRate.Text = "-";
             this.lbl_utilizationRate.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // lbl_boardAiPassRate
@@ -429,7 +475,7 @@
             this.lbl_boardAiPassRate.Name = "lbl_boardAiPassRate";
             this.lbl_boardAiPassRate.Size = new System.Drawing.Size(218, 77);
             this.lbl_boardAiPassRate.TabIndex = 7;
-            this.lbl_boardAiPassRate.Text = "AVI Pass Rate_AI后\n-";
+            this.lbl_boardAiPassRate.Text = "-";
             this.lbl_boardAiPassRate.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // lbl_SnTotalCount
@@ -494,7 +540,7 @@
             this.lbl_aviPassRateCount.Name = "lbl_aviPassRateCount";
             this.lbl_aviPassRateCount.Size = new System.Drawing.Size(218, 77);
             this.lbl_aviPassRateCount.TabIndex = 3;
-            this.lbl_aviPassRateCount.Text = "AVI Pass Rate_AI前";
+            this.lbl_aviPassRateCount.Text = "-";
             this.lbl_aviPassRateCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // lbl_filteredOkCount
@@ -509,51 +555,6 @@
             this.lbl_filteredOkCount.TabIndex = 4;
             this.lbl_filteredOkCount.Text = "-";
             this.lbl_filteredOkCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // Code
-            // 
-            this.Code.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Code.DataPropertyName = "Code";
-            this.Code.FillWeight = 180F;
-            this.Code.HeaderText = "SN任务队列";
-            this.Code.MinimumWidth = 6;
-            this.Code.Name = "Code";
-            this.Code.ReadOnly = true;
-            this.Code.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            // 
-            // AVI
-            // 
-            this.AVI.HeaderText = "AVI";
-            this.AVI.MinimumWidth = 6;
-            this.AVI.Name = "AVI";
-            this.AVI.ReadOnly = true;
-            this.AVI.Width = 50;
-            // 
-            // AI
-            // 
-            this.AI.HeaderText = "AI";
-            this.AI.MinimumWidth = 6;
-            this.AI.Name = "AI";
-            this.AI.ReadOnly = true;
-            this.AI.Width = 50;
-            // 
-            // Time
-            // 
-            this.Time.HeaderText = "时间(ms)";
-            this.Time.MinimumWidth = 6;
-            this.Time.Name = "Time";
-            this.Time.ReadOnly = true;
-            this.Time.Width = 120;
-            // 
-            // Status
-            // 
-            this.Status.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Status.FillWeight = 150F;
-            this.Status.HeaderText = "状态";
-            this.Status.MinimumWidth = 8;
-            this.Status.Name = "Status";
-            this.Status.ReadOnly = true;
-            this.Status.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             // 
             // FrHome
             // 

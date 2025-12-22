@@ -242,18 +242,6 @@ namespace DeepSightModel
     {
         [JsonProperty("watch_path")]
         public List<WatchPathConfig> WatchPaths { get; set; } = new List<WatchPathConfig>();
-
-        //[JsonProperty("watch_A_path")]
-        //public string WatchAPath { get; set; }
-
-        //[JsonProperty("watch_B_path")]
-        //public string WatchBPath { get; set; }
-
-        //[JsonProperty("thread_number")]
-        //public int ThreadNumber { get; set; }
-
-        //[JsonProperty("depth_from_watch_path_to_result_ini")]
-        //public int Depth { get; set; }
         [JsonProperty("max_wait_time")]
         public int MaxWaitTime { get; set; }
         [JsonProperty("wait_flag")]
@@ -304,14 +292,9 @@ namespace DeepSightModel
                     BPath = "C:\\workspace\\ats\\real_ats_data\\real_ats_data\\Verify_B-2025.04yue",
                     Depth = 4,
                     IsEnable = false,
-                    //CopyOrCutMode="copy",
                 };
                 aviConfig.WatchPaths = new List<WatchPathConfig>();
                 aviConfig.WatchPaths.Add(watchPath);
-                //aviConfig.WatchAPath = "C:\\workspace\\ats\\real_ats_data\\real_ats_data\\Verify_A-2025.04yue";
-                //aviConfig.WatchBPath = "C:\\workspace\\ats\\real_ats_data\\real_ats_data\\Verify_B-2025.04yue";
-                //aviConfig.ThreadNumber = 2;
-                //aviConfig.Depth = 4;
                 aviConfig.MaxWaitTime = 5;
                 aviConfig.WaitFlag = "wait_format.flag";
                 aviConfig.Finishflag = "finish_format.flag";
@@ -367,7 +350,7 @@ namespace DeepSightModel
         /// <returns></returns>
         public bool Save(AVIConfig _config)
         {
-            bool result = false;
+            bool result;
             try
             {
                 if (File.Exists(System.AppDomain.CurrentDomain.BaseDirectory + "ATS_Agent_EXE\\config\\config.json"))

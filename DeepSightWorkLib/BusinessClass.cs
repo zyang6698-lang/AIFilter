@@ -133,7 +133,7 @@ namespace DeepSightWorkLib
                 // 当从 false 变为 true 时，更新推理请求开始时间
                 if (!previousValue && value)
                 {
-                   _aviReaderService.fetchTime = DateTime.Now;
+                    _aviReaderService.fetchTime = DateTime.Now;
                 }
             }
         }
@@ -162,27 +162,6 @@ namespace DeepSightWorkLib
         /// LevelDB 服务 URL
         /// </summary>
         public string URL { get; set; }
-
-        /// <summary>
-        /// 产品料号
-        /// </summary>
-        public string ProductSerial { get; set; } = "";
-
-        /// <summary>
-        /// 当前方案名称
-        /// </summary>
-        public string Solution { get; set; } = "";
-
-        /// <summary>
-        /// 当前流程名称
-        /// </summary>
-        public string Flow { get; set; } = "";
-
-        /// <summary>
-        /// 是否切换模式
-        /// </summary>
-        public bool IsSwitch { get; set; } = false;
-
         /// <summary>
         /// 方案配置
         /// </summary>
@@ -233,7 +212,6 @@ namespace DeepSightWorkLib
             _aviReaderService = new AviReaderService(HttpDb, _processingSnSet, ReadJsonByMinio);
             _imageLoaderService = new ImageLoaderService(Minio);
             _defectProcessor = new DefectProcessor(Defect, ImageDisplay, _imageLoaderService, _aviQueue, _aiResultQueue, _inferencePostProcessQueue);
-            // Post-process service handles inference result parsing and DB save, decoupled from BusinessClass
             _postProcessService = new PostProcessService(_dsCenterInfoDict, SysConfig, SavePanelSideToDatabase);
         }
 
@@ -248,7 +226,7 @@ namespace DeepSightWorkLib
             this.IsStart = false;
 
             // 创建 ResultWriter 需要 URL
-            _resultWriterService = new ResultWriterService(HttpDb, _processingSnSet, URL,SysConfig.DsCenterUrl);
+            _resultWriterService = new ResultWriterService(HttpDb, _processingSnSet, URL, SysConfig.DsCenterUrl);
 
             // 工作线程 -> 使用 Task 管理
             _cancellationTokenSource = new CancellationTokenSource();
@@ -315,7 +293,7 @@ namespace DeepSightWorkLib
 
                 try
                 {
-                    if (!IsStart  || !IsAllow)
+                    if (!IsStart || !IsAllow)
                     {
                         continue;
                     }
@@ -339,7 +317,7 @@ namespace DeepSightWorkLib
         /// <summary>
         /// 解析Minio路径
         /// </summary>
-        public void ParseMinioPath(string fullPath, out string path, out string result)=>AviReaderService.ParseMinioPath(fullPath,out path, out result);
+        public void ParseMinioPath(string fullPath, out string path, out string result) => AviReaderService.ParseMinioPath(fullPath, out path, out result);
 
         #endregion
 
@@ -386,8 +364,8 @@ namespace DeepSightWorkLib
 
                             //调用算法处理
 
-                            SystemEvent.SendTaskMsg(info.SN,$"准备DefectMethod，Side:{info.Side}，图片数量:{info.Mats.Count}");
-                            if (_defectProcessor.DefectMethod(info,SysConfig.MaxDefectCount, out List<string> msg, out List<string> details, out PcsResult pcsResult, out string vbJson))
+                            SystemEvent.SendTaskMsg(info.SN, $"准备DefectMethod，Side:{info.Side}，图片数量:{info.Mats.Count}");
+                            if (_defectProcessor.DefectMethod(info, SysConfig.MaxDefectCount, out List<string> msg, out List<string> details, out PcsResult pcsResult, out string vbJson))
                             {
                                 // 检查点2：推理完成后检查是否应该中止（不再回写结果）
                                 if (!IsStart)
@@ -417,7 +395,7 @@ namespace DeepSightWorkLib
                         {
                             AIStopwatch.Stop();
                             var elapsedMs = AIStopwatch.ElapsedMilliseconds;
-                            if (elapsedMs>20)
+                            if (elapsedMs > 20)
                             {
                                 SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面AI耗时:{elapsedMs}ms", elapsedMs);
                             }
@@ -481,7 +459,7 @@ namespace DeepSightWorkLib
                     minioPath = head,
                     panelInfo = obj,
                     isByPass = isByPass,
-                    ImageKeys=imageKeys
+                    ImageKeys = imageKeys
                 };
 
                 var loadModel = new ImageLoadModel
@@ -505,20 +483,25 @@ namespace DeepSightWorkLib
             {
                 isByPass = false;
                 LogTextHelper.Info($"{info.SerialNumber} {info.SideIndex}  ProcuctSerial:" + info.ProductSerial);
+
+
+                string solution = "";
+                string flow = "";
+                bool isSwitch = false;
                 var solutionFlow = SolConfig.solus.FirstOrDefault(o => o.ProductSerial == info.ProductSerial);
                 if (solutionFlow != null)
                 {
                     if (info.SideIndex == "A")
                     {
-                        Solution = solutionFlow.Asolution;
-                        Flow = solutionFlow.Aflow;
+                        solution = solutionFlow.Asolution;
+                        flow = solutionFlow.Aflow;
                     }
                     else
                     {
-                        Solution = solutionFlow.Bsolution;
-                        Flow = solutionFlow.Bflow;
+                        solution = solutionFlow.Bsolution;
+                        flow = solutionFlow.Bflow;
                     }
-                    IsSwitch = solutionFlow.IsSwitch;
+                    isSwitch = solutionFlow.IsSwitch;
                 }
                 else
                 {
@@ -529,15 +512,15 @@ namespace DeepSightWorkLib
                     {
                         if (info.SideIndex == "A")
                         {
-                            Solution = defaultSolutionFlow.Asolution;
-                            Flow = defaultSolutionFlow.Aflow;
+                            solution = defaultSolutionFlow.Asolution;
+                            flow = defaultSolutionFlow.Aflow;
                         }
                         else
                         {
-                            Solution = defaultSolutionFlow.Bsolution;
-                            Flow = defaultSolutionFlow.Bflow;
+                            solution = defaultSolutionFlow.Bsolution;
+                            flow = defaultSolutionFlow.Bflow;
                         }
-                        IsSwitch = defaultSolutionFlow.IsSwitch;
+                        isSwitch = defaultSolutionFlow.IsSwitch;
                     }
                     else
                     {
@@ -565,7 +548,7 @@ namespace DeepSightWorkLib
                     string infoJson = JsonConvert.SerializeObject(dsInfo, Formatting.None, jsonSetting);
                 }
 
-                LogTextHelper.Info($"当前产品:{info.SerialNumber},{info.SideIndex}面,所属料号:{info.ProductSerial},切换参数-->方案:{Solution},flow:{Flow}");
+                LogTextHelper.Info($"当前产品:{info.SerialNumber},{info.SideIndex}面,所属料号:{info.ProductSerial},切换参数-->方案:{solution},flow:{flow}");
                 RootVBInfo vBInfo = new RootVBInfo
                 {
                     MessageType = "visionbuilder_inference",
@@ -576,12 +559,12 @@ namespace DeepSightWorkLib
                 {
                     ImageInferParams = new ImageInferParams
                     {
-                        PipelineName = Solution,
+                        PipelineName = solution,
                         NodeParams = new List<NodeParam>
                         {
                             new NodeParam()
                             {
-                                NodeName = Flow,
+                                NodeName = flow,
                                 height = 200,
                                 width = 200,
                             }
@@ -668,7 +651,7 @@ namespace DeepSightWorkLib
                                     pcsInfo.DefectInfo[j].DefectRoi.Height
                                 }
                             };
-                            if (IsSwitch)
+                            if (isSwitch)
                             {
                                 group.DefectCode = pcsInfo.DefectInfo[j].DefectCode;
                             }
@@ -745,7 +728,7 @@ namespace DeepSightWorkLib
 
         #region 算法调用与结果处理
 
-        public bool DefectMethod(VBModel vBModel, out List<string> resList, out List<string> detailsList, out PcsResult pcsResult, out string vbJson)=>_defectProcessor.DefectMethod(vBModel,SysConfig.MaxDefectCount, out resList, out detailsList, out pcsResult, out vbJson);
+        public bool DefectMethod(VBModel vBModel, out List<string> resList, out List<string> detailsList, out PcsResult pcsResult, out string vbJson) => _defectProcessor.DefectMethod(vBModel, SysConfig.MaxDefectCount, out resList, out detailsList, out pcsResult, out vbJson);
 
         #endregion
 
@@ -1112,7 +1095,7 @@ namespace DeepSightWorkLib
                                   $"图片加载队列:{_imageLoadQueue.Count}, " +
                                   $"推理队列:{_aviQueue.Count}, " +
                                   $"后处理队列:{_inferencePostProcessQueue.Count}, " +
-                                  $"回写结果队列:{_aiResultQueue.Count}"+
+                                  $"回写结果队列:{_aiResultQueue.Count}" +
                                   $"数据库队列{_databaseHelper.GetQueueLength()}");
 
                 // 告警：如果处理集合持续增长超过阈值

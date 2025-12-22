@@ -204,9 +204,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="MIGRATION_REPORT.md" />
     <None Include="packages.config" />
-    <None Include="README_TaskStatus.md" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

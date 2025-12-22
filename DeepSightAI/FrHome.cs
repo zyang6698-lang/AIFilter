@@ -78,8 +78,8 @@ namespace DeepSightAI
 
         private void FrHome_Load(object sender, EventArgs e)
         {
-           // LogTextHelper.OnCallBackLogProc -= Log_single_OnCallBackLogProc;
-           // LogTextHelper.OnCallBackLogProc += Log_single_OnCallBackLogProc;
+            LogTextHelper.OnCallBackLogProc -= Log_single_OnCallBackLogProc;
+            LogTextHelper.OnCallBackLogProc += Log_single_OnCallBackLogProc;
         }
 
 

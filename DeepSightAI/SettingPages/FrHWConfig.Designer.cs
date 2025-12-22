@@ -39,12 +39,6 @@ namespace DeepSightAI.SettingPages
             this.label11 = new System.Windows.Forms.Label();
             this.label10 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
-            this.txt_temporary_file_storage_area_B = new System.Windows.Forms.TextBox();
-            this.label13 = new System.Windows.Forms.Label();
-            this.txt_temporary_file_storage_area_A = new System.Windows.Forms.TextBox();
-            this.label14 = new System.Windows.Forms.Label();
-            this.txt_deepsight_agent_data_workspace = new System.Windows.Forms.TextBox();
-            this.label15 = new System.Windows.Forms.Label();
             this.txt_get_infer_result_timeout = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
             this.txt_get_infer_result_interval = new System.Windows.Forms.TextBox();
@@ -53,10 +47,6 @@ namespace DeepSightAI.SettingPages
             this.label8 = new System.Windows.Forms.Label();
             this.txt_LDB_endpoint = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
-            this.txt_B_minio_config = new System.Windows.Forms.TextBox();
-            this.label4 = new System.Windows.Forms.Label();
-            this.txt_A_minio_config = new System.Windows.Forms.TextBox();
-            this.label5 = new System.Windows.Forms.Label();
             this.txt_max_wait_time = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
@@ -104,8 +94,8 @@ namespace DeepSightAI.SettingPages
             this.tableLayoutPanel2.ColumnCount = 2;
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 52.14286F));
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 47.85714F));
-            this.tableLayoutPanel2.Controls.Add(this.uiGroupBox1, 1, 0);
             this.tableLayoutPanel2.Controls.Add(this.grpAxisOfSelection, 0, 0);
+            this.tableLayoutPanel2.Controls.Add(this.uiGroupBox1, 1, 0);
             this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel2.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel2.Margin = new System.Windows.Forms.Padding(4);
@@ -140,8 +130,9 @@ namespace DeepSightAI.SettingPages
             // 
             this.aviCtr2Container1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.aviCtr2Container1.Location = new System.Drawing.Point(27, 25);
-            this.aviCtr2Container1.Margin = new System.Windows.Forms.Padding(14, 29, 14, 29);
+            this.aviCtr2Container1.Margin = new System.Windows.Forms.Padding(21, 52, 21, 52);
             this.aviCtr2Container1.Name = "aviCtr2Container1";
+            this.aviCtr2Container1.ShowDeleteButtons = true;
             this.aviCtr2Container1.Size = new System.Drawing.Size(830, 679);
             this.aviCtr2Container1.TabIndex = 0;
             // 
@@ -151,12 +142,6 @@ namespace DeepSightAI.SettingPages
             this.grpAxisOfSelection.Controls.Add(this.label11);
             this.grpAxisOfSelection.Controls.Add(this.label10);
             this.grpAxisOfSelection.Controls.Add(this.label1);
-            this.grpAxisOfSelection.Controls.Add(this.txt_temporary_file_storage_area_B);
-            this.grpAxisOfSelection.Controls.Add(this.label13);
-            this.grpAxisOfSelection.Controls.Add(this.txt_temporary_file_storage_area_A);
-            this.grpAxisOfSelection.Controls.Add(this.label14);
-            this.grpAxisOfSelection.Controls.Add(this.txt_deepsight_agent_data_workspace);
-            this.grpAxisOfSelection.Controls.Add(this.label15);
             this.grpAxisOfSelection.Controls.Add(this.txt_get_infer_result_timeout);
             this.grpAxisOfSelection.Controls.Add(this.label6);
             this.grpAxisOfSelection.Controls.Add(this.txt_get_infer_result_interval);
@@ -165,10 +150,6 @@ namespace DeepSightAI.SettingPages
             this.grpAxisOfSelection.Controls.Add(this.label8);
             this.grpAxisOfSelection.Controls.Add(this.txt_LDB_endpoint);
             this.grpAxisOfSelection.Controls.Add(this.label9);
-            this.grpAxisOfSelection.Controls.Add(this.txt_B_minio_config);
-            this.grpAxisOfSelection.Controls.Add(this.label4);
-            this.grpAxisOfSelection.Controls.Add(this.txt_A_minio_config);
-            this.grpAxisOfSelection.Controls.Add(this.label5);
             this.grpAxisOfSelection.Controls.Add(this.txt_max_wait_time);
             this.grpAxisOfSelection.Controls.Add(this.label3);
             this.grpAxisOfSelection.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -231,72 +212,6 @@ namespace DeepSightAI.SettingPages
             this.label1.Size = new System.Drawing.Size(35, 24);
             this.label1.TabIndex = 252;
             this.label1.Text = "ms";
-            // 
-            // txt_temporary_file_storage_area_B
-            // 
-            this.txt_temporary_file_storage_area_B.Location = new System.Drawing.Point(227, 358);
-            this.txt_temporary_file_storage_area_B.Margin = new System.Windows.Forms.Padding(2);
-            this.txt_temporary_file_storage_area_B.Name = "txt_temporary_file_storage_area_B";
-            this.txt_temporary_file_storage_area_B.Size = new System.Drawing.Size(459, 31);
-            this.txt_temporary_file_storage_area_B.TabIndex = 247;
-            this.txt_temporary_file_storage_area_B.Visible = false;
-            // 
-            // label13
-            // 
-            this.label13.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label13.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label13.Location = new System.Drawing.Point(51, 362);
-            this.label13.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(172, 19);
-            this.label13.TabIndex = 246;
-            this.label13.Text = "复判OK图像存储位置B：";
-            this.label13.TextAlign = System.Drawing.ContentAlignment.TopRight;
-            this.label13.Visible = false;
-            // 
-            // txt_temporary_file_storage_area_A
-            // 
-            this.txt_temporary_file_storage_area_A.Location = new System.Drawing.Point(227, 328);
-            this.txt_temporary_file_storage_area_A.Margin = new System.Windows.Forms.Padding(2);
-            this.txt_temporary_file_storage_area_A.Name = "txt_temporary_file_storage_area_A";
-            this.txt_temporary_file_storage_area_A.Size = new System.Drawing.Size(459, 31);
-            this.txt_temporary_file_storage_area_A.TabIndex = 245;
-            this.txt_temporary_file_storage_area_A.Visible = false;
-            // 
-            // label14
-            // 
-            this.label14.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label14.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label14.Location = new System.Drawing.Point(48, 332);
-            this.label14.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label14.Name = "label14";
-            this.label14.Size = new System.Drawing.Size(175, 19);
-            this.label14.TabIndex = 244;
-            this.label14.Text = "复判OK图像存储位置A：";
-            this.label14.TextAlign = System.Drawing.ContentAlignment.TopRight;
-            this.label14.Visible = false;
-            // 
-            // txt_deepsight_agent_data_workspace
-            // 
-            this.txt_deepsight_agent_data_workspace.Location = new System.Drawing.Point(227, 298);
-            this.txt_deepsight_agent_data_workspace.Margin = new System.Windows.Forms.Padding(2);
-            this.txt_deepsight_agent_data_workspace.Name = "txt_deepsight_agent_data_workspace";
-            this.txt_deepsight_agent_data_workspace.Size = new System.Drawing.Size(459, 31);
-            this.txt_deepsight_agent_data_workspace.TabIndex = 243;
-            this.txt_deepsight_agent_data_workspace.Visible = false;
-            // 
-            // label15
-            // 
-            this.label15.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label15.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label15.Location = new System.Drawing.Point(80, 302);
-            this.label15.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label15.Name = "label15";
-            this.label15.Size = new System.Drawing.Size(143, 19);
-            this.label15.TabIndex = 242;
-            this.label15.Text = "推理所需数据存储路径：";
-            this.label15.TextAlign = System.Drawing.ContentAlignment.TopRight;
-            this.label15.Visible = false;
             // 
             // txt_get_infer_result_timeout
             // 
@@ -377,50 +292,6 @@ namespace DeepSightAI.SettingPages
             this.label9.TabIndex = 233;
             this.label9.Text = "数据库URL：";
             this.label9.TextAlign = System.Drawing.ContentAlignment.TopRight;
-            // 
-            // txt_B_minio_config
-            // 
-            this.txt_B_minio_config.Location = new System.Drawing.Point(227, 418);
-            this.txt_B_minio_config.Margin = new System.Windows.Forms.Padding(2);
-            this.txt_B_minio_config.Name = "txt_B_minio_config";
-            this.txt_B_minio_config.Size = new System.Drawing.Size(459, 31);
-            this.txt_B_minio_config.TabIndex = 232;
-            this.txt_B_minio_config.Visible = false;
-            // 
-            // label4
-            // 
-            this.label4.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label4.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label4.Location = new System.Drawing.Point(113, 423);
-            this.label4.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(110, 19);
-            this.label4.TabIndex = 231;
-            this.label4.Text = "B_minio_config：";
-            this.label4.TextAlign = System.Drawing.ContentAlignment.TopRight;
-            this.label4.Visible = false;
-            // 
-            // txt_A_minio_config
-            // 
-            this.txt_A_minio_config.Location = new System.Drawing.Point(227, 388);
-            this.txt_A_minio_config.Margin = new System.Windows.Forms.Padding(2);
-            this.txt_A_minio_config.Name = "txt_A_minio_config";
-            this.txt_A_minio_config.Size = new System.Drawing.Size(459, 31);
-            this.txt_A_minio_config.TabIndex = 230;
-            this.txt_A_minio_config.Visible = false;
-            // 
-            // label5
-            // 
-            this.label5.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label5.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label5.Location = new System.Drawing.Point(110, 393);
-            this.label5.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(113, 19);
-            this.label5.TabIndex = 229;
-            this.label5.Text = "A_minio_config：";
-            this.label5.TextAlign = System.Drawing.ContentAlignment.TopRight;
-            this.label5.Visible = false;
             // 
             // txt_max_wait_time
             // 
@@ -527,12 +398,6 @@ namespace DeepSightAI.SettingPages
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.Label label1;
-        internal System.Windows.Forms.TextBox txt_temporary_file_storage_area_B;
-        internal System.Windows.Forms.Label label13;
-        internal System.Windows.Forms.TextBox txt_temporary_file_storage_area_A;
-        internal System.Windows.Forms.Label label14;
-        internal System.Windows.Forms.TextBox txt_deepsight_agent_data_workspace;
-        internal System.Windows.Forms.Label label15;
         internal System.Windows.Forms.TextBox txt_get_infer_result_timeout;
         internal System.Windows.Forms.Label label6;
         internal System.Windows.Forms.TextBox txt_get_infer_result_interval;
@@ -541,10 +406,6 @@ namespace DeepSightAI.SettingPages
         internal System.Windows.Forms.Label label8;
         internal System.Windows.Forms.TextBox txt_LDB_endpoint;
         internal System.Windows.Forms.Label label9;
-        internal System.Windows.Forms.TextBox txt_B_minio_config;
-        internal System.Windows.Forms.Label label4;
-        internal System.Windows.Forms.TextBox txt_A_minio_config;
-        internal System.Windows.Forms.Label label5;
         internal System.Windows.Forms.TextBox txt_max_wait_time;
         internal System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label20;

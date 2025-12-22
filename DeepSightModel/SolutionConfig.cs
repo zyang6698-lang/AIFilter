@@ -18,27 +18,6 @@ namespace DeepSightModel
     public class SolutionConfig
     {
         /// <summary>
-        /// 当前料号
-        /// </summary>
-        [XmlAttribute("CurrentProductSerial")]
-        public string CurrentProductSerial { get; set; }
-        /// <summary>
-        /// 当前方案
-        /// </summary>
-        [XmlAttribute("CurrentSolution")]
-
-        public string CurrentSolution { get; set; }
-        /// <summary>
-        /// 当前流程
-        /// </summary>
-        [XmlAttribute("CurrentFlow")]
-        public string CurrentFlow { get; set; }
-        /// <summary>
-        /// 是否switch
-        /// </summary>
-        [XmlAttribute("CurrentisSwitch")]
-        public bool CurrentisSwitch { get; set; }
-        /// <summary>
         /// 方案信息
         /// </summary>
         [XmlElementAttribute("SolutionConfig", IsNullable = false)]
@@ -126,9 +105,6 @@ namespace DeepSightModel
                 {
                     solus = new List<SolutionAndFlow>(),
                 };
-                config.CurrentProductSerial = "A123";
-                config.CurrentSolution = "solution1";
-                config.CurrentFlow = "flow1";
                 SolutionAndFlow defect = new SolutionAndFlow
                 {
                     ProductSerial= "A123",
@@ -136,10 +112,6 @@ namespace DeepSightModel
                     Aflow = "flow1",
                     Bsolution = "0317",
                     Bflow = "flow1",
-                    //Asolution = "085-a",
-                    //Aflow = "085-a",
-                    //Bsolution = "085-b",
-                    //Bflow = "085-b",
                     IsSwitch = false,
                 };
                 config.solus.Add(defect);

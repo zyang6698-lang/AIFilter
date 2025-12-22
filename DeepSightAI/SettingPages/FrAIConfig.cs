@@ -283,11 +283,6 @@ namespace DeepSightAI.SettingPages
         {
             GetSolutionFlow(true);
         }
-        string solutionName = string.Empty;
-        string flowName = string.Empty;
-        string productSerial = string.Empty;
-        bool isSCH = false;
-
         private void dataPost_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
@@ -297,30 +292,11 @@ namespace DeepSightAI.SettingPages
                 var cell = dataPost.Rows[e.RowIndex].Cells[e.ColumnIndex];
                 cell.Value = !(cell.Value is bool isChecked && isChecked);
                 dataPost.CommitEdit(DataGridViewDataErrorContexts.Commit);
-                isSCH = Convert.ToBoolean(cell.Value);
             }
-            int rowIndex = e.RowIndex;
-            //int columnIndex = e.ColumnIndex;
-            productSerial = dataPost.Rows[rowIndex].Cells[1].Value?.ToString() ?? "空值";
-            solutionName = dataPost.Rows[rowIndex].Cells[2].Value?.ToString() ?? "空值";
-            flowName = dataPost.Rows[rowIndex].Cells[3].Value?.ToString() ?? "空值";
-
-            //isSCH = Convert.ToBoolean(dataPost.Rows[rowIndex].Cells[2].Value);
-            // isSCH = false;
-            this.lbl_solution.Text = solutionName;
-            this.lbl_flow.Text = flowName;
-            this.lbl_ProductSerial.Text = productSerial;
-            this.lbl_Bsolution.Text = dataPost.Rows[rowIndex].Cells[4].Value?.ToString() ?? "空值"; ;
-            this.lbl_Bflow.Text = dataPost.Rows[rowIndex].Cells[5].Value?.ToString() ?? "空值"; ;
         }
 
         private void btn_setSolution_Click(object sender, EventArgs e)
         {
-            Machine.master.workClass.Solution = Machine.solution = solutionName;
-            Machine.master.workClass.Flow = Machine.flow = flowName;
-            Machine.master.workClass.IsSwitch = Machine.isSwitch = isSCH;
-            Machine.master.workClass.ProductSerial = Machine.productSerial = productSerial;
-            FrmMain.Instance.solutionAndflow.Text = $"当前方案:{solutionName}_当前流程:{flowName}_当前Switch:{isSCH}";
             SaveParam();
             MessageBox.Show("方案及流程设置成功", "设置成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
@@ -350,10 +326,6 @@ namespace DeepSightAI.SettingPages
                     }
                     solConfig.solus.Add(item);
                 }
-                solConfig.CurrentProductSerial = this.lbl_ProductSerial.Text.ToString();
-                solConfig.CurrentSolution = this.lbl_solution.Text.ToString();
-                solConfig.CurrentFlow = this.lbl_flow.Text.ToString();
-                solConfig.CurrentisSwitch = isSCH;
                 Machine.solconfig = solConfig;
                 result=Machine.sol_class.Save(solConfig);
 
@@ -511,8 +483,6 @@ namespace DeepSightAI.SettingPages
                 {
                     list.Add(System.IO.Path.GetFileName(dir));
                 }
-                // 如果希望从文件获取：可以再加文件名逻辑
-                // foreach (var file in System.IO.Directory.GetFiles(rootPath, "*.json")) { ... }
             }
             catch (Exception ex)
             {
