@@ -113,6 +113,13 @@ namespace DeepSightDB
         {
             try
             {
+                // 确保配置文件所在目录存在
+                var directory = Path.GetDirectoryName(ConfigFilePath);
+                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+
                 var json = JsonConvert.SerializeObject(this, Formatting.Indented);
                 File.WriteAllText(ConfigFilePath, json);
             }
