@@ -23,16 +23,14 @@ namespace DeepSightModel
         [XmlElementAttribute("SolutionConfig", IsNullable = false)]
         public List<SolutionAndFlow> solus { get; set; }
         [XmlElementAttribute("PartNumberImagesLoc", IsNullable = false)]
-        public string PartNumberImagesLoc { get; set;} = @"D:\ATS_AI_INSTALL\TemplateImages";
+        public string PartNumberImagesLoc { get; set;} 
 
         public SolutionConfig()
         {
 
         }
     }
-    /// <summary>
-    /// 项
-    /// </summary>ATS_Agent_EXEATS_Agent_EXE
+
     [XmlRootAttribute("SolutionAndFlow")]
     public class SolutionAndFlow
     {

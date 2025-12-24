@@ -13,8 +13,18 @@ namespace DeepSightDB
 {
     public class DatabaseHelper : IDisposable
     {
-        private static readonly PostgreSqlConfig _config = PostgreSqlConfig.Load();
-        private static readonly string connectionString = _config.GetConnectionString();
+        /// <summary>
+        /// 默认配置（兼容已有 WinForms 程序使用）
+        /// </summary>
+        private static readonly PostgreSqlConfig DefaultConfig = PostgreSqlConfig.Load();
+        private static readonly string DefaultConnectionString = DefaultConfig.GetConnectionString();
+
+        /// <summary>
+        /// 当前实例使用的配置和连接串（支持多机台 / 多数据库）
+        /// </summary>
+        private readonly PostgreSqlConfig _config;
+        private readonly string _connectionString;
+
         private readonly BlockingCollection<Action<NpgsqlConnection>> _dbQueue = new BlockingCollection<Action<NpgsqlConnection>>();
         private readonly Thread _dbThread;
         private bool _disposed = false;
@@ -23,8 +33,42 @@ namespace DeepSightDB
         private NpgsqlCommand _upsertPanelCmd;
         private NpgsqlCommand _upsertPanelSideCmd;
 
-        public DatabaseHelper()
+        /// <summary>
+        /// 使用默认配置的构造函数（保持向后兼容）
+        /// </summary>
+        public DatabaseHelper() : this(DefaultConfig)
         {
+        }
+
+        /// <summary>
+        /// 使用指定 PostgreSqlConfig 的构造函数（推荐：允许为不同机台传入不同配置）
+        /// </summary>
+        /// <param name="config">PostgreSQL 配置</param>
+        public DatabaseHelper(PostgreSqlConfig config)
+        {
+            _config = config ?? throw new ArgumentNullException(nameof(config));
+            _connectionString = _config.GetConnectionString();
+
+            _dbThread = new Thread(ProcessQueue)
+            {
+                IsBackground = true,
+                Name = "DatabaseThread"
+            };
+            _dbThread.Start();
+        }
+
+        /// <summary>
+        /// 直接使用连接字符串的构造函数（适合 ASP.NET 中从配置读取完整连接串）
+        /// 说明：使用该构造函数不会自动创建数据库和表结构，请在外部确保库表已存在。
+        /// </summary>
+        /// <param name="connectionString">PostgreSQL 连接字符串</param>
+        public DatabaseHelper(string connectionString)
+        {
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new ArgumentException("connectionString 不能为空", nameof(connectionString));
+
+            _connectionString = connectionString;
+
             _dbThread = new Thread(ProcessQueue)
             {
                 IsBackground = true,
@@ -81,7 +125,7 @@ namespace DeepSightDB
 
         private void ProcessQueue()
         {
-            using (var connection = new NpgsqlConnection(connectionString))
+            using (var connection = new NpgsqlConnection(_connectionString))
             {
                 connection.Open();
 
@@ -124,17 +168,18 @@ namespace DeepSightDB
         /// </summary>
         public int GetQueueLength() => _dbQueue.Count;
         /// <summary>
-        /// 确保数据库存在，如果不存在则自动创建
+        /// 确保数据库存在，如果不存在则自动创建（使用指定配置）
         /// </summary>
-        private static void EnsureDatabaseExists()
+        private static void EnsureDatabaseExists(PostgreSqlConfig config)
         {
+            var connectionString = config.GetConnectionString();
             try
             {
                 // 尝试连接到目标数据库，如果成功则数据库已存在
                 using (var testConnection = new NpgsqlConnection(connectionString))
                 {
                     testConnection.Open();
-                    LogTextHelper.Info($"数据库 '{_config.Database}' 已存在");
+                    LogTextHelper.Info($"数据库 '{config.Database}' 已存在");
                     return;
                 }
             }
@@ -143,21 +188,21 @@ namespace DeepSightDB
                 // 错误代码 3D000 表示数据库不存在
                 if (ex.SqlState == "3D000")
                 {
-                    LogTextHelper.Warn($"数据库 '{_config.Database}' 不存在，正在自动创建...");
+                    LogTextHelper.Warn($"数据库 '{config.Database}' 不存在，正在自动创建...");
 
                     try
                     {
                         // 连接到 postgres 数据库来创建新数据库
-                        using (var connection = new NpgsqlConnection(_config.GetPostgresConnectionString()))
+                        using (var connection = new NpgsqlConnection(config.GetPostgresConnectionString()))
                         {
                             connection.Open();
 
                             // 创建数据库 - 使用简化的语法，继承模板数据库的排序规则
                             // 这样可以避免与中文 Windows 系统的默认排序规则冲突
                             string createDbSql = $@"
-                                CREATE DATABASE {_config.Database}
+                                CREATE DATABASE {config.Database}
                                 WITH
-                                OWNER = {_config.Username}
+                                OWNER = {config.Username}
                                 ENCODING = 'UTF8'";
 
                             using (var command = new NpgsqlCommand(createDbSql, connection))
@@ -165,13 +210,13 @@ namespace DeepSightDB
                                 command.ExecuteNonQuery();
                             }
 
-                            LogTextHelper.Info($"数据库 '{_config.Database}' 创建成功！");
+                            LogTextHelper.Info($"数据库 '{config.Database}' 创建成功！");
                         }
                     }
                     catch (Exception createEx)
                     {
                         LogTextHelper.Error($"创建数据库失败: {createEx.Message}");
-                        throw new Exception($"无法创建数据库 '{_config.Database}'。请确保 PostgreSQL 服务正在运行，并且用户 '{_config.Username}' 有创建数据库的权限。", createEx);
+                        throw new Exception($"无法创建数据库 '{config.Database}'。请确保 PostgreSQL 服务正在运行，并且用户 '{config.Username}' 有创建数据库的权限。", createEx);
                     }
                 }
                 else
@@ -187,10 +232,27 @@ namespace DeepSightDB
                 throw;
             }
         }
+
+        /// <summary>
+        /// 使用默认配置初始化数据库（向后兼容）
+        /// </summary>
         public static void InitializeDatabase()
         {
+            InitializeDatabase(DefaultConfig);
+        }
+
+        /// <summary>
+        /// 使用指定配置初始化数据库（适用于 ASP.NET 为不同机台使用不同连接参数的场景）
+        /// </summary>
+        /// <param name="config">PostgreSQL 配置</param>
+        public static void InitializeDatabase(PostgreSqlConfig config)
+        {
+            if (config == null) throw new ArgumentNullException(nameof(config));
+
             // 首先确保数据库存在
-            EnsureDatabaseExists();
+            EnsureDatabaseExists(config);
+
+            var connectionString = config.GetConnectionString();
 
             // 然后创建表结构
             using (var connection = new NpgsqlConnection(connectionString))

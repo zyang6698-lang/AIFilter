@@ -37,6 +37,8 @@ namespace DeepSightTool
 
         static LogTextHelper()
         {
+            //Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
             if (!Directory.Exists(LogFolder))
             {
                 Directory.CreateDirectory(LogFolder);
@@ -53,7 +55,7 @@ namespace DeepSightTool
         private static void InitializeSerilog()
         {
             var outputTemplate = "[{Timestamp:yyyy-MM-dd HH:mm:ss,fff}]---->  {Message:lj}{NewLine}{NewLine}";
-            var encoding = Encoding.GetEncoding("GB2312");
+            var encoding = Encoding.GetEncoding("UTF-8");
 
             // 高性能配置参数
             const int asyncBufferSize = 10000;          // 异步队列大小，默认10000

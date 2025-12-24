@@ -365,7 +365,8 @@ namespace DeepSightWorkLib
                             //调用算法处理
 
                             SystemEvent.SendTaskMsg(info.SN, $"准备DefectMethod，Side:{info.Side}，图片数量:{info.Mats.Count}");
-                            if (_defectProcessor.DefectMethod(info, SysConfig.MaxDefectCount, out List<string> msg, out List<string> details, out PcsResult pcsResult, out string vbJson))
+
+                            if (_defectProcessor.DefectMethod(info, SysConfig.MaxDefectCount, out List<string> msg, out List<string> details, out PcsResult pcsResult, out string vbJson,AviConfig.GetInferResultTimeout))
                             {
                                 // 检查点2：推理完成后检查是否应该中止（不再回写结果）
                                 if (!IsStart)

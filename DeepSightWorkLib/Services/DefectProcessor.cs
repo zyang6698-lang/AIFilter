@@ -41,7 +41,7 @@ namespace DeepSightWorkLib.Services
         /// <summary>
         /// 调用 DefectClass.DefectMethodWithImages 并将返回结果解析为与原 BusinessClass.DefectMethod 相同的输出
         /// </summary>
-        public bool DefectMethod(VBModel vBModel,int maxCount, out List<string> resList, out List<string> detailsList, out PcsResult pcsResult, out string vbJson)
+        public bool DefectMethod(VBModel vBModel,int maxCount, out List<string> resList, out List<string> detailsList, out PcsResult pcsResult, out string vbJson,int timeoutSeconds = 10)
         {
             resList = new List<string>();
             pcsResult = new PcsResult();
@@ -53,8 +53,6 @@ namespace DeepSightWorkLib.Services
                 EnqueuePostProcess(vBModel, "", false);
                 // 使用新的状态发送方式（推荐）
                 TaskStatusSender.SendSkipped(vBModel.SN, vBModel.Side, "缺陷数为0");
-                // 或者继续使用旧方式（向后兼容）
-                // SystemEvent.SendTaskMsg(vBModel.SN, $"{vBModel.Side}面缺陷数为0，跳过AI检测");
                 return true;
             }
 
@@ -75,8 +73,6 @@ namespace DeepSightWorkLib.Services
                 string infoJson = JsonConvert.SerializeObject(info, Formatting.None, jsonSetting);
                 LogTextHelper.Info($"{vBModel.SN} {vBModel.Side}  准备调用算法,参数为：" + infoJson);
 
-                // 计算超时时间：图片数量 * 2秒
-                int timeoutSeconds = vBModel.Mats.Count * 2;
                 string msg = null;
                 bool timedOut = false;
 
