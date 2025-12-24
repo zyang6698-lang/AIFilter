@@ -174,9 +174,30 @@ namespace DeepSightDB
         }
         private static readonly Dictionary<string, MachineLotSn> MachineLatestLotSn = new Dictionary<string, MachineLotSn>(StringComparer.OrdinalIgnoreCase);
 
+        private const int SaveBatchSize = 100;
+        private static int _pendingSaveCount = 0;
+
         private static BoardStat _totals = new BoardStat();
         private static DateTime _currentDate = DateTime.Today;
         private static bool _stateLoadedForDate = false;
+
+        static BoardStatCache()
+        {
+            AppDomain.CurrentDomain.ProcessExit += (s, e) =>
+            {
+                try
+                {
+                    lock (SyncRoot)
+                    {
+                        SaveStateIfNeeded(force: true);
+                    }
+                }
+                catch
+                {
+                    // ignore
+                }
+            };
+        }
 
         private static void EnsureCurrentDate()
         {
@@ -187,7 +208,7 @@ namespace DeepSightDB
             }
 
             // Optionally persist previous date before reset
-            try { SaveStateInternal(_currentDate); } catch { /* ignore */ }
+            try { SaveStateInternal(_currentDate); _pendingSaveCount = 0; } catch { /* ignore */ }
 
             PanelEntries.Clear();
             MachineTimestamps.Clear();
@@ -335,6 +356,18 @@ namespace DeepSightDB
             }
         }
 
+        private static void SaveStateIfNeeded(bool force = false)
+        {
+            _pendingSaveCount++;
+            if (!force && _pendingSaveCount < SaveBatchSize)
+            {
+                return;
+            }
+
+            try { SaveStateInternal(_currentDate); } catch { /* ignore */ }
+            _pendingSaveCount = 0;
+        }
+
         private static void LoadStateInternal(DateTime date)
         {
             PanelEntries.Clear();
@@ -480,7 +513,7 @@ namespace DeepSightDB
                     timestamps.Add(record.AviCreationTime.Value);
                 }
 
-                try { SaveStateInternal(_currentDate); } catch { /* ignore */ }
+                SaveStateIfNeeded();
             }
         }
 

@@ -268,14 +268,17 @@ namespace DeepSightAI
             {
                 try
                 {
-                    // 更新右下角统计信息
+                    // 每6秒都更新右下角统计信息
                     UpdateMainBorad();
-                    
-                    // 更新机台看板（异步操作）
-                    await UpdateMachineBoardWithTimeout(cts.Token);
-                    
-                    // 更新LotSn
-                    UpdateLotSn();
+
+                    // 计数器+1，每5次（30秒）更新一次机台看板和LotSn
+                    _updateCounter++;
+                    if (_updateCounter >= 5)
+                    {
+                        await UpdateMachineBoardWithTimeout(cts.Token);
+                        UpdateLotSn();
+                        _updateCounter = 0;
+                    }
                 }
                 catch (OperationCanceledException)
                 {
