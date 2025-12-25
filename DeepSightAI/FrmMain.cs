@@ -1062,7 +1062,7 @@ namespace DeepSightAI
         {
             this.Invoke(new MethodInvoker(() =>
             {
-                Machine.master.workClass.defect.ai_Defect.Vision_Show_View(1);
+                Machine.master.workClass.Defect.ai_Defect.Vision_Show_View(1);
             }));
         }
         private void toolStripButton2_Click(object sender, EventArgs e)

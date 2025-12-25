@@ -91,6 +91,8 @@ namespace DeepSightModel
         public string AviCreateTime { get; set; }
         [JsonProperty("path_index")]
         public string PathIndex { get; set; }
+        [JsonProperty("template_img_path")] 
+        public string TemplateImgPath { get; set; }
     }
 
     public class PanelSourceImage

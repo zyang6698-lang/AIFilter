@@ -79,7 +79,7 @@ namespace DeepSightAI.SettingPages
                     message_type = "visionbuilder_solution_flow_list"
                 });
                 IntPtr input = Marshal.StringToHGlobalAnsi(json);
-                Machine.master.workClass.defect.ai_Defect.Vision_runMethod(input, out IntPtr intPtr);
+                Machine.master.workClass.Defect.ai_Defect.Vision_runMethod(input, out IntPtr intPtr);
                 string solutionandflow_List = Marshal.PtrToStringAnsi(intPtr);
 
                 if (string.IsNullOrEmpty(solutionandflow_List))

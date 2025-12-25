@@ -37,11 +37,6 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.splitContainer4 = new System.Windows.Forms.SplitContainer();
             this.dataGridViewData = new System.Windows.Forms.DataGridView();
-            this.Code = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.AVI = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.AI = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Time = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Status = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.rich_log = new System.Windows.Forms.RichTextBox();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.btnClearLog = new System.Windows.Forms.ToolStripMenuItem();
@@ -65,6 +60,11 @@
             this.lbl_aiFilterOKCount = new System.Windows.Forms.Label();
             this.lbl_aviPassRateCount = new System.Windows.Forms.Label();
             this.lbl_filteredOkCount = new System.Windows.Forms.Label();
+            this.Code = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.AVI = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.AI = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Time = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Status = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.table_main.SuspendLayout();
             this.panel_show.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -209,51 +209,6 @@
             this.dataGridViewData.TabIndex = 2;
             this.dataGridViewData.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewData_CellClick);
             // 
-            // Code
-            // 
-            this.Code.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Code.DataPropertyName = "Code";
-            this.Code.FillWeight = 180F;
-            this.Code.HeaderText = "SN任务队列";
-            this.Code.MinimumWidth = 6;
-            this.Code.Name = "Code";
-            this.Code.ReadOnly = true;
-            this.Code.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            // 
-            // AVI
-            // 
-            this.AVI.HeaderText = "AVI";
-            this.AVI.MinimumWidth = 6;
-            this.AVI.Name = "AVI";
-            this.AVI.ReadOnly = true;
-            this.AVI.Width = 50;
-            // 
-            // AI
-            // 
-            this.AI.HeaderText = "AI";
-            this.AI.MinimumWidth = 6;
-            this.AI.Name = "AI";
-            this.AI.ReadOnly = true;
-            this.AI.Width = 50;
-            // 
-            // Time
-            // 
-            this.Time.HeaderText = "时间(ms)";
-            this.Time.MinimumWidth = 6;
-            this.Time.Name = "Time";
-            this.Time.ReadOnly = true;
-            this.Time.Width = 120;
-            // 
-            // Status
-            // 
-            this.Status.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Status.FillWeight = 150F;
-            this.Status.HeaderText = "状态";
-            this.Status.MinimumWidth = 8;
-            this.Status.Name = "Status";
-            this.Status.ReadOnly = true;
-            this.Status.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            // 
             // rich_log
             // 
             this.rich_log.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
@@ -275,19 +230,19 @@
             this.btnClearLog,
             this.btnShowLog});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(139, 52);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(125, 48);
             // 
             // btnClearLog
             // 
             this.btnClearLog.Name = "btnClearLog";
-            this.btnClearLog.Size = new System.Drawing.Size(138, 24);
+            this.btnClearLog.Size = new System.Drawing.Size(124, 22);
             this.btnClearLog.Text = "清空日志";
             this.btnClearLog.Click += new System.EventHandler(this.btnClearLog_Click);
             // 
             // btnShowLog
             // 
             this.btnShowLog.Name = "btnShowLog";
-            this.btnShowLog.Size = new System.Drawing.Size(138, 24);
+            this.btnShowLog.Size = new System.Drawing.Size(124, 22);
             this.btnShowLog.Text = "查看日志";
             this.btnShowLog.Click += new System.EventHandler(this.btnShowLog_Click);
             // 
@@ -395,7 +350,7 @@
             this.lblPageInfo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.lblPageInfo.Location = new System.Drawing.Point(223, 11);
             this.lblPageInfo.Name = "lblPageInfo";
-            this.lblPageInfo.Size = new System.Drawing.Size(117, 20);
+            this.lblPageInfo.Size = new System.Drawing.Size(99, 17);
             this.lblPageInfo.TabIndex = 46;
             this.lblPageInfo.Text = "第 1 页 / 共 1 页";
             this.lblPageInfo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -556,9 +511,53 @@
             this.lbl_filteredOkCount.Text = "-";
             this.lbl_filteredOkCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
+            // Code
+            // 
+            this.Code.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.Code.DataPropertyName = "Code";
+            this.Code.FillWeight = 180F;
+            this.Code.HeaderText = "SN任务队列";
+            this.Code.MinimumWidth = 6;
+            this.Code.Name = "Code";
+            this.Code.ReadOnly = true;
+            this.Code.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            // 
+            // AVI
+            // 
+            this.AVI.HeaderText = "AVI";
+            this.AVI.MinimumWidth = 6;
+            this.AVI.Name = "AVI";
+            this.AVI.ReadOnly = true;
+            this.AVI.Width = 50;
+            // 
+            // AI
+            // 
+            this.AI.HeaderText = "AI";
+            this.AI.MinimumWidth = 6;
+            this.AI.Name = "AI";
+            this.AI.ReadOnly = true;
+            this.AI.Width = 50;
+            // 
+            // Time
+            // 
+            this.Time.HeaderText = "时间(ms)";
+            this.Time.MinimumWidth = 6;
+            this.Time.Name = "Time";
+            this.Time.ReadOnly = true;
+            // 
+            // Status
+            // 
+            this.Status.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.Status.FillWeight = 150F;
+            this.Status.HeaderText = "状态";
+            this.Status.MinimumWidth = 8;
+            this.Status.Name = "Status";
+            this.Status.ReadOnly = true;
+            this.Status.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            // 
             // FrHome
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
             this.ClientSize = new System.Drawing.Size(1761, 851);

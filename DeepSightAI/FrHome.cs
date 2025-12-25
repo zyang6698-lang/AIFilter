@@ -268,17 +268,14 @@ namespace DeepSightAI
             {
                 try
                 {
-                    // 每6秒都更新右下角统计信息
+                    // 更新右下角统计信息
                     UpdateMainBorad();
-
-                    // 计数器+1，每5次（30秒）更新一次机台看板和LotSn
-                    _updateCounter++;
-                    if (_updateCounter >= 5)
-                    {
-                        await UpdateMachineBoardWithTimeout(cts.Token);
-                        UpdateLotSn();
-                        _updateCounter = 0;
-                    }
+                    
+                    // 更新机台看板（异步操作）
+                    await UpdateMachineBoardWithTimeout(cts.Token);
+                    
+                    // 更新LotSn
+                    UpdateLotSn();
                 }
                 catch (OperationCanceledException)
                 {
@@ -414,7 +411,7 @@ namespace DeepSightAI
             try
             {
 
-                if (Machine.master.workClass.isStart)
+                if (Machine.master.workClass.IsStart)
                 {
                     MessageBox.Show("当前系统正在运行中,请先点击暂停", "运行提示", MessageBoxButtons.OK, MessageBoxIcon.Question);
                     return;
@@ -432,7 +429,7 @@ namespace DeepSightAI
 
                 this.Invoke(new MethodInvoker(() =>
                 {
-                    Machine.master.workClass.defect.ai_Defect.Vision_Show_View(1);
+                    Machine.master.workClass.Defect.ai_Defect.Vision_Show_View(1);
                 }));
 
 
@@ -826,7 +823,7 @@ namespace DeepSightAI
                 PcsResult pcsResult;
                 if (dic_Results.TryGetValue(str_SN, out res_lbl) && dic_PcsResult.TryGetValue(str_SN, out pcsResult))
                 {
-                    await Task.Factory.StartNew(() =>
+                    await Task.Factory.StartNew((Action)(() =>
                     {
                         Parallel.ForEach(defect_indexPaths, parallelOptions, item =>
                         {
@@ -848,10 +845,10 @@ namespace DeepSightAI
                             {
                                 vbValue = pcsResult.vb_List[index2];
                             }
-                            Machine.master.workClass.showImage(item.Path, (item.Index + 1) * 2 - 2, labelText, vbValue);
+                            Machine.master.workClass.ShowImage(item.Path, (item.Index + 1) * 2 - 2, labelText, vbValue);
                         });
-                    });
-                    await Task.Factory.StartNew(() =>
+                    }));
+                    await Task.Factory.StartNew((Action)(() =>
                     {
                         Parallel.ForEach(gerberOrtemp_indexPaths, parallelOptions, item =>
                         {
@@ -873,27 +870,27 @@ namespace DeepSightAI
                             {
                                 vbValue = pcsResult.vb_List[index2];
                             }
-                            Machine.master.workClass.showImage(item.Path, (item.Index + 1) * 2 - 1, labelText, vbValue);
+                            Machine.master.workClass.ShowImage(item.Path, (item.Index + 1) * 2 - 1, labelText, vbValue);
                         });
-                    });
+                    }));
                 }
                 else
                 {
-                    await Task.Factory.StartNew(() =>
+                    await Task.Factory.StartNew((Action)(() =>
                     {
                         Parallel.ForEach(defect_indexPaths, parallelOptions, item =>
                         {
                             //Machine.master.workClass.showImage(item.Path, item.Index*2-1);
-                            Machine.master.workClass.showImage(item.Path, (item.Index + 1) * 2 - 2, "未处理");
+                            Machine.master.workClass.ShowImage(item.Path, (item.Index + 1) * 2 - 2, "未处理");
                         });
-                    });
-                    await Task.Factory.StartNew(() =>
+                    }));
+                    await Task.Factory.StartNew((Action)(() =>
                     {
                         Parallel.ForEach(gerberOrtemp_indexPaths, parallelOptions, item =>
                         {
-                            Machine.master.workClass.showImage(item.Path, (item.Index + 1) * 2 - 1, "未处理");
+                            Machine.master.workClass.ShowImage(item.Path, (item.Index + 1) * 2 - 1, "未处理");
                         });
-                    });
+                    }));
                 }
 
 
@@ -901,20 +898,20 @@ namespace DeepSightAI
 
                 if (currentPage == totalPages)
                 {
-                    await Task.Factory.StartNew(() =>
+                    await Task.Factory.StartNew((Action)(() =>
                     {
-                        Parallel.For(defect_pagedData.Count, table_Small.RowCount, item =>
+                        Parallel.For(defect_pagedData.Count, table_Small.RowCount, (Action<int>)(item =>
                         {
-                            Machine.master.workClass.showImage("", (item + 1) * 2 - 2);
-                        });
-                    });
-                    await Task.Factory.StartNew(() =>
+                            Machine.master.workClass.ShowImage("", (item + 1) * 2 - 2);
+                        }));
+                    }));
+                    await Task.Factory.StartNew((Action)(() =>
                     {
-                        Parallel.For(gerberOrtemp_pagedData.Count, table_Small.RowCount, item =>
+                        Parallel.For(gerberOrtemp_pagedData.Count, table_Small.RowCount, (Action<int>)(item =>
                         {
-                            Machine.master.workClass.showImage("", (item + 1) * 2 - 1);
-                        });
-                    });
+                            Machine.master.workClass.ShowImage("", (item + 1) * 2 - 1);
+                        }));
+                    }));
                 }
                 UpdatePagingControls();
             }

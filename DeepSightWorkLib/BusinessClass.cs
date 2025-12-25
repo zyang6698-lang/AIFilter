@@ -181,9 +181,6 @@ namespace DeepSightWorkLib
 
         #region 兼容性属性 (已弃用，保持向后兼容)
 
-        [Obsolete("请使用 Defect 属性")]
-        public DefectClass defect { get => Defect; set => Defect = value; }
-
         [Obsolete("请使用 IsStart 属性")]
         public bool isStart { get => IsStart; set => IsStart = value; }
 
@@ -254,10 +251,6 @@ namespace DeepSightWorkLib
         }
 
         #region 兼容性方法（已弃用）
-
-        [Obsolete("请使用 ImageDisplay.ShowImage 方法")]
-        public void showImage(string path, int index, string result = "", VBRcvInfp box = null) => ShowImage(path, index, result, box);
-
         /// <summary>
         /// 显示图片（委托给 ImageDisplayService）
         /// </summary>
@@ -643,7 +636,7 @@ namespace DeepSightWorkLib
                                 GroupUuid = Guid.NewGuid().ToString(),
                                 GroupInfos = new List<GroupInfo>(),
                                 DefectCode = "",
-                                TempImgPath = Path.Combine(SolConfig.PartNumberImagesLoc, $"{info.ProductSerial}\\{info.ProductSerial}[{info.SideIndex}].jpg"),
+                                TempImgPath =info.TemplateImgPath,
                                 ImgROI = new List<int>
                                 {
                                     pcsInfo.DefectInfo[j].DefectRoi.X,

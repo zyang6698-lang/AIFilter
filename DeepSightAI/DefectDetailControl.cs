@@ -36,6 +36,11 @@ namespace DeepSightAI
         /// </summary>
         public event EventHandler<VvsCompletedEventArgs> SnVvsCompleted;
 
+        /// <summary>
+        /// 当VVS状态改变时触发
+        /// </summary>
+        public event EventHandler VvsStatusChanged;
+
         public DefectDetailControl()
         {
             InitializeComponent();
@@ -238,6 +243,9 @@ namespace DeepSightAI
 
                                 // 检查是否所有缺陷点都已完成VVS复判
                                 CheckAllVvsStatusSet();
+                                
+                                // 触发VVS状态改变事件，用于更新左下角复判详情
+                                VvsStatusChanged?.Invoke(this, EventArgs.Empty);
                             }
 
                             label.Text = $"AI: {GetStatusText(heatPoint.AIStatus)}\n" +

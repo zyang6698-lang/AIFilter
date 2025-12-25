@@ -23,6 +23,13 @@ namespace DeepSightAI
         private SortableBindingList<DefectReviewItem> _bindingList;
         private string _currentSelectedLot = null; // 当前选中的Lot
 
+        // 复判详情相关字段
+        private string _currentReviewLot = null;
+        private DateTime _currentReviewTime = DateTime.MinValue;
+        private int _vvsOkCount = 0;
+        private int _vvsNgCount = 0;
+        private int _vvsNotSetCount = 0;
+
         #endregion
 
         #region Constructor
@@ -47,6 +54,9 @@ namespace DeepSightAI
 
             // 订阅VVS复判完成事件 - 当某SN所有缺陷点都完成VVS复判时自动更新人工判定状态
             defectDetailControl1.SnVvsCompleted += DefectDetailControl_SnVvsCompleted;
+            
+            // 订阅VVS状态改变事件 - 用于更新左下角复判详情显示
+            defectDetailControl1.VvsStatusChanged += DefectDetailControl_VvsStatusChanged;
 
             // 订阅TreeView事件
             treeView_Lots.AfterSelect += TreeView_Lots_AfterSelect;
@@ -85,7 +95,7 @@ namespace DeepSightAI
 
         #region Event Handlers
 
-        private async void HeatMapQueryControl_QueryClicked(object sender, EventArgs e)
+        private void HeatMapQueryControl_QueryClicked(object sender, EventArgs e)
         {
             try
             {
@@ -239,6 +249,22 @@ namespace DeepSightAI
 
             // 刷新DataGridView显示
             _bindingList.ResetBindings();
+            
+            // 更新左下角复判详情
+            UpdateVvsStatusSummary();
+        }
+
+        /// <summary>
+        /// 当VVS状态改变时触发，用于更新左下角复判详情
+        /// </summary>
+        private void DefectDetailControl_VvsStatusChanged(object sender, EventArgs e)
+        {
+            // 如果当前有展示的详情，重新统计VVS状态
+            if (_currentReviewLot != null)
+            {
+                UpdateVvsStatusSummary();
+                RefreshReviewDetailDisplay();
+            }
         }
 
         private async void Btn_Save_Click(object sender, EventArgs e)
@@ -451,7 +477,7 @@ namespace DeepSightAI
             }
         }
 
-        private async void Btn_LoadImages_Click(object sender, EventArgs e)
+        private void Btn_LoadImages_Click(object sender, EventArgs e)
         {
             using (var folderBrowserDialog = new FolderBrowserDialog())
             {
@@ -491,6 +517,9 @@ namespace DeepSightAI
             if (e.Node.Level == 0)
             {
                 LoadLotData(e.Node.Name);
+                // 清除复判详情，因为只是选择表格数据
+                _currentReviewLot = null;
+                RefreshReviewDetailDisplay();
             }
             // 如果是子分类节点（第二层，如按Side分组），加载该分类的数据
             else if (e.Node.Level == 1 && e.Node.Parent != null)
@@ -498,6 +527,9 @@ namespace DeepSightAI
                 string lotNumber = e.Node.Parent.Name;
                 string category = e.Node.Name; // 如 "A面", "B面" 等
                 LoadLotDataByCategory(lotNumber, category);
+                // 清除复判详情
+                _currentReviewLot = null;
+                RefreshReviewDetailDisplay();
             }
         }
 
@@ -553,6 +585,22 @@ namespace DeepSightAI
 
                 if (totalHeatPoints > 0)
                 {
+                    // 更新复判详情显示（使用第一个项目的信息）
+                    if (itemsToDisplay.Count > 0)
+                    {
+                        var firstItem = itemsToDisplay.FirstOrDefault();
+                        if (firstItem != null)
+                        {
+                            _currentReviewLot = firstItem.LotNumber;
+                            _currentReviewTime = firstItem.DetectionDate;
+                            // 统计所有项目的VVS状态总和
+                            _vvsOkCount = itemsToDisplay.Sum(item => item.HeatPoints?.Count(hp => hp.VVSStatus == 1) ?? 0);
+                            _vvsNgCount = itemsToDisplay.Sum(item => item.HeatPoints?.Count(hp => hp.VVSStatus == 2) ?? 0);
+                            _vvsNotSetCount = itemsToDisplay.Sum(item => item.HeatPoints?.Count(hp => hp.VVSStatus == 0) ?? 0);
+                            RefreshReviewDetailDisplay();
+                        }
+                    }
+                    
                     // 使用新的重载方法，传递原始items列表（保持HeatPoints引用），以便按SN分组检查VVS状态
                     defectDetailControl1.DisplayDefectDetails(itemsToDisplay, displayTitle);
                     tabControl_Main.SelectedTab = tabPage_Details;
@@ -563,6 +611,8 @@ namespace DeepSightAI
                 }
             }
         }
+
+
 
         /// <summary>
         /// 构建Lot分组的TreeView节点
@@ -837,6 +887,59 @@ namespace DeepSightAI
             }
         }
 
+
+        /// <summary>
+        /// 统计当前VVS状态
+        /// </summary>
+        private void UpdateVvsStatusSummary()
+        {
+            _vvsOkCount = 0;
+            _vvsNgCount = 0;
+            _vvsNotSetCount = 0;
+
+            foreach (var item in _allDefectItems)
+            {
+                if (item.LotNumber==_currentReviewLot)
+                {
+                    if (item != null && item.HeatPoints != null)
+                    {
+                        foreach (var hp in item.HeatPoints)
+                        {
+                            if (hp.VVSStatus == 0) _vvsNotSetCount++;
+                            else if (hp.VVSStatus == 1) _vvsOkCount++;
+                            else if (hp.VVSStatus == 2) _vvsNgCount++;
+                        }
+                    }
+                }
+            }
+
+        }
+
+        /// <summary>
+        /// 刷新复判详情的显示
+        /// </summary>
+        private void RefreshReviewDetailDisplay()
+        {
+            string detail = string.Empty;
+
+            if (!string.IsNullOrEmpty(_currentReviewLot))
+            {
+                detail = $"【复判详情】\n\n";
+                detail += $"Lot号: {_currentReviewLot}\n";
+                detail += $"检测时间: {_currentReviewTime:yyyy-MM-dd HH:mm:ss}\n\n";
+                detail += $"【VVS状态统计】\n";
+                detail += $"OK: {_vvsOkCount}\n";
+                detail += $"NG: {_vvsNgCount}\n";
+                detail += $"未设置: {_vvsNotSetCount}\n";
+                detail += $"总数: {_vvsOkCount + _vvsNgCount + _vvsNotSetCount}";
+            }
+            else
+            {
+                detail = "请从左侧选择缺陷记录\n以查看复判详情";
+            }
+
+            label_ReviewDetail.Text = detail;
+        }
 
         private async Task SaveManualReviewResults(List<DefectReviewItem> items)
         {
