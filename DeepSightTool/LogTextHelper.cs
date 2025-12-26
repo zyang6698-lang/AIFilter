@@ -185,7 +185,7 @@ namespace DeepSightTool
             }
             var msg = ex?.ToString() ?? string.Empty;
             _warnLogger?.Warning(msg);
-            OnCallBackLogProc?.Invoke(msg, Color.Red);
+            OnCallBackLogProc?.Invoke(msg, Color.Green);
         }
 
         /// <summary>
@@ -200,7 +200,7 @@ namespace DeepSightTool
             }
             var msg = ex?.ToString() ?? string.Empty;
             _errorLogger?.Error(msg);
-            OnCallBackLogProc?.Invoke(msg, Color.Red);
+            OnCallBackLogProc?.Invoke(msg, Color.Green);
         }
 
         /// <summary>
