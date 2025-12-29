@@ -40,7 +40,7 @@ namespace DeepSightDB
             private SideSnapshot _sideB;
             private BoardStat _contribution = new BoardStat();
             
-            // ¼ÇÂ¼¸ÃÃæ°åÊ×´Î±»¼ÇÂ¼µÄĞ¡Ê±
+            // è®°å½•è¯¥é¢æ¿é¦–æ¬¡è¢«è®°å½•çš„å°æ—¶
             public int Hour { get; set; } = -1;
 
             public bool IsEmpty => _sideA == null && _sideB == null;
@@ -160,11 +160,11 @@ namespace DeepSightDB
         private static readonly object SyncRoot = new object();
         private static readonly Dictionary<string, PanelStatEntry> PanelEntries = new Dictionary<string, PanelStatEntry>(StringComparer.OrdinalIgnoreCase);
         private static readonly Dictionary<string, List<DateTime>> MachineTimestamps = new Dictionary<string, List<DateTime>>(StringComparer.OrdinalIgnoreCase);
-        // Ã¿Ì¨»úÌ¨¸÷×ÔµÄÍ³¼Æ
+        // æ¯å°æœºå°å•ç‹¬çš„ç»Ÿè®¡
         private static readonly Dictionary<string, BoardStat> MachineTotals = new Dictionary<string, BoardStat>(StringComparer.OrdinalIgnoreCase);
-        // SN -> »úÌ¨ µÄÓ³Éä£¨ÓÃÓÚ½«Ãæ°åÍ³¼ÆÔöÁ¿¼ÆÈë»úÌ¨£©
+        // SN -> æœºå° çš„æ˜ å°„ï¼ˆç”¨äºå°†é¢æ¿ç»Ÿè®¡å½’å±åˆ°æœºå°ï¼‰
         private static readonly Dictionary<string, string> SerialToMachine = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        // Ã¿Ì¨»úÌ¨µÄ×îĞÂ Lot/SN µÈ
+        // æ¯å°æœºå°æœ€æ–°çš„ Lot/SN ç­‰
         private sealed class MachineLotSn
         {
             public string LotNumber { get; set; }
@@ -319,7 +319,7 @@ namespace DeepSightDB
         {
             var currentHour = DateTime.Now.Hour;
             
-            // Ö»±£´æÊôÓÚµ±Ç°Ğ¡Ê±µÄÃæ°åÊı¾İ
+            // åªä¿å­˜å±äºå½“å‰å°æ—¶çš„é¢æ¿æ•°æ®
             var panelsForCurrentHour = PanelEntries
                 .Where(kvp => kvp.Value.Hour == currentHour)
                 .Select(kvp => new PanelEntryState
@@ -330,7 +330,7 @@ namespace DeepSightDB
                     Hour = kvp.Value.Hour
                 }).ToList();
             
-            // Ö»±£´æµ±Ç°Ğ¡Ê±µÄ»úÌ¨Ê±¼ä´Á
+            // åªä¿å­˜å½“å‰å°æ—¶çš„æœºå°æ—¶é—´æˆ³
             var machinesForCurrentHour = MachineTimestamps
                 .Select(kvp => new MachineTimestampsState
                 {
@@ -376,7 +376,7 @@ namespace DeepSightDB
             SerialToMachine.Clear();
             MachineLatestLotSn.Clear();
 
-            // ¼ÓÔØµ±ÌìËùÓĞĞ¡Ê±µÄÎÄ¼ş
+            // åŠ è½½å½“å¤©æ‰€æœ‰å°æ—¶çš„æ–‡ä»¶
             for (int hour = 0; hour < 24; hour++)
             {
                 var path = GetStateFilePath(date, hour);
@@ -395,7 +395,7 @@ namespace DeepSightDB
                             continue;
                         }
 
-                        // ºÏ²¢Ãæ°åÊı¾İ
+                        // åˆå¹¶é¢æ¿æ•°æ®
                         if (obj.Panels != null)
                         {
                             foreach (var p in obj.Panels)
@@ -405,7 +405,7 @@ namespace DeepSightDB
                                     continue;
                                 }
 
-                                // Èç¹ûÒÑ´æÔÚ£¬ºÏ²¢Êı¾İ£»·ñÔò´´½¨ĞÂÌõÄ¿
+                                // å¦‚æœå·²å­˜åœ¨ï¼Œåˆå¹¶æ•°æ®ï¼›å¦åˆ™åˆ›å»ºæ–°æ¡ç›®
                                 if (!PanelEntries.TryGetValue(p.SerialNumber, out var entry))
                                 {
                                     entry = new PanelStatEntry();
@@ -424,7 +424,7 @@ namespace DeepSightDB
                             }
                         }
 
-                        // ºÏ²¢»úÌ¨Ê±¼ä´Á
+                        // åˆå¹¶æœºå°æ—¶é—´æˆ³
                         if (obj.Machines != null)
                         {
                             foreach (var m in obj.Machines)
@@ -440,7 +440,7 @@ namespace DeepSightDB
                                     MachineTimestamps[m.MachineId] = timestamps;
                                 }
 
-                                // Ö»±£Áôµ±ÌìµÄÊ±¼ä´Á£¬¹ıÂËµôÇ°¼¸ÌìµÄÊı¾İ
+                                // åªæ·»åŠ å½“å¤©çš„æ—¶é—´æˆ³ï¼Œè¿‡æ»¤æ‰éå½“å‰æ—¥æœŸçš„æ•°æ®
                                 var todayTimestamps = (m.Timestamps ?? new List<DateTime>())
                                     .Where(t => t.Date == date.Date);
                                 timestamps.AddRange(todayTimestamps);
@@ -450,11 +450,11 @@ namespace DeepSightDB
                 }
                 catch
                 {
-                    // ºöÂÔµ¥¸öÎÄ¼şµÄ¼ÓÔØÊ§°Ü£¬¼ÌĞø¼ÓÔØÆäËûĞ¡Ê±µÄÎÄ¼ş
+                    // å¿½ç•¥å•ä¸ªæ–‡ä»¶çš„åŠ è½½å¤±è´¥ï¼Œç»§ç»­å¤„ç†å…¶ä»–å°æ—¶çš„æ–‡ä»¶
                 }
             }
 
-            // ¶ÔÃ¿¸ö»úÌ¨µÄÊ±¼ä´ÁÈ¥ÖØ²¢ÅÅĞò
+            // å¯¹æ¯ä¸ªæœºå°çš„æ—¶é—´æˆ³å»é‡å¹¶æ’åº
             foreach (var kvp in MachineTimestamps.ToList())
             {
                 MachineTimestamps[kvp.Key] = kvp.Value.Distinct().OrderBy(t => t).ToList();
@@ -489,7 +489,7 @@ namespace DeepSightDB
                     PanelEntries[record.SerialNumber] = entry;
                 }
 
-                // ¼ÇÂ¼ SN -> »úÌ¨ Ó³Éä
+                // è®°å½• SN -> æœºå° æ˜ å°„
                 if (!string.IsNullOrWhiteSpace(record.MachineId) && !SerialToMachine.ContainsKey(record.SerialNumber))
                 {
                     SerialToMachine[record.SerialNumber] = record.MachineId;
@@ -505,12 +505,17 @@ namespace DeepSightDB
 
                 if (wasEmpty && record.AviCreationTime.HasValue && !string.IsNullOrWhiteSpace(record.MachineId))
                 {
-                    if (!MachineTimestamps.TryGetValue(record.MachineId, out var timestamps))
+                    var aviTime = record.AviCreationTime.Value;
+                    // åªè®°å½•å½“å¤©çš„æ—¶é—´æˆ³ï¼Œéå½“å¤©çš„ä¸è®°å½•
+                    if (aviTime.Date == today)
                     {
-                        timestamps = new List<DateTime>();
-                        MachineTimestamps[record.MachineId] = timestamps;
+                        if (!MachineTimestamps.TryGetValue(record.MachineId, out var timestamps))
+                        {
+                            timestamps = new List<DateTime>();
+                            MachineTimestamps[record.MachineId] = timestamps;
+                        }
+                        timestamps.Add(aviTime);
                     }
-                    timestamps.Add(record.AviCreationTime.Value);
                 }
 
                 SaveStateIfNeeded();
@@ -536,7 +541,7 @@ namespace DeepSightDB
             }
         }
 
-        // »ñÈ¡Ä³»úÌ¨½ñÈÕÍ³¼Æ
+        // è·å–æŸæœºå°å½“å¤©ç»Ÿè®¡
         public static BoardStat GetTodayStatForMachine(string machineId)
         {
             lock (SyncRoot)
@@ -558,7 +563,7 @@ namespace DeepSightDB
             }
         }
 
-        // ¸üĞÂÄ³»úÌ¨×îĞÂµÄ Lot/SN µÈ£¨¹©ÒµÎñ²àÔÚ»ñÈ¡Ê±»ú¸üĞÂ£©
+        // æ›´æ–°æŸæœºå°æœ€æ–°çš„ Lot/SN ç­‰ï¼ˆåœ¨ä¸šåŠ¡é€»è¾‘è·å–æ—¶æ›´æ–°ï¼‰
         public static void UpdateMachineLotSn(string machineId, string lotNumber, string serialNumber, string productSerial, string pathIndex)
         {
             if (string.IsNullOrWhiteSpace(machineId)) return;
@@ -577,7 +582,7 @@ namespace DeepSightDB
             }
         }
 
-        // ¶ÁÈ¡Ä³»úÌ¨×îĞÂ Lot/SN ĞÅÏ¢
+        // è·å–æŸæœºå°æœ€æ–° Lot/SN ä¿¡æ¯
         public static (string LotNumber, string SerialNumber, string ProductSerial, string PathIndex) GetLatestLotSn(string machineId)
         {
             lock (SyncRoot)
