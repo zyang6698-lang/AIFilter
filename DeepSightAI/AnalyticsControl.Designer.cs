@@ -30,15 +30,17 @@
         {
             this.btnShowAnalytics = new System.Windows.Forms.Button();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.btnReadEmployeeData = new System.Windows.Forms.Button();
+            this.lblImportStatus = new System.Windows.Forms.Label();
+            this.progressBarImport = new System.Windows.Forms.ProgressBar();
             this.btnTest = new System.Windows.Forms.Button();
+            this.btnReadEmployeeData = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.SuspendLayout();
-            // 
+            //
             // btnShowAnalytics
-            // 
+            //
             this.btnShowAnalytics.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
             this.btnShowAnalytics.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.btnShowAnalytics.Location = new System.Drawing.Point(46, 42);
@@ -48,24 +50,42 @@
             this.btnShowAnalytics.Text = "图表展示";
             this.btnShowAnalytics.UseVisualStyleBackColor = false;
             this.btnShowAnalytics.Click += new System.EventHandler(this.btnShowAnalytics_Click);
-            // 
+            //
             // splitContainer1
-            // 
+            //
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer1.Location = new System.Drawing.Point(0, 0);
             this.splitContainer1.Name = "splitContainer1";
-            // 
+            //
             // splitContainer1.Panel1
-            // 
+            //
+            this.splitContainer1.Panel1.Controls.Add(this.lblImportStatus);
+            this.splitContainer1.Panel1.Controls.Add(this.progressBarImport);
             this.splitContainer1.Panel1.Controls.Add(this.btnTest);
             this.splitContainer1.Panel1.Controls.Add(this.btnReadEmployeeData);
             this.splitContainer1.Panel1.Controls.Add(this.btnShowAnalytics);
             this.splitContainer1.Size = new System.Drawing.Size(726, 493);
             this.splitContainer1.SplitterDistance = 202;
             this.splitContainer1.TabIndex = 120;
-            // 
+            //
+            // lblImportStatus
+            //
+            this.lblImportStatus.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.lblImportStatus.Location = new System.Drawing.Point(14, 280);
+            this.lblImportStatus.Name = "lblImportStatus";
+            this.lblImportStatus.Size = new System.Drawing.Size(174, 20);
+            this.lblImportStatus.TabIndex = 124;
+            this.lblImportStatus.Text = "就绪";
+            //
+            // progressBarImport
+            //
+            this.progressBarImport.Location = new System.Drawing.Point(14, 250);
+            this.progressBarImport.Name = "progressBarImport";
+            this.progressBarImport.Size = new System.Drawing.Size(174, 23);
+            this.progressBarImport.TabIndex = 123;
+            //
             // btnReadEmployeeData
-            // 
+            //
             this.btnReadEmployeeData.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
             this.btnReadEmployeeData.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.btnReadEmployeeData.Location = new System.Drawing.Point(46, 104);
@@ -75,21 +95,21 @@
             this.btnReadEmployeeData.Text = "读取员工数据";
             this.btnReadEmployeeData.UseVisualStyleBackColor = false;
             this.btnReadEmployeeData.Click += new System.EventHandler(this.btnReadEmployeeData_Click);
-            // 
+            //
             // btnTest
-            // 
+            //
             this.btnTest.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
             this.btnTest.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.btnTest.Location = new System.Drawing.Point(46, 161);
             this.btnTest.Name = "btnTest";
             this.btnTest.Size = new System.Drawing.Size(110, 33);
             this.btnTest.TabIndex = 121;
-            this.btnTest.Text = "测试";
+            this.btnTest.Text = "导入CSV数据";
             this.btnTest.UseVisualStyleBackColor = false;
             this.btnTest.Click += new System.EventHandler(this.btnTest_Click);
-            // 
+            //
             // AnalyticsControl
-            // 
+            //
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
@@ -109,5 +129,7 @@
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.Button btnReadEmployeeData;
         private System.Windows.Forms.Button btnTest;
+        private System.Windows.Forms.ProgressBar progressBarImport;
+        private System.Windows.Forms.Label lblImportStatus;
     }
 }

@@ -747,6 +747,11 @@ namespace DeepSightWorkLib
             _databaseHelper.SavePanelSide(record);
 
         /// <summary>
+        /// 获取 DatabaseHelper 实例（用于 CSV 数据导入等场景）
+        /// </summary>
+        public DatabaseHelper GetDatabaseHelper() => _databaseHelper;
+
+        /// <summary>
         /// 保存 PanelSide 数据到数据库（从 RootPanelInfo 构建记录）
         /// </summary>
         /// <param name="panelInfo">面板信息</param>

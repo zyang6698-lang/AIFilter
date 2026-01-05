@@ -101,9 +101,78 @@ namespace DeepSightAI
             Machine.master.workClass.GenerateVRSTestData();
         }
 
-        private void btnTest_Click(object sender, EventArgs e)
+        private async void btnTest_Click(object sender, EventArgs e)
         {
+            // CSV 文件路径
+            string basePath = @"C:\Users\zhangyang\Desktop\AI过滤软件资料\排查\log";
+            string panelsFilePath = Path.Combine(basePath, "panels.csv");
+            string panelSidesFilePath = Path.Combine(basePath, "panelsides.csv");
 
+            // 检查文件是否存在
+            if (!File.Exists(panelsFilePath))
+            {
+                MessageBox.Show($"Panels 文件不存在: {panelsFilePath}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if (!File.Exists(panelSidesFilePath))
+            {
+                MessageBox.Show($"PanelSides 文件不存在: {panelSidesFilePath}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            btnTest.Enabled = false;
+            progressBarImport.Value = 0;
+            lblImportStatus.Text = "开始导入...";
+
+            try
+            {
+                var dbHelper = Machine.master.workClass.GetDatabaseHelper();
+                if (dbHelper == null)
+                {
+                    MessageBox.Show("无法获取 DatabaseHelper 实例", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                // 全部在后台线程执行，包括文件读取和解析
+                var result = await Task.Run(async () =>
+                {
+                    UpdateProgress(5, "读取 Panels 文件...");
+                    string[] panelsLines = File.ReadAllLines(panelsFilePath, Encoding.UTF8);
+
+                    UpdateProgress(10, "读取 PanelSides 文件...");
+                    string[] panelSidesLines = File.ReadAllLines(panelSidesFilePath, Encoding.UTF8);
+
+                    UpdateProgress(15, $"文件读取完成: Panels={panelsLines.Length}, PanelSides={panelSidesLines.Length}");
+                    LogTextHelper.Info($"开始导入 CSV: Panels={panelsLines.Length}, PanelSides={panelSidesLines.Length}");
+
+                    // 调用导入方法
+                    return await dbHelper.ImportFromCsvData(panelsLines, panelSidesLines, UpdateProgress);
+                });
+
+                MessageBox.Show($"CSV 数据导入完成!\n成功: {result.success} 条\n失败: {result.failed} 条",
+                    "完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"导入 CSV 数据失败: {ex.Message}", ex);
+                MessageBox.Show($"导入失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                UpdateProgress(0, $"导入失败: {ex.Message}");
+            }
+            finally
+            {
+                btnTest.Enabled = true;
+            }
+        }
+
+        private void UpdateProgress(int percent, string status)
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(() => UpdateProgress(percent, status)));
+                return;
+            }
+            progressBarImport.Value = Math.Min(percent, 100);
+            lblImportStatus.Text = status;
         }
     }
 }

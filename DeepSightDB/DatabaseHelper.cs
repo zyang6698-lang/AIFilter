@@ -794,6 +794,345 @@ namespace DeepSightDB
         }
 
         /// <summary>
+        /// 从导出的CSV数据导入到数据库
+        /// 解析 Panels 和 PanelSides 数据，并通过 SavePanelSide 存储
+        /// </summary>
+        /// <param name="panelsCsvLines">Panels 表的 CSV 行数据（格式: Id,MachineId,SerialNumber,LotNumber,ProductSerial,DetectionDate,PathIndex,AviCreationTime）</param>
+        /// <param name="panelSidesCsvLines">PanelSides 表的 CSV 行数据（格式: Id,PanelId,Side,HeatPoints,AviState,AiState,VvsState,VrsState,FinalState）</param>
+        /// <param name="progressCallback">进度回调 (percent, message)</param>
+        public Task<(int success, int failed)> ImportFromCsvData(string[] panelsCsvLines, string[] panelSidesCsvLines, Action<int, string> progressCallback = null)
+        {
+            var tcs = new TaskCompletionSource<(int success, int failed)>();
+
+            if (panelsCsvLines == null || panelSidesCsvLines == null)
+            {
+                LogTextHelper.Error("ImportFromCsvData: 输入数据为空");
+                tcs.SetResult((0, 0));
+                return tcs.Task;
+            }
+
+            // 将所有处理都放入数据库队列，在单独线程执行
+            _dbQueue.Add(conn =>
+            {
+                int totalSaved = 0;
+                int totalFailed = 0;
+                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+                try
+                {
+                    progressCallback?.Invoke(20, "解析 Panels 数据...");
+
+                    // 第一步：解析 Panels 数据（通常数据量小，不需要并行）
+                    var panelsDict = new Dictionary<int, (string MachineId, string SerialNumber, string LotNumber, string ProductSerial, DateTime DetectionDate, string PathIndex, DateTime? AviCreationTime)>();
+
+                    foreach (var line in panelsCsvLines)
+                    {
+                        if (string.IsNullOrWhiteSpace(line)) continue;
+
+                        try
+                        {
+                            var parts = line.Split(',');
+                            if (parts.Length < 8) continue;
+
+                            int pId = int.Parse(parts[0]);
+                            panelsDict[pId] = (
+                                parts[1],
+                                parts[2],
+                                parts[3],
+                                parts[4],
+                                DateTime.Parse(parts[5]),
+                                parts[6],
+                                string.IsNullOrWhiteSpace(parts[7]) ? (DateTime?)null : DateTime.Parse(parts[7])
+                            );
+                        }
+                        catch { }
+                    }
+
+                    LogTextHelper.Info($"[性能] 解析 Panels 耗时: {stopwatch.ElapsedMilliseconds}ms, 共 {panelsDict.Count} 条");
+                    stopwatch.Restart();
+
+                    progressCallback?.Invoke(35, $"并行解析 PanelSides... ({panelSidesCsvLines.Length} 行)");
+
+                    // 第二步：并行解析 PanelSides 数据
+                    int totalLines = panelSidesCsvLines.Length;
+                    int processedCount = 0;
+                    int parseErrorCount = 0;
+                    int panelNotFoundCount = 0;
+
+                    // 调试：打印第一行的解析结果
+                    if (totalLines > 0)
+                    {
+                        var debugLine = panelSidesCsvLines[0];
+                        var debugParts = ParseCsvLineWithJson(debugLine);
+                        LogTextHelper.Info($"[调试] 第一行解析: 共 {debugParts.Length} 个字段");
+                        for (int d = 0; d < Math.Min(debugParts.Length, 5); d++)
+                        {
+                            LogTextHelper.Info($"[调试] 字段[{d}]: {(debugParts[d].Length > 100 ? debugParts[d].Substring(0, 100) + "..." : debugParts[d])}");
+                        }
+                        if (debugParts.Length >= 2)
+                        {
+                            int debugPanelId = int.Parse(debugParts[1]);
+                            LogTextHelper.Info($"[调试] PanelId={debugPanelId}, 是否存在于 panelsDict: {panelsDict.ContainsKey(debugPanelId)}");
+                        }
+                    }
+
+                    // 预分配数组，避免 ConcurrentBag 的开销
+                    var parsedResults = new (PanelSideRecord Record, string HeatPointsJson)?[totalLines];
+
+                    Parallel.For(0, totalLines, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, i =>
+                    {
+                        var line = panelSidesCsvLines[i];
+                        if (string.IsNullOrWhiteSpace(line)) return;
+
+                        try
+                        {
+                            // 快速解析 CSV（针对固定格式优化）
+                            var parts = ParseCsvLineWithJson(line);
+                            if (parts.Length < 9)
+                            {
+                                Interlocked.Increment(ref parseErrorCount);
+                                return;
+                            }
+
+                            int pId = int.Parse(parts[1]);
+                            if (!panelsDict.TryGetValue(pId, out var panelInfo))
+                            {
+                                Interlocked.Increment(ref panelNotFoundCount);
+                                return;
+                            }
+
+                            string side = parts[2];
+                            string heatPointsJson = parts[3];
+
+                            // 直接使用原始 JSON，不在解析阶段反序列化
+                            string cleanedJson = string.IsNullOrWhiteSpace(heatPointsJson) ? "[]" : heatPointsJson.Replace("'\"", "\"").Replace("\"'", "\"");
+
+                            var record = new PanelSideRecord
+                            {
+                                MachineId = panelInfo.MachineId,
+                                SerialNumber = panelInfo.SerialNumber,
+                                LotNumber = panelInfo.LotNumber,
+                                ProductSerial = panelInfo.ProductSerial,
+                                DetectionDate = panelInfo.DetectionDate,
+                                PathIndex = panelInfo.PathIndex,
+                                AviCreationTime = panelInfo.AviCreationTime,
+                                Side = side,
+                                Data = new SideData
+                                {
+                                    Side = side,
+                                    DetectPoints = null, // 不在这里反序列化
+                                    AviState = int.Parse(parts[4]),
+                                    AiState = int.Parse(parts[5]),
+                                    VvsState = int.Parse(parts[6]),
+                                    VrsState = int.Parse(parts[7]),
+                                    FinalState = int.Parse(parts[8])
+                                }
+                            };
+
+                            parsedResults[i] = (record, cleanedJson);
+
+                            int count = Interlocked.Increment(ref processedCount);
+                            if (count % 10000 == 0)
+                                progressCallback?.Invoke(35 + (int)((double)count / totalLines * 10), $"解析: {count}/{totalLines}");
+                        }
+                        catch { Interlocked.Increment(ref parseErrorCount); }
+                    });
+
+                    LogTextHelper.Info($"[调试] 解析结果: 成功={processedCount}, 解析错误={parseErrorCount}, Panel未找到={panelNotFoundCount}");
+
+                    // 过滤掉 null 值
+                    var serializedRecords = parsedResults.Where(x => x.HasValue).Select(x => x.Value).ToList();
+
+                    LogTextHelper.Info($"[性能] 解析 PanelSides 耗时: {stopwatch.ElapsedMilliseconds}ms, 共 {serializedRecords.Count} 条");
+                    stopwatch.Restart();
+
+                    if (serializedRecords.Count == 0)
+                    {
+                        LogTextHelper.Warn("ImportFromCsvData: 没有有效记录可导入");
+                        tcs.SetResult((0, 0));
+                        return;
+                    }
+
+                    progressCallback?.Invoke(50, $"开始导入 {serializedRecords.Count} 条记录...");
+                    LogTextHelper.Info($"ImportFromCsvData: 开始批量保存 {serializedRecords.Count} 条记录...");
+
+                    // 第三步：批量插入数据库（增大批次大小）
+                    int batchSize = 500;
+                    int totalRecords = serializedRecords.Count;
+
+                    for (int i = 0; i < totalRecords; i += batchSize)
+                    {
+                        int currentBatchSize = Math.Min(batchSize, totalRecords - i);
+                        NpgsqlTransaction transaction = null;
+
+                        try
+                        {
+                            transaction = conn.BeginTransaction();
+
+                            for (int j = 0; j < currentBatchSize; j++)
+                            {
+                                var (record, heatPointsJson) = serializedRecords[i + j];
+
+                                _upsertPanelCmd.Transaction = transaction;
+                                _upsertPanelCmd.Parameters["@MachineId"].Value = record.MachineId ?? string.Empty;
+                                _upsertPanelCmd.Parameters["@SN"].Value = record.SerialNumber;
+                                _upsertPanelCmd.Parameters["@Lot"].Value = record.LotNumber ?? string.Empty;
+                                _upsertPanelCmd.Parameters["@Date"].Value = record.DetectionDate;
+                                _upsertPanelCmd.Parameters["@ProductSerial"].Value = (object)record.ProductSerial ?? DBNull.Value;
+                                _upsertPanelCmd.Parameters["@PathIndex"].Value = (object)record.PathIndex ?? DBNull.Value;
+                                _upsertPanelCmd.Parameters["@AviCreationTime"].Value = (object)record.AviCreationTime ?? DBNull.Value;
+                                long panelId = Convert.ToInt64(_upsertPanelCmd.ExecuteScalar());
+
+                                _upsertPanelSideCmd.Transaction = transaction;
+                                _upsertPanelSideCmd.Parameters["@PanelId"].Value = panelId;
+                                _upsertPanelSideCmd.Parameters["@Side"].Value = record.Side;
+                                _upsertPanelSideCmd.Parameters["@HeatPoints"].Value = heatPointsJson;
+                                _upsertPanelSideCmd.Parameters["@AviState"].Value = record.Data.AviState;
+                                _upsertPanelSideCmd.Parameters["@AiState"].Value = record.Data.AiState;
+                                _upsertPanelSideCmd.Parameters["@VvsState"].Value = record.Data.VvsState;
+                                _upsertPanelSideCmd.Parameters["@VrsState"].Value = record.Data.VrsState;
+                                _upsertPanelSideCmd.Parameters["@FinalState"].Value = record.Data.FinalState;
+                                _upsertPanelSideCmd.ExecuteNonQuery();
+                            }
+
+                            transaction.Commit();
+                            totalSaved += currentBatchSize;
+
+                            int percent = 50 + (int)((double)(i + currentBatchSize) / totalRecords * 45);
+                            progressCallback?.Invoke(percent, $"已导入 {totalSaved}/{totalRecords}");
+                        }
+                        catch (Exception ex)
+                        {
+                            LogTextHelper.Error($"ImportFromCsvData: 批量保存失败，批次 {i / batchSize + 1}, 错误: {ex.Message}");
+                            totalFailed += currentBatchSize;
+                            try { transaction?.Rollback(); } catch { }
+                        }
+                        finally
+                        {
+                            transaction?.Dispose();
+                        }
+                    }
+
+                    LogTextHelper.Info($"[性能] 数据库写入耗时: {stopwatch.ElapsedMilliseconds}ms");
+                    LogTextHelper.Info($"ImportFromCsvData: 导入完成，成功 {totalSaved} 条，失败 {totalFailed} 条");
+                    progressCallback?.Invoke(100, $"完成! 成功 {totalSaved}, 失败 {totalFailed}");
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error($"ImportFromCsvData: 发生异常: {ex.Message}");
+                    progressCallback?.Invoke(100, $"错误: {ex.Message}");
+                }
+
+                tcs.SetResult((totalSaved, totalFailed));
+            });
+
+            return tcs.Task;
+        }
+
+        /// <summary>
+        /// 解析普通 CSV 行（不含复杂 JSON）
+        /// </summary>
+        private string[] ParseCsvLine(string line)
+        {
+            return line.Split(',');
+        }
+
+        /// <summary>
+        /// 解析包含 JSON 字段的 CSV 行
+        /// JSON 字段用双引号包裹，内部使用 '" 和 "' 作为属性引号
+        /// 格式: id,panelId,side,"[{'"key'":'"value'",...}]",aviState,...
+        /// </summary>
+        private string[] ParseCsvLineWithJson(string line)
+        {
+            var result = new List<string>();
+            bool inJsonField = false;
+            var current = new System.Text.StringBuilder();
+            int i = 0;
+
+            while (i < line.Length)
+            {
+                char c = line[i];
+
+                // 检测 JSON 字段的开始: ,"[ 或行首 "[
+                if (!inJsonField && c == '"' && i + 1 < line.Length && line[i + 1] == '[')
+                {
+                    inJsonField = true;
+                    i++; // 跳过开头的 "
+                    continue;
+                }
+
+                // 检测 JSON 字段的结束: ]"
+                if (inJsonField && c == ']' && i + 1 < line.Length && line[i + 1] == '"')
+                {
+                    current.Append(c); // 添加 ]
+                    inJsonField = false;
+                    i += 2; // 跳过 ]"
+                    continue;
+                }
+
+                // 检测 JSON 字段结束（空数组情况）: "[]"
+                if (inJsonField && c == ']' && i + 1 < line.Length && line[i + 1] == '"')
+                {
+                    current.Append(c);
+                    inJsonField = false;
+                    i += 2;
+                    continue;
+                }
+
+                // 普通逗号分隔（不在 JSON 字段内）
+                if (c == ',' && !inJsonField)
+                {
+                    result.Add(current.ToString());
+                    current.Clear();
+                    i++;
+                    continue;
+                }
+
+                current.Append(c);
+                i++;
+            }
+
+            result.Add(current.ToString());
+            return result.ToArray();
+        }
+
+        /// <summary>
+        /// 获取数据库中所有唯一的 MachineId
+        /// </summary>
+        /// <returns>所有不重复的机台ID列表</returns>
+        public Task<List<string>> GetAllMachineIds()
+        {
+            var tcs = new TaskCompletionSource<List<string>>();
+            _dbQueue.Add(connection =>
+            {
+                try
+                {
+                    var machineIds = new List<string>();
+                    using (var cmd = new NpgsqlCommand("SELECT DISTINCT MachineId FROM Panels ORDER BY MachineId", connection))
+                    {
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                if (!reader.IsDBNull(0))
+                                {
+                                    machineIds.Add(reader.GetString(0));
+                                }
+                            }
+                        }
+                    }
+                    tcs.SetResult(machineIds);
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error($"获取机台ID列表失败: {ex.Message}");
+                    tcs.SetException(ex);
+                }
+            });
+            return tcs.Task;
+        }
+
+        /// <summary>
         /// 清空数据库所有表的数据
         /// </summary>
         public Task<bool> ClearAllData()

@@ -109,7 +109,7 @@ namespace DeepSightAI
             this.tableLayoutPanel1.Controls.Add(this.statusStrip, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this.panel10, 0, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 140);
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 144);
             this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
@@ -120,7 +120,7 @@ namespace DeepSightAI
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 17F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 17F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 17F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(1417, 578);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(1417, 574);
             this.tableLayoutPanel1.TabIndex = 15;
             // 
             // statusStrip
@@ -134,11 +134,11 @@ namespace DeepSightAI
             this.lbl_username,
             this.lblPageInfo,
             this.solutionAndflow});
-            this.statusStrip.Location = new System.Drawing.Point(0, 555);
+            this.statusStrip.Location = new System.Drawing.Point(0, 552);
             this.statusStrip.Name = "statusStrip";
             this.statusStrip.Padding = new System.Windows.Forms.Padding(14, 0, 2, 0);
             this.statusStrip.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
-            this.statusStrip.Size = new System.Drawing.Size(1417, 23);
+            this.statusStrip.Size = new System.Drawing.Size(1417, 22);
             this.statusStrip.SizingGrip = false;
             this.statusStrip.TabIndex = 6;
             // 
@@ -148,7 +148,7 @@ namespace DeepSightAI
             this.lbl_curTime.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.lbl_curTime.Name = "lbl_curTime";
             this.lbl_curTime.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.lbl_curTime.Size = new System.Drawing.Size(163, 17);
+            this.lbl_curTime.Size = new System.Drawing.Size(163, 16);
             this.lbl_curTime.Text = "2022-03-30 13:20:13";
             // 
             // lbl_username
@@ -156,7 +156,7 @@ namespace DeepSightAI
             this.lbl_username.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Right;
             this.lbl_username.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.lbl_username.Name = "lbl_username";
-            this.lbl_username.Size = new System.Drawing.Size(133, 17);
+            this.lbl_username.Size = new System.Drawing.Size(133, 16);
             this.lbl_username.Text = "当前用户：未登录";
             // 
             // lblPageInfo
@@ -164,7 +164,7 @@ namespace DeepSightAI
             this.lblPageInfo.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Right;
             this.lblPageInfo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.lblPageInfo.Name = "lblPageInfo";
-            this.lblPageInfo.Size = new System.Drawing.Size(121, 17);
+            this.lblPageInfo.Size = new System.Drawing.Size(121, 16);
             this.lblPageInfo.Text = "第 1 页 / 共 1 页";
             // 
             // solutionAndflow
@@ -189,7 +189,7 @@ namespace DeepSightAI
             this.panel10.Location = new System.Drawing.Point(3, 2);
             this.panel10.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panel10.Name = "panel10";
-            this.panel10.Size = new System.Drawing.Size(1411, 551);
+            this.panel10.Size = new System.Drawing.Size(1411, 548);
             this.panel10.TabIndex = 0;
             // 
             // panel7
@@ -429,7 +429,7 @@ namespace DeepSightAI
             this.table_menu.Controls.Add(this.panel8, 8, 0);
             this.table_menu.Controls.Add(this.panel9, 7, 0);
             this.table_menu.Dock = System.Windows.Forms.DockStyle.Top;
-            this.table_menu.Location = new System.Drawing.Point(0, 75);
+            this.table_menu.Location = new System.Drawing.Point(0, 79);
             this.table_menu.Margin = new System.Windows.Forms.Padding(0);
             this.table_menu.Name = "table_menu";
             this.table_menu.Padding = new System.Windows.Forms.Padding(3, 2, 0, 2);
@@ -510,7 +510,7 @@ namespace DeepSightAI
             this.btnTest.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.btnTest.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnTest.Name = "btnTest";
-            this.btnTest.Size = new System.Drawing.Size(53, 24);
+            this.btnTest.Size = new System.Drawing.Size(53, 28);
             this.btnTest.Text = "调试";
             this.btnTest.Click += new System.EventHandler(this.btnTest_Click);
             // 
@@ -532,7 +532,7 @@ namespace DeepSightAI
             this.toolStripDropDownButton1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.toolStripDropDownButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripDropDownButton1.Name = "toolStripDropDownButton1";
-            this.toolStripDropDownButton1.Size = new System.Drawing.Size(83, 24);
+            this.toolStripDropDownButton1.Size = new System.Drawing.Size(83, 28);
             this.toolStripDropDownButton1.Text = "图片切换";
             // 
             // btnModelB
@@ -556,7 +556,7 @@ namespace DeepSightAI
             // toolStripButton1
             // 
             this.toolStripButton1.Name = "toolStripButton1";
-            this.toolStripButton1.Size = new System.Drawing.Size(29, 24);
+            this.toolStripButton1.Size = new System.Drawing.Size(29, 28);
             // 
             // toolStrip
             // 
@@ -575,7 +575,7 @@ namespace DeepSightAI
             this.toolStrip.Name = "toolStrip";
             this.toolStrip.Padding = new System.Windows.Forms.Padding(0, 0, 3, 0);
             this.toolStrip.ShowItemToolTips = false;
-            this.toolStrip.Size = new System.Drawing.Size(1417, 27);
+            this.toolStrip.Size = new System.Drawing.Size(1417, 31);
             this.toolStrip.TabIndex = 14;
             // 
             // toolStripButton2
@@ -585,7 +585,7 @@ namespace DeepSightAI
             this.toolStripButton2.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton2.Image")));
             this.toolStripButton2.ImageTransparentColor = System.Drawing.Color.Maroon;
             this.toolStripButton2.Name = "toolStripButton2";
-            this.toolStripButton2.Size = new System.Drawing.Size(73, 24);
+            this.toolStripButton2.Size = new System.Drawing.Size(73, 28);
             this.toolStripButton2.Text = "批量测试";
             this.toolStripButton2.ToolTipText = "循环测试";
             this.toolStripButton2.Click += new System.EventHandler(this.toolStripButton2_Click);
@@ -597,7 +597,7 @@ namespace DeepSightAI
             this.btnRunVB.Image = ((System.Drawing.Image)(resources.GetObject("btnRunVB.Image")));
             this.btnRunVB.ImageTransparentColor = System.Drawing.Color.Maroon;
             this.btnRunVB.Name = "btnRunVB";
-            this.btnRunVB.Size = new System.Drawing.Size(62, 24);
+            this.btnRunVB.Size = new System.Drawing.Size(62, 28);
             this.btnRunVB.Text = "启动VB";
             this.btnRunVB.Click += new System.EventHandler(this.btnRunVB_Click);
             // 
@@ -608,7 +608,7 @@ namespace DeepSightAI
             this.btnClear.Image = ((System.Drawing.Image)(resources.GetObject("btnClear.Image")));
             this.btnClear.ImageTransparentColor = System.Drawing.Color.Maroon;
             this.btnClear.Name = "btnClear";
-            this.btnClear.Size = new System.Drawing.Size(73, 24);
+            this.btnClear.Size = new System.Drawing.Size(73, 28);
             this.btnClear.Text = "重置软件";
             this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
             // 

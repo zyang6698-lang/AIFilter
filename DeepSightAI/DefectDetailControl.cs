@@ -476,7 +476,7 @@ namespace DeepSightAI
 
             int globalIndex = ((_currentPage - 1) * PageSize) + _selectedIndex;
             int nextGlobalIndex = (globalIndex + 1) % _filteredHeatPoints.Count;
-
+            if (nextGlobalIndex == 0) return;
             int nextPage = (nextGlobalIndex / PageSize) + 1;
             int nextLocalIndex = nextGlobalIndex % PageSize;
 
