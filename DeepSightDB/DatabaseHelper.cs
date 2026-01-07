@@ -568,6 +568,88 @@ namespace DeepSightDB
             });
         }
 
+        /// <summary>
+        /// 获取指定时间范围内的员工报告数据
+        /// </summary>
+        /// <param name="start">开始时间</param>
+        /// <param name="end">结束时间</param>
+        /// <returns>员工报告列表</returns>
+        public Task<List<EmployeeReport>> GetEmployeeReports(DateTime start, DateTime end)
+        {
+            var tcs = new TaskCompletionSource<List<EmployeeReport>>();
+            _dbQueue.Add(connection =>
+            {
+                try
+                {
+                    var reports = new List<EmployeeReport>();
+                    var sql = "SELECT EmployeeID, SN, AllNGNumber, StartTime, EndTime, VRSOKNumber FROM EmployeeReports WHERE StartTime >= @Start AND EndTime <= @End";
+                    using (var cmd = new NpgsqlCommand(sql, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@Start", start);
+                        cmd.Parameters.AddWithValue("@End", end);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                reports.Add(new EmployeeReport
+                                {
+                                    ID = reader.GetString(0),
+                                    SN = reader.GetString(1),
+                                    AllNGNumber = reader.GetInt32(2),
+                                    StartTime = reader.GetDateTime(3),
+                                    EndTime = reader.GetDateTime(4),
+                                    VRSOKNumber = reader.GetInt32(5)
+                                });
+                            }
+                        }
+                    }
+                    tcs.SetResult(reports);
+                }
+                catch (Exception ex)
+                {
+                    tcs.SetException(ex);
+                }
+            });
+            return tcs.Task;
+        }
+
+        /// <summary>
+        /// 获取指定时间范围内的所有员工ID列表
+        /// </summary>
+        /// <param name="start">开始时间</param>
+        /// <param name="end">结束时间</param>
+        /// <returns>员工ID列表</returns>
+        public Task<List<string>> GetEmployeeIds(DateTime start, DateTime end)
+        {
+            var tcs = new TaskCompletionSource<List<string>>();
+            _dbQueue.Add(connection =>
+            {
+                try
+                {
+                    var employeeIds = new List<string>();
+                    var sql = "SELECT DISTINCT EmployeeID FROM EmployeeReports WHERE StartTime >= @Start AND EndTime <= @End ORDER BY EmployeeID";
+                    using (var cmd = new NpgsqlCommand(sql, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@Start", start);
+                        cmd.Parameters.AddWithValue("@End", end);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                employeeIds.Add(reader.GetString(0));
+                            }
+                        }
+                    }
+                    tcs.SetResult(employeeIds);
+                }
+                catch (Exception ex)
+                {
+                    tcs.SetException(ex);
+                }
+            });
+            return tcs.Task;
+        }
+
         public Task<List<PanelDataRecord>> GetPanelsDataByMachineAndLot(string machineId, string lotNumber)
         {
             var tcs = new TaskCompletionSource<List<PanelDataRecord>>();

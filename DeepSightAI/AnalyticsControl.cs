@@ -51,20 +51,35 @@ namespace DeepSightAI
         {
             var AllEmployeeReports = new List<EmployeeReport>();
 
-            //string folder = "D\\minio\\deepresults\\ats_data";
+            btnReadEmployeeData.Enabled = false;
+            progressBarImport.Value = 0;
+            UpdateProgress(0, "开始读取员工数据...");
 
-            foreach (var cfg in Machine.aviconfig.WatchPaths)
+            try
             {
-                if (cfg.IsEnable)
+                // 收集所有启用的配置路径
+                var enabledPaths = Machine.aviconfig.WatchPaths.Where(cfg => cfg.IsEnable).ToList();
+                if (enabledPaths.Count == 0)
+                {
+                    UpdateProgress(0, "没有启用的监控路径");
+                    return;
+                }
+
+                int pathIndex = 0;
+                foreach (var cfg in enabledPaths)
                 {
                     var folder = cfg.DeepsightAgentDataWorkspace;
+                    UpdateProgress(5, $"正在扫描文件夹: {folder}");
 
-                    var allCsv = ReadAndProcessCSV.ProcessCsvFiles(folder);
+                    var allCsvEnum = ReadAndProcessCSV.ProcessCsvFiles(folder);
                     LogTextHelper.Info($"获取了{folder}所有的csv文件路径");
 
-                    if (allCsv != null)
+                    var allCsv = allCsvEnum?.ToList();
+                    if (allCsv != null && allCsv.Count > 0)
                     {
                         LogTextHelper.Info("开始读取并处理csv文件");
+                        int totalFiles = allCsv.Count;
+                        int processedFiles = 0;
 
                         await Task.Run(() =>
                         {
@@ -72,13 +87,24 @@ namespace DeepSightAI
                             {
                                 var list = ReadAndProcessCSV.ReadCsvFile(filePath);
                                 AllEmployeeReports.AddRange(list);
+                                processedFiles++;
+                                int percent = 10 + (int)(processedFiles * 40.0 / totalFiles);
+                                UpdateProgress(percent, $"读取CSV文件 ({processedFiles}/{totalFiles})...");
                             }
                         });
 
+                        UpdateProgress(50, $"开始保存员工数据，共 {AllEmployeeReports.Count} 条...");
+
+                        int totalRecords = AllEmployeeReports.Count;
+                        int savedRecords = 0;
+
                         foreach (var record in AllEmployeeReports)
                         {
-                            dataQueues.Enqueue(record); // Enqueue() 将元素添加到队尾
-                            Machine.master.workClass.SaveEmployeeReport(record);
+                            dataQueues.Enqueue(record);
+                            await Task.Run(() => Machine.master.workClass.SaveEmployeeReport(record));
+                            savedRecords++;
+                            int percent = 50 + (int)(savedRecords * 45.0 / totalRecords);
+                            UpdateProgress(percent, $"保存员工数据 ({savedRecords}/{totalRecords})...");
                             LogTextHelper.Info($"员工报点数据已解析,员工工号：{record.ID}，SN：{record.SN}，总NG数：{record.AllNGNumber}，起始时间：{record.StartTime}，结束时间：{record.StartTime}");
                         }
 
@@ -87,11 +113,24 @@ namespace DeepSightAI
                     else
                     {
                         LogTextHelper.Error("未找到csv文件！");
+                        UpdateProgress(0, "未找到csv文件");
                     }
+
+                    pathIndex++;
                 }
+
+                UpdateProgress(100, $"完成！共处理 {AllEmployeeReports.Count} 条员工数据");
             }
-
-
+            catch (Exception ex)
+            {
+                LogTextHelper.Error("读取员工数据失败", ex);
+                UpdateProgress(0, $"读取失败: {ex.Message}");
+                MessageBox.Show($"读取员工数据失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                btnReadEmployeeData.Enabled = true;
+            }
         }
 
 
