@@ -52,6 +52,10 @@ namespace DeepSightAI.SettingPages
                 {
                     Machine.sysConfig.MaxDefectCount = maxDefectCount;
                 }
+                if (int.TryParse(this.txt_AgentShutdownTimeout.Text, out int agentShutdownTimeout))
+                {
+                    Machine.sysConfig.AgentShutdownTimeout = agentShutdownTimeout;
+                }
             }
             catch (Exception ex)
             {
@@ -67,6 +71,7 @@ namespace DeepSightAI.SettingPages
             this.txt_Minioport.Text = Machine.sysConfig.MinioPort;
             this.txt_DsCenterURL.Text = Machine.sysConfig.DsCenterUrl;
             this.txt_MaxDefectCount.Text = Machine.sysConfig.MaxDefectCount.ToString();
+            this.txt_AgentShutdownTimeout.Text = Machine.sysConfig.AgentShutdownTimeout.ToString();
         }
     }
 }

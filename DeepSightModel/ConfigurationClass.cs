@@ -50,7 +50,12 @@ namespace DeepSightModel
         /// <summary>
         /// 最大缺陷数
         /// </summary>
-        public int MaxDefectCount { get; set; } 
+        public int MaxDefectCount { get; set; }
+
+        /// <summary>
+        /// Agent关闭超时时间（毫秒）
+        /// </summary>
+        public int AgentShutdownTimeout { get; set; } = 2000;
 
         public ConfigurationClass()
         {
@@ -93,6 +98,7 @@ namespace DeepSightModel
                     MinioPort = "9102",
                     DsCenterUrl = "http://dp55.local:82/api/zmq/dataImport",
                     MaxDefectCount = 200,
+                    AgentShutdownTimeout = 2000,
                  };
                 return Save(config);
             }

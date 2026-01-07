@@ -569,19 +569,19 @@ namespace DeepSightAI
         {
             try
             {
-                if (!Machine.master.workClass.isStart)
+                if (!Machine.master.workClass.IsStart)
                 {
-                    Machine.master.workClass.isStart = true;
+                    Machine.master.workClass.IsStart = true;
                     btnStart.Image = Resources.pause2;
-                    FrSetting.Instance.RestartApplication(FrSetting.Instance.appPath, FrSetting.Instance.appExe, true);
+                    FrSetting.Instance.RestartApplication(FrSetting.Instance.appPath, FrSetting.Instance.appExe, Machine.sysConfig.AgentShutdownTimeout, true);
 
                     LogTextHelper.Info("开始作业...");
                 }
                 else
                 {
-                    Machine.master.workClass.isStart = false;
+                    Machine.master.workClass.IsStart = false;
                     btnStart.Image = Resources.start2;
-                    FrSetting.Instance.KillProcessInDirectory(FrSetting.Instance.appPath, FrSetting.Instance.appExe);
+                    FrSetting.Instance.KillProcessInDirectory(FrSetting.Instance.appPath, FrSetting.Instance.appExe, Machine.sysConfig.AgentShutdownTimeout);
 
                     LogTextHelper.Info("暂停作业...");
                 }

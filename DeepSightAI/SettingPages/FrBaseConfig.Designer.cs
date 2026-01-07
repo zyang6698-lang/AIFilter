@@ -35,6 +35,8 @@
             this.label19 = new System.Windows.Forms.Label();
             this.txt_MaxDefectCount = new System.Windows.Forms.TextBox();
             this.label21 = new System.Windows.Forms.Label();
+            this.txt_AgentShutdownTimeout = new System.Windows.Forms.TextBox();
+            this.label22 = new System.Windows.Forms.Label();
             this.txt_Minioport = new System.Windows.Forms.TextBox();
             this.label18 = new System.Windows.Forms.Label();
             this.txt_endpoint_address = new System.Windows.Forms.TextBox();
@@ -52,6 +54,8 @@
             // 
             resources.ApplyResources(this.panel1, "panel1");
             this.panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.panel1.Controls.Add(this.txt_AgentShutdownTimeout);
+            this.panel1.Controls.Add(this.label22);
             this.panel1.Controls.Add(this.txt_MaxDefectCount);
             this.panel1.Controls.Add(this.label21);
             this.panel1.Controls.Add(this.txt_DsCenterURL);
@@ -90,6 +94,17 @@
             resources.ApplyResources(this.label21, "label21");
             this.label21.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.label21.Name = "label21";
+            //
+            // txt_AgentShutdownTimeout
+            //
+            resources.ApplyResources(this.txt_AgentShutdownTimeout, "txt_AgentShutdownTimeout");
+            this.txt_AgentShutdownTimeout.Name = "txt_AgentShutdownTimeout";
+            //
+            // label22
+            //
+            resources.ApplyResources(this.label22, "label22");
+            this.label22.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.label22.Name = "label22";
             //
             // txt_Minioport
             // 
@@ -179,5 +194,7 @@
         internal System.Windows.Forms.Label label19;
         internal System.Windows.Forms.TextBox txt_MaxDefectCount;
         internal System.Windows.Forms.Label label21;
+        internal System.Windows.Forms.TextBox txt_AgentShutdownTimeout;
+        internal System.Windows.Forms.Label label22;
     }
 }

@@ -331,7 +331,7 @@ namespace DeepSightAI
                     FrHWConfig.Instance.GetStationParam();
                     if (Machine.avi_class.Save(Machine.aviconfig))
                     {
-                        RestartApplication(appPath, appExe);
+                        RestartApplication(appPath, appExe, Machine.sysConfig.AgentShutdownTimeout);
                         Machine.master.workClass.AviConfig = Machine.aviconfig;
                         // 更新FrHome中的AviCtr状态
                         FrHome.Instance.RefreshAviCtrConfigs();
@@ -430,9 +430,9 @@ namespace DeepSightAI
             //}
         }
 
-        public void RestartApplication(string appDirectory, string exeName, bool isRun = false)
+        public void RestartApplication(string appDirectory, string exeName, int timeoutMs = 2000, bool isRun = false)
         {
-            bool result = KillProcessInDirectory(appDirectory, exeName);
+            bool result = KillProcessInDirectory(appDirectory, exeName, timeoutMs);
             Thread.Sleep(1000);
             if (result || isRun)
             {
@@ -468,7 +468,7 @@ namespace DeepSightAI
             {
                 return;
             }
-            RestartApplication(appDirectory, exeName, true);
+            RestartApplication(appDirectory, exeName, Machine.sysConfig.AgentShutdownTimeout, true);
         }
         /// <summary>
         /// 通过Windows事件信号通知ATS_Agent进程优雅关闭
