@@ -63,21 +63,28 @@ namespace DeepSightModel
         }
     }
 
+    /// <summary>
+    /// 常规配置读写类（已升级为 JSON 格式，兼容旧 XML 配置自动迁移）
+    /// </summary>
     public class DeepSight_Config_class
     {
         private static readonly string BaseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-        private static readonly string NewConfigDirectory = Path.Combine(BaseDirectory, "configs");
-        private static readonly string NewConfigFileName = "general.config.xml";
-        private static readonly string NewConfigPath = Path.Combine(NewConfigDirectory, NewConfigFileName);
+        private static readonly string ConfigDirectory = Path.Combine(BaseDirectory, "configs");
+
+        // JSON 配置路径（新格式，优先使用）
+        private static readonly string JsonConfigPath = Path.Combine(ConfigDirectory, "general.config.json");
+        // XML 配置路径（旧格式，用于兼容和迁移）
+        private static readonly string XmlConfigPath = Path.Combine(ConfigDirectory, "general.config.xml");
+        // 更旧的配置路径
         private static readonly string LegacyConfigDirectory = Path.Combine(BaseDirectory, "config");
         private static readonly string LegacyConfigPath = Path.Combine(LegacyConfigDirectory, "config.xml");
 
         public DeepSight_Config_class()
         {
             EnsureConfigDirectory();
-            TryMigrateLegacyConfig();
+            TryMigrateToJson();
 
-            if (!File.Exists(NewConfigPath))
+            if (!File.Exists(JsonConfigPath))
             {
                 default_dat_config();
             }
@@ -98,8 +105,8 @@ namespace DeepSightModel
                     MinioPort = "9102",
                     DsCenterUrl = "http://dp55.local:82/api/zmq/dataImport",
                     MaxDefectCount = 200,
-                    AgentShutdownTimeout = 2000,
-                 };
+                    AgentShutdownTimeout = 2000
+                };
                 return Save(config);
             }
             catch
@@ -107,102 +114,109 @@ namespace DeepSightModel
                 return false;
             }
         }
+
         /// <summary>
-        /// 获取配置信息
+        /// 获取配置信息（优先读取 JSON，兼容旧 XML）
         /// </summary>
-        /// <param name="system_config"></param>
-        /// <returns></returns>
         public bool Read(out ConfigurationClass system_config)
         {
-            bool result = false;
             system_config = new ConfigurationClass();
             try
             {
-                string configPath = ResolveReadableConfigPath();
-                if (!File.Exists(configPath))
+                // 优先读取 JSON 配置
+                if (File.Exists(JsonConfigPath))
                 {
-                    result = false;
+                    var json = File.ReadAllText(JsonConfigPath);
+                    system_config = JsonConvert.DeserializeObject<ConfigurationClass>(json) ?? new ConfigurationClass();
+                    return true;
                 }
-                else
+
+                // 兼容旧 XML 配置
+                string xmlPath = File.Exists(XmlConfigPath) ? XmlConfigPath :
+                                 File.Exists(LegacyConfigPath) ? LegacyConfigPath : null;
+
+                if (xmlPath != null)
                 {
-                    using (FileStream stream = new FileStream(configPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    using (var stream = new FileStream(xmlPath, FileMode.Open, FileAccess.Read, FileShare.Read))
                     {
-                        XmlSerializer xs = new XmlSerializer(typeof(ConfigurationClass));
+                        var xs = new XmlSerializer(typeof(ConfigurationClass));
                         system_config = (ConfigurationClass)xs.Deserialize(stream);
                     }
-                    result = true;
+                    // 自动迁移到 JSON
+                    Save(system_config);
+                    return true;
                 }
-            }
-            catch (System.Exception ex)
-            {
-                LogTextHelper.Error("异常", ex);
-                result = false;
-            }
-            return result;
-        }
 
-        /// <summary>
-        /// 更新配置信息
-        /// </summary>
-        /// <param name="crane_config"></param>
-        /// <returns></returns>
-        public bool Save(ConfigurationClass system_config)
-        {
-            bool result = false;
-            try
-            {
-                EnsureConfigDirectory();
-                using (FileStream stream = new FileStream(NewConfigPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
-                {
-                    XmlSerializer xs = new XmlSerializer(typeof(ConfigurationClass));
-                    xs.Serialize(stream, system_config);
-                }
-                result = true;
+                return false;
             }
             catch (Exception ex)
             {
-                LogTextHelper.Error("异常", ex);
-                result = false;
+                LogTextHelper.Error("读取常规配置异常", ex);
+                return false;
             }
-            return result;
+        }
+
+        /// <summary>
+        /// 保存配置信息（保存为 JSON 格式）
+        /// </summary>
+        public bool Save(ConfigurationClass system_config)
+        {
+            try
+            {
+                EnsureConfigDirectory();
+                var json = JsonConvert.SerializeObject(system_config, Formatting.Indented);
+                File.WriteAllText(JsonConfigPath, json);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error("保存常规配置异常", ex);
+                return false;
+            }
         }
 
         private static void EnsureConfigDirectory()
         {
-            if (!Directory.Exists(NewConfigDirectory))
+            if (!Directory.Exists(ConfigDirectory))
             {
-                Directory.CreateDirectory(NewConfigDirectory);
+                Directory.CreateDirectory(ConfigDirectory);
             }
         }
 
-        private static void TryMigrateLegacyConfig()
+        /// <summary>
+        /// 尝试从旧 XML 配置迁移到 JSON
+        /// </summary>
+        private void TryMigrateToJson()
         {
-            if (!File.Exists(NewConfigPath) && File.Exists(LegacyConfigPath))
+            if (File.Exists(JsonConfigPath))
             {
-                try
+                return; // 已有 JSON 配置，无需迁移
+            }
+
+            // 按优先级查找旧配置
+            var legacyPaths = new[] { XmlConfigPath, LegacyConfigPath };
+            foreach (var path in legacyPaths)
+            {
+                if (File.Exists(path))
                 {
-                    File.Copy(LegacyConfigPath, NewConfigPath, true);
+                    try
+                    {
+                        using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                        {
+                            var xs = new XmlSerializer(typeof(ConfigurationClass));
+                            var config = (ConfigurationClass)xs.Deserialize(stream);
+                            var json = JsonConvert.SerializeObject(config, Formatting.Indented);
+                            File.WriteAllText(JsonConfigPath, json);
+                            LogTextHelper.Info($"常规配置已从 XML 迁移到 JSON: {path} -> {JsonConfigPath}");
+                        }
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        LogTextHelper.Error($"迁移常规配置失败: {path}", ex);
+                    }
                 }
-                catch (Exception ex)
-                {
-                    LogTextHelper.Error("迁移旧常规配置失败", ex);
-                }
             }
-        }
-
-        private static string ResolveReadableConfigPath()
-        {
-            if (File.Exists(NewConfigPath))
-            {
-                return NewConfigPath;
-            }
-
-            if (File.Exists(LegacyConfigPath))
-            {
-                return LegacyConfigPath;
-            }
-
-            return NewConfigPath;
         }
     }
 

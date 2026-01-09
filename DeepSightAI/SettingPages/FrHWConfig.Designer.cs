@@ -32,8 +32,6 @@ namespace DeepSightAI.SettingPages
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.panel2 = new System.Windows.Forms.Panel();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
-            this.uiGroupBox1 = new Sunny.UI.UIGroupBox();
-            this.aviCtr2Container1 = new DeepSightAI.SettingPages.AviCtr2Container();
             this.grpAxisOfSelection = new Sunny.UI.UIGroupBox();
             this.label20 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
@@ -49,6 +47,8 @@ namespace DeepSightAI.SettingPages
             this.label9 = new System.Windows.Forms.Label();
             this.txt_max_wait_time = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
+            this.uiGroupBox1 = new Sunny.UI.UIGroupBox();
+            this.aviCtr2Container1 = new DeepSightAI.SettingPages.AviCtr2Container();
             this.panel1 = new System.Windows.Forms.Panel();
             this.lblstationcount = new System.Windows.Forms.Label();
             this.txt_station_count = new System.Windows.Forms.NumericUpDown();
@@ -56,8 +56,8 @@ namespace DeepSightAI.SettingPages
             this.tableLayoutPanel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
-            this.uiGroupBox1.SuspendLayout();
             this.grpAxisOfSelection.SuspendLayout();
+            this.uiGroupBox1.SuspendLayout();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.txt_station_count)).BeginInit();
             this.SuspendLayout();
@@ -105,36 +105,6 @@ namespace DeepSightAI.SettingPages
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 741F));
             this.tableLayoutPanel2.Size = new System.Drawing.Size(1867, 741);
             this.tableLayoutPanel2.TabIndex = 0;
-            // 
-            // uiGroupBox1
-            // 
-            this.uiGroupBox1.Controls.Add(this.aviCtr2Container1);
-            this.uiGroupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.uiGroupBox1.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.uiGroupBox1.FillDisableColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.uiGroupBox1.Font = new System.Drawing.Font("微软雅黑", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.uiGroupBox1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.uiGroupBox1.Location = new System.Drawing.Point(978, 6);
-            this.uiGroupBox1.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
-            this.uiGroupBox1.MinimumSize = new System.Drawing.Size(1, 1);
-            this.uiGroupBox1.Name = "uiGroupBox1";
-            this.uiGroupBox1.Padding = new System.Windows.Forms.Padding(27, 25, 27, 25);
-            this.uiGroupBox1.RectColor = System.Drawing.Color.FromArgb(((int)(((byte)(110)))), ((int)(((byte)(190)))), ((int)(((byte)(40)))));
-            this.uiGroupBox1.Size = new System.Drawing.Size(884, 729);
-            this.uiGroupBox1.Style = Sunny.UI.UIStyle.Custom;
-            this.uiGroupBox1.TabIndex = 27;
-            this.uiGroupBox1.Text = "AVI配置";
-            this.uiGroupBox1.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // aviCtr2Container1
-            // 
-            this.aviCtr2Container1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.aviCtr2Container1.Location = new System.Drawing.Point(27, 25);
-            this.aviCtr2Container1.Margin = new System.Windows.Forms.Padding(21, 52, 21, 52);
-            this.aviCtr2Container1.Name = "aviCtr2Container1";
-            this.aviCtr2Container1.ShowDeleteButtons = true;
-            this.aviCtr2Container1.Size = new System.Drawing.Size(830, 679);
-            this.aviCtr2Container1.TabIndex = 0;
             // 
             // grpAxisOfSelection
             // 
@@ -248,7 +218,7 @@ namespace DeepSightAI.SettingPages
             this.label7.Location = new System.Drawing.Point(129, 149);
             this.label7.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(94, 19);
+            this.label7.Size = new System.Drawing.Size(78, 16);
             this.label7.TabIndex = 237;
             this.label7.Text = "结果轮询频率：";
             this.label7.TextAlign = System.Drawing.ContentAlignment.TopRight;
@@ -313,6 +283,36 @@ namespace DeepSightAI.SettingPages
             this.label3.Text = "AB面同步最大等待时间：";
             this.label3.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
+            // uiGroupBox1
+            // 
+            this.uiGroupBox1.Controls.Add(this.aviCtr2Container1);
+            this.uiGroupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.uiGroupBox1.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.uiGroupBox1.FillDisableColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.uiGroupBox1.Font = new System.Drawing.Font("微软雅黑", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.uiGroupBox1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.uiGroupBox1.Location = new System.Drawing.Point(978, 6);
+            this.uiGroupBox1.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
+            this.uiGroupBox1.MinimumSize = new System.Drawing.Size(1, 1);
+            this.uiGroupBox1.Name = "uiGroupBox1";
+            this.uiGroupBox1.Padding = new System.Windows.Forms.Padding(27, 25, 27, 25);
+            this.uiGroupBox1.RectColor = System.Drawing.Color.FromArgb(((int)(((byte)(110)))), ((int)(((byte)(190)))), ((int)(((byte)(40)))));
+            this.uiGroupBox1.Size = new System.Drawing.Size(884, 729);
+            this.uiGroupBox1.Style = Sunny.UI.UIStyle.Custom;
+            this.uiGroupBox1.TabIndex = 27;
+            this.uiGroupBox1.Text = "AVI配置";
+            this.uiGroupBox1.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // aviCtr2Container1
+            // 
+            this.aviCtr2Container1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.aviCtr2Container1.Location = new System.Drawing.Point(27, 25);
+            this.aviCtr2Container1.Margin = new System.Windows.Forms.Padding(32, 94, 32, 94);
+            this.aviCtr2Container1.Name = "aviCtr2Container1";
+            this.aviCtr2Container1.ShowDeleteButtons = true;
+            this.aviCtr2Container1.Size = new System.Drawing.Size(830, 679);
+            this.aviCtr2Container1.TabIndex = 0;
+            // 
             // panel1
             // 
             this.panel1.Controls.Add(this.lblstationcount);
@@ -365,7 +365,7 @@ namespace DeepSightAI.SettingPages
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(76)))), ((int)(((byte)(80)))));
-            this.ClientSize = new System.Drawing.Size(1875, 822);
+            this.ClientSize = new System.Drawing.Size(2250, 986);
             this.Controls.Add(this.tableLayoutPanel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
@@ -375,9 +375,9 @@ namespace DeepSightAI.SettingPages
             this.tableLayoutPanel1.ResumeLayout(false);
             this.panel2.ResumeLayout(false);
             this.tableLayoutPanel2.ResumeLayout(false);
-            this.uiGroupBox1.ResumeLayout(false);
             this.grpAxisOfSelection.ResumeLayout(false);
             this.grpAxisOfSelection.PerformLayout();
+            this.uiGroupBox1.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.txt_station_count)).EndInit();

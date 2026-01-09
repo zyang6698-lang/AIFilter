@@ -1,4 +1,5 @@
 ﻿using DeepSightTool;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -70,23 +71,29 @@ namespace DeepSightModel
 
     }
 
-    //******************读写配置文件XML******************
+    /// <summary>
+    /// AI 方案配置读写类（已升级为 JSON 格式，兼容旧 XML 配置自动迁移）
+    /// </summary>
     [Serializable]
     public class DeepSight_Solution
     {
         private static readonly string BaseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-        private static readonly string NewConfigDirectory = Path.Combine(BaseDirectory, "configs");
-        private static readonly string NewConfigFileName = "aisolution.config.xml";
-        private static readonly string NewConfigPath = Path.Combine(NewConfigDirectory, NewConfigFileName);
+        private static readonly string ConfigDirectory = Path.Combine(BaseDirectory, "configs");
+
+        // JSON 配置路径（新格式，优先使用）
+        private static readonly string JsonConfigPath = Path.Combine(ConfigDirectory, "aisolution.config.json");
+        // XML 配置路径（旧格式，用于兼容和迁移）
+        private static readonly string XmlConfigPath = Path.Combine(ConfigDirectory, "aisolution.config.xml");
+        // 更旧的配置路径
         private static readonly string LegacyConfigDirectory = Path.Combine(BaseDirectory, "AISolutionAndFlow");
         private static readonly string LegacyConfigPath = Path.Combine(LegacyConfigDirectory, "config.xml");
 
         public DeepSight_Solution()
         {
             EnsureConfigDirectory();
-            TryMigrateLegacyConfig();
+            TryMigrateToJson();
 
-            if (!File.Exists(NewConfigPath))
+            if (!File.Exists(JsonConfigPath))
             {
                 default_dat_config();
             }
@@ -101,18 +108,19 @@ namespace DeepSightModel
             {
                 SolutionConfig config = new SolutionConfig
                 {
-                    solus = new List<SolutionAndFlow>(),
+                    solus = new List<SolutionAndFlow>
+                    {
+                        new SolutionAndFlow
+                        {
+                            ProductSerial = "A123",
+                            Asolution = "0317",
+                            Aflow = "flow1",
+                            Bsolution = "0317",
+                            Bflow = "flow1",
+                            IsSwitch = false
+                        }
+                    }
                 };
-                SolutionAndFlow defect = new SolutionAndFlow
-                {
-                    ProductSerial= "A123",
-                    Asolution = "0317",
-                    Aflow = "flow1",
-                    Bsolution = "0317",
-                    Bflow = "flow1",
-                    IsSwitch = false,
-                };
-                config.solus.Add(defect);
                 return Save(config);
             }
             catch
@@ -122,102 +130,107 @@ namespace DeepSightModel
         }
 
         /// <summary>
-        /// 获取配置信息
+        /// 获取配置信息（优先读取 JSON，兼容旧 XML）
         /// </summary>
-        /// <param name="system_config"></param>
-        /// <returns></returns>
         public bool Read(out SolutionConfig sol_config)
         {
-            bool result = false;
             sol_config = new SolutionConfig();
             try
             {
-                string configPath = ResolveReadableConfigPath();
-                if (!File.Exists(configPath))
+                // 优先读取 JSON 配置
+                if (File.Exists(JsonConfigPath))
                 {
-                    result = false;
+                    var json = File.ReadAllText(JsonConfigPath);
+                    sol_config = JsonConvert.DeserializeObject<SolutionConfig>(json) ?? new SolutionConfig();
+                    return true;
                 }
-                else
+
+                // 兼容旧 XML 配置
+                string xmlPath = File.Exists(XmlConfigPath) ? XmlConfigPath :
+                                 File.Exists(LegacyConfigPath) ? LegacyConfigPath : null;
+
+                if (xmlPath != null)
                 {
-                    using (FileStream stream = new FileStream(configPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    using (var stream = new FileStream(xmlPath, FileMode.Open, FileAccess.Read, FileShare.Read))
                     {
-                        XmlSerializer xs = new XmlSerializer(typeof(SolutionConfig));
+                        var xs = new XmlSerializer(typeof(SolutionConfig));
                         sol_config = (SolutionConfig)xs.Deserialize(stream);
                     }
-                    result = true;
+                    // 自动迁移到 JSON
+                    Save(sol_config);
+                    return true;
                 }
-            }
-            catch (System.Exception ex)
-            {
-                LogTextHelper.Error("异常", ex);
-                result = false;
-            }
 
-            return result;
-        }
-
-        /// <summary>
-        /// 更新配置信息
-        /// </summary>
-        /// <param name="crane_config"></param>
-        /// <returns></returns>
-        public bool Save(SolutionConfig sol_config)
-        {
-            bool result = false;
-            try
-            {
-                EnsureConfigDirectory();
-                using (TextWriter sw = TextWriter.Synchronized(new StreamWriter(NewConfigPath, false, Encoding.UTF8)))
-                {
-                    XmlSerializer xml = new System.Xml.Serialization.XmlSerializer(typeof(SolutionConfig));
-                    xml.Serialize(sw, sol_config);
-                    result = true;
-                }
+                return false;
             }
             catch (Exception ex)
             {
-                LogTextHelper.Error("异常", ex);
-                result = false;
+                LogTextHelper.Error("读取 AI 方案配置异常", ex);
+                return false;
             }
-            return result;
+        }
+
+        /// <summary>
+        /// 保存配置信息（保存为 JSON 格式）
+        /// </summary>
+        public bool Save(SolutionConfig sol_config)
+        {
+            try
+            {
+                EnsureConfigDirectory();
+                var json = JsonConvert.SerializeObject(sol_config, Formatting.Indented);
+                File.WriteAllText(JsonConfigPath, json);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error("保存 AI 方案配置异常", ex);
+                return false;
+            }
         }
 
         private static void EnsureConfigDirectory()
         {
-            if (!Directory.Exists(NewConfigDirectory))
+            if (!Directory.Exists(ConfigDirectory))
             {
-                Directory.CreateDirectory(NewConfigDirectory);
+                Directory.CreateDirectory(ConfigDirectory);
             }
         }
 
-        private static void TryMigrateLegacyConfig()
+        /// <summary>
+        /// 尝试从旧 XML 配置迁移到 JSON
+        /// </summary>
+        private void TryMigrateToJson()
         {
-            if (!File.Exists(NewConfigPath) && File.Exists(LegacyConfigPath))
+            if (File.Exists(JsonConfigPath))
             {
-                try
+                return; // 已有 JSON 配置，无需迁移
+            }
+
+            // 按优先级查找旧配置
+            var legacyPaths = new[] { XmlConfigPath, LegacyConfigPath };
+            foreach (var path in legacyPaths)
+            {
+                if (File.Exists(path))
                 {
-                    File.Copy(LegacyConfigPath, NewConfigPath, true);
+                    try
+                    {
+                        using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                        {
+                            var xs = new XmlSerializer(typeof(SolutionConfig));
+                            var config = (SolutionConfig)xs.Deserialize(stream);
+                            var json = JsonConvert.SerializeObject(config, Formatting.Indented);
+                            File.WriteAllText(JsonConfigPath, json);
+                            LogTextHelper.Info($"AI 方案配置已从 XML 迁移到 JSON: {path} -> {JsonConfigPath}");
+                        }
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        LogTextHelper.Error($"迁移 AI 方案配置失败: {path}", ex);
+                    }
                 }
-                catch (Exception ex)
-                {
-                    LogTextHelper.Error("迁移AISolution配置失败", ex);
-                }
             }
-        }
-
-        private static string ResolveReadableConfigPath()
-        {
-            if (File.Exists(NewConfigPath))
-            {
-                return NewConfigPath;
-            }
-
-            if (File.Exists(LegacyConfigPath))
-            {
-                return LegacyConfigPath;
-            }
-
-            return NewConfigPath;
         }
     }
 }
