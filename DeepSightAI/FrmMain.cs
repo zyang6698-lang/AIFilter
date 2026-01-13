@@ -160,7 +160,7 @@ namespace DeepSightAI
             timer.Elapsed += Timer_Elapsed;
             timer.Interval = 1000;
             timer.Start();
-            Machine.master.workClass.isShowBox = this.btn_showBox.Checked;
+            Machine.master.workClass.IsShowBox = this.btn_showBox.Checked;
             string filePath = Assembly.GetExecutingAssembly().Location;
             DateTime lastWriteTime = File.GetLastWriteTime(filePath);
             this.lbl_title.Text = "ATS_AI ~ " + lastWriteTime.ToString("MMdd");
@@ -983,12 +983,12 @@ namespace DeepSightAI
             if (!btn_showBox.Checked)
             {
                 btn_showBox.Checked = false;
-                Machine.master.workClass.isShowBox = false;
+                Machine.master.workClass.IsShowBox = false;
             }
             else
             {
                 btn_showBox.Checked = true;
-                Machine.master.workClass.isShowBox = true;
+                Machine.master.workClass.IsShowBox = true;
             }
            
         }

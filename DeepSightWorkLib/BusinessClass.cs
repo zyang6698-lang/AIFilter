@@ -164,10 +164,6 @@ namespace DeepSightWorkLib
         public bool IsAllow { get; set; } = true;
 
         /// <summary>
-        /// LevelDB 服务 URL
-        /// </summary>
-        public string URL { get; set; }
-        /// <summary>
         /// 方案配置
         /// </summary>
         public SolutionConfig SolConfig { get; set; } = new SolutionConfig();
@@ -181,21 +177,6 @@ namespace DeepSightWorkLib
         /// 系统配置
         /// </summary>
         public ConfigurationClass SysConfig { get; set; } = new ConfigurationClass();
-
-        #endregion
-
-        #region 兼容性属性 (已弃用，保持向后兼容)
-
-        [Obsolete("请使用 IsStart 属性")]
-        public bool isStart { get => IsStart; set => IsStart = value; }
-
-        [Obsolete("请使用 IsShowBox 属性")]
-        public bool isShowBox { get => IsShowBox; set => IsShowBox = value; }
-
-        /// <summary>
-        /// 小图显示集合
-        /// </summary>
-        public List<CvDisplay> DisplaysList { get; set; }
 
         #endregion
 
@@ -258,18 +239,14 @@ namespace DeepSightWorkLib
         /// <summary>
         /// 初始化工作线程
         /// </summary>
-        /// <param name="url">LevelDB 服务 URL</param>
-        /// <param name="index">游标索引</param>
-        public void InitWork(string url)
+        public void InitWork()
         {
-            this.URL = url;
             this.IsStart = false;
 
-            // 创建 ResultWriter 需要 URL（需要具体类型）
             var httpInstance = HttpService as HttpClass ?? new HttpClass();
-            _resultWriterService = new ResultWriterService(httpInstance, _processingSnSet, URL, SysConfig.DsCenterUrl);
+            var ldbUrl = $"{SysConfig.ServerIP}:{SysConfig.ServerPort}";
+            _resultWriterService = new ResultWriterService(httpInstance, _processingSnSet, ldbUrl, SysConfig.DsCenterUrl);
 
-            // 工作线程 -> 使用 Task 管理
             _cancellationTokenSource = new CancellationTokenSource();
             var token = _cancellationTokenSource.Token;
             _readAviTask = Task.Run(() => ThreadReadAVI(token), token);
@@ -278,7 +255,6 @@ namespace DeepSightWorkLib
             _returnAviTask = Task.Run(() => ThreadReturnAVI(token), token);
             _postProcessTask = Task.Run(() => ThreadPostProcess(token), token);
             AIStopwatch = new Stopwatch();
-            // ⭐ 关键修改点7：启动清理线程
             _cleanupTask = Task.Factory.StartNew(() => ThreadCleanupProcessingCache(token),
                 token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 
@@ -291,7 +267,6 @@ namespace DeepSightWorkLib
         public void SetHWindow(List<CvDisplay> displaysList)
         {
             ImageDisplay.SetDisplayList(displaysList);
-            DisplaysList = ImageDisplay.DisplaysList;
         }
 
         #region 兼容性方法（已弃用）
@@ -335,7 +310,8 @@ namespace DeepSightWorkLib
                         continue;
                     }
                     // 读取 AVI 数据
-                    if (_aviReaderService.ReadAVI(URL, out string result))
+                    var ldbUrl = $"{SysConfig.ServerIP}:{SysConfig.ServerPort}";
+                    if (_aviReaderService.ReadAVI(ldbUrl, out string result))
                     {
                         _aviReaderService.DoAviJsonTyped(result);
                     }
