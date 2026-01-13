@@ -8,96 +8,79 @@ using DeepSightModel;
 using DeepSightTool;
 using DeepSightWorkLib.Interfaces;
 using DeepSightWorkLib.Services;
-using Minio;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using OpenCvSharp;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Reactive.Concurrency;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace DeepSightWorkLib
 {
     /// <summary>
-    /// 业务处理类，支持通过接口进行依赖注入
+    /// 业务处理类（Facade 模式）- 组合调用各个服务
+    /// 职责：作为门面类协调各个服务，不直接处理业务逻辑
     /// </summary>
     public class BusinessClass : IDisposable
     {
-        #region 私有字段
+        #region 私有字段 - 核心服务
 
         private readonly IDatabaseService _databaseHelper;
-        private const int PanelSideBatchSize = 100;
-        private readonly object _panelRecordLock = new object();
-        private readonly List<PanelSideRecord> _pendingPanelSideRecords = new List<PanelSideRecord>();
 
         /// <summary>
-        /// 读取 AVI 存储对象队列
+        /// 队列管理器 - 统一管理所有处理队列
         /// </summary>
-        private readonly ConcurrentQueue<VBModel> _aviQueue = new ConcurrentQueue<VBModel>();
+        private readonly QueueManager _queueManager;
 
         /// <summary>
-        /// 算法处理结果存储对象队列 (Key, SN, Side, RootAIResult, DsCenterInfo)
+        /// Panel 数据转换服务
         /// </summary>
-        private readonly ConcurrentQueue<Tuple<string, string, string, RootAIResult, DsCenterInfo>> _aiResultQueue = new ConcurrentQueue<Tuple<string, string, string, RootAIResult, DsCenterInfo>>();
+        private readonly IPanelDataConverter _panelDataConverter;
 
         /// <summary>
-        /// 图片加载队列（解耦图片读取和推理）
+        /// 工作线程管理器
         /// </summary>
-        private readonly ConcurrentQueue<ImageLoadModel> _imageLoadQueue = new ConcurrentQueue<ImageLoadModel>();
+        private readonly WorkerThreadManager _workerManager;
 
-        /// <summary>
-        /// 推理后处理队列（异步处理推理结果）
-        /// </summary>
-        private readonly ConcurrentQueue<InferenceResultModel> _inferencePostProcessQueue = new ConcurrentQueue<InferenceResultModel>();
+        #endregion
 
-        /// <summary>
-        /// 奥特斯项目上传中台数据字典
-        /// </summary>
-        private readonly ConcurrentDictionary<string, DsCenterInfo> _dsCenterInfoDict = new ConcurrentDictionary<string, DsCenterInfo>();
+        #region 私有字段 - 业务服务
 
-        /// <summary>
-        /// 正在处理的SN+Side集合（防止重复检测）
-        /// Key格式："{SerialNumber}_{Side}"
-        /// Value：入队时间戳
-        /// </summary>
-        private readonly ConcurrentDictionary<string, DateTime> _processingSnSet = new ConcurrentDictionary<string, DateTime>();
-
-        /// <summary>
-        /// 图像显示服务
-        /// </summary>
         private ImageDisplayService ImageDisplay { get; set; }
-        // services
         private AviReaderService _aviReaderService;
         private ImageLoaderService _imageLoaderService;
         private DefectProcessor _defectProcessor;
         private ResultWriterService _resultWriterService;
         private PostProcessService _postProcessService;
 
+        #endregion
+
+        #region 私有字段 - 数据库批量写入
+
+        private const int PanelSideBatchSize = 100;
+        private readonly object _panelRecordLock = new object();
+        private readonly List<PanelSideRecord> _pendingPanelSideRecords = new List<PanelSideRecord>();
+
+        #endregion
+
+        #region 私有字段 - 运行状态
+
         /// <summary>
-        /// 缓存过期时间（分钟），超过此时间自动清理，防止内存泄漏
+        /// 缓存过期时间（分钟）
         /// </summary>
         private const int CACHE_EXPIRE_MINUTES = 30;
+
         /// <summary>
-        /// 开始/停止作业标志（内部字段）
+        /// 开始/停止作业标志
         /// </summary>
         private volatile bool _isStart = false;
-        private Stopwatch AIStopwatch;
 
-        // Task-based management（线程管理）
-        private CancellationTokenSource _cancellationTokenSource;
-        private Task _readAviTask;
-        private Task _defectTask;
-        private Task _returnAviTask;
-        private Task _imageLoadTask;
-        private Task _postProcessTask;
-        private Task _cleanupTask;
+        /// <summary>
+        /// AI 检测耗时计时器
+        /// </summary>
+        private Stopwatch AIStopwatch;
 
         #endregion
 
@@ -189,7 +172,8 @@ namespace DeepSightWorkLib
             new DefectClass(),
             new HttpClass(),
             new MinioClass(),
-            null) // DatabaseHelper 需要先初始化数据库
+            null,
+            null) // DatabaseHelper 和 PanelDataConverter 使用默认实现
         {
         }
 
@@ -200,15 +184,22 @@ namespace DeepSightWorkLib
         /// <param name="httpService">HTTP 服务</param>
         /// <param name="minioService">Minio 服务</param>
         /// <param name="databaseService">数据库服务（可选，为 null 时使用默认实现）</param>
+        /// <param name="panelDataConverter">Panel数据转换服务（可选，为 null 时使用默认实现）</param>
         public BusinessClass(
             IDefectService defectService,
             IHttpService httpService,
             IMinioService minioService,
-            IDatabaseService databaseService)
+            IDatabaseService databaseService,
+            IPanelDataConverter panelDataConverter = null)
         {
             DefectService = defectService ?? throw new ArgumentNullException(nameof(defectService));
             HttpService = httpService ?? throw new ArgumentNullException(nameof(httpService));
             MinioService = minioService ?? throw new ArgumentNullException(nameof(minioService));
+
+            // 初始化核心管理器
+            _queueManager = new QueueManager();
+            _workerManager = new WorkerThreadManager();
+            _panelDataConverter = panelDataConverter ?? new PanelDataConverter();
 
             // 需要具体的 MinioClass 实例来创建 ImageDisplayService
             var minioInstance = minioService as MinioClass ?? new MinioClass();
@@ -229,11 +220,12 @@ namespace DeepSightWorkLib
             var httpInstance = httpService as HttpClass ?? new HttpClass();
             var defectInstance = defectService as DefectClass ?? new DefectClass();
 
-            // 初始化拆分后的服务
-            _aviReaderService = new AviReaderService(httpInstance, _processingSnSet, ReadJsonByMinio);
+            // 初始化拆分后的服务（使用 QueueManager 中的队列）
+            _aviReaderService = new AviReaderService(httpInstance, _queueManager.ProcessingSnSet, ReadJsonByMinio);
             _imageLoaderService = new ImageLoaderService(minioInstance);
-            _defectProcessor = new DefectProcessor(defectInstance, ImageDisplay, _imageLoaderService, _aviQueue, _aiResultQueue, _inferencePostProcessQueue);
-            _postProcessService = new PostProcessService(_dsCenterInfoDict, SysConfig, SavePanelSideToDatabase);
+            _defectProcessor = new DefectProcessor(defectInstance, ImageDisplay, _imageLoaderService,
+                _queueManager.AviQueue, _queueManager.AIResultQueue, _queueManager.PostProcessQueue);
+            _postProcessService = new PostProcessService(_panelDataConverter, SysConfig, SavePanelSideToDatabase);
         }
 
         /// <summary>
@@ -245,18 +237,30 @@ namespace DeepSightWorkLib
 
             var httpInstance = HttpService as HttpClass ?? new HttpClass();
             var ldbUrl = $"{SysConfig.ServerIP}:{SysConfig.ServerPort}";
-            _resultWriterService = new ResultWriterService(httpInstance, _processingSnSet, ldbUrl, SysConfig.DsCenterUrl);
+            _resultWriterService = new ResultWriterService(httpInstance, _queueManager.ProcessingSnSet, ldbUrl, SysConfig.DsCenterUrl);
 
-            _cancellationTokenSource = new CancellationTokenSource();
-            var token = _cancellationTokenSource.Token;
-            _readAviTask = Task.Run(() => ThreadReadAVI(token), token);
-            _imageLoadTask = Task.Run(() => ThreadImageLoad(token), token);
-            _defectTask = Task.Run(() => ThreadDefect(token), token);
-            _returnAviTask = Task.Run(() => ThreadReturnAVI(token), token);
-            _postProcessTask = Task.Run(() => ThreadPostProcess(token), token);
+            // 使用 WorkerThreadManager 管理线程
+            _workerManager.Start();
             AIStopwatch = new Stopwatch();
-            _cleanupTask = Task.Factory.StartNew(() => ThreadCleanupProcessingCache(token),
-                token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+
+            // 注册各个工作线程
+            _workerManager.RegisterPollingWorker(() => WorkerReadAVI(),
+                new WorkerConfig { Name = "ReadAVI", PollIntervalMs = 100 });
+
+            _workerManager.RegisterPollingWorker(() => WorkerImageLoad(),
+                new WorkerConfig { Name = "ImageLoad", PollIntervalMs = 15 });
+
+            _workerManager.RegisterPollingWorker(() => WorkerDefect(),
+                new WorkerConfig { Name = "Defect", PollIntervalMs = 15 });
+
+            _workerManager.RegisterPollingWorker(() => WorkerReturnAVI(),
+                new WorkerConfig { Name = "ReturnAVI", PollIntervalMs = 15 });
+
+            _workerManager.RegisterPollingWorker(() => WorkerPostProcess(),
+                new WorkerConfig { Name = "PostProcess", PollIntervalMs = 10 });
+
+            _workerManager.RegisterPollingWorker(() => WorkerCleanupCache(),
+                new WorkerConfig { Name = "CleanupCache", PollIntervalMs = 60000, IsLongRunning = true });
 
             LogTextHelper.Info("BusinessClass 初始化完成，所有线程已启动");
         }
@@ -282,44 +286,254 @@ namespace DeepSightWorkLib
 
         #endregion
 
-        #region 线程管理
-
+        #region Worker 方法（由 WorkerThreadManager 调度）
 
         /// <summary>
-        /// 线程处理 (Task循环)
+        /// 读取 AVI 数据工作单元
         /// </summary>
-        private void ThreadReadAVI(CancellationToken token)
+        private bool WorkerReadAVI()
         {
-            while (!token.IsCancellationRequested)
+            if (!IsStart || !IsAllow) return false;
+
+            try
+            {
+                var ldbUrl = $"{SysConfig.ServerIP}:{SysConfig.ServerPort}";
+                if (_aviReaderService.ReadAVI(ldbUrl, out string result))
+                {
+                    _aviReaderService.DoAviJsonTyped(result);
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"WorkerReadAVI 异常: {ex}");
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 图片加载工作单元
+        /// </summary>
+        private bool WorkerImageLoad()
+        {
+            if (!IsStart) return false;
+
+            if (_queueManager.ImageLoadQueue.TryDequeue(out ImageLoadModel loadModel))
             {
                 try
                 {
-                    // 使用 Thread.Sleep 替代 Task.Delay().Wait()，避免阻塞线程池线程
-                    Thread.Sleep(100);
-                    if (token.IsCancellationRequested) break;
-                }
-                catch (OperationCanceledException)
-                {
-                    break;
-                }
+                    if (!IsStart)
+                    {
+                        LogTextHelper.Info($"图片加载任务被暂停中止，SN:{loadModel.Model?.SN}");
+                        TaskStatusSender.SendSkipped(loadModel.Model?.SN, loadModel.Model?.Side, "任务已暂停");
+                        CleanupMats(loadModel.Model?.Mats);
+                        return false;
+                    }
 
-                try
-                {
-                    if (!IsStart || !IsAllow)
+                    LogTextHelper.Info($"开始加载图片，SN:{loadModel.Model.SN}，数量：{loadModel.Model.ImageKeys.Count}");
+                    TaskStatusSender.SendLoadingImages(loadModel.Model.SN, loadModel.Model.Side);
+
+                    loadModel.Model.Mats = _imageLoaderService.LoadImages(loadModel.Model.ImageKeys);
+
+                    if (!IsStart)
                     {
-                        continue;
+                        LogTextHelper.Info($"图片加载后任务被暂停中止，SN:{loadModel.Model.SN}");
+                        TaskStatusSender.SendSkipped(loadModel.Model.SN, loadModel.Model.Side, "任务已暂停");
+                        CleanupMats(loadModel.Model.Mats);
+                        return false;
                     }
-                    // 读取 AVI 数据
-                    var ldbUrl = $"{SysConfig.ServerIP}:{SysConfig.ServerPort}";
-                    if (_aviReaderService.ReadAVI(ldbUrl, out string result))
-                    {
-                        _aviReaderService.DoAviJsonTyped(result);
-                    }
+
+                    LogImageLoadResult(loadModel);
+
+                    _queueManager.AviQueue.Enqueue(loadModel.Model);
+                    SystemEvent.SendPanelInfo(loadModel.Model.SN, loadModel.RootPanelInfo);
+                    TaskStatusSender.SendImagesLoaded(loadModel.Model.SN, loadModel.Model.Side, loadModel.Model.Mats.Count);
+
+                    LogTextHelper.Info($"图片加载完成，SN:{loadModel.Model.SN}，实际加载:{loadModel.Model.Mats.Count}张");
+                    return true;
                 }
                 catch (Exception ex)
                 {
-                    LogTextHelper.Error(ex.ToString());
+                    LogTextHelper.Error($"图片加载异常，SN:{loadModel.Model?.SN}：{ex}");
                 }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// AI 检测工作单元
+        /// </summary>
+        private bool WorkerDefect()
+        {
+            if (!IsStart) return false;
+
+            if (_queueManager.AviQueue.TryDequeue(out VBModel info))
+            {
+                try
+                {
+                    if (!IsStart)
+                    {
+                        LogTextHelper.Info($"AI检测任务被暂停中止，SN:{info?.SN}");
+                        SystemEvent.SendTaskMsg(info?.SN, "暂停-AI检测已中止");
+                        return false;
+                    }
+
+                    SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面开始AI检测(缺陷数:{info.Mats.Count})");
+                    AIStopwatch.Restart();
+
+                    if (_defectProcessor.DefectMethod(info, SysConfig.MaxDefectCount,
+                        out List<string> msg, out List<string> details, out PcsResult pcsResult, out string vbJson,
+                        AviConfig.GetInferResultTimeout))
+                    {
+                        if (!IsStart)
+                        {
+                            LogTextHelper.Info($"AI检测任务被暂停中止（推理完成后），SN:{info.SN}");
+                            SystemEvent.SendTaskMsg(info.SN, "暂停-AI检测已中止（结果未回写）");
+                            return false;
+                        }
+                        SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面AI检测完成");
+                        SystemEvent.SendResultInfo(info.SN, msg, details, pcsResult);
+                    }
+                    else
+                    {
+                        LogTextHelper.Warn($"KEY:{info.Key} SN:{info.SN}检测失败！");
+                        SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面已完成");
+                    }
+                    _defectProcessor.EnqueueAIResult(info, msg);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error($"AI检测异常：{ex}");
+                    SystemEvent.SendTaskMsg(info?.SN, $"{info?.Side}面已完成");
+                }
+                finally
+                {
+                    AIStopwatch.Stop();
+                    var elapsedMs = AIStopwatch.ElapsedMilliseconds;
+                    if (elapsedMs > 20)
+                    {
+                        SystemEvent.SendTaskMsg(info?.SN, $"{info?.Side}面AI耗时:{elapsedMs}ms", elapsedMs);
+                    }
+                    CleanupMats(info?.Mats);
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 结果回写工作单元
+        /// </summary>
+        private bool WorkerReturnAVI()
+        {
+            if (!IsStart) return false;
+
+            if (_queueManager.AIResultQueue.TryDequeue(out var info))
+            {
+                try
+                {
+                    if (!IsStart)
+                    {
+                        LogTextHelper.Info($"结果回写任务被暂停中止，SN:{info?.Item2}");
+                        TaskStatusSender.SendSkipped(info?.Item2, info?.Item3, "任务已暂停");
+                        return false;
+                    }
+                    _resultWriterService?.ReturnAVI(info);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error($"结果回写异常：{ex}");
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 后处理工作单元
+        /// </summary>
+        private bool WorkerPostProcess()
+        {
+            if (!IsStart) return false;
+
+            if (_queueManager.PostProcessQueue.TryDequeue(out InferenceResultModel resultModel))
+            {
+                try
+                {
+                    if (!IsStart)
+                    {
+                        LogTextHelper.Info($"后处理任务被暂停中止，SN:{resultModel.VBModel?.SN}");
+                        TaskStatusSender.SendSkipped(resultModel.VBModel?.SN, resultModel.VBModel?.panelInfo?.SideIndex, "任务已暂停");
+                        return false;
+                    }
+                    _postProcessService.ProcessInferenceResult(resultModel);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error($"后处理异常: SN={resultModel.VBModel?.SN}, 错误={ex}");
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 缓存清理工作单元
+        /// </summary>
+        private bool WorkerCleanupCache()
+        {
+            try
+            {
+                int cleanedCount = _queueManager.CleanupExpiredProcessing(CACHE_EXPIRE_MINUTES);
+                if (cleanedCount > 0)
+                {
+                    LogTextHelper.Info($"清理了 {cleanedCount} 个过期处理标记");
+                }
+                LogProcessingStatistics();
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"清理缓存异常: {ex}");
+            }
+            return false; // 始终返回 false，保持定时轮询
+        }
+
+        #endregion
+
+        #region 辅助方法
+
+        /// <summary>
+        /// 清理 Mat 资源
+        /// </summary>
+        private void CleanupMats(List<Mat> mats)
+        {
+            if (mats == null) return;
+            foreach (var mat in mats)
+            {
+                mat?.Dispose();
+            }
+            mats.Clear();
+        }
+
+        /// <summary>
+        /// 记录图片加载结果
+        /// </summary>
+        private void LogImageLoadResult(ImageLoadModel loadModel)
+        {
+            int expectedCount = loadModel.Model.ImageKeys.Count;
+            int actualCount = loadModel.Model.Mats.Count;
+
+            if (expectedCount == 0)
+            {
+                LogTextHelper.Info($"SN:{loadModel.Model.SN} 无报点数据，无需加载图片");
+            }
+            else if (actualCount == 0)
+            {
+                LogTextHelper.Error($"图片加载失败，SN:{loadModel.Model.SN}，期望{expectedCount}张图片，实际加载0张！");
+            }
+            else if (actualCount < expectedCount)
+            {
+                LogTextHelper.Warn($"图片部分加载失败，SN:{loadModel.Model.SN}，期望{expectedCount}张，实际{actualCount}张");
             }
         }
 
@@ -331,102 +545,6 @@ namespace DeepSightWorkLib
         /// 解析Minio路径
         /// </summary>
         public void ParseMinioPath(string fullPath, out string path, out string result) => AviReaderService.ParseMinioPath(fullPath, out path, out result);
-
-        #endregion
-
-        #region 算法检测处理
-
-        /// <summary>
-        /// 算法检测线程处理 (Task循环)
-        /// </summary>
-        private void ThreadDefect(CancellationToken token)
-        {
-            while (!token.IsCancellationRequested)
-            {
-                try
-                {
-                    // 使用 Thread.Sleep 替代 Task.Delay().Wait()，避免阻塞线程池线程
-                    Thread.Sleep(15);
-                    if (token.IsCancellationRequested) break;
-                }
-                catch (OperationCanceledException)
-                {
-                    break;
-                }
-
-                if (!IsStart)
-                {
-                    continue;
-                }
-                if (_aviQueue.Count > 0)
-                {
-                    if (_aviQueue.TryDequeue(out VBModel info))
-                    {
-                        try
-                        {
-                            // 检查点1：出队后立即检查是否应该中止
-                            if (!IsStart)
-                            {
-                                LogTextHelper.Info($"AI检测任务被暂停中止（出队后），SN:{info?.SN}");
-                                SystemEvent.SendTaskMsg(info?.SN, "暂停-AI检测已中止");
-                                continue; // finally 会释放资源
-                            }
-
-                            SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面开始AI检测(缺陷数:{info.Mats.Count})");
-                            AIStopwatch.Restart();
-
-                            //调用算法处理
-
-                            SystemEvent.SendTaskMsg(info.SN, $"准备DefectMethod，Side:{info.Side}，图片数量:{info.Mats.Count}");
-
-                            if (_defectProcessor.DefectMethod(info, SysConfig.MaxDefectCount, out List<string> msg, out List<string> details, out PcsResult pcsResult, out string vbJson,AviConfig.GetInferResultTimeout))
-                            {
-                                // 检查点2：推理完成后检查是否应该中止（不再回写结果）
-                                if (!IsStart)
-                                {
-                                    LogTextHelper.Info($"AI检测任务被暂停中止（推理完成后），SN:{info.SN}");
-                                    SystemEvent.SendTaskMsg(info.SN, "暂停-AI检测已中止（结果未回写）");
-                                    continue; // finally 会释放资源
-                                }
-                                SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面AI检测完成");
-                                SystemEvent.SendResultInfo(info.SN, msg, details, pcsResult);
-                            }
-                            else
-                            {
-                                LogTextHelper.Warn($"KEY:{info.Key} SN:{info.SN}检测失败！");
-                                SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面已完成");
-
-                            }
-                            _defectProcessor.EnqueueAIResult(info, msg);
-
-                        }
-                        catch (Exception ex)
-                        {
-                            LogTextHelper.Error(ex.ToString());
-                            SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面已完成");
-                        }
-                        finally
-                        {
-                            AIStopwatch.Stop();
-                            var elapsedMs = AIStopwatch.ElapsedMilliseconds;
-                            if (elapsedMs > 20)
-                            {
-                                SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面AI耗时:{elapsedMs}ms", elapsedMs);
-                            }
-                            // 释放 Mat 资源，防止内存泄漏
-                            if (info?.Mats != null)
-                            {
-                                foreach (var mat in info.Mats)
-                                {
-                                    mat?.Dispose();
-                                }
-                                info.Mats.Clear();
-                            }
-                        }
-                    }
-                }
-            }
-        }
 
         #endregion
 
@@ -443,14 +561,25 @@ namespace DeepSightWorkLib
                 MinioService.BuildClient(ip, port);
                 string json = MinioService.ReadJsonSync("deepiresults", path, ip);
                 var obj = JsonConvert.DeserializeObject<RootPanelInfo>(json);
-                List<int> defectIndex = new List<int>();
-                List<int> pcsList = new List<int>();
+
                 if (side == "A")
                 {
                     TaskStatusSender.SendQueued(sn);
                 }
+
                 LogTextHelper.Info($"{sn} {side} 开始将json转为vbinfo");
-                RootVBInfo vbInfo = PanelJsonToVBInfo(ip, port, head, obj, ref defectIndex, ref pcsList, out bool isByPass);
+
+                // 使用 PanelDataConverter 进行转换
+                var context = new PanelConvertContext
+                {
+                    MinioIP = ip,
+                    MinioPort = port,
+                    Head = head,
+                    SolutionConfig = SolConfig,
+                    AviConfig = AviConfig,
+                    ProjectName = SysConfig.ProjectName
+                };
+                var convertResult = _panelDataConverter.Convert(obj, context);
 
                 RootPanelInfoWithIP rootobj = new RootPanelInfoWithIP()
                 {
@@ -467,12 +596,12 @@ namespace DeepSightWorkLib
                     Key = key,
                     SN = sn,
                     Side = side,
-                    DefectIndex = defectIndex,
-                    PcsIndex = pcsList,
-                    VbInfo = vbInfo,
+                    DefectIndex = convertResult.DefectIndexList,
+                    PcsIndex = convertResult.PcsIndexList,
+                    VbInfo = convertResult.VBInfo,
                     minioPath = head,
                     panelInfo = obj,
-                    isByPass = isByPass,
+                    isByPass = convertResult.IsByPass,
                     ImageKeys = imageKeys
                 };
 
@@ -481,260 +610,13 @@ namespace DeepSightWorkLib
                     Model = model,
                     RootPanelInfo = rootobj
                 };
-                _imageLoadQueue.Enqueue(loadModel);
+                _queueManager.ImageLoadQueue.Enqueue(loadModel);
 
-                LogTextHelper.Info($"{sn} {side} ReadJsonByMinio完成,入队列_imageLoadQueue成功,待加载图片数量:{imageKeys.Count}");
+                LogTextHelper.Info($"{sn} {side} ReadJsonByMinio完成,入队列成功,待加载图片数量:{imageKeys.Count}");
             }
             catch (Exception ex)
             {
                 LogTextHelper.Error("异常" + ex.ToString());
-            }
-        }
-
-        public RootVBInfo PanelJsonToVBInfo(string minioip, string minioport, string head, RootPanelInfo info, ref List<int> defectList, ref List<int> pcsList, out bool isByPass)
-        {
-            try
-            {
-                isByPass = false;
-                LogTextHelper.Info($"{info.SerialNumber} {info.SideIndex}  ProcuctSerial:" + info.ProductSerial);
-
-
-                string solution = "";
-                string flow = "";
-                bool isSwitch = false;
-                var solutionFlow = SolConfig.solus.FirstOrDefault(o => o.ProductSerial == info.ProductSerial);
-                if (solutionFlow != null)
-                {
-                    if (info.SideIndex == "A")
-                    {
-                        solution = solutionFlow.Asolution;
-                        flow = solutionFlow.Aflow;
-                    }
-                    else
-                    {
-                        solution = solutionFlow.Bsolution;
-                        flow = solutionFlow.Bflow;
-                    }
-                    isSwitch = solutionFlow.IsSwitch;
-                }
-                else
-                {
-                    isByPass = true;
-                    LogTextHelper.Warn($"料号 {info.ProductSerial} 未配置，使用默认方案，标记为ByPass");
-                    var defaultSolutionFlow = SolConfig.solus.FirstOrDefault(o => o.ProductSerial.ToUpper() == "DEFAULT");
-                    if (defaultSolutionFlow != null)
-                    {
-                        if (info.SideIndex == "A")
-                        {
-                            solution = defaultSolutionFlow.Asolution;
-                            flow = defaultSolutionFlow.Aflow;
-                        }
-                        else
-                        {
-                            solution = defaultSolutionFlow.Bsolution;
-                            flow = defaultSolutionFlow.Bflow;
-                        }
-                        isSwitch = defaultSolutionFlow.IsSwitch;
-                    }
-                    else
-                    {
-                        throw new Exception("找不到default的算法流程");
-                    }
-                }
-
-                DsCenterInfo dsInfo = new DsCenterInfo();
-                PanelData panelData = new PanelData
-                {
-                    Project = SysConfig.ProjectName
-                };
-                if (info.SideIndex == "A")
-                {
-                    panelData.Product = info.ProductSerial;
-                    panelData.Lot = info.LotId;
-                    panelData.Sn = info.SerialNumber;
-                    panelData.Avi = info.StationName;
-                    panelData.CustomTags = "";
-                }
-                else
-                {
-                    _dsCenterInfoDict.TryGetValue($"{info.LotId}_{info.SerialNumber}", out dsInfo);
-                    JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
-                    string infoJson = JsonConvert.SerializeObject(dsInfo, Formatting.None, jsonSetting);
-                }
-
-                LogTextHelper.Info($"当前产品:{info.SerialNumber},{info.SideIndex}面,所属料号:{info.ProductSerial},切换参数-->方案:{solution},flow:{flow}");
-                RootVBInfo vBInfo = new RootVBInfo
-                {
-                    MessageType = "visionbuilder_inference",
-                    paramsData = new ParamsData()
-                };
-                vBInfo.paramsData.InferResUuid = Guid.NewGuid().ToString();
-                vBInfo.paramsData.InferWholeData = new InferWholeData
-                {
-                    ImageInferParams = new ImageInferParams
-                    {
-                        PipelineName = solution,
-                        NodeParams = new List<NodeParam>
-                        {
-                            new NodeParam()
-                            {
-                                NodeName = flow,
-                                height = 200,
-                                width = 200,
-                            }
-                        }
-                    },
-                    ImageData = new ImageData()
-                    {
-                        DataType = "minio",
-                        DataValue = new DataValue
-                        {
-                            InferImageGroup = new List<InferImageGroup>()
-                        }
-                    }
-                };
-
-                for (int i = 0; i < info.PcsInfo.Count; i++)
-                {
-                    ContentItem item = new ContentItem();
-                    if (info.SideIndex == "A")
-                    {
-                        item.MachineName = info.StationName;
-                        item.ProductSerial = info.ProductSerial;
-                        item.SerialNumber = info.SerialNumber;
-                        item.ProcessTimeA = DateTime.Now.ToString("yyyyMMddHHmmssffffff");
-                        item.LotId = info.LotId;
-                        item.Lot = info.LotId;
-                        item.Product = info.ProductSerial;
-                        item.OperateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                        item.ExpansionAndContraction = null;
-                        item.PieceIndex = (i + 1).ToString();
-                        item.PieceVesIndex = (i + 1).ToString();
-                    }
-                    else
-                    {
-                        JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };//去掉空值NULL
-                        string infoJson = JsonConvert.SerializeObject(dsInfo, Formatting.None, jsonSetting);
-                        dsInfo?.Data[0].Content.TryGetValue((i + 1).ToString(), out item);
-                        item.ProcessTimeB = DateTime.Now.ToString("yyyyMMddHHmmssffffff");
-                    }
-
-
-                    // info的PcsInfo在ATS只有一条，做其他项目时要注意
-                    if (info.PcsInfo.TryGetValue((i + 1).ToString(), out PcsInfo pcsInfo))
-                    {
-                        LogTextHelper.Info($"SN:{info.SerialNumber}_{info.SideIndex}面报点数据为:{pcsInfo.DefectInfo.Count}");
-
-                        for (int j = 0; j < pcsInfo.DefectInfo.Count; j++)
-                        {
-                            //奥特斯
-                            DsCenterDefectInfo dsDefectinfo = new DsCenterDefectInfo
-                            {
-                                SideType = info.SideIndex,
-                                SideType2 = info.SideIndex,
-                                PcsIndex = i + 1,
-                                PcsVesIndex = (i + 1).ToString(),
-                                DefectRoi = pcsInfo.DefectInfo[j].DefectRoi,
-
-                                DefectOriginRoi = pcsInfo.DefectInfo[j].DefectOriginRoi,
-                                DefectsRoi = new List<int>()
-                                {
-                                    pcsInfo.DefectInfo[j].DefectRoi.X,
-                                    pcsInfo.DefectInfo[j].DefectRoi.Y,
-                                    pcsInfo.DefectInfo[j].DefectRoi.Height,
-                                    pcsInfo.DefectInfo[j].DefectRoi.Width
-                                }
-                            };
-                            InferImageGroup group = new InferImageGroup
-                            {
-                                MachineTemplateInfo = new MachineTemplateInfo()
-                                {
-                                    MachineName = info.StationName,
-                                    product = info.ProductSerial,
-                                    Side = info.SideIndex,
-                                },
-                                GroupUuid = Guid.NewGuid().ToString(),
-                                GroupInfos = new List<GroupInfo>(),
-                                DefectCode = "",
-                                TempImgPath =info.TemplateImgPath,
-                                ImgROI = new List<int>
-                                {
-                                    pcsInfo.DefectInfo[j].DefectRoi.X,
-                                    pcsInfo.DefectInfo[j].DefectRoi.Y,
-                                    pcsInfo.DefectInfo[j].DefectRoi.Width,
-                                    pcsInfo.DefectInfo[j].DefectRoi.Height
-                                }
-                            };
-                            if (isSwitch)
-                            {
-                                group.DefectCode = pcsInfo.DefectInfo[j].DefectCode;
-                            }
-                            WatchPathConfig config = AviConfig.WatchPaths.FirstOrDefault(o => o.AviName == info.StationName);
-                            if (config != null)
-                            {
-                                void AddGroupInfo(List<string> images, string imageType, Action<string> addUrlAction = null)
-                                {
-                                    if (images != null && images.Count > 0)
-                                    {
-                                        var imagePath = $"{head}/{images[0]}";
-                                        group.GroupInfos.Add(new GroupInfo()
-                                        {
-                                            ImagePath = imagePath,
-                                            ImageUuid = Guid.NewGuid().ToString(),
-                                            ImageType = imageType,
-                                        });
-                                        addUrlAction?.Invoke($"http://{config.MinioConfig}/deepiresults/{imagePath}");
-                                    }
-                                }
-                                AddGroupInfo(pcsInfo.DefectInfo[j].DefectVrsImages, "defect", url => dsDefectinfo.DefectImages.Add(url));
-                                AddGroupInfo(pcsInfo.DefectInfo[j].DefectVrsOkImages, "template");
-                                AddGroupInfo(pcsInfo.DefectInfo[j].DefectVrsGerberImages, "gerber", url => dsDefectinfo.DefectGerberImages.Add(url));
-                            }
-                            else
-                            {
-                                LogTextHelper.Error($"{pcsInfo.PcsSerialNumber}:panel的machineID:{info.StationName} 未找到对应机台的machineID");
-                            }
-
-                            vBInfo.paramsData.InferWholeData.ImageData.DataValue.InferImageGroup.Add(group);
-                            group.inspectDetails = new InspectDetails
-                            {
-                                InferRois = new List<InferRoi>() { }
-                            };
-                            defectList.Add(j);
-                            pcsList.Add(pcsInfo.DefectInfo[j].PcsIndex);
-                            item.DefectsInfo.Add(dsDefectinfo);
-                        }
-                    }
-                    if (info.SideIndex == "A")
-                    {
-                        panelData.Content.Add((i + 1).ToString(), item);
-                    }
-                }
-                vBInfo.paramsData.InferWholeData.OtherInfos = new Others();
-                vBInfo.paramsData.InferWholeData.OtherInfos.imageminio = new ImageMminio();
-                vBInfo.paramsData.InferWholeData.OtherInfos.imageminio.access_key_id = "deepiobjectdata";
-                vBInfo.paramsData.InferWholeData.OtherInfos.imageminio.bucket = "deepiresults";
-                vBInfo.paramsData.InferWholeData.OtherInfos.imageminio.endpoint_url = minioip;
-                vBInfo.paramsData.InferWholeData.OtherInfos.imageminio.secret_key = "deepiobject2019";
-                vBInfo.paramsData.InferWholeData.OtherInfos.imageminio.secret_port = minioport;
-
-                if (info.SideIndex == "A")
-                {
-                    dsInfo.Data.Add(panelData);
-                    _dsCenterInfoDict.TryAdd($"{info.LotId}_{info.SerialNumber}", dsInfo);
-                    LogTextHelper.Info($"{info.LotId}_{info.SerialNumber}_在A面创建dsinfo成功");
-                }
-                else
-                {
-                    _dsCenterInfoDict[$"{info.LotId}_{info.SerialNumber}"] = dsInfo;
-                    LogTextHelper.Info($"{info.LotId}_{info.SerialNumber}_在B面取得dsinfo成功");
-                }
-                return vBInfo;
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error(ex.ToString());
-                throw;
             }
         }
 
@@ -857,257 +739,7 @@ namespace DeepSightWorkLib
             _databaseHelper.GetPanelsDataByMachineAndLot(machineId, lotNumber);
         #endregion
 
-        #region 后台线程处理
-
-        /// <summary>
-        /// 图片加载线程处理 (解耦图片读取和推理)
-        /// </summary>
-        private void ThreadImageLoad(CancellationToken token)
-        {
-            while (!token.IsCancellationRequested)
-            {
-                try
-                {
-                    // 使用 Thread.Sleep 替代 Task.Delay().Wait()，避免阻塞线程池线程
-                    Thread.Sleep(15);
-                    if (token.IsCancellationRequested) break;
-                }
-                catch (OperationCanceledException)
-                {
-                    break;
-                }
-
-                if (!IsStart)
-                {
-                    continue;
-                }
-
-                if (_imageLoadQueue.TryDequeue(out ImageLoadModel loadModel))
-                {
-                    try
-                    {
-                        // 检查点1：出队后立即检查是否应该中止
-                        if (!IsStart)
-                        {
-                            LogTextHelper.Info($"图片加载任务被暂停中止，SN:{loadModel.Model?.SN}");
-                            TaskStatusSender.SendSkipped(loadModel.Model?.SN, loadModel.Model?.Side, "任务已暂停");
-                            // 清理已加载的资源
-                            if (loadModel.Model?.Mats != null)
-                            {
-                                foreach (var mat in loadModel.Model.Mats)
-                                {
-                                    mat?.Dispose();
-                                }
-                                loadModel.Model.Mats.Clear();
-                            }
-                            continue;
-                        }
-
-                        LogTextHelper.Info($"开始加载图片，SN:{loadModel.Model.SN}，数量：{loadModel.Model.ImageKeys.Count}");
-                        TaskStatusSender.SendLoadingImages(loadModel.Model.SN, loadModel.Model.Side);
-
-                        // 使用 ImageLoaderService 并行加载图片
-                        loadModel.Model.Mats = _imageLoaderService.LoadImages(loadModel.Model.ImageKeys);
-
-                        // 检查点2：图片加载完成后检查是否应该中止
-                        if (!IsStart)
-                        {
-                            LogTextHelper.Info($"图片加载后任务被暂停中止，SN:{loadModel.Model.SN}");
-                            TaskStatusSender.SendSkipped(loadModel.Model.SN, loadModel.Model.Side, "任务已暂停");
-                            // 释放已加载的图片资源
-                            if (loadModel.Model.Mats != null)
-                            {
-                                foreach (var mat in loadModel.Model.Mats)
-                                {
-                                    mat?.Dispose();
-                                }
-                                loadModel.Model.Mats.Clear();
-                            }
-                            continue;
-                        }
-
-                        // 检查加载结果
-                        int expectedCount = loadModel.Model.ImageKeys.Count;
-                        int actualCount = loadModel.Model.Mats.Count;
-                        if (expectedCount == 0)
-                        {
-                            // 本身就没有报点数据，不是错误
-                            LogTextHelper.Info($"SN:{loadModel.Model.SN} 无报点数据，无需加载图片");
-                        }
-                        else if (actualCount == 0)
-                        {
-                            LogTextHelper.Error($"图片加载失败，SN:{loadModel.Model.SN}，期望{expectedCount}张图片，实际加载0张！");
-                        }
-                        else if (actualCount < expectedCount)
-                        {
-                            LogTextHelper.Warn($"图片部分加载失败，SN:{loadModel.Model.SN}，期望{expectedCount}张，实际{actualCount}张");
-                        }
-
-                        // 图片加载完成，入推理队列
-                        _aviQueue.Enqueue(loadModel.Model);
-
-                        // 发送 PanelInfo 事件
-                        SystemEvent.SendPanelInfo(loadModel.Model.SN, loadModel.RootPanelInfo);
-
-                        TaskStatusSender.SendImagesLoaded(loadModel.Model.SN, loadModel.Model.Side, loadModel.Model.Mats.Count);
-                        LogTextHelper.Info($"图片加载完成，SN:{loadModel.Model.SN}，实际加载:{loadModel.Model.Mats.Count}张，入队列_aviQueue成功");
-
-                    }
-                    catch (Exception ex)
-                    {
-                        LogTextHelper.Error($"图片加载异常，SN:{loadModel.Model?.SN}：" + ex.ToString());
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// 线程处理 (Task循环)
-        /// </summary>
-        private void ThreadReturnAVI(CancellationToken token)
-        {
-            while (!token.IsCancellationRequested)
-            {
-                try
-                {
-                    // 使用 Thread.Sleep 替代 Task.Delay().Wait()，避免阻塞线程池线程
-                    Thread.Sleep(15);
-                    if (token.IsCancellationRequested) break;
-                }
-                catch (OperationCanceledException)
-                {
-                    break;
-                }
-
-                if (!IsStart)
-                {
-                    continue;
-                }
-
-                try
-                {
-                    if (_aiResultQueue.Count > 0)
-                    {
-                        if (_aiResultQueue.TryDequeue(out Tuple<string, string, string, RootAIResult, DsCenterInfo> info))
-                        {
-                            // 检查点：出队后检查是否应该中止
-                            if (!IsStart)
-                            {
-                                LogTextHelper.Info($"结果回写任务被暂停中止，SN:{info?.Item2}");
-                                TaskStatusSender.SendSkipped(info?.Item2, info?.Item3, "任务已暂停");
-                                continue;
-                            }
-                            // 回写处理
-                            _resultWriterService?.ReturnAVI(info);
-
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    LogTextHelper.Error(ex.ToString());
-                }
-            }
-        }
-
-        /// <summary>
-        /// 推理后处理线程（异步处理推理结果）
-        /// </summary>
-        private void ThreadPostProcess(CancellationToken token)
-        {
-            LogTextHelper.Info("推理后处理线程已启动");
-
-            while (!token.IsCancellationRequested)
-            {
-                if (!IsStart)
-                {
-                    continue;
-                }
-                try
-                {
-                    if (_inferencePostProcessQueue.TryDequeue(out InferenceResultModel resultModel))
-                    {
-                        try
-                        {
-                            // 检查点：出队后检查是否应该中止
-                            if (!IsStart)
-                            {
-                                LogTextHelper.Info($"后处理任务被暂停中止，SN:{resultModel.VBModel?.SN}");
-                                TaskStatusSender.SendSkipped(resultModel.VBModel?.SN, resultModel.VBModel?.panelInfo?.SideIndex, "任务已暂停");
-                                continue;
-                            }
-                            // Delegate to PostProcessService
-                            _postProcessService.ProcessInferenceResult(resultModel);
-                        }
-                        catch (Exception ex)
-                        {
-                            LogTextHelper.Error($"后处理异常: SN={resultModel.VBModel?.SN}, 错误={ex}");
-                        }
-                    }
-                    else
-                    {
-                        Thread.Sleep(10); // 队列为空时短暂休眠
-                    }
-                }
-                catch (Exception ex)
-                {
-                    LogTextHelper.Error($"后处理线程异常: {ex}");
-                }
-            }
-
-            LogTextHelper.Info("推理后处理线程已停止");
-        }
-
-        /// <summary>
-        /// 定期清理过期的处理标记（防止内存泄漏）
-        /// </summary>
-        private void ThreadCleanupProcessingCache(CancellationToken token)
-        {
-            LogTextHelper.Info("处理缓存清理线程已启动");
-
-            while (!token.IsCancellationRequested)
-            {
-                try
-                {
-                    Thread.Sleep(60000); // 每分钟清理一次
-
-                    if (token.IsCancellationRequested) break;
-
-                    var now = DateTime.Now;
-                    var expiredKeys = _processingSnSet
-                        .Where(kvp => (now - kvp.Value).TotalMinutes > CACHE_EXPIRE_MINUTES)
-                        .Select(kvp => kvp.Key)
-                        .ToList();
-
-                    foreach (var key in expiredKeys)
-                    {
-                        if (_processingSnSet.TryRemove(key, out DateTime addTime))
-                        {
-                            var duration = now - addTime;
-                            LogTextHelper.Warn($"清理过期处理标记：{key}，已超时 {duration.TotalMinutes:F1} 分钟");
-                        }
-                    }
-
-                    if (expiredKeys.Count > 0)
-                    {
-                        LogTextHelper.Info($"清理了 {expiredKeys.Count} 个过期处理标记，当前集合大小：{_processingSnSet.Count}");
-                    }
-
-                    // 输出统计信息
-                    LogProcessingStatistics();
-                }
-                catch (OperationCanceledException)
-                {
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    LogTextHelper.Error($"清理处理缓存异常: {ex}");
-                }
-            }
-
-            LogTextHelper.Info("处理缓存清理线程已停止");
-        }
+        #region 统计信息
 
         /// <summary>
         /// 定期输出处理统计信息
@@ -1116,20 +748,16 @@ namespace DeepSightWorkLib
         {
             try
             {
-                LogTextHelper.Info($"处理统计 - 处理中:{_processingSnSet.Count}, " +
-                                  $"图片加载队列:{_imageLoadQueue.Count}, " +
-                                  $"推理队列:{_aviQueue.Count}, " +
-                                  $"后处理队列:{_inferencePostProcessQueue.Count}, " +
-                                  $"回写结果队列:{_aiResultQueue.Count}" +
-                                  $"数据库队列{_databaseHelper.GetQueueLength()}");
+                var stats = _queueManager.GetStatistics();
+                LogTextHelper.Info($"处理统计 - {stats}, 数据库队列:{_databaseHelper.GetQueueLength()}");
 
                 // 告警：如果处理集合持续增长超过阈值
-                if (_processingSnSet.Count > 100)
+                if (stats.ProcessingSnCount > 100)
                 {
-                    LogTextHelper.Warn($"⚠️ 处理集合过大({_processingSnSet.Count})，可能存在处理阻塞或标记未清理！");
+                    LogTextHelper.Warn($"⚠️ 处理集合过大({stats.ProcessingSnCount})，可能存在处理阻塞或标记未清理！");
 
                     // 输出前10个最老的处理项
-                    var oldestItems = _processingSnSet
+                    var oldestItems = _queueManager.ProcessingSnSet
                         .OrderBy(kvp => kvp.Value)
                         .Take(10)
                         .ToList();
@@ -1150,80 +778,36 @@ namespace DeepSightWorkLib
         #endregion
 
         #region 释放资源
+
         public void Dispose()
         {
             try
             {
-                if (_cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested)
-                {
-                    _cancellationTokenSource.Cancel();
-                    try
-                    {
-                        // ⭐ 关键修改点8：等待所有任务完成，包括清理线程
-                        Task.WaitAll(new[] {
-                            _readAviTask,
-                            _imageLoadTask,
-                            _defectTask,
-                            _returnAviTask,
-                            _postProcessTask,
-                            _cleanupTask  // 新增
-                        }, 5000);
-                    }
-                    catch (AggregateException)
-                    {
-                        // 忽略因取消导致的任务异常
-                    }
-                    _cancellationTokenSource.Dispose();
-                }
+                // 停止所有工作线程
+                _workerManager?.Stop();
 
+                // 刷新待写入的数据库记录
                 FlushPendingPanelSideRecords();
 
-                // 清理队列中残留的 Mat 资源
-                while (_aviQueue.TryDequeue(out var vbModel))
-                {
-                    if (vbModel?.Mats != null)
-                    {
-                        foreach (var mat in vbModel.Mats)
-                        {
-                            mat?.Dispose();
-                        }
-                        vbModel.Mats.Clear();
-                    }
-                }
+                // 清空所有队列并释放资源
+                _queueManager?.ClearAllQueues();
 
-                // 清理图片加载队列中残留的资源
-                while (_imageLoadQueue.TryDequeue(out var loadModel))
-                {
-                    if (loadModel?.Model?.Mats != null)
-                    {
-                        foreach (var mat in loadModel.Model.Mats)
-                        {
-                            mat?.Dispose();
-                        }
-                        loadModel.Model.Mats.Clear();
-                    }
-                }
+                // 释放管理器资源
+                _workerManager?.Dispose();
+                _queueManager?.Dispose();
 
-                // 清理后处理队列
-                while (_inferencePostProcessQueue.TryDequeue(out var _))
-                {
-                    // 仅清空队列，不需要释放资源
-                }
-                LogTextHelper.Info("后处理队列已清空");
-
-                // ⭐ 关键修改点9：清理处理集合
-                _processingSnSet.Clear();
-                LogTextHelper.Info($"已清理处理集合，释放资源完成");
+                LogTextHelper.Info("BusinessClass 资源已释放");
             }
             catch (Exception ex)
             {
-                LogTextHelper.Error("Dispose an exception occurred during task cancellation:" + ex.ToString());
+                LogTextHelper.Error($"Dispose 异常: {ex}");
             }
-
         }
+
         #endregion
 
         #region 推理结果处理相关
+
         /// <summary>
         /// 清空所有正在处理的队列（当 IsStart 设置为 false 时调用）
         /// </summary>
@@ -1233,91 +817,8 @@ namespace DeepSightWorkLib
             {
                 LogTextHelper.Info("IsStart 设置为 false，开始清空所有处理队列...");
 
-                // 用于收集被清除的 SN 列表
-                HashSet<string> clearedSnSet = new HashSet<string>();
-
-                int aviQueueCount = 0;
-                int imageLoadQueueCount = 0;
-                int aiResultQueueCount = 0;
-                int postProcessQueueCount = 0;
-
-                // 清空 _aviQueue 并释放 Mat 资源
-                while (_aviQueue.TryDequeue(out var vbModel))
-                {
-                    if (vbModel != null)
-                    {
-                        if (!string.IsNullOrEmpty(vbModel.SN))
-                        {
-                            clearedSnSet.Add(vbModel.SN);
-                        }
-                        if (vbModel.Mats != null)
-                        {
-                            foreach (var mat in vbModel.Mats)
-                            {
-                                mat?.Dispose();
-                            }
-                            vbModel.Mats.Clear();
-                        }
-                    }
-                    aviQueueCount++;
-                }
-
-                // 清空 _imageLoadQueue 并释放 Mat 资源
-                while (_imageLoadQueue.TryDequeue(out var loadModel))
-                {
-                    if (loadModel?.Model != null)
-                    {
-                        if (!string.IsNullOrEmpty(loadModel.Model.SN))
-                        {
-                            clearedSnSet.Add(loadModel.Model.SN);
-                        }
-                        if (loadModel.Model.Mats != null)
-                        {
-                            foreach (var mat in loadModel.Model.Mats)
-                            {
-                                mat?.Dispose();
-                            }
-                            loadModel.Model.Mats.Clear();
-                        }
-                    }
-                    imageLoadQueueCount++;
-                }
-
-                // 清空 _aiResultQueue
-                while (_aiResultQueue.TryDequeue(out var aiResult))
-                {
-                    if (aiResult != null && !string.IsNullOrEmpty(aiResult.Item2))
-                    {
-                        clearedSnSet.Add(aiResult.Item2); // Item2 是 SN
-                    }
-                    aiResultQueueCount++;
-                }
-
-                // 清空 _inferencePostProcessQueue
-                while (_inferencePostProcessQueue.TryDequeue(out var postProcess))
-                {
-                    if (postProcess?.VBModel != null && !string.IsNullOrEmpty(postProcess.VBModel.SN))
-                    {
-                        clearedSnSet.Add(postProcess.VBModel.SN);
-                    }
-                    postProcessQueueCount++;
-                }
-
-                // 清空 _processingSnSet
-                int processingSnCount = _processingSnSet.Count;
-                _processingSnSet.Clear();
-
-                // 清空 _dsCenterInfoDict
-                int dsCenterInfoCount = _dsCenterInfoDict.Count;
-                _dsCenterInfoDict.Clear();
-
-                LogTextHelper.Info($"所有处理队列已清空 - " +
-                    $"AVI队列:{aviQueueCount}, " +
-                    $"图片加载队列:{imageLoadQueueCount}, " +
-                    $"AI结果队列:{aiResultQueueCount}, " +
-                    $"后处理队列:{postProcessQueueCount}, " +
-                    $"处理中集合:{processingSnCount}, " +
-                    $"中台数据字典:{dsCenterInfoCount}");
+                // 使用 QueueManager 清空所有队列
+                var clearedSnSet = _queueManager.ClearAllQueues();
 
                 // 通知界面被清除的 SN
                 foreach (var sn in clearedSnSet)

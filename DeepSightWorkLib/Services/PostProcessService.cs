@@ -1,9 +1,9 @@
 using DeepSightDB;
 using DeepSightModel;
 using DeepSightTool;
+using DeepSightWorkLib.Interfaces;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,20 +11,20 @@ using System.Linq;
 namespace DeepSightWorkLib.Services
 {
     /// <summary>
-    /// ¸ºÔğ´¦ÀíÍÆÀíºóµÄºó´¦ÀíÂß¼­£¨°üº¬¸üĞÂÖĞÌ¨Êı¾İÓë±£´æÃæ´ÎÊı¾İµ½Êı¾İ¿â£©
-    /// Í¨¹ıÍâ²¿×¢ÈëµÄ delegate ½« PanelSide ±£´æ»Ø BusinessClass µÄÊı¾İ¿âÅú´¦ÀíÂß¼­£¬±ÜÃâÖ±½ÓÒÀÀµ BusinessClass¡£
+    /// è´Ÿè´£æ¨ç†ç»“æœçš„åå¤„ç†é€»è¾‘ï¼ˆå¦‚æ›´æ–°ä¸­å°æ•°æ®ã€ä¿å­˜æ¿é¢æ•°æ®åˆ°æ•°æ®åº“ï¼‰
+    /// é€šè¿‡å¤–éƒ¨æ³¨å…¥çš„ delegate å°† PanelSide ä¿å­˜åˆ° BusinessClass çš„æ•°æ®åº“æ“ä½œé€»è¾‘ï¼Œé¿å…ç›´æ¥ä¾èµ– BusinessClassã€‚
     /// </summary>
     public class PostProcessService
     {
-        private readonly ConcurrentDictionary<string, DsCenterInfo> _dsCenterInfoDict;
+        private readonly IPanelDataConverter _panelDataConverter;
         private readonly ConfigurationClass _sysConfig;
         private readonly Action<RootPanelInfo, List<DetectInfo>, int, int> _savePanelSideAction;
 
-        public PostProcessService(ConcurrentDictionary<string, DsCenterInfo> dsCenterInfoDict,
+        public PostProcessService(IPanelDataConverter panelDataConverter,
             ConfigurationClass sysConfig,
             Action<RootPanelInfo, List<DetectInfo>, int, int> savePanelSideAction)
         {
-            _dsCenterInfoDict = dsCenterInfoDict ?? throw new ArgumentNullException(nameof(dsCenterInfoDict));
+            _panelDataConverter = panelDataConverter ?? throw new ArgumentNullException(nameof(panelDataConverter));
             _sysConfig = sysConfig ?? throw new ArgumentNullException(nameof(sysConfig));
             _savePanelSideAction = savePanelSideAction ?? throw new ArgumentNullException(nameof(savePanelSideAction));
         }
@@ -37,29 +37,29 @@ namespace DeepSightWorkLib.Services
 
             try
             {
-                // Èç¹û²»ĞèÒª´¦Àí£¨ÀıÈçÍ¼Æ¬ÊıÁ¿Îª0»ò³¬¹ı×î´óÖµ£©
+                // æ£€æŸ¥æ˜¯å¦éœ€è¦å¤„ç†ï¼ˆå›¾ç‰‡æ•°é‡ä¸º0æˆ–è¶…è¿‡æœ€å¤§å€¼ï¼‰
                 if (!resultModel.NeedsProcessing)
                 {
                     if (vBModel.Mats == null || vBModel.Mats.Count == 0)
                     {
                         _savePanelSideAction(panelInfo, new List<DetectInfo>(), 1, 1);
-                        LogTextHelper.Info($"ºó´¦ÀíÍê³É(ÎŞÍ¼Æ¬): SN={vBModel.SN}");
+                        LogTextHelper.Info($"è·³è¿‡å¤„ç†(æ— å›¾ç‰‡): SN={vBModel.SN}");
                     }
                     else if (vBModel.Mats.Count > _sysConfig.MaxDefectCount)
                     {
                         var imageKeys = vBModel.ImageKeys.Select(t => new DetectInfo() { ImagePath = t, AIStatus = 3 }).ToList();
                         _savePanelSideAction(panelInfo, imageKeys, 2, 3);
-                        LogTextHelper.Info($"ºó´¦ÀíÍê³É(Í¼Æ¬³¬ÏŞ): SN={vBModel.SN}");
+                        LogTextHelper.Info($"è·³è¿‡å¤„ç†(å›¾ç‰‡è¶…é™): SN={vBModel.SN}");
                     }
                     return;
                 }
 
-                LogTextHelper.Info($"¿ªÊ¼ºó´¦Àí: SN={vBModel.SN}, Side={panelInfo.SideIndex}");
+                LogTextHelper.Info($"å¼€å§‹å¤„ç†: SN={vBModel.SN}, Side={panelInfo.SideIndex}");
 
                 var obj = JsonConvert.DeserializeObject<RootVBOutInfo>(msg);
                 if (obj == null)
                 {
-                    LogTextHelper.Error($"Ëã·¨·µ»Ø½á¹û·´ĞòÁĞ»¯Ê§°Ü for Side {panelInfo.SideIndex}£¬Ô­Ê¼ÏûÏ¢: {msg}");
+                    LogTextHelper.Error($"ç®—æ³•è¿”å›ç»“æœååºåˆ—åŒ–å¤±è´¥ for Side {panelInfo.SideIndex}ï¼ŒåŸå§‹æ¶ˆæ¯: {msg}");
                     return;
                 }
 
@@ -70,10 +70,10 @@ namespace DeepSightWorkLib.Services
                 {
                     List<DetectInfo> avi_HeatInfo = new List<DetectInfo>();
 
-                    // ¸üĞÂÖĞÌ¨Êı¾İ
+                    // æ›´æ–°ä¸­å°æ•°æ®
                     UpdateDsCenterInfo(panelInfo, obj);
 
-                    // ´¦Àí HeatPoint µÈĞÅÏ¢
+                    // æ„å»º HeatPoint ç‚¹ä¿¡æ¯
                     for (int i = 0; i < obj.Data.InferWholeData.InferResults.Count; i++)
                     {
                         DetectInfo heatInfo = new DetectInfo();
@@ -129,41 +129,38 @@ namespace DeepSightWorkLib.Services
                         avi_HeatInfo.Add(heatInfo);
                     }
 
-                    // ´æÊı¾İµ½Êı¾İ¿â
+                    // ä¿å­˜æ•°æ®åˆ°æ•°æ®åº“
                     int aviState = avi_HeatInfo.Count == 0 ? 1 : 2;
                     int aiState = avi_HeatInfo.Any(h => h.AIStatus == 3) ? 3 : avi_HeatInfo.Any(h => h.AIStatus == 2) ? 2 : 1;
                     _savePanelSideAction(panelInfo, avi_HeatInfo, aviState, aiState);
 
-                    LogTextHelper.Info($"ºó´¦ÀíÍê³É: SN={vBModel.SN}, Side={panelInfo.SideIndex}, AviState={aviState}, AiState={aiState}");
+                    LogTextHelper.Info($"å¤„ç†å®Œæˆ: SN={vBModel.SN}, Side={panelInfo.SideIndex}, AviState={aviState}, AiState={aiState}");
                 }
                 else if (code == "600")
                 {
-                    // ÎŞÈ±Ïİ£¬AVI OK, AI OK
+                    // æ— ç¼ºé™·ï¼šAVI OK, AI OK
                     _savePanelSideAction(panelInfo, new List<DetectInfo>(), 1, 1);
-                    LogTextHelper.Info($"ºó´¦ÀíÍê³É(ÎŞÈ±Ïİ): SN={vBModel.SN}, Side={panelInfo.SideIndex}");
+                    LogTextHelper.Info($"å¤„ç†å®Œæˆ(æ— ç¼ºé™·): SN={vBModel.SN}, Side={panelInfo.SideIndex}");
                 }
                 else
                 {
-                    LogTextHelper.Warn($"Ëã·¨µ÷ÓÃÊ§°Ü for Side {panelInfo.SideIndex}£¬·µ»ØÂë: {code}£¬·µ»ØĞÅÏ¢£º{message}");
+                    LogTextHelper.Warn($"ç®—æ³•å¤„ç†å¤±è´¥ for Side {panelInfo.SideIndex}ï¼Œé”™è¯¯ç : {code}ï¼Œé”™è¯¯ä¿¡æ¯ï¼š{message}");
                 }
             }
             catch (Exception ex)
             {
-                LogTextHelper.Error($"ºó´¦ÀíÒì³£: SN={vBModel.SN}, ´íÎó={ex}");
+                LogTextHelper.Error($"å¤„ç†å¼‚å¸¸: SN={vBModel.SN}, é”™è¯¯={ex}");
             }
         }
 
         private void UpdateDsCenterInfo(RootPanelInfo panelInfo, RootVBOutInfo obj)
         {
-            if (!_dsCenterInfoDict.TryGetValue($"{panelInfo.LotId}_{panelInfo.SerialNumber}", out DsCenterInfo dsCenterInfo))
-            {
-                return;
-            }
+            var dsCenterInfo = _panelDataConverter.GetDsCenterInfo(panelInfo.LotId, panelInfo.SerialNumber);
             if (dsCenterInfo == null)
             {
                 return;
             }
-            LogTextHelper.Info($"È¡³ö{panelInfo.LotId}_{panelInfo.SerialNumber}µÄÖĞÌ¨Êı¾İ£¬×¼±¸¸üĞÂ...");
+            LogTextHelper.Info($"å–å¾—{panelInfo.LotId}_{panelInfo.SerialNumber}çš„ä¸­å°æ•°æ®ï¼Œå‡†å¤‡æ›´æ–°...");
 
             string time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
@@ -175,7 +172,7 @@ namespace DeepSightWorkLib.Services
 
                     try
                     {
-                        //¸üĞÂÖĞÌ¨Êı¾İ
+                        // æ›´æ–°ä¸­å°æ•°æ®
                         if (panelInfo.SideIndex == "A")
                         {
                             dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].AiResult = obj.Data.InferWholeData.InferResults[i].Infer_Result.ToLower();
@@ -198,10 +195,10 @@ namespace DeepSightWorkLib.Services
                     }
                     catch (Exception ex)
                     {
-                        LogTextHelper.Error("¸üĞÂÖĞÌ¨Êı¾İÒì³£" + ex.ToString());
+                        LogTextHelper.Error("æ›´æ–°ä¸­å°æ•°æ®å¼‚å¸¸" + ex.ToString());
                     }
 
-                    // ¸üĞÂ×ÓÈ±ÏİĞÅÏ¢µ½ÖĞÌ¨Êı¾İ
+                    // æ„å»ºå­ç¼ºé™·ä¿¡æ¯åˆ°ä¸­å°æ•°æ®
                     for (int j = 0; j < obj.Data.InferWholeData.InferResults[i].InferDetails.Location.Count; j++)
                     {
                         DsCenterSubDefectInfo subDefectInfo = new DsCenterSubDefectInfo();
@@ -237,13 +234,13 @@ namespace DeepSightWorkLib.Services
                         subDefectInfo.SubDefectRoi.Add(subY);
                         subDefectInfo.SubDefectRoi.Add(subW);
                         subDefectInfo.SubDefectRoi.Add(subH);
-                        //ÖĞĞÄµã²ÎÊı
+                        // ä¸­å¿ƒç‚¹åæ ‡
                         int CenterPointX = defectX + subX / 2 + subW / 4;
                         int CenterPointY = defectY + subY / 2 + subH / 4;
                         subDefectInfo.CenterPoint.Add(CenterPointX);
                         subDefectInfo.CenterPoint.Add(CenterPointY);
 
-                        //¸üĞÂÖĞÌ¨Êı¾İ
+                        // æ›´æ–°ä¸­å°æ•°æ®
                         if (panelInfo.SideIndex == "A")
                         {
                             dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].SubDefectsInfo.Add(subDefectInfo);
@@ -257,7 +254,7 @@ namespace DeepSightWorkLib.Services
                         }
                     }
                 }
-                //BÃæ×öÍêÅĞ¶Ï×Ü½á¹û
+                // Bé¢å¤„ç†å®Œæˆåˆ¤æ–­æ€»ç»“æœ
                 if (panelInfo.SideIndex == "B")
                 {
                     if (dsCenterInfo.Data[0].Content["1"].DefectsInfo.Exists(o => o.AiResult.ToLower() == "ng"))
@@ -274,7 +271,7 @@ namespace DeepSightWorkLib.Services
             }
             catch (Exception ex)
             {
-                LogTextHelper.Error("ÖĞÌ¨Êı¾İ´¦ÀíÒì³£" + ex.ToString());
+                LogTextHelper.Error("ä¸­å°æ•°æ®å¤„ç†å¼‚å¸¸" + ex.ToString());
             }
         }
     }

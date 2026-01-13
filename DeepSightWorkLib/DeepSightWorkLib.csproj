@@ -176,6 +176,10 @@
     <Compile Include="Services\PostProcessService.cs" />
     <Compile Include="Services\ResultWriterService.cs" />
     <Compile Include="Services\TaskStatusSender.cs" />
+    <Compile Include="Services\QueueManager.cs" />
+    <Compile Include="Services\WorkerThreadManager.cs" />
+    <Compile Include="Services\PanelDataConverter.cs" />
+    <Compile Include="Interfaces\IPanelDataConverter.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DeepSightCommunication\DeepSightCommunication.csproj">

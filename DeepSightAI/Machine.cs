@@ -98,10 +98,11 @@ namespace DeepSightAI
                     return;
                 }
                 master = new MasterWorkClass();
-                master.InitWork();
                 master.workClass.SolConfig = solconfig;
                 master.workClass.AviConfig = aviconfig;
                 master.workClass.SysConfig = sysConfig;
+                master.InitWork();
+
                 UpdateStep(50, "读取配置文件中...", true);
               
                 Application.DoEvents();
