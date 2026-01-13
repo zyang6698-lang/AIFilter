@@ -429,7 +429,7 @@ namespace DeepSightAI
 
                 this.Invoke(new MethodInvoker(() =>
                 {
-                    Machine.master.workClass.Defect.ai_Defect.Vision_Show_View(1);
+                    Machine.master.workClass.DefectService.AiDefect.Vision_Show_View(1);
                 }));
 
 

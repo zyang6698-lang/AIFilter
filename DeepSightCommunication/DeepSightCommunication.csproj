@@ -151,6 +151,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="HttpClass.cs" />
+    <Compile Include="Interfaces\IHttpService.cs" />
+    <Compile Include="Interfaces\IMinioService.cs" />
     <Compile Include="MinioClass.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

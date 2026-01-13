@@ -166,6 +166,7 @@
   <ItemGroup>
     <Compile Include="BusinessClass.cs" />
     <Compile Include="DefectClass.cs" />
+    <Compile Include="Interfaces\IDefectService.cs" />
     <Compile Include="Services\ImageDisplayService.cs" />
     <Compile Include="ImageHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -322,7 +322,7 @@ namespace DeepSightAI
                 if (tvw_setting.SelectedNode.Text == "机台配置")
                 {
                     // 检查软件是否处于运行状态
-                    if (Machine.master != null && Machine.master.workClass != null && Machine.master.workClass.isStart)
+                    if (Machine.master != null && Machine.master.workClass != null && Machine.master.workClass.IsStart)
                     {
                         MessageBox.Show("软件正在运行中，请先停止运行后再保存机台配置！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;

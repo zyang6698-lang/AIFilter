@@ -1,4 +1,5 @@
-﻿using DeepSightTool;
+﻿using DeepSightDB.Interfaces;
+using DeepSightTool;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
@@ -11,7 +12,10 @@ using System.Threading.Tasks;
 
 namespace DeepSightDB
 {
-    public class DatabaseHelper : IDisposable
+    /// <summary>
+    /// 数据库服务实现类
+    /// </summary>
+    public class DatabaseHelper : IDatabaseService
     {
         /// <summary>
         /// 默认配置（兼容已有 WinForms 程序使用）

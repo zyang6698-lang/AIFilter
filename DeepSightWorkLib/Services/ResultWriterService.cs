@@ -45,7 +45,7 @@ namespace DeepSightWorkLib.Services
 
                     if (info.Item5 != null)
                     {
-                        _httpDb.HttpPostMethod2(_dsCenterUrl, info.Item5, 0, out string outInfo);
+                        _httpDb.HttpPostMethod(_dsCenterUrl, info.Item5, 0, out string outInfo);
                         LogTextHelper.Info($"sn:{info.Item2}_中台数据发送，信息:{outInfo}");
                     }
 

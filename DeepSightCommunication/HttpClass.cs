@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using DeepSightCommunication.Interfaces;
 using DeepSightEvent;
 using DeepSightTool;
 using Newtonsoft.Json;
@@ -12,7 +13,10 @@ using Newtonsoft.Json.Linq;
 
 namespace DeepSightCommunication
 {
-    public class HttpClass
+    /// <summary>
+    /// HTTP 服务实现类，用于与 LevelDB 等后端服务通信
+    /// </summary>
+    public class HttpClass : IHttpService
     {
         /// <summary>
         /// http操作LevelDB
@@ -62,13 +66,7 @@ namespace DeepSightCommunication
             }
             return result;
         }
-        public bool HttpPostMethod2(string url, object info, int type, out string outInfo)
-        {
-            var task = HttpPostAsync(url, info, type);
-            task.Wait();
-            outInfo = task.Result.Response;
-            return task.Result.Success;
-        }
+
         public async Task<HttpResult> HttpPostAsync(string url, object info, int type)
         {
             var result = new HttpResult();
@@ -78,14 +76,6 @@ namespace DeepSightCommunication
                 // 1. 序列化数据
                 JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };//去掉空值NULL
                 string infoJson = JsonConvert.SerializeObject(info, Formatting.None, jsonSetting);
-                //if (url.Contains("zmq"))
-                //{
-                //    LogTextHelper.Info(string.Format("AI-->中台 {1}:{0}", infoJson, type == 0 ? "请求数据" : "回写数据"));
-                //}
-                //else
-                //{
-                //    LogTextHelper.Info(string.Format("AI-->DB {1}:{0}", infoJson, type == 0 ? "请求数据" : "回写数据"));
-                //}
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
                 request.Method = "POST";
                 request.Timeout = 8000;

@@ -1,9 +1,13 @@
 ﻿using DeepSightCommunication;
+using DeepSightCommunication.Interfaces;
 using DeepSightDB;
+using DeepSightDB.Interfaces;
 using DeepSightDisplay;
 using DeepSightEvent;
 using DeepSightModel;
 using DeepSightTool;
+using DeepSightWorkLib.Interfaces;
+using DeepSightWorkLib.Services;
 using Minio;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -18,16 +22,17 @@ using System.Linq;
 using System.Reactive.Concurrency;
 using System.Threading;
 using System.Threading.Tasks;
-using DeepSightWorkLib.Services;
 
 namespace DeepSightWorkLib
 {
-    //后续考虑是否设计为抽象，支持传统及AI调用
+    /// <summary>
+    /// 业务处理类，支持通过接口进行依赖注入
+    /// </summary>
     public class BusinessClass : IDisposable
     {
         #region 私有字段
 
-        private readonly DatabaseHelper _databaseHelper;
+        private readonly IDatabaseService _databaseHelper;
         private const int PanelSideBatchSize = 100;
         private readonly object _panelRecordLock = new object();
         private readonly List<PanelSideRecord> _pendingPanelSideRecords = new List<PanelSideRecord>();
@@ -99,19 +104,19 @@ namespace DeepSightWorkLib
         #region 公共属性
 
         /// <summary>
-        /// 算法检测对象
+        /// 算法检测服务（接口类型，支持依赖注入）
         /// </summary>
-        public DefectClass Defect { get; private set; }
+        public IDefectService DefectService { get; private set; }
 
         /// <summary>
-        /// LevelDB 交互服务
+        /// HTTP 服务（接口类型，支持依赖注入）
         /// </summary>
-        public HttpClass HttpDb { get; private set; }
+        public IHttpService HttpService { get; private set; }
 
         /// <summary>
-        /// Minio 对象存储服务
+        /// Minio 服务（接口类型，支持依赖注入）
         /// </summary>
-        public MinioClass Minio { get; private set; }
+        public IMinioService MinioService { get; private set; }
 
         /// <summary>
         /// 开始/停止作业标志
@@ -196,19 +201,57 @@ namespace DeepSightWorkLib
 
         #region 构造函数和初始化
 
-        public BusinessClass()
+        /// <summary>
+        /// 默认构造函数（使用具体实现）
+        /// </summary>
+        public BusinessClass() : this(
+            new DefectClass(),
+            new HttpClass(),
+            new MinioClass(),
+            null) // DatabaseHelper 需要先初始化数据库
         {
-            Defect = new DefectClass();
-            HttpDb = new HttpClass();
-            Minio = new MinioClass();
-            ImageDisplay = new ImageDisplayService(Minio);
-            // 先初始化数据库（确保数据库和表存在），然后再创建 DatabaseHelper 实例
-            DatabaseHelper.InitializeDatabase();
-            _databaseHelper = new DatabaseHelper();
+        }
+
+        /// <summary>
+        /// 依赖注入构造函数（支持测试和自定义实现）
+        /// </summary>
+        /// <param name="defectService">缺陷检测服务</param>
+        /// <param name="httpService">HTTP 服务</param>
+        /// <param name="minioService">Minio 服务</param>
+        /// <param name="databaseService">数据库服务（可选，为 null 时使用默认实现）</param>
+        public BusinessClass(
+            IDefectService defectService,
+            IHttpService httpService,
+            IMinioService minioService,
+            IDatabaseService databaseService)
+        {
+            DefectService = defectService ?? throw new ArgumentNullException(nameof(defectService));
+            HttpService = httpService ?? throw new ArgumentNullException(nameof(httpService));
+            MinioService = minioService ?? throw new ArgumentNullException(nameof(minioService));
+
+            // 需要具体的 MinioClass 实例来创建 ImageDisplayService
+            var minioInstance = minioService as MinioClass ?? new MinioClass();
+            ImageDisplay = new ImageDisplayService(minioInstance);
+
+            // 数据库初始化
+            if (databaseService == null)
+            {
+                DatabaseHelper.InitializeDatabase();
+                _databaseHelper = new DatabaseHelper();
+            }
+            else
+            {
+                _databaseHelper = databaseService;
+            }
+
+            // 需要具体类型的实例来初始化服务
+            var httpInstance = httpService as HttpClass ?? new HttpClass();
+            var defectInstance = defectService as DefectClass ?? new DefectClass();
+
             // 初始化拆分后的服务
-            _aviReaderService = new AviReaderService(HttpDb, _processingSnSet, ReadJsonByMinio);
-            _imageLoaderService = new ImageLoaderService(Minio);
-            _defectProcessor = new DefectProcessor(Defect, ImageDisplay, _imageLoaderService, _aviQueue, _aiResultQueue, _inferencePostProcessQueue);
+            _aviReaderService = new AviReaderService(httpInstance, _processingSnSet, ReadJsonByMinio);
+            _imageLoaderService = new ImageLoaderService(minioInstance);
+            _defectProcessor = new DefectProcessor(defectInstance, ImageDisplay, _imageLoaderService, _aviQueue, _aiResultQueue, _inferencePostProcessQueue);
             _postProcessService = new PostProcessService(_dsCenterInfoDict, SysConfig, SavePanelSideToDatabase);
         }
 
@@ -222,8 +265,9 @@ namespace DeepSightWorkLib
             this.URL = url;
             this.IsStart = false;
 
-            // 创建 ResultWriter 需要 URL
-            _resultWriterService = new ResultWriterService(HttpDb, _processingSnSet, URL, SysConfig.DsCenterUrl);
+            // 创建 ResultWriter 需要 URL（需要具体类型）
+            var httpInstance = HttpService as HttpClass ?? new HttpClass();
+            _resultWriterService = new ResultWriterService(httpInstance, _processingSnSet, URL, SysConfig.DsCenterUrl);
 
             // 工作线程 -> 使用 Task 管理
             _cancellationTokenSource = new CancellationTokenSource();
@@ -420,8 +464,8 @@ namespace DeepSightWorkLib
             try
             {
                 SystemEvent.SendTaskMsg(sn, $"{side}面正在读取Minio数据");
-                Minio.BuildClient(ip, port);
-                string json = Minio.ReadJsonSync("deepiresults", path, ip);
+                MinioService.BuildClient(ip, port);
+                string json = MinioService.ReadJsonSync("deepiresults", path, ip);
                 var obj = JsonConvert.DeserializeObject<RootPanelInfo>(json);
                 List<int> defectIndex = new List<int>();
                 List<int> pcsList = new List<int>();
@@ -747,9 +791,15 @@ namespace DeepSightWorkLib
             _databaseHelper.SavePanelSide(record);
 
         /// <summary>
-        /// 获取 DatabaseHelper 实例（用于 CSV 数据导入等场景）
+        /// 获取数据库服务实例（用于 CSV 数据导入等场景）
         /// </summary>
-        public DatabaseHelper GetDatabaseHelper() => _databaseHelper;
+        public IDatabaseService GetDatabaseService() => _databaseHelper;
+
+        /// <summary>
+        /// 获取 DatabaseHelper 实例（兼容旧代码）
+        /// </summary>
+        [Obsolete("请使用 GetDatabaseService() 方法")]
+        public DatabaseHelper GetDatabaseHelper() => _databaseHelper as DatabaseHelper;
 
         /// <summary>
         /// 保存 PanelSide 数据到数据库（从 RootPanelInfo 构建记录）

@@ -1012,7 +1012,7 @@ namespace DeepSightAI
         }
         private async void btnClear_Click(object sender, EventArgs e)
         {
-            Machine.master.workClass.isStart = false;
+            Machine.master.workClass.IsStart = false;
             // 生成索引集合（0-99）
             var indices = Enumerable.Range(0, FrHome.Instance.DispWin2.Length).ToList();
 
@@ -1040,7 +1040,6 @@ namespace DeepSightAI
                     }
                 });
             });
-            //FrHome.Instance.DispWin1[0].Clear();
         }
         private async void btnModel_Click(object sender, EventArgs e)
         {
@@ -1062,7 +1061,7 @@ namespace DeepSightAI
         {
             this.Invoke(new MethodInvoker(() =>
             {
-                Machine.master.workClass.Defect.ai_Defect.Vision_Show_View(1);
+                Machine.master.workClass.DefectService.AiDefect.Vision_Show_View(1);
             }));
         }
         private void toolStripButton2_Click(object sender, EventArgs e)

@@ -1,4 +1,5 @@
-﻿using DeepSightTool;
+﻿using DeepSightCommunication.Interfaces;
+using DeepSightTool;
 using Minio;
 using Minio.ApiEndpoints;
 using Minio.DataModel.Args;
@@ -16,8 +17,10 @@ using System.Threading.Tasks;
 
 namespace DeepSightCommunication
 {
-    //Minio操作类
-    public class MinioClass
+    /// <summary>
+    /// Minio 对象存储服务实现类
+    /// </summary>
+    public class MinioClass : IMinioService
     {
         public static ConcurrentDictionary<string, MinioClient> dic_Minio = new ConcurrentDictionary<string, MinioClient>();
         public MinioClient _minioClient;

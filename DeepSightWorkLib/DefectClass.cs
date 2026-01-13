@@ -1,6 +1,7 @@
 ﻿using DeepSightEvent;
 using DeepSightModel;
 using DeepSightTool;
+using DeepSightWorkLib.Interfaces;
 using Newtonsoft.Json;
 using OpenCvSharp;
 using System;
@@ -13,16 +14,27 @@ using System.Threading.Tasks;
 
 namespace DeepSightWorkLib
 {
-
     /// <summary>
     /// 算法检测类
     /// </summary>
-    public class DefectClass
+    public class DefectClass : IDefectService
     {
-        public AI_DefectClass ai_Defect = null;
+        private AI_DefectClass _aiDefect = null;
+
+        /// <summary>
+        /// 获取底层 AI 检测类实例
+        /// </summary>
+        public AI_DefectClass AiDefect => _aiDefect;
+
+        /// <summary>
+        /// 兼容旧代码的属性（已弃用，请使用 AiDefect）
+        /// </summary>
+        [Obsolete("请使用 AiDefect 属性")]
+        public AI_DefectClass ai_Defect => _aiDefect;
+
         public DefectClass()
         {
-            ai_Defect = new AI_DefectClass();
+            _aiDefect = new AI_DefectClass();
         }
 
         /// <summary>
@@ -35,7 +47,7 @@ namespace DeepSightWorkLib
                 JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
                 IntPtr input = Marshal.StringToHGlobalAnsi(JsonConvert.SerializeObject(info, Formatting.None, jsonSetting));
                 IntPtr result = IntPtr.Zero;
-                ai_Defect.Vision_runMethod(input, out result);
+                _aiDefect.Vision_runMethod(input, out result);
                 vb_outStr = Marshal.PtrToStringAnsi(result);
             }
             catch (Exception ex)
@@ -74,7 +86,7 @@ namespace DeepSightWorkLib
                     LogTextHelper.Info($"DefectMethodWithImages: BatchImageData创建完成，ImagesPtr={batchData.ImagesPtr}, Count={batchData.Count}");
 
                     IntPtr result = IntPtr.Zero;
-                    int ret = ai_Defect.InferenceWithImages(jsonStr, batchData.ImagesPtr, batchData.Count, out result);
+                    int ret = _aiDefect.InferenceWithImages(jsonStr, batchData.ImagesPtr, batchData.Count, out result);
 
                     LogTextHelper.Info($"DefectMethodWithImages: 推理返回，ret={ret}, result={result}");
 
