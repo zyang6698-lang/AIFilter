@@ -39,10 +39,10 @@ namespace DeepSightModel
         public string Infer_Result { get; set; }
 
         [JsonProperty("infer_details")]
-        public InferDetails inferDetails { get; set; }
+        public InferDetails InferDetails { get; set; }
 
         [JsonProperty("inspect_details")]
-        public InspectDetails inspectDetails { get; set; }
+        public InspectDetails InspectDetails { get; set; }
 
         [JsonProperty("group_infos")]
         public List<GroupInfo> GroupInfos { get; set; }

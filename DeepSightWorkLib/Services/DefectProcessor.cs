@@ -150,14 +150,14 @@ namespace DeepSightWorkLib.Services
 
                         if (obj.Data.InferWholeData.InferResults[i].Infer_Result != "OK")
                         {
-                            for (int j = 0; j < obj.Data.InferWholeData.InferResults[i].inferDetails.Location.Count; j++)
+                            for (int j = 0; j < obj.Data.InferWholeData.InferResults[i].InferDetails.Location.Count; j++)
                             {
                                 string sub_defectName = obj.Data.InferWholeData.InferResults[i].Defect_name;
 
-                                int subX = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].inferDetails.Location[j].X);
-                                int subY = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].inferDetails.Location[j].Y);
-                                int subH = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].inferDetails.Location[j].Height);
-                                int subW = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].inferDetails.Location[j].Width);
+                                int subX = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].X);
+                                int subY = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].Y);
+                                int subH = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].Height);
+                                int subW = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].Width);
 
                                 vBRcv.raw_bbox = new List<double>
                                 {

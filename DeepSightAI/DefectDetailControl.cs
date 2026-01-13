@@ -342,6 +342,9 @@ namespace DeepSightAI
                 }
             }
 
+            // 【测试用】为没有缺陷名称的HeatPoints填充虚拟数据
+            //FillTestDefectInfo(_allHeatPoints);
+
             _filteredHeatPoints = new List<DetectInfo>(_allHeatPoints);
             _totalPages = (int)Math.Ceiling((double)_filteredHeatPoints.Count / PageSize);
             _currentPage = 1;
@@ -355,6 +358,47 @@ namespace DeepSightAI
             comboBox_FilterVVS.SelectedIndex = 0;
 
             LoadDefectsPage(_currentPage);
+        }
+
+        /// <summary>
+        /// 【测试用】为HeatPoints填充虚拟缺陷信息
+        /// 正式环境请注释或删除此方法的调用
+        /// </summary>
+        private void FillTestDefectInfo(List<DetectInfo> heatPoints)
+        {
+            if (heatPoints == null || heatPoints.Count == 0)
+                return;
+
+            // 虚拟缺陷名称列表
+            string[] testDefectNames = new string[]
+            {
+                "划伤", "异物", "凹坑", "气泡", "裂纹",
+                "污渍", "变形", "缺角", "毛刺", "氧化"
+            };
+
+            Random random = new Random();
+
+            for (int i = 0; i < heatPoints.Count; i++)
+            {
+                var hp = heatPoints[i];
+
+                // 只为没有缺陷名称的项填充虚拟数据
+                if (string.IsNullOrEmpty(hp.DefectName))
+                {
+                    // 随机选择一个缺陷名称
+                    hp.DefectName = testDefectNames[random.Next(testDefectNames.Length)];
+                }
+
+                // 如果没有有效的缺陷框信息，填充虚拟数据
+                if (hp.Width <= 0 || hp.Height <= 0)
+                {
+                    // 虚拟缺陷框位置和大小（基于图片中心区域）
+                    hp.RoiX = 50 + random.Next(100);
+                    hp.RoiY = 50 + random.Next(100);
+                    hp.Width = 30 + random.Next(50);
+                    hp.Height = 30 + random.Next(50);
+                }
+            }
         }
 
         private void LoadDefectsPage(int page)
@@ -549,7 +593,8 @@ namespace DeepSightAI
                 {
                     using (var img = Image.FromFile(heatPoint.ImagePath))
                     {
-                        topPictureBox.Image = new Bitmap(img);
+                        // 绘制带缺陷框和缺陷名称的图片
+                        topPictureBox.Image = DrawDefectBoxOnImage(img, heatPoint);
                     }
                 }
                 catch (Exception ex)
@@ -581,7 +626,8 @@ namespace DeepSightAI
                     {
                         using (var img = Image.FromFile(templatePath))
                         {
-                            bottomPictureBox.Image = new Bitmap(img);
+                            // 模板图也绘制缺陷框
+                            bottomPictureBox.Image = DrawDefectBoxOnImage(img, heatPoint);
                         }
                     }
                 }
@@ -645,6 +691,87 @@ namespace DeepSightAI
         public (string aiFilter, string vvsFilter) GetFilters()
         {
             return (_aiFilter, _vvsFilter);
+        }
+
+        /// <summary>
+        /// 在图片上绘制缺陷框和缺陷名称
+        /// </summary>
+        /// <param name="originalImage">原始图片</param>
+        /// <param name="heatPoint">缺陷信息</param>
+        /// <returns>绘制了缺陷框的图片</returns>
+        private Bitmap DrawDefectBoxOnImage(Image originalImage, DetectInfo heatPoint)
+        {
+            Bitmap result = new Bitmap(originalImage);
+
+            // 检查是否有有效的缺陷框信息
+            if (heatPoint.Width <= 0 || heatPoint.Height <= 0)
+            {
+                return result;
+            }
+
+            using (Graphics g = Graphics.FromImage(result))
+            {
+                // 设置绘制质量
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+
+                // 缺陷框颜色 - 使用醒目的红色
+                Color boxColor = Color.Red;
+                using (Pen pen = new Pen(boxColor, 2))
+                {
+                    // 绘制缺陷框
+                    Rectangle defectRect = new Rectangle(
+                        heatPoint.RoiX,
+                        heatPoint.RoiY,
+                        heatPoint.Width,
+                        heatPoint.Height);
+
+                    g.DrawRectangle(pen, defectRect);
+                }
+
+                // 绘制缺陷名称
+                if (!string.IsNullOrEmpty(heatPoint.DefectName))
+                {
+                    using (Font font = new Font("微软雅黑", 10F, FontStyle.Bold))
+                    using (SolidBrush textBrush = new SolidBrush(Color.Yellow))
+                    using (SolidBrush bgBrush = new SolidBrush(Color.FromArgb(180, 0, 0, 0)))
+                    {
+                        // 计算文字大小
+                        SizeF textSize = g.MeasureString(heatPoint.DefectName, font);
+
+                        // 文字位置：缺陷框上方
+                        float textX = heatPoint.RoiX;
+                        float textY = heatPoint.RoiY - textSize.Height - 2;
+
+                        // 如果文字超出图片上边界，则显示在缺陷框下方
+                        if (textY < 0)
+                        {
+                            textY = heatPoint.RoiY + heatPoint.Height + 2;
+                        }
+
+                        // 如果文字超出图片右边界，调整位置
+                        if (textX + textSize.Width > result.Width)
+                        {
+                            textX = result.Width - textSize.Width - 2;
+                        }
+
+                        // 确保文字不超出左边界
+                        if (textX < 0)
+                        {
+                            textX = 2;
+                        }
+
+                        // 绘制文字背景
+                        RectangleF bgRect = new RectangleF(textX - 2, textY - 1, textSize.Width + 4, textSize.Height + 2);
+                        g.FillRectangle(bgBrush, bgRect);
+
+                        // 绘制文字
+                        g.DrawString(heatPoint.DefectName, font, textBrush, textX, textY);
+                    }
+                }
+            }
+
+            return result;
         }
     }
 

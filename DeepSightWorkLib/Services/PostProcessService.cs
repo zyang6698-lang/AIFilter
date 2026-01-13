@@ -93,20 +93,21 @@ namespace DeepSightWorkLib.Services
                         else
                         {
                             heatInfo.AIStatus = 2;
-                            for (int j = 0; j < obj.Data.InferWholeData.InferResults[i].inferDetails.Location.Count; j++)
+                            for (int j = 0; j < obj.Data.InferWholeData.InferResults[i].InferDetails.Location.Count; j++)
                             {
                                 string sub_defectName = obj.Data.InferWholeData.InferResults[i].Defect_name;
-                                int subX = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].inferDetails.Location[j].X);
-                                int subY = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].inferDetails.Location[j].Y);
-                                int subH = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].inferDetails.Location[j].Height);
-                                int subW = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].inferDetails.Location[j].Width);
+                                int subX = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].X);
+                                int subY = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].Y);
+                                int subH = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].Height);
+                                int subW = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].Width);
 
                                 if (j == 0)
                                 {
                                     heatInfo.DefectName = sub_defectName;
                                     heatInfo.RoiX = subX / 2 + subW / 4;
                                     heatInfo.RoiY = subY / 2 + subH / 4;
-
+                                    heatInfo.Width = subW / 2;
+                                    heatInfo.Height = subH / 2;
                                     if (sub_defectName == "AU10" || sub_defectName == "CU10" || sub_defectName == "CU41"
                                         || sub_defectName == "HO01" || sub_defectName == "SM10")
                                     {
@@ -201,10 +202,10 @@ namespace DeepSightWorkLib.Services
                     }
 
                     // 更新子缺陷信息到中台数据
-                    for (int j = 0; j < obj.Data.InferWholeData.InferResults[i].inferDetails.Location.Count; j++)
+                    for (int j = 0; j < obj.Data.InferWholeData.InferResults[i].InferDetails.Location.Count; j++)
                     {
                         DsCenterSubDefectInfo subDefectInfo = new DsCenterSubDefectInfo();
-                        subDefectInfo.SubDefectArea = Convert.ToDouble(obj.Data.InferWholeData.InferResults[i].inferDetails.DefectArea);
+                        subDefectInfo.SubDefectArea = Convert.ToDouble(obj.Data.InferWholeData.InferResults[i].InferDetails.DefectArea);
                         string sub_defectName = obj.Data.InferWholeData.InferResults[i].Defect_name;
                         subDefectInfo.SubDefectCode = sub_defectName;
 
@@ -224,10 +225,10 @@ namespace DeepSightWorkLib.Services
                             defectY = dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].DefectRoi.Y;
                         }
 
-                        int subX = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].inferDetails.Location[j].X);
-                        int subY = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].inferDetails.Location[j].Y);
-                        int subH = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].inferDetails.Location[j].Height);
-                        int subW = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].inferDetails.Location[j].Width);
+                        int subX = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].X);
+                        int subY = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].Y);
+                        int subH = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].Height);
+                        int subW = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].Width);
 
                         subDefectInfo.SubDefectHeight = subH;
                         subDefectInfo.SubDefectWidth = subW;

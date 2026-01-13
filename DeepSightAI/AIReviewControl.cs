@@ -854,6 +854,14 @@ namespace DeepSightAI
 
         private DefectReviewItem CreateDefectReviewItem(PanelDataRecord panel, SideData sideData)
         {
+            // 从缺陷点中提取所有不重复的缺陷名称
+            var defectNames = sideData.DetectPoints?
+                .Where(dp => !string.IsNullOrEmpty(dp.DefectName))
+                .Select(dp => dp.DefectName)
+                .Distinct()
+                .ToList() ?? new List<string>();
+            string defectNameStr = defectNames.Count > 0 ? string.Join(", ", defectNames) : "";
+
             return new DefectReviewItem
             {
                 SerialNumber = panel.SerialNumber,
@@ -862,9 +870,10 @@ namespace DeepSightAI
                 ProductSerial = panel.ProductSerial,
                 Side = sideData.Side,
                 AviStatus = sideData.AviState == 1 ? "OK" : "NG",
-                AiStatus =sideData.AiState==1?"OK":"NG",
-                ManualStatus = sideData.VvsState==0?"未判定" : sideData.VvsState == 1?"OK":"NG",
+                AiStatus = sideData.AiState == 1 ? "OK" : "NG",
+                ManualStatus = sideData.VvsState == 0 ? "未判定" : sideData.VvsState == 1 ? "OK" : "NG",
                 DefectCount = sideData.DetectPoints?.Count ?? 0,
+                DefectName = defectNameStr,
                 PathIndex = panel.PathIndex,
                 DetectionDate = panel.DetectionDate,
                 HeatPoints = sideData.DetectPoints,
@@ -1028,6 +1037,10 @@ namespace DeepSightAI
         public string AiStatus { get; set; }
         public string ManualStatus { get; set; }
         public int DefectCount { get; set; }
+        /// <summary>
+        /// 缺陷名称列表，多个缺陷名用逗号分隔
+        /// </summary>
+        public string DefectName { get; set; }
         /// <summary>
         /// 缺陷点数变化，格式：原始数量 -> VVS复判后NG数量
         /// </summary>
