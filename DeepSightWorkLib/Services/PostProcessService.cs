@@ -104,10 +104,10 @@ namespace DeepSightWorkLib.Services
                                 if (j == 0)
                                 {
                                     heatInfo.DefectName = sub_defectName;
-                                    heatInfo.RoiX = subX / 2 + subW / 4;
-                                    heatInfo.RoiY = subY / 2 + subH / 4;
-                                    heatInfo.Width = subW / 2;
-                                    heatInfo.Height = subH / 2;
+                                    heatInfo.RoiX = subX ;
+                                    heatInfo.RoiY = subY ;
+                                    heatInfo.Width = subW ;
+                                    heatInfo.Height = subH ;
                                     if (sub_defectName == "AU10" || sub_defectName == "CU10" || sub_defectName == "CU41"
                                         || sub_defectName == "HO01" || sub_defectName == "SM10")
                                     {

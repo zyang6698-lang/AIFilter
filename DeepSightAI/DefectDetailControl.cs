@@ -627,7 +627,7 @@ namespace DeepSightAI
                         using (var img = Image.FromFile(templatePath))
                         {
                             // 模板图也绘制缺陷框
-                            bottomPictureBox.Image = DrawDefectBoxOnImage(img, heatPoint);
+                            bottomPictureBox.Image = new Bitmap(img);
                         }
                     }
                 }
