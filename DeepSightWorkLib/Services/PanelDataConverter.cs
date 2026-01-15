@@ -1,4 +1,5 @@
 using DeepSightModel;
+using DeepSightModel.Configuration;
 using DeepSightTool;
 using DeepSightWorkLib.Interfaces;
 using Newtonsoft.Json;
@@ -28,6 +29,11 @@ namespace DeepSightWorkLib.Services
         {
             NullValueHandling = NullValueHandling.Ignore
         };
+
+        /// <summary>
+        /// Minio 配置引用
+        /// </summary>
+        private static MinioSettings MinioSettingsConfig => MinioSettings.Instance;
 
         /// <inheritdoc/>
         public PanelConvertResult Convert(RootPanelInfo panelInfo, PanelConvertContext context)
@@ -439,7 +445,7 @@ namespace DeepSightWorkLib.Services
                 ImageType = imageType
             });
 
-            addUrlAction?.Invoke($"http://{minioConfig}/deepiresults/{imagePath}");
+            addUrlAction?.Invoke($"http://{minioConfig}/{MinioSettingsConfig.DefaultBucket}/{imagePath}");
         }
 
         /// <summary>
@@ -451,10 +457,10 @@ namespace DeepSightWorkLib.Services
             {
                 imageminio = new ImageMminio
                 {
-                    access_key_id = "deepiobjectdata",
-                    bucket = "deepiresults",
+                    access_key_id = MinioSettingsConfig.AccessKey,
+                    bucket = MinioSettingsConfig.DefaultBucket,
                     endpoint_url = minioIP,
-                    secret_key = "deepiobject2019",
+                    secret_key = MinioSettingsConfig.SecretKey,
                     secret_port = minioPort
                 }
             };

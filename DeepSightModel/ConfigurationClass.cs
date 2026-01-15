@@ -1,4 +1,5 @@
-﻿using DeepSightTool;
+﻿using DeepSightModel.Configuration;
+using DeepSightTool;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -19,10 +20,6 @@ namespace DeepSightModel
         /// 项目名
         /// </summary>
         public string ProjectName { get; set; }
-        /// <summary>
-        /// 线体
-        /// </summary>
-        public string Line { get; set; }
         /// <summary>
         /// 日志存储天数
         /// </summary>
@@ -96,16 +93,15 @@ namespace DeepSightModel
             {
                 ConfigurationClass config = new ConfigurationClass
                 {
-                    ProjectName = "DeepSight_AI",
-                    Line = "Line1",
-                    ServerIP = "http://",
-                    ServerPort = "2000",
-                    LogDay = 7,
-                    endpoint_address = "127.0.0.1",
-                    MinioPort = "9102",
-                    DsCenterUrl = "http://dp55.local:82/api/zmq/dataImport",
-                    MaxDefectCount = 200,
-                    AgentShutdownTimeout = 2000
+                    ProjectName = DefaultValues.ProjectName,
+                    ServerIP = DefaultValues.ServerIP,
+                    ServerPort = DefaultValues.ServerPort,
+                    LogDay = DefaultValues.LogDay,
+                    endpoint_address = DefaultValues.MinioIP,
+                    MinioPort = DefaultValues.MinioPort,
+                    DsCenterUrl = DefaultValues.DsCenterUrl,
+                    MaxDefectCount = DefaultValues.MaxDefectCount,
+                    AgentShutdownTimeout = DefaultValues.AgentShutdownTimeout
                 };
                 return Save(config);
             }
@@ -305,27 +301,30 @@ namespace DeepSightModel
         {
             try
             {
-                AVIConfig aviConfig = new AVIConfig();
-                WatchPathConfig watchPath = new WatchPathConfig()
+                AVIConfig aviConfig = new AVIConfig
                 {
-                    APath = "C:\\workspace\\ats\\real_ats_data\\real_ats_data\\Verify_A-2025.04yue",
-                    BPath = "C:\\workspace\\ats\\real_ats_data\\real_ats_data\\Verify_B-2025.04yue",
-                    Depth = 4,
-                    IsEnable = false,
+                    WatchPaths = new List<WatchPathConfig>
+                    {
+                        new WatchPathConfig()
+                        {
+                            AviName = DefaultValues.AviName,
+                            APath = string.Empty,  // 由用户配置
+                            BPath = string.Empty,  // 由用户配置
+                            IsEnable = false,
+                        }
+                    },
+                    MaxWaitTime = DefaultValues.MaxWaitTime,
+                    WaitFlag = DefaultValues.WaitFlag,
+                    Finishflag = DefaultValues.FinishFlag,
+                    AMinioConfig = DefaultValues.MinioConfig,
+                    BMinioConfig = DefaultValues.MinioConfig,
+                    LDBEndpoint = DefaultValues.LDBEndpoint,
+                    GetInferResultInterval = DefaultValues.GetInferResultInterval,
+                    GetInferResultTimeout = DefaultValues.GetInferResultTimeout,
+                    DeepsightAgentDataWorkspace = string.Empty,  // 由用户配置
+                    TemporaryFileStorageArea_A = string.Empty,   // 由用户配置
+                    TemporaryFileStorageArea_B = string.Empty   // 由用户配置
                 };
-                aviConfig.WatchPaths = new List<WatchPathConfig>();
-                aviConfig.WatchPaths.Add(watchPath);
-                aviConfig.MaxWaitTime = 5;
-                aviConfig.WaitFlag = "wait_format.flag";
-                aviConfig.Finishflag = "finish_format.flag";
-                aviConfig.AMinioConfig = "192.168.77.126:9102";
-                aviConfig.BMinioConfig = "192.168.77.126:9102";
-                aviConfig.LDBEndpoint = "192.168.77.126:9877";
-                aviConfig.GetInferResultInterval = 5;
-                aviConfig.GetInferResultTimeout = 300;
-                aviConfig.DeepsightAgentDataWorkspace = "C:\\minio\\deepiresults\\real_ats_data";
-                aviConfig.TemporaryFileStorageArea_A = "C:\\workspace\\ats\\ats_data\\temporary_file_storage_area_A";
-                aviConfig.TemporaryFileStorageArea_B = "C:\\workspace\\ats\\ats_data\\temporary_file_storage_area_B";
                 return Save(aviConfig);
             }
             catch

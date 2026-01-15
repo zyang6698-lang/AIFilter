@@ -1,4 +1,5 @@
 ﻿using DeepSightCommunication.Interfaces;
+using DeepSightModel.Configuration;
 using DeepSightTool;
 using Minio;
 using Minio.ApiEndpoints;
@@ -25,16 +26,25 @@ namespace DeepSightCommunication
         public static ConcurrentDictionary<string, MinioClient> dic_Minio = new ConcurrentDictionary<string, MinioClient>();
         public MinioClient _minioClient;
         private bool _overwriteExisting = true;
+
+        /// <summary>
+        /// 从配置获取 Minio 凭证信息
+        /// </summary>
+        private static MinioSettings MinioSettingsConfig => MinioSettings.Instance;
+
         public void BuildClient(string minio_ip, string minio_port)
         {
             if (!dic_Minio.ContainsKey(minio_ip))
             {
                 var endpoint = $"{minio_ip}:{minio_port}";
-                var accessKey = "deepiobjectdata";
-                var secretKey = "deepiobject2019";
-                _minioClient = (MinioClient)new MinioClient().WithEndpoint(endpoint).WithCredentials(accessKey, secretKey)
-               //.WithSSL()
-               .Build();
+                var accessKey = MinioSettingsConfig.AccessKey;
+                var secretKey = MinioSettingsConfig.SecretKey;
+                var builder = new MinioClient().WithEndpoint(endpoint).WithCredentials(accessKey, secretKey);
+                if (MinioSettingsConfig.UseSsl)
+                {
+                    builder = builder.WithSSL();
+                }
+                _minioClient = (MinioClient)builder.Build();
                 dic_Minio.TryAdd(minio_ip, _minioClient);
                 LogTextHelper.Info("创建Minio_Ip:Minio_Port完成" + endpoint);
             }
@@ -182,7 +192,7 @@ namespace DeepSightCommunication
                     foreach (var obj in objects)
                     {
                         tasks.Add(ProcessObjectAsync(bucket, obj, minioFolderPath, localRootPath,true));
-                        if (tasks.Count >= 15)
+                        if (tasks.Count >= MinioSettingsConfig.MaxConcurrentDownloads)
                         {
                             await Task.WhenAll(tasks);
                             tasks.Clear();
@@ -267,7 +277,7 @@ namespace DeepSightCommunication
                     .WithObject(objectKey)
                     .WithCallbackStream(async (stream, cancellationToken) =>
                     {
-                        await stream.CopyToAsync(fileStream, 81920, cancellationToken);
+                        await stream.CopyToAsync(fileStream, MinioSettingsConfig.StreamBufferSize, cancellationToken);
                         await fileStream.FlushAsync(cancellationToken);
                     });
                     await _minioClient.GetObjectAsync(args);

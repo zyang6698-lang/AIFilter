@@ -22,16 +22,15 @@ namespace DeepSightModel.Configuration
         {
             return new ConfigurationClass
             {
-                ProjectName = "DeepSight_AI",
-                Line = "Line1",
-                ServerIP = "http://",
-                ServerPort = "2000",
-                LogDay = 7,
-                endpoint_address = "127.0.0.1",
-                MinioPort = "9102",
-                DsCenterUrl = "http://dp55.local:82/api/zmq/dataImport",
-                MaxDefectCount = 200,
-                AgentShutdownTimeout = 2000
+                ProjectName = DefaultValues.ProjectName,
+                ServerIP = DefaultValues.ServerIP,
+                ServerPort = DefaultValues.ServerPort,
+                LogDay = DefaultValues.LogDay,
+                endpoint_address = DefaultValues.MinioIP,
+                MinioPort = DefaultValues.MinioPort,
+                DsCenterUrl = DefaultValues.DsCenterUrl,
+                MaxDefectCount = DefaultValues.MaxDefectCount,
+                AgentShutdownTimeout = DefaultValues.AgentShutdownTimeout
             };
         }
 

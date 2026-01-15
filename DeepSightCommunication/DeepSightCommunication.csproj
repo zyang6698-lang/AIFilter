@@ -165,6 +165,10 @@
       <Project>{A9B6C0CB-ADC2-4F0B-B786-AF1A8B752040}</Project>
       <Name>DeepSightEvent</Name>
     </ProjectReference>
+    <ProjectReference Include="..\DeepSightModel\DeepSightModel.csproj">
+      <Project>{c3032123-71af-4b9f-aaf1-5fdbb73274b0}</Project>
+      <Name>DeepSightModel</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DeepSightTool\DeepSightTool.csproj">
       <Project>{57CA0C29-06A8-4ACC-B6EB-7BF1BF6CF1B3}</Project>
       <Name>DeepSightTool</Name>

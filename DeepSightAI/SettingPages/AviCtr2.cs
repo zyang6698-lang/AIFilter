@@ -1,4 +1,5 @@
 ﻿using DeepSightModel;
+using DeepSightModel.Configuration;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -63,14 +64,13 @@ namespace DeepSightAI.SettingPages
         private ToolTip toolTip;
         private WatchPathConfig _ctrConfig = new WatchPathConfig()
         {
-            AviName = "AVI",
+            AviName = DefaultValues.AviName,
             IsEnable = false,
-            APath = "C:\\workspace\\ats\\real_ats_data\\real_ats_data\\Verify_A-2025.04yue",
-            BPath = "C:\\workspace\\ats\\real_ats_data\\real_ats_data\\Verify_B-2025.04yue",
-            Depth = 4,
-            FileA = "",
-            FileB = "",
-            // CopyOrCutMode="copy",
+            APath = string.Empty,  // 由用户配置，不再硬编码默认路径
+            BPath = string.Empty,  // 由用户配置，不再硬编码默认路径
+            Depth = DefaultValues.WatchPathDepth,
+            FileA = string.Empty,
+            FileB = string.Empty,
         };
 
         private double aviPassRate;

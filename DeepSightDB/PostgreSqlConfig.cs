@@ -50,6 +50,36 @@ namespace DeepSightDB
         public int MinPoolSize { get; set; } = 1;
 
         /// <summary>
+        /// 写缓冲区大小（字节）
+        /// </summary>
+        public int WriteBufferSize { get; set; } = 16384;
+
+        /// <summary>
+        /// 读缓冲区大小（字节）
+        /// </summary>
+        public int ReadBufferSize { get; set; } = 16384;
+
+        /// <summary>
+        /// 是否启用 TCP Keepalive
+        /// </summary>
+        public bool TcpKeepalive { get; set; } = true;
+
+        /// <summary>
+        /// Keepalive 间隔（秒）
+        /// </summary>
+        public int KeepaliveInterval { get; set; } = 60;
+
+        /// <summary>
+        /// 是否启用连接池
+        /// </summary>
+        public bool Pooling { get; set; } = true;
+
+        /// <summary>
+        /// 关闭连接时是否重置连接状态
+        /// </summary>
+        public bool NoResetOnClose { get; set; } = true;
+
+        /// <summary>
         /// 获取连接字符串
         /// </summary>
         public string GetConnectionString()
@@ -64,9 +94,9 @@ namespace DeepSightDB
             // - Keepalive: 连接保活间隔（秒）
             return $"Host={Host};Port={Port};Database={Database};Username={Username};Password={Password};" +
                    $"Timeout={Timeout};Maximum Pool Size={MaxPoolSize};Minimum Pool Size={MinPoolSize};" +
-                   $"Pooling=true;No Reset On Close=true;" +
-                   $"Write Buffer Size=16384;Read Buffer Size=16384;" +
-                   $"Tcp Keepalive=true;Keepalive=60;";
+                   $"Pooling={Pooling};No Reset On Close={NoResetOnClose};" +
+                   $"Write Buffer Size={WriteBufferSize};Read Buffer Size={ReadBufferSize};" +
+                   $"Tcp Keepalive={TcpKeepalive};Keepalive={KeepaliveInterval};";
         }
 
         /// <summary>

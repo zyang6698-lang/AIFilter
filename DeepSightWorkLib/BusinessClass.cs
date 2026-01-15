@@ -5,6 +5,7 @@ using DeepSightDB.Interfaces;
 using DeepSightDisplay;
 using DeepSightEvent;
 using DeepSightModel;
+using DeepSightModel.Configuration;
 using DeepSightTool;
 using DeepSightWorkLib.Interfaces;
 using DeepSightWorkLib.Services;
@@ -59,7 +60,10 @@ namespace DeepSightWorkLib
 
         #region 私有字段 - 数据库批量写入
 
-        private const int PanelSideBatchSize = 100;
+        /// <summary>
+        /// Panel 批量写入大小（来自配置）
+        /// </summary>
+        private static int PanelSideBatchSize => DefaultValues.PanelSideBatchSize;
         private readonly object _panelRecordLock = new object();
         private readonly List<PanelSideRecord> _pendingPanelSideRecords = new List<PanelSideRecord>();
 
@@ -68,9 +72,9 @@ namespace DeepSightWorkLib
         #region 私有字段 - 运行状态
 
         /// <summary>
-        /// 缓存过期时间（分钟）
+        /// 缓存过期时间（分钟）- 来自配置
         /// </summary>
-        private const int CACHE_EXPIRE_MINUTES = 30;
+        private static int CACHE_EXPIRE_MINUTES => DefaultValues.CacheExpireMinutes;
 
         /// <summary>
         /// 开始/停止作业标志
@@ -243,24 +247,24 @@ namespace DeepSightWorkLib
             _workerManager.Start();
             AIStopwatch = new Stopwatch();
 
-            // 注册各个工作线程
+            // 注册各个工作线程（轮询间隔来自 DefaultValues 配置）
             _workerManager.RegisterPollingWorker(() => WorkerReadAVI(),
-                new WorkerConfig { Name = "ReadAVI", PollIntervalMs = 100 });
+                new WorkerConfig { Name = "ReadAVI", PollIntervalMs = DefaultValues.ReadAviPollIntervalMs });
 
             _workerManager.RegisterPollingWorker(() => WorkerImageLoad(),
-                new WorkerConfig { Name = "ImageLoad", PollIntervalMs = 15 });
+                new WorkerConfig { Name = "ImageLoad", PollIntervalMs = DefaultValues.ImageLoadPollIntervalMs });
 
             _workerManager.RegisterPollingWorker(() => WorkerDefect(),
-                new WorkerConfig { Name = "Defect", PollIntervalMs = 15 });
+                new WorkerConfig { Name = "Defect", PollIntervalMs = DefaultValues.DefectPollIntervalMs });
 
             _workerManager.RegisterPollingWorker(() => WorkerReturnAVI(),
-                new WorkerConfig { Name = "ReturnAVI", PollIntervalMs = 15 });
+                new WorkerConfig { Name = "ReturnAVI", PollIntervalMs = DefaultValues.ReturnAviPollIntervalMs });
 
             _workerManager.RegisterPollingWorker(() => WorkerPostProcess(),
-                new WorkerConfig { Name = "PostProcess", PollIntervalMs = 10 });
+                new WorkerConfig { Name = "PostProcess", PollIntervalMs = DefaultValues.PostProcessPollIntervalMs });
 
             _workerManager.RegisterPollingWorker(() => WorkerCleanupCache(),
-                new WorkerConfig { Name = "CleanupCache", PollIntervalMs = 60000, IsLongRunning = true });
+                new WorkerConfig { Name = "CleanupCache", PollIntervalMs = DefaultValues.CleanupCachePollIntervalMs, IsLongRunning = true });
 
             LogTextHelper.Info("BusinessClass 初始化完成，所有线程已启动");
         }

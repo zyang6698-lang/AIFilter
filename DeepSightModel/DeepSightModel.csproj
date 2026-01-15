@@ -80,10 +80,12 @@
   <ItemGroup>
     <Compile Include="AviResponseModel.cs" />
     <Compile Include="Configuration\ConfigPaths.cs" />
+    <Compile Include="Configuration\DefaultValues.cs" />
     <Compile Include="Configuration\JsonConfigBase.cs" />
     <Compile Include="Configuration\GeneralConfigManager.cs" />
     <Compile Include="Configuration\AISolutionConfigManager.cs" />
     <Compile Include="ConfigurationClass.cs" />
+    <Compile Include="Configuration\MinioSettings.cs" />
     <Compile Include="DisPlayInfo.cs" />
     <Compile Include="DsCenterInfo.cs" />
     <Compile Include="ImageDataInfo.cs" />
