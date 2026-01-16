@@ -109,8 +109,9 @@ namespace DeepSightWorkLib.Services
 
         /// <summary>
         /// 创建标准的轮询工作线程
+        /// 使用自适应退避策略：当没有工作时增加等待时间，有工作时减少等待时间
         /// </summary>
-        /// <param name="workAction">每次轮询执行的工作（返回true继续轮询，返回false等待）</param>
+        /// <param name="workAction">每次轮询执行的工作（返回true表示有工作处理，返回false表示空闲）</param>
         /// <param name="config">工作线程配置</param>
         public void RegisterPollingWorker(Func<bool> workAction, WorkerConfig config)
         {
@@ -118,14 +119,40 @@ namespace DeepSightWorkLib.Services
             {
                 LogTextHelper.Info($"工作线程 [{config.Name}] 已启动");
 
+                // 自适应退避参数
+                int currentWaitMs = config.PollIntervalMs;
+                int maxWaitMs = Math.Max(config.PollIntervalMs * 10, 500); // 最大等待时间
+                int consecutiveIdleCount = 0;
+
                 while (!token.IsCancellationRequested)
                 {
                     try
                     {
-                        Thread.Sleep(config.PollIntervalMs);
-                        if (token.IsCancellationRequested) break;
+                        // 使用 WaitHandle 等待，支持取消
+                        if (token.WaitHandle.WaitOne(currentWaitMs))
+                        {
+                            // 收到取消信号
+                            break;
+                        }
 
-                        workAction?.Invoke();
+                        bool hasWork = workAction?.Invoke() ?? false;
+
+                        // 自适应退避策略
+                        if (hasWork)
+                        {
+                            // 有工作时，重置等待时间为最小值
+                            currentWaitMs = config.PollIntervalMs;
+                            consecutiveIdleCount = 0;
+                        }
+                        else
+                        {
+                            // 空闲时，逐渐增加等待时间（指数退避）
+                            consecutiveIdleCount++;
+                            if (consecutiveIdleCount > 5)
+                            {
+                                currentWaitMs = Math.Min(currentWaitMs * 2, maxWaitMs);
+                            }
+                        }
                     }
                     catch (OperationCanceledException)
                     {
@@ -134,6 +161,8 @@ namespace DeepSightWorkLib.Services
                     catch (Exception ex)
                     {
                         LogTextHelper.Error($"工作线程 [{config.Name}] 异常: {ex}");
+                        // 异常后短暂等待，避免快速循环
+                        token.WaitHandle.WaitOne(100);
                     }
                 }
 

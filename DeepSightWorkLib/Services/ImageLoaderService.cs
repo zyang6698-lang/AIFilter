@@ -9,7 +9,7 @@ using DeepSightModel;
 namespace DeepSightWorkLib.Services
 {
     /// <summary>
-    /// ¸ºÔğ´Ó Minio ÏÂÔØÍ¼Æ¬²¢½âÂëÎª OpenCvSharp.Mat µÄ·şÎñ
+    /// ä» Minio åŠ è½½å›¾ç‰‡å¹¶è½¬æ¢ä¸º OpenCvSharp.Mat çš„æœåŠ¡
     /// </summary>
     public class ImageLoaderService
     {
@@ -21,7 +21,7 @@ namespace DeepSightWorkLib.Services
         }
 
         /// <summary>
-        /// ´Ó×Ô¶¨ÒåµÄ "endpoint:objectKey" ¸ñÊ½¼ÓÔØµ¥ÕÅÍ¼Æ¬²¢·µ»Ø Mat£¬Ê§°Ü·µ»Ø null
+        /// å°è¯•ä» "endpoint:objectKey" æ ¼å¼çš„è·¯å¾„åŠ è½½å›¾ç‰‡å¹¶è¿”å› Matï¼Œå¤±è´¥è¿”å› null
         /// </summary>
         public Mat LoadMinioImage(string path)
         {
@@ -31,14 +31,14 @@ namespace DeepSightWorkLib.Services
                 var parts = path.Split(':');
                 if (parts.Length < 2)
                 {
-                    LogTextHelper.Warn("Í¼Æ¬Â·¾¶¸ñÊ½´íÎó(Ğè°üº¬Ã°ºÅ)£º" + path);
+                    LogTextHelper.Warn("å›¾ç‰‡è·¯å¾„æ ¼å¼é”™è¯¯(ç¼ºå°‘å†’å·)ï¼š" + path);
                     return null;
                 }
                 using (var stream = _minio.GetImageStreamSync("deepiresults", parts[1], parts[0]))
                 {
                     if (stream == null || stream.Length == 0)
                     {
-                        LogTextHelper.Warn("Minio·µ»Ø¿ÕÍ¼Æ¬Êı¾İ£º" + path);
+                        LogTextHelper.Warn("Minioè¿”å›ç©ºå›¾ç‰‡æ•°æ®ï¼š" + path);
                         return null;
                     }
                     return Cv2.ImDecode(stream.ToArray(), ImreadModes.Color);
@@ -46,13 +46,13 @@ namespace DeepSightWorkLib.Services
             }
             catch (Exception ex)
             {
-                LogTextHelper.Error("¼ÓÔØ Minio Í¼Æ¬Òì³££º" + ex);
+                LogTextHelper.Error("åŠ è½½ Minio å›¾ç‰‡å¼‚å¸¸ï¼š" + ex);
                 return null;
             }
         }
 
         /// <summary>
-        /// ²¢ĞĞ¼ÓÔØ¶àÕÅÍ¼Æ¬²¢·µ»Ø·Ç¿Õ Mat ÁĞ±í
+        /// å¹¶è¡ŒåŠ è½½å¤šå¼ å›¾ç‰‡ï¼Œè¿”å›éç©º Mat åˆ—è¡¨
         /// </summary>
         public List<Mat> LoadImages(IEnumerable<string> paths)
         {
@@ -69,14 +69,14 @@ namespace DeepSightWorkLib.Services
             }
             catch (Exception ex)
             {
-                LogTextHelper.Error("LoadImages Òì³££º" + ex);
+                LogTextHelper.Error("LoadImages å¼‚å¸¸ï¼š" + ex);
                 return new List<Mat>();
             }
         }
 
         /// <summary>
-        /// Build list of Minio image keys (endpoint:objectKey) from panel info.
-        /// This centralizes logic previously in BusinessClass.GetAllMinioImageKeys
+        /// ä»é¢æ¿ä¿¡æ¯æ„å»º Minio å›¾ç‰‡é”®åˆ—è¡¨ï¼ˆendpoint:objectKey æ ¼å¼ï¼‰
+        /// æ­¤æ–¹æ³•é›†ä¸­äº†åŸæ¥ BusinessClass.GetAllMinioImageKeys ä¸­çš„é€»è¾‘
         /// </summary>
         public List<string> GetAllMinioImageKeys(RootPanelInfoWithIP info)
         {
@@ -85,7 +85,7 @@ namespace DeepSightWorkLib.Services
             {
                 if (info == null || info.rootInfo == null || string.IsNullOrWhiteSpace(info.IP))
                 {
-                    LogTextHelper.Warn("GetAllMinioImageKeys: ²ÎÊıÎª¿Õ»ò IP È±Ê§¡£");
+                    LogTextHelper.Warn("GetAllMinioImageKeys: å‚æ•°ä¸ºç©ºæˆ– IP ç¼ºå¤±ï¼");
                     return results;
                 }
 
@@ -94,13 +94,13 @@ namespace DeepSightWorkLib.Services
                 string head = ExtractHeadFromLocalDescribeDir(panel.LocalDescribeDir);
                 if (string.IsNullOrWhiteSpace(head))
                 {
-                    LogTextHelper.Warn($"GetAllMinioImageKeys: ÎŞ·¨´Ó LocalDescribeDir ½âÎö head¡£LocalDescribeDir={panel.LocalDescribeDir}");
+                    LogTextHelper.Warn($"GetAllMinioImageKeys: æ— æ³•ä» LocalDescribeDir æå– headï¼ŒLocalDescribeDir={panel.LocalDescribeDir}");
                     return results;
                 }
 
                 if (panel.PcsInfo == null || panel.PcsInfo.Count == 0)
                 {
-                    LogTextHelper.Info($"GetAllMinioImageKeys: PcsInfo Îª¿Õ¡£SN={panel.SerialNumber}");
+                    LogTextHelper.Info($"GetAllMinioImageKeys: PcsInfo ä¸ºç©ºã€‚SN={panel.SerialNumber}");
                     return results;
                 }
 
@@ -124,7 +124,7 @@ namespace DeepSightWorkLib.Services
             }
             catch (Exception ex)
             {
-                LogTextHelper.Error("GetAllMinioImageKeys Òì³££º" + ex);
+                LogTextHelper.Error("GetAllMinioImageKeys å¼‚å¸¸ï¼š" + ex);
             }
 
             return results;
@@ -142,6 +142,9 @@ namespace DeepSightWorkLib.Services
             }
         }
 
+        /// <summary>
+        /// ä» LocalDescribeDir ä¸­æå–è·¯å¾„å¤´éƒ¨
+        /// </summary>
         private string ExtractHeadFromLocalDescribeDir(string localDescribeDir)
         {
             if (string.IsNullOrWhiteSpace(localDescribeDir)) return string.Empty;

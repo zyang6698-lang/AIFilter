@@ -42,7 +42,8 @@ namespace DeepSightAI
         {
             InitializeComponent();
 
-            Control.CheckForIllegalCrossThreadCalls = false;
+            // 注意：不再禁用跨线程检查，改用 InvokeOnUI 方法安全地访问 UI
+            // Control.CheckForIllegalCrossThreadCalls = false;
             MaximizedBounds = SystemInformation.WorkingArea;//Screen.PrimaryScreen.WorkingArea;
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.AllPaintingInWmPaint, true); // 禁止擦除背景.
@@ -68,52 +69,29 @@ namespace DeepSightAI
         {
             try
             {
-                if (!FrHome.Instance.dic_Results.ContainsKey(sn))
+                // 使用 GetOrAdd 线程安全地获取或添加结果
+                var resultList = FrHome.Instance.dic_Results.GetOrAdd(sn, _ => new List<string>());
+                lock (resultList)
                 {
-                    List<string> result = new List<string>();
-                    result.AddRange(msg);
-                    FrHome.Instance.dic_Results.TryAdd(sn, result);
-                }
-                else
-                {
-                    FrHome.Instance.dic_Results.TryGetValue(sn, out List<string> result);
-                    result.AddRange(msg);
-                }
-                //细节信息
-                if (!FrHome.Instance.dic_Details.ContainsKey(sn))
-                {
-                    List<string> result = new List<string>();
-                    result.AddRange(details);
-                    FrHome.Instance.dic_Details.Add(sn, result);
-                }
-                else
-                {
-                    FrHome.Instance.dic_Details.TryGetValue(sn, out List<string> result);
-                    result.AddRange(details);
+                    resultList.AddRange(msg);
                 }
 
-                //PCS缺陷坐标
-                if (!FrHome.Instance.dic_PcsResult.ContainsKey(sn))
+                // 细节信息
+                var detailsList = FrHome.Instance.dic_Details.GetOrAdd(sn, _ => new List<string>());
+                lock (detailsList)
                 {
-                    PcsResult result = new PcsResult
-                    {
-                        vb_List = new List<VBRcvInfp>()
-                    };
-                    if (pcsResult?.vb_List != null)
-                    {
-                        result.vb_List.AddRange(pcsResult.vb_List);
-                    }
-                    FrHome.Instance.dic_PcsResult.Add(sn, result);
-                }
-                else
-                {
-                    FrHome.Instance.dic_PcsResult.TryGetValue(sn, out PcsResult result);
-                    if (pcsResult?.vb_List != null)
-                    {
-                        result.vb_List.AddRange(pcsResult.vb_List);
-                    }
+                    detailsList.AddRange(details);
                 }
 
+                // PCS缺陷坐标
+                var pcsResultEntry = FrHome.Instance.dic_PcsResult.GetOrAdd(sn, _ => new PcsResult { vb_List = new List<VBRcvInfp>() });
+                if (pcsResult?.vb_List != null)
+                {
+                    lock (pcsResultEntry.vb_List)
+                    {
+                        pcsResultEntry.vb_List.AddRange(pcsResult.vb_List);
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -126,21 +104,14 @@ namespace DeepSightAI
         {
             try
             {
-                if (!FrHome.Instance.dic_Infos.ContainsKey(sn))
+                // 使用 GetOrAdd 线程安全地获取或添加 Panel 信息
+                var infoList = FrHome.Instance.dic_Infos.GetOrAdd(sn, _ => new List<RootPanelInfoWithIP>());
+                lock (infoList)
                 {
-                    List<RootPanelInfoWithIP> resInfo = new List<RootPanelInfoWithIP>
-                    {
-                        info
-                    };
-                    FrHome.Instance.dic_Infos.Add(sn, resInfo);
+                    infoList.Add(info);
                 }
-                else
-                {
-                    FrHome.Instance.dic_Infos.TryGetValue(sn, out List<RootPanelInfoWithIP> resInfo);
-                    resInfo.Add(info);
-                    //客户要求先屏蔽
-                    //AddOrUpdateMachineData(info.rootInfo.StationName, info.rootInfo.ProductSerial, $"{info.rootInfo.LotId}_{info.rootInfo.LotBatch}");
-                }
+                //客户要求先屏蔽
+                //AddOrUpdateMachineData(info.rootInfo.StationName, info.rootInfo.ProductSerial, $"{info.rootInfo.LotId}_{info.rootInfo.LotBatch}");
                 Machine.config_class.Save(Machine.sysConfig);
             }
             catch (Exception ex)

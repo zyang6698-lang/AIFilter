@@ -21,11 +21,12 @@ namespace DeepSightAI
     {
 
 
-        public Dictionary<string, List<RootPanelInfoWithIP>> dic_Infos = new Dictionary<string, List<RootPanelInfoWithIP>>();
+        // 使用线程安全的 ConcurrentDictionary 替代普通 Dictionary，避免并发访问问题
+        public ConcurrentDictionary<string, List<RootPanelInfoWithIP>> dic_Infos = new ConcurrentDictionary<string, List<RootPanelInfoWithIP>>();
         public ConcurrentDictionary<string, List<string>> dic_Results = new ConcurrentDictionary<string, List<string>>();
-        public Dictionary<string, List<string>> dic_Details = new Dictionary<string, List<string>>();
-        public Dictionary<string, PcsResult> dic_PcsResult = new Dictionary<string, PcsResult>();
-        public Dictionary<string, List<string>> dic_Paths = new Dictionary<string, List<string>>();
+        public ConcurrentDictionary<string, List<string>> dic_Details = new ConcurrentDictionary<string, List<string>>();
+        public ConcurrentDictionary<string, PcsResult> dic_PcsResult = new ConcurrentDictionary<string, PcsResult>();
+        public ConcurrentDictionary<string, List<string>> dic_Paths = new ConcurrentDictionary<string, List<string>>();
 
 
         private List<RootPanelInfoWithIP> info = null;

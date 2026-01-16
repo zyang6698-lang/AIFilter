@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using DeepSightCommunication.Interfaces;
@@ -19,37 +20,61 @@ namespace DeepSightCommunication
     public class HttpClass : IHttpService
     {
         /// <summary>
-        /// http操作LevelDB
+        /// HTTP 请求超时时间（毫秒）
         /// </summary>
+        private const int HttpTimeoutMs = 8000;
+
+        /// <summary>
+        /// 共享的 HttpClient 实例（线程安全，推荐复用）
+        /// </summary>
+        private static readonly HttpClient _httpClient = new HttpClient
+        {
+            Timeout = TimeSpan.FromMilliseconds(HttpTimeoutMs)
+        };
+
+        /// <summary>
+        /// JSON 序列化设置（忽略空值）
+        /// </summary>
+        private static readonly JsonSerializerSettings _jsonSettings = new JsonSerializerSettings
+        {
+            NullValueHandling = NullValueHandling.Ignore
+        };
+
+        /// <summary>
+        /// http操作LevelDB（同步方法）
+        /// </summary>
+        /// <param name="url">请求地址</param>
         /// <param name="info">请求参数</param>
         /// <param name="type">请求类型 0：请求数据  1：回写数据</param>
-        /// <returns></returns>
+        /// <param name="outInfo">输出响应内容</param>
+        /// <returns>是否成功</returns>
         public bool HttpPostMethod(string url, object info, int type, out string outInfo)
         {
             bool result = false;
+            outInfo = string.Empty;
+
             try
             {
-                JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };//去掉空值NULL
-                string infoJson = JsonConvert.SerializeObject(info, Formatting.None, jsonSetting);
+                string infoJson = JsonConvert.SerializeObject(info, Formatting.None, _jsonSettings);
                 LogTextHelper.Info(string.Format("AI-->DB {1}:{0}", infoJson, type == 0 ? "请求数据" : "回写数据"));
 
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
                 request.Method = "POST";
-                request.Timeout = 8000;
+                request.Timeout = HttpTimeoutMs;
                 request.ContentType = "application/json";
 
                 byte[] data = Encoding.UTF8.GetBytes(infoJson);
                 request.ContentLength = data.Length;
-                using (Stream reqstream = request.GetRequestStream())
-                {
-                    reqstream.Write(data, 0, data.Length);
-                    reqstream.Close();
-                }
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                Stream stream = response.GetResponseStream();
 
-                //获取响应内容
-                using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+                using (Stream reqStream = request.GetRequestStream())
+                {
+                    reqStream.Write(data, 0, data.Length);
+                }
+
+                // 修复：使用 using 确保 response 和 stream 正确释放
+                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+                using (Stream responseStream = response.GetResponseStream())
+                using (StreamReader reader = new StreamReader(responseStream, Encoding.UTF8))
                 {
                     outInfo = reader.ReadToEnd();
                 }
@@ -59,45 +84,47 @@ namespace DeepSightCommunication
             }
             catch (Exception ex)
             {
-                outInfo = "";
+                outInfo = string.Empty;
                 result = false;
                 LogTextHelper.Error("HTTP流程异常" + ex.ToString());
                 SystemEvent.SendAlarmMsg("HTTP流程异常,详情请见LOG");
             }
+
             return result;
         }
 
+        /// <summary>
+        /// http操作LevelDB（真正的异步方法）
+        /// </summary>
+        /// <param name="url">请求地址</param>
+        /// <param name="info">请求参数</param>
+        /// <param name="type">请求类型 0：请求数据  1：回写数据</param>
+        /// <returns>HTTP 请求结果</returns>
         public async Task<HttpResult> HttpPostAsync(string url, object info, int type)
         {
             var result = new HttpResult();
 
             try
             {
-                // 1. 序列化数据
-                JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };//去掉空值NULL
-                string infoJson = JsonConvert.SerializeObject(info, Formatting.None, jsonSetting);
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                request.Method = "POST";
-                request.Timeout = 8000;
-                request.ContentType = "application/json";
-                request.KeepAlive = true;
-                byte[] data = Encoding.UTF8.GetBytes(infoJson);
-                request.ContentLength = data.Length;
+                string infoJson = JsonConvert.SerializeObject(info, Formatting.None, _jsonSettings);
 
-                using (Stream reqstream = request.GetRequestStream())
+                using (var content = new StringContent(infoJson, Encoding.UTF8, "application/json"))
+                using (var response = await _httpClient.PostAsync(url, content).ConfigureAwait(false))
                 {
-                    reqstream.Write(data, 0, data.Length);
-                    reqstream.Close();
-                }
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                Stream stream = response.GetResponseStream();
+                    result.Response = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    result.Success = response.IsSuccessStatusCode;
 
-                //获取响应内容
-                using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
-                {
-                    result.Response = Task.Run(async () => await reader.ReadToEndAsync()).GetAwaiter().GetResult();
-                    result.Success = true;
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        LogTextHelper.Warn($"HTTP请求返回非成功状态码: {response.StatusCode}");
+                    }
                 }
+            }
+            catch (TaskCanceledException)
+            {
+                result.Success = false;
+                result.Response = "请求超时";
+                LogTextHelper.Error($"HTTP请求超时: {url}");
             }
             catch (Exception ex)
             {

@@ -171,6 +171,92 @@ namespace DeepSightDB
         /// 获取当前数据库队列长度（待处理的操作数）
         /// </summary>
         public int GetQueueLength() => _dbQueue.Count;
+
+        #region 数据读取辅助方法
+
+        /// <summary>
+        /// 从 DataReader 读取 PanelDataRecord（抽取公共逻辑）
+        /// </summary>
+        private PanelDataRecord ReadPanelDataRecord(NpgsqlDataReader reader)
+        {
+            return new PanelDataRecord
+            {
+                Id = reader.GetInt32(0),
+                MachineId = reader.GetString(1),
+                SerialNumber = reader.GetString(2),
+                LotNumber = reader.GetString(3),
+                ProductSerial = reader.IsDBNull(4) ? null : reader.GetString(4),
+                DetectionDate = reader.GetDateTime(5),
+                PathIndex = reader.IsDBNull(6) ? null : reader.GetString(6),
+                AviCreationTime = reader.IsDBNull(7) ? (DateTime?)null : reader.GetDateTime(7),
+                Sides = new List<SideData>()
+            };
+        }
+
+        /// <summary>
+        /// 从 DataReader 读取 SideData（抽取公共逻辑）
+        /// </summary>
+        private SideData ReadSideData(NpgsqlDataReader reader)
+        {
+            var sideData = new SideData
+            {
+                Side = reader.GetString(8),
+                AviState = reader.IsDBNull(10) ? 0 : reader.GetInt32(10),
+                AiState = reader.IsDBNull(11) ? 0 : reader.GetInt32(11),
+                VvsState = reader.IsDBNull(12) ? 0 : reader.GetInt32(12),
+                VrsState = reader.IsDBNull(13) ? 0 : reader.GetInt32(13),
+                FinalState = reader.IsDBNull(14) ? 0 : reader.GetInt32(14)
+            };
+
+            if (!reader.IsDBNull(9))
+            {
+                sideData.DetectPoints = JsonConvert.DeserializeObject<List<DetectInfo>>(reader.GetString(9));
+            }
+            else
+            {
+                sideData.DetectPoints = new List<DetectInfo>();
+            }
+
+            return sideData;
+        }
+
+        /// <summary>
+        /// 执行 Panel 查询并返回结果列表（抽取公共逻辑）
+        /// </summary>
+        private List<PanelDataRecord> ExecutePanelQuery(NpgsqlConnection connection, string sql, Action<NpgsqlCommand> addParameters)
+        {
+            var panelRecords = new Dictionary<int, PanelDataRecord>();
+
+            using (var cmd = new NpgsqlCommand(sql, connection))
+            {
+                addParameters?.Invoke(cmd);
+
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        int panelId = reader.GetInt32(0);
+
+                        // 如果 Panel 不存在，创建新的
+                        if (!panelRecords.TryGetValue(panelId, out var panelRecord))
+                        {
+                            panelRecord = ReadPanelDataRecord(reader);
+                            panelRecords[panelId] = panelRecord;
+                        }
+
+                        // 如果有 Side 数据，添加到 Sides 列表
+                        if (!reader.IsDBNull(8))
+                        {
+                            panelRecord.Sides.Add(ReadSideData(reader));
+                        }
+                    }
+                }
+            }
+
+            return panelRecords.Values.ToList();
+        }
+
+        #endregion
         /// <summary>
         /// 确保数据库存在，如果不存在则自动创建（使用指定配置）
         /// </summary>
@@ -661,8 +747,6 @@ namespace DeepSightDB
             {
                 try
                 {
-                    var panelRecords = new Dictionary<int, PanelDataRecord>();
-
                     // 如果 lotNumber 为空，直接返回空列表
                     if (string.IsNullOrWhiteSpace(lotNumber))
                     {
@@ -670,7 +754,7 @@ namespace DeepSightDB
                         return;
                     }
 
-                    // 使用 LEFT JOIN 一次性查询所有数据，避免 N+1 问题
+                    // 构建 SQL 查询
                     var sqlBuilder = new System.Text.StringBuilder(@"
                         SELECT p.Id, p.MachineId, p.SerialNumber, p.LotNumber, p.ProductSerial, p.DetectionDate, p.PathIndex, p.AviCreationTime,
                                ps.Side, ps.HeatPoints, ps.AviState, ps.AiState, ps.VvsState, ps.VrsState, ps.FinalState
@@ -684,66 +768,17 @@ namespace DeepSightDB
                     }
                     sqlBuilder.Append(" ORDER BY p.Id");
 
-                    using (var cmd = new NpgsqlCommand(sqlBuilder.ToString(), connection))
+                    // 使用辅助方法执行查询
+                    var result = ExecutePanelQuery(connection, sqlBuilder.ToString(), cmd =>
                     {
                         cmd.Parameters.AddWithValue("@LotNumber", lotNumber);
                         if (!string.IsNullOrWhiteSpace(machineId))
                         {
                             cmd.Parameters.AddWithValue("@MachineId", machineId);
                         }
+                    });
 
-                        using (var reader = cmd.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                int panelId = reader.GetInt32(0);
-
-                                // 如果 Panel 不存在，创建新的
-                                if (!panelRecords.TryGetValue(panelId, out var panelRecord))
-                                {
-                                    panelRecord = new PanelDataRecord
-                                    {
-                                        Id = panelId,
-                                        MachineId = reader.GetString(1),
-                                        SerialNumber = reader.GetString(2),
-                                        LotNumber = reader.GetString(3),
-                                        ProductSerial = reader.IsDBNull(4) ? null : reader.GetString(4),
-                                        DetectionDate = reader.GetDateTime(5),
-                                        PathIndex = reader.IsDBNull(6) ? null : reader.GetString(6),
-                                        AviCreationTime = reader.IsDBNull(7) ? (DateTime?)null : reader.GetDateTime(7),
-                                        Sides = new List<SideData>()
-                                    };
-                                    panelRecords[panelId] = panelRecord;
-                                }
-
-                                // 如果有 Side 数据，添加到 Sides 列表
-                                if (!reader.IsDBNull(8))
-                                {
-                                    var sideData = new SideData
-                                    {
-                                        Side = reader.GetString(8),
-                                        AviState = reader.IsDBNull(10) ? 0 : reader.GetInt32(10),
-                                        AiState = reader.IsDBNull(11) ? 0 : reader.GetInt32(11),
-                                        VvsState = reader.IsDBNull(12) ? 0 : reader.GetInt32(12),
-                                        VrsState = reader.IsDBNull(13) ? 0 : reader.GetInt32(13),
-                                        FinalState = reader.IsDBNull(14) ? 0 : reader.GetInt32(14)
-                                    };
-
-                                    if (!reader.IsDBNull(9))
-                                    {
-                                        sideData.DetectPoints = JsonConvert.DeserializeObject<List<DetectInfo>>(reader.GetString(9));
-                                    }
-                                    else
-                                    {
-                                        sideData.DetectPoints = new List<DetectInfo>();
-                                    }
-                                    panelRecord.Sides.Add(sideData);
-                                }
-                            }
-                        }
-                    }
-
-                    tcs.SetResult(panelRecords.Values.ToList());
+                    tcs.SetResult(result);
                 }
                 catch (Exception ex)
                 {
@@ -754,12 +789,12 @@ namespace DeepSightDB
         }
 
         /// <summary>
-        /// 1.	输入起止时间，输出panels数据库所有的数据
+        /// 输入起止时间，输出 panels 数据库所有的数据
         /// </summary>
-        /// <param name="start"></param>
-        /// <param name="end"></param>
+        /// <param name="start">开始时间</param>
+        /// <param name="end">结束时间</param>
         /// <param name="partNumber">料号 (可选)</param>
-        /// <returns></returns>
+        /// <returns>Panel 数据记录列表</returns>
         public Task<List<PanelDataRecord>> GetPanelsData(DateTime start, DateTime end, string partNumber = null)
         {
             var tcs = new TaskCompletionSource<List<PanelDataRecord>>();
@@ -767,9 +802,7 @@ namespace DeepSightDB
             {
                 try
                 {
-                    var panelRecords = new Dictionary<int, PanelDataRecord>();
-
-                    // 使用 LEFT JOIN 一次性查询所有数据，避免 N+1 问题
+                    // 构建 SQL 查询
                     var sqlBuilder = new System.Text.StringBuilder(@"
                         SELECT p.Id, p.MachineId, p.SerialNumber, p.LotNumber, p.ProductSerial, p.DetectionDate, p.PathIndex, p.AviCreationTime,
                                ps.Side, ps.HeatPoints, ps.AviState, ps.AiState, ps.VvsState, ps.VrsState, ps.FinalState
@@ -783,7 +816,8 @@ namespace DeepSightDB
                     }
                     sqlBuilder.Append(" ORDER BY p.Id");
 
-                    using (var cmd = new NpgsqlCommand(sqlBuilder.ToString(), connection))
+                    // 使用辅助方法执行查询
+                    var result = ExecutePanelQuery(connection, sqlBuilder.ToString(), cmd =>
                     {
                         cmd.Parameters.AddWithValue("@Start", start);
                         cmd.Parameters.AddWithValue("@End", end);
@@ -791,59 +825,9 @@ namespace DeepSightDB
                         {
                             cmd.Parameters.AddWithValue("@ProductSerial", partNumber);
                         }
+                    });
 
-                        using (var reader = cmd.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                int panelId = reader.GetInt32(0);
-
-                                // 如果 Panel 不存在，创建新的
-                                if (!panelRecords.TryGetValue(panelId, out var panelRecord))
-                                {
-                                    panelRecord = new PanelDataRecord
-                                    {
-                                        Id = panelId,
-                                        MachineId = reader.GetString(1),
-                                        SerialNumber = reader.GetString(2),
-                                        LotNumber = reader.GetString(3),
-                                        ProductSerial = reader.IsDBNull(4) ? null : reader.GetString(4),
-                                        DetectionDate = reader.GetDateTime(5),
-                                        PathIndex = reader.IsDBNull(6) ? null : reader.GetString(6),
-                                        AviCreationTime = reader.IsDBNull(7) ? (DateTime?)null : reader.GetDateTime(7),
-                                        Sides = new List<SideData>()
-                                    };
-                                    panelRecords[panelId] = panelRecord;
-                                }
-
-                                // 如果有 Side 数据，添加到 Sides 列表
-                                if (!reader.IsDBNull(8))
-                                {
-                                    var sideData = new SideData
-                                    {
-                                        Side = reader.GetString(8),
-                                        AviState = reader.IsDBNull(10) ? 0 : reader.GetInt32(10),
-                                        AiState = reader.IsDBNull(11) ? 0 : reader.GetInt32(11),
-                                        VvsState = reader.IsDBNull(12) ? 0 : reader.GetInt32(12),
-                                        VrsState = reader.IsDBNull(13) ? 0 : reader.GetInt32(13),
-                                        FinalState = reader.IsDBNull(14) ? 0 : reader.GetInt32(14)
-                                    };
-
-                                    if (!reader.IsDBNull(9))
-                                    {
-                                        sideData.DetectPoints = JsonConvert.DeserializeObject<List<DetectInfo>>(reader.GetString(9));
-                                    }
-                                    else
-                                    {
-                                        sideData.DetectPoints = new List<DetectInfo>();
-                                    }
-                                    panelRecord.Sides.Add(sideData);
-                                }
-                            }
-                        }
-                    }
-
-                    tcs.SetResult(panelRecords.Values.ToList());
+                    tcs.SetResult(result);
                 }
                 catch (Exception ex)
                 {
