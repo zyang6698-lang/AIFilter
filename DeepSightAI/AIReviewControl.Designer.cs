@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.panel_Main = new System.Windows.Forms.Panel();
             this.splitContainer_Main = new System.Windows.Forms.SplitContainer();
@@ -62,6 +63,10 @@
             this.label_LotTitle = new System.Windows.Forms.Label();
             this.tabPage_Details = new System.Windows.Forms.TabPage();
             this.defectDetailControl1 = new DeepSightAI.DefectDetailControl();
+            this.tabPage_ValidationTest = new System.Windows.Forms.TabPage();
+            this.validationTestResultControl1 = new DeepSightAI.ValidationTestResultControl();
+            this.contextMenuStrip_Lot = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.toolStripMenuItem_RunTest = new System.Windows.Forms.ToolStripMenuItem();
             this.panel_Main.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer_Main)).BeginInit();
             this.splitContainer_Main.Panel1.SuspendLayout();
@@ -83,6 +88,8 @@
             this.panel_LotList.SuspendLayout();
             this.panel_SnSearch.SuspendLayout();
             this.tabPage_Details.SuspendLayout();
+            this.tabPage_ValidationTest.SuspendLayout();
+            this.contextMenuStrip_Lot.SuspendLayout();
             this.SuspendLayout();
             // 
             // panel_Main
@@ -92,7 +99,7 @@
             this.panel_Main.Location = new System.Drawing.Point(0, 0);
             this.panel_Main.Margin = new System.Windows.Forms.Padding(5);
             this.panel_Main.Name = "panel_Main";
-            this.panel_Main.Size = new System.Drawing.Size(1604, 906);
+            this.panel_Main.Size = new System.Drawing.Size(1924, 1087);
             this.panel_Main.TabIndex = 0;
             // 
             // splitContainer_Main
@@ -110,7 +117,7 @@
             // splitContainer_Main.Panel2
             // 
             this.splitContainer_Main.Panel2.Controls.Add(this.tabControl_Main);
-            this.splitContainer_Main.Size = new System.Drawing.Size(1604, 906);
+            this.splitContainer_Main.Size = new System.Drawing.Size(1924, 1087);
             this.splitContainer_Main.SplitterDistance = 363;
             this.splitContainer_Main.SplitterWidth = 7;
             this.splitContainer_Main.TabIndex = 3;
@@ -131,8 +138,8 @@
             // 
             this.splitContainer1.Panel2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
-            this.splitContainer1.Size = new System.Drawing.Size(363, 906);
-            this.splitContainer1.SplitterDistance = 421;
+            this.splitContainer1.Size = new System.Drawing.Size(363, 1087);
+            this.splitContainer1.SplitterDistance = 504;
             this.splitContainer1.SplitterWidth = 5;
             this.splitContainer1.TabIndex = 1;
             // 
@@ -140,7 +147,6 @@
             // 
             this.QueryControl.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.QueryControl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.QueryControl.EndDate = new System.DateTime(2025, 11, 26, 10, 54, 13, 49);
             this.QueryControl.IsDateChecked = true;
             this.QueryControl.Location = new System.Drawing.Point(0, 0);
             this.QueryControl.LotNumber = "";
@@ -149,8 +155,7 @@
             this.QueryControl.Name = "QueryControl";
             this.QueryControl.PartNumber = "";
             this.QueryControl.SelectedSide = "A";
-            this.QueryControl.Size = new System.Drawing.Size(363, 421);
-            this.QueryControl.StartDate = new System.DateTime(2025, 11, 26, 10, 54, 13, 49);
+            this.QueryControl.Size = new System.Drawing.Size(363, 504);
             this.QueryControl.TabIndex = 0;
             // 
             // splitContainer2
@@ -170,8 +175,8 @@
             // splitContainer2.Panel2
             // 
             this.splitContainer2.Panel2.Controls.Add(this.panel_ReviewDetail);
-            this.splitContainer2.Size = new System.Drawing.Size(363, 480);
-            this.splitContainer2.SplitterDistance = 61;
+            this.splitContainer2.Size = new System.Drawing.Size(363, 578);
+            this.splitContainer2.SplitterDistance = 73;
             this.splitContainer2.SplitterWidth = 5;
             this.splitContainer2.TabIndex = 0;
             // 
@@ -227,7 +232,7 @@
             this.panel_ReviewDetail.Location = new System.Drawing.Point(0, 0);
             this.panel_ReviewDetail.Margin = new System.Windows.Forms.Padding(4);
             this.panel_ReviewDetail.Name = "panel_ReviewDetail";
-            this.panel_ReviewDetail.Size = new System.Drawing.Size(363, 414);
+            this.panel_ReviewDetail.Size = new System.Drawing.Size(363, 500);
             this.panel_ReviewDetail.TabIndex = 0;
             // 
             // label_ReviewDetail
@@ -238,7 +243,7 @@
             this.label_ReviewDetail.Location = new System.Drawing.Point(0, 0);
             this.label_ReviewDetail.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label_ReviewDetail.Name = "label_ReviewDetail";
-            this.label_ReviewDetail.Size = new System.Drawing.Size(363, 414);
+            this.label_ReviewDetail.Size = new System.Drawing.Size(363, 500);
             this.label_ReviewDetail.TabIndex = 0;
             this.label_ReviewDetail.Text = "复判详情区";
             this.label_ReviewDetail.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -247,12 +252,13 @@
             // 
             this.tabControl_Main.Controls.Add(this.tabPage_Grid);
             this.tabControl_Main.Controls.Add(this.tabPage_Details);
+            this.tabControl_Main.Controls.Add(this.tabPage_ValidationTest);
             this.tabControl_Main.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl_Main.Location = new System.Drawing.Point(0, 0);
             this.tabControl_Main.Margin = new System.Windows.Forms.Padding(5);
             this.tabControl_Main.Name = "tabControl_Main";
             this.tabControl_Main.SelectedIndex = 0;
-            this.tabControl_Main.Size = new System.Drawing.Size(1234, 906);
+            this.tabControl_Main.Size = new System.Drawing.Size(1554, 1087);
             this.tabControl_Main.TabIndex = 2;
             // 
             // tabPage_Grid
@@ -262,7 +268,7 @@
             this.tabPage_Grid.Margin = new System.Windows.Forms.Padding(5);
             this.tabPage_Grid.Name = "tabPage_Grid";
             this.tabPage_Grid.Padding = new System.Windows.Forms.Padding(5);
-            this.tabPage_Grid.Size = new System.Drawing.Size(1226, 877);
+            this.tabPage_Grid.Size = new System.Drawing.Size(1546, 1058);
             this.tabPage_Grid.TabIndex = 0;
             this.tabPage_Grid.Text = "缺陷列表";
             this.tabPage_Grid.UseVisualStyleBackColor = true;
@@ -276,7 +282,7 @@
             this.panel_Grid.Location = new System.Drawing.Point(5, 5);
             this.panel_Grid.Margin = new System.Windows.Forms.Padding(5);
             this.panel_Grid.Name = "panel_Grid";
-            this.panel_Grid.Size = new System.Drawing.Size(1216, 867);
+            this.panel_Grid.Size = new System.Drawing.Size(1536, 1048);
             this.panel_Grid.TabIndex = 1;
             // 
             // dataGridView_Defects
@@ -315,7 +321,7 @@
             this.dataGridView_Defects.RowHeadersWidth = 51;
             this.dataGridView_Defects.RowTemplate.Height = 23;
             this.dataGridView_Defects.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
-            this.dataGridView_Defects.Size = new System.Drawing.Size(944, 867);
+            this.dataGridView_Defects.Size = new System.Drawing.Size(1264, 1048);
             this.dataGridView_Defects.TabIndex = 0;
             // 
             // col_SN
@@ -409,7 +415,7 @@
             this.splitter_LotGrid.Location = new System.Drawing.Point(267, 0);
             this.splitter_LotGrid.Margin = new System.Windows.Forms.Padding(4);
             this.splitter_LotGrid.Name = "splitter_LotGrid";
-            this.splitter_LotGrid.Size = new System.Drawing.Size(5, 867);
+            this.splitter_LotGrid.Size = new System.Drawing.Size(5, 1048);
             this.splitter_LotGrid.TabIndex = 3;
             this.splitter_LotGrid.TabStop = false;
             // 
@@ -422,7 +428,7 @@
             this.panel_LotList.Location = new System.Drawing.Point(0, 0);
             this.panel_LotList.Margin = new System.Windows.Forms.Padding(4);
             this.panel_LotList.Name = "panel_LotList";
-            this.panel_LotList.Size = new System.Drawing.Size(267, 867);
+            this.panel_LotList.Size = new System.Drawing.Size(267, 1048);
             this.panel_LotList.TabIndex = 2;
             // 
             // treeView_Lots
@@ -437,7 +443,7 @@
             this.treeView_Lots.Location = new System.Drawing.Point(0, 69);
             this.treeView_Lots.Margin = new System.Windows.Forms.Padding(4);
             this.treeView_Lots.Name = "treeView_Lots";
-            this.treeView_Lots.Size = new System.Drawing.Size(267, 798);
+            this.treeView_Lots.Size = new System.Drawing.Size(267, 979);
             this.treeView_Lots.TabIndex = 1;
             // 
             // panel_SnSearch
@@ -503,7 +509,7 @@
             this.tabPage_Details.Margin = new System.Windows.Forms.Padding(5);
             this.tabPage_Details.Name = "tabPage_Details";
             this.tabPage_Details.Padding = new System.Windows.Forms.Padding(5);
-            this.tabPage_Details.Size = new System.Drawing.Size(1226, 877);
+            this.tabPage_Details.Size = new System.Drawing.Size(1546, 1058);
             this.tabPage_Details.TabIndex = 1;
             this.tabPage_Details.Text = "缺陷详情";
             this.tabPage_Details.UseVisualStyleBackColor = true;
@@ -515,8 +521,45 @@
             this.defectDetailControl1.Location = new System.Drawing.Point(5, 5);
             this.defectDetailControl1.Margin = new System.Windows.Forms.Padding(7, 6, 7, 6);
             this.defectDetailControl1.Name = "defectDetailControl1";
-            this.defectDetailControl1.Size = new System.Drawing.Size(1216, 867);
+            this.defectDetailControl1.Size = new System.Drawing.Size(1536, 1048);
             this.defectDetailControl1.TabIndex = 0;
+            // 
+            // tabPage_ValidationTest
+            // 
+            this.tabPage_ValidationTest.Controls.Add(this.validationTestResultControl1);
+            this.tabPage_ValidationTest.Location = new System.Drawing.Point(4, 25);
+            this.tabPage_ValidationTest.Margin = new System.Windows.Forms.Padding(5);
+            this.tabPage_ValidationTest.Name = "tabPage_ValidationTest";
+            this.tabPage_ValidationTest.Padding = new System.Windows.Forms.Padding(5);
+            this.tabPage_ValidationTest.Size = new System.Drawing.Size(1546, 1058);
+            this.tabPage_ValidationTest.TabIndex = 2;
+            this.tabPage_ValidationTest.Text = "模型一致性测试";
+            this.tabPage_ValidationTest.UseVisualStyleBackColor = true;
+            // 
+            // validationTestResultControl1
+            // 
+            this.validationTestResultControl1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(30)))));
+            this.validationTestResultControl1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.validationTestResultControl1.Font = new System.Drawing.Font("微软雅黑", 9F);
+            this.validationTestResultControl1.Location = new System.Drawing.Point(5, 5);
+            this.validationTestResultControl1.Margin = new System.Windows.Forms.Padding(5);
+            this.validationTestResultControl1.Name = "validationTestResultControl1";
+            this.validationTestResultControl1.Size = new System.Drawing.Size(1536, 1048);
+            this.validationTestResultControl1.TabIndex = 0;
+            // 
+            // contextMenuStrip_Lot
+            // 
+            this.contextMenuStrip_Lot.ImageScalingSize = new System.Drawing.Size(20, 20);
+            this.contextMenuStrip_Lot.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItem_RunTest});
+            this.contextMenuStrip_Lot.Name = "contextMenuStrip_Lot";
+            this.contextMenuStrip_Lot.Size = new System.Drawing.Size(214, 28);
+            // 
+            // toolStripMenuItem_RunTest
+            // 
+            this.toolStripMenuItem_RunTest.Name = "toolStripMenuItem_RunTest";
+            this.toolStripMenuItem_RunTest.Size = new System.Drawing.Size(213, 24);
+            this.toolStripMenuItem_RunTest.Text = "运行模型一致性测试";
             // 
             // AIReviewControl
             // 
@@ -525,7 +568,7 @@
             this.Controls.Add(this.panel_Main);
             this.Margin = new System.Windows.Forms.Padding(5);
             this.Name = "AIReviewControl";
-            this.Size = new System.Drawing.Size(1604, 906);
+            this.Size = new System.Drawing.Size(1924, 1087);
             this.panel_Main.ResumeLayout(false);
             this.splitContainer_Main.Panel1.ResumeLayout(false);
             this.splitContainer_Main.Panel2.ResumeLayout(false);
@@ -548,6 +591,8 @@
             this.panel_SnSearch.ResumeLayout(false);
             this.panel_SnSearch.PerformLayout();
             this.tabPage_Details.ResumeLayout(false);
+            this.tabPage_ValidationTest.ResumeLayout(false);
+            this.contextMenuStrip_Lot.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -587,5 +632,9 @@
         private System.Windows.Forms.Button btn_SnSearch;
         private System.Windows.Forms.Panel panel_ReviewDetail;
         private System.Windows.Forms.Label label_ReviewDetail;
+        private System.Windows.Forms.TabPage tabPage_ValidationTest;
+        private ValidationTestResultControl validationTestResultControl1;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip_Lot;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem_RunTest;
     }
 }

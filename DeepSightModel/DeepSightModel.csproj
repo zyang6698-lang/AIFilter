@@ -87,7 +87,6 @@
     <Compile Include="ConfigurationClass.cs" />
     <Compile Include="Configuration\MinioSettings.cs" />
     <Compile Include="DisPlayInfo.cs" />
-    <Compile Include="DsCenterInfo.cs" />
     <Compile Include="ImageDataInfo.cs" />
     <Compile Include="InferenceResultModel.cs" />
     <Compile Include="PanelInfo.cs" />
@@ -99,10 +98,10 @@
     <Compile Include="SysAdmins.cs" />
     <Compile Include="TaskStatus.cs" />
     <Compile Include="TaskStatusInfo.cs" />
+    <Compile Include="ValidationTestModel.cs" />
     <Compile Include="VBInfo.cs" />
     <Compile Include="VBModel.cs" />
     <Compile Include="VBOutInfo.cs" />
-    <Compile Include="VBRcvInfp.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DeepSightTool\DeepSightTool.csproj">
@@ -113,6 +112,9 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="ReInference\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

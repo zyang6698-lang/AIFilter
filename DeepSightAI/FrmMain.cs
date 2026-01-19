@@ -65,7 +65,7 @@ namespace DeepSightAI
 
 
 
-        private void SystemEvent_EventSendDefectResultInfoToUI(string sn, List<string> msg, List<string> details, PcsResult pcsResult)
+        private void SystemEvent_EventSendDefectResultInfoToUI(string sn, List<string> msg, List<string> details)
         {
             try
             {
@@ -83,15 +83,6 @@ namespace DeepSightAI
                     detailsList.AddRange(details);
                 }
 
-                // PCS缺陷坐标
-                var pcsResultEntry = FrHome.Instance.dic_PcsResult.GetOrAdd(sn, _ => new PcsResult { vb_List = new List<VBRcvInfp>() });
-                if (pcsResult?.vb_List != null)
-                {
-                    lock (pcsResultEntry.vb_List)
-                    {
-                        pcsResultEntry.vb_List.AddRange(pcsResult.vb_List);
-                    }
-                }
             }
             catch (Exception ex)
             {
@@ -438,11 +429,10 @@ namespace DeepSightAI
         /// </summary>
         private void CleanupTaskData(string sn)
         {
-            FrHome.Instance.dic_Infos.Remove(sn);
-            FrHome.Instance.dic_Paths.Remove(sn);
+            FrHome.Instance.dic_Infos.TryRemove(sn,out _);
+            FrHome.Instance.dic_Paths.TryRemove(sn, out _);
             FrHome.Instance.dic_Results.TryRemove(sn, out _);
-            FrHome.Instance.dic_PcsResult.Remove(sn);
-            FrHome.Instance.dic_Details.Remove(sn);
+            FrHome.Instance.dic_Details.TryRemove(sn, out _);
         }
         internal void LoadMethod()
         {

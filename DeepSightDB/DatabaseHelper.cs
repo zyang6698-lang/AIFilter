@@ -205,7 +205,9 @@ namespace DeepSightDB
                 AiState = reader.IsDBNull(11) ? 0 : reader.GetInt32(11),
                 VvsState = reader.IsDBNull(12) ? 0 : reader.GetInt32(12),
                 VrsState = reader.IsDBNull(13) ? 0 : reader.GetInt32(13),
-                FinalState = reader.IsDBNull(14) ? 0 : reader.GetInt32(14)
+                FinalState = reader.IsDBNull(14) ? 0 : reader.GetInt32(14),
+                TestState = reader.IsDBNull(15) ? 0 : reader.GetInt32(15),
+                LastTestTime = reader.IsDBNull(16) ? (DateTime?)null : reader.GetDateTime(16)
             };
 
             if (!reader.IsDBNull(9))
@@ -372,8 +374,22 @@ namespace DeepSightDB
                     VvsState INTEGER DEFAULT 0, -- 0: 未运行, 1: OK, 2: NG
                     VrsState INTEGER DEFAULT 0, -- 0: 未运行, 1: OK, 2: NG
                     FinalState INTEGER DEFAULT 0, -- 0: 待处理, 1: 最终OK, 2: 最终NG
+                    TestState INTEGER DEFAULT 0, -- 0: 未测试, 1: 一致, 2: 不一致, 3: 测试中, 4: 测试异常
+                    LastTestTime TIMESTAMP, -- 最近一次测试时间
                     FOREIGN KEY (PanelId) REFERENCES Panels(Id) ON DELETE CASCADE
                 );";
+
+                // 为已存在的数据库添加 TestState 和 LastTestTime 列（如果不存在）
+                string addTestStateColumn = @"
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='panelsides' AND column_name='teststate') THEN
+                        ALTER TABLE PanelSides ADD COLUMN TestState INTEGER DEFAULT 0;
+                    END IF;
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='panelsides' AND column_name='lasttesttime') THEN
+                        ALTER TABLE PanelSides ADD COLUMN LastTestTime TIMESTAMP;
+                    END IF;
+                END $$;";
 
 
                 string createEmployeeReportsTable = @"
@@ -433,6 +449,10 @@ namespace DeepSightDB
                     command.CommandText = createPanelSidesTable;
                     command.ExecuteNonQuery();
                     command.CommandText = createEmployeeReportsTable;
+                    command.ExecuteNonQuery();
+
+                    // 迁移：为已存在的数据库添加新列
+                    command.CommandText = addTestStateColumn;
                     command.ExecuteNonQuery();
 
                     // 创建索引
@@ -757,7 +777,8 @@ namespace DeepSightDB
                     // 构建 SQL 查询
                     var sqlBuilder = new System.Text.StringBuilder(@"
                         SELECT p.Id, p.MachineId, p.SerialNumber, p.LotNumber, p.ProductSerial, p.DetectionDate, p.PathIndex, p.AviCreationTime,
-                               ps.Side, ps.HeatPoints, ps.AviState, ps.AiState, ps.VvsState, ps.VrsState, ps.FinalState
+                               ps.Side, ps.HeatPoints, ps.AviState, ps.AiState, ps.VvsState, ps.VrsState, ps.FinalState,
+                               ps.TestState, ps.LastTestTime
                         FROM Panels p
                         LEFT JOIN PanelSides ps ON p.Id = ps.PanelId
                         WHERE p.LotNumber = @LotNumber");
@@ -805,7 +826,8 @@ namespace DeepSightDB
                     // 构建 SQL 查询
                     var sqlBuilder = new System.Text.StringBuilder(@"
                         SELECT p.Id, p.MachineId, p.SerialNumber, p.LotNumber, p.ProductSerial, p.DetectionDate, p.PathIndex, p.AviCreationTime,
-                               ps.Side, ps.HeatPoints, ps.AviState, ps.AiState, ps.VvsState, ps.VrsState, ps.FinalState
+                               ps.Side, ps.HeatPoints, ps.AviState, ps.AiState, ps.VvsState, ps.VrsState, ps.FinalState,
+                               ps.TestState, ps.LastTestTime
                         FROM Panels p
                         LEFT JOIN PanelSides ps ON p.Id = ps.PanelId
                         WHERE p.DetectionDate BETWEEN @Start AND @End");
@@ -831,6 +853,44 @@ namespace DeepSightDB
                 }
                 catch (Exception ex)
                 {
+                    tcs.SetException(ex);
+                }
+            });
+            return tcs.Task;
+        }
+
+        /// <summary>
+        /// 更新 PanelSide 的测试状态
+        /// </summary>
+        /// <param name="serialNumber">序列号</param>
+        /// <param name="side">面别 (A/B)</param>
+        /// <param name="testState">测试状态</param>
+        /// <param name="testTime">测试时间</param>
+        public Task UpdateTestStateAsync(string serialNumber, string side, int testState, DateTime testTime)
+        {
+            var tcs = new TaskCompletionSource<bool>();
+            _dbQueue.Add(connection =>
+            {
+                try
+                {
+                    using (var cmd = new NpgsqlCommand(@"
+                        UPDATE PanelSides ps
+                        SET TestState = @TestState, LastTestTime = @LastTestTime
+                        FROM Panels p
+                        WHERE ps.PanelId = p.Id AND p.SerialNumber = @SerialNumber AND ps.Side = @Side", connection))
+                    {
+                        cmd.Parameters.AddWithValue("@SerialNumber", serialNumber);
+                        cmd.Parameters.AddWithValue("@Side", side);
+                        cmd.Parameters.AddWithValue("@TestState", testState);
+                        cmd.Parameters.AddWithValue("@LastTestTime", testTime);
+                        int affected = cmd.ExecuteNonQuery();
+                        LogTextHelper.Info($"UpdateTestState: SN={serialNumber}, Side={side}, State={testState}, 影响行数={affected}");
+                    }
+                    tcs.SetResult(true);
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error($"UpdateTestState 失败: {ex.Message}");
                     tcs.SetException(ex);
                 }
             });

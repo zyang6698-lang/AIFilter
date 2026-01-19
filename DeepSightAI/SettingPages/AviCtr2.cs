@@ -68,7 +68,7 @@ namespace DeepSightAI.SettingPages
             IsEnable = false,
             APath = string.Empty,  // 由用户配置，不再硬编码默认路径
             BPath = string.Empty,  // 由用户配置，不再硬编码默认路径
-            Depth = DefaultValues.WatchPathDepth,
+            Depth =0,
             FileA = string.Empty,
             FileB = string.Empty,
         };

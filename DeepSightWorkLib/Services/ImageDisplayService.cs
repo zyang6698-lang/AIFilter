@@ -133,7 +133,7 @@ namespace DeepSightWorkLib.Services
         /// <param name="index">显示窗口索引</param>
         /// <param name="result">AI结果代码</param>
         /// <param name="box">检测框信息</param>
-        public void ShowImage(string path, int index, string result = "", VBRcvInfp box = null)
+        public void ShowImage(string path, int index, string result = "")
         {
             Task.Run(() =>
             {
@@ -156,11 +156,6 @@ namespace DeepSightWorkLib.Services
                         }
                         mt = Cv2.ImDecode(stream.ToArray(), ImreadModes.Color);
 
-                        if (IsShowBox && box != null)
-                        {
-                            DrawBoxesOnMat(ref mt, box);
-                        }
-
                         DisplaysList[index].Image = mt;
                         mt = null; // 所有权已转移
                         string displayText = ConvertResultCodeToText(result);
@@ -178,162 +173,7 @@ namespace DeepSightWorkLib.Services
             });
         }
 
-        /// <summary>
-        /// 显示图片（支持多图拼接）
-        /// </summary>
-        public void ShowImage2(int index, List<string> paths, string result = "", VBRcvInfp box = null)
-        {
-            Task.Run(() =>
-            {
-                Mat[] mats = new Mat[paths.Count];
-                Mat resultMat = null;
-                try
-                {
-                    if (paths.Count <= 0)
-                    {
-                        DisplaysList2[index].Image = null;
-                        DisplaysList2[index].Clear();
-                        return;
-                    }
-                    if (paths.Count == 1)
-                    {
-                        ShowSingleImage2(index, paths[0], result, box);
-                        return;
-                    }
 
-                    // 多图拼接显示
-                    for (int i = 0; i < paths.Count; i++)
-                    {
-                        string[] str = paths[i].Split(':').ToArray();
-                        using (var stream = _minio.GetImageStreamSync(DefaultBucket, str[0], str[1]))
-                        {
-                            if (stream.Length == 0)
-                            {
-                                Console.WriteLine("图片数据为空");
-                                return;
-                            }
-                            mats[i] = Cv2.ImDecode(stream.ToArray(), ImreadModes.Color);
-                            if (i == 0 && box != null)
-                            {
-                                DrawBoxesOnMat(ref mats[i], box, false);
-                            }
-                        }
-                    }
-                    resultMat = new Mat();
-                    Cv2.HConcat(mats, resultMat);
-
-                    // 释放源 Mat 数组
-                    for (int i = 0; i < mats.Length; i++)
-                    {
-                        mats[i]?.Dispose();
-                        mats[i] = null;
-                    }
-                    DisplaysList2[index].Image = resultMat;
-                    resultMat = null;
-                    string displayText = ConvertResultCodeToText(result);
-                    DisplaysList2[index].DrawStatus(string.IsNullOrEmpty(displayText) ? "" : $"AI结果:{displayText}");
-                }
-                catch (Exception ex)
-                {
-                    HandleShowImage2Exception(index, mats, ex);
-                }
-                finally
-                {
-                    resultMat?.Dispose();
-                    for (int i = 0; i < mats.Length; i++)
-                    {
-                        mats[i]?.Dispose();
-                    }
-                }
-            });
-        }
-
-        /// <summary>
-        /// 显示单张图片到 DisplaysList2
-        /// </summary>
-        private void ShowSingleImage2(int index, string path, string result, VBRcvInfp box)
-        {
-            Mat resultMat = null;
-            try
-            {
-                string[] str = path.Split(':').ToArray();
-                using (var stream = _minio.GetImageStreamSync(DefaultBucket, str[0], str[1]))
-                {
-                    if (stream.Length == 0)
-                    {
-                        Console.WriteLine("图片数据为空");
-                        return;
-                    }
-                    resultMat = Cv2.ImDecode(stream.ToArray(), ImreadModes.Color);
-
-                    if (box != null)
-                    {
-                        DrawBoxesOnMat(ref resultMat, box, false);
-                    }
-                    DisplaysList2[index].Image = resultMat;
-                    resultMat = null;
-                    string displayText = ConvertResultCodeToText(result);
-                    DisplaysList2[index].DrawStatus(string.IsNullOrEmpty(displayText) ? "" : $"AI结果:{displayText}");
-                }
-            }
-            finally
-            {
-                resultMat?.Dispose();
-            }
-        }
-
-        /// <summary>
-        /// 处理 ShowImage2 异常时的图片拼接
-        /// </summary>
-        private void HandleShowImage2Exception(int index, Mat[] mats, Exception ex)
-        {
-            Mat errorMat = null;
-            try
-            {
-                List<Mat> matsList = new List<Mat>();
-                for (int i = 0; i < mats.Length; i++)
-                {
-                    if (mats[i] != null)
-                    {
-                        matsList.Add(mats[i]);
-                    }
-                }
-                if (matsList.Count > 0)
-                {
-                    errorMat = new Mat();
-                    Cv2.HConcat(matsList.ToArray(), errorMat);
-                    DisplaysList2[index].Image = errorMat;
-                    errorMat = null;
-                }
-            }
-            finally
-            {
-                errorMat?.Dispose();
-            }
-            LogTextHelper.Error("异常(可能未找到Minio路径图像),Index为" + index.ToString() + "\n" + ex.ToString());
-        }
-
-        /// <summary>
-        /// 在 Mat 上绘制检测框
-        /// </summary>
-        private void DrawBoxesOnMat(ref Mat mat, VBRcvInfp box, bool drawText = true)
-        {
-            if (box == null || box.bbox == null) return;
-
-            List<string> content = new List<string>();
-            List<System.Drawing.Point> location = new List<System.Drawing.Point>();
-            for (int i = 0; i < box.bbox.Count; i++)
-            {
-                Rect rect = new Rect((int)box.bbox[i][0], (int)box.bbox[i][1], (int)box.bbox[i][2], (int)box.bbox[i][3]);
-                location.Add(new System.Drawing.Point((int)box.bbox[i][0] + 10, (int)box.bbox[i][1] + 30));
-                mat.Rectangle(rect, Scalar.Red, 2);
-            }
-            if (drawText)
-            {
-                content.AddRange(box.sub_DefectNames);
-                PutTextAll(ref mat, content.ToArray(), location.ToArray(), Color.Yellow, 24);
-            }
-        }
 
         #endregion
 
@@ -342,7 +182,7 @@ namespace DeepSightWorkLib.Services
         /// <summary>
         /// 在图片上绘制多行文字
         /// </summary>
-        public void PutTextAll(ref Mat mat, string[] content, System.Drawing.Point[] location,
+        public void PutTextAll(ref Mat mat, System.Drawing.Point[] location,
             Color color, float fontSize = 8, string familyName = "宋体")
         {
             try
@@ -351,10 +191,6 @@ namespace DeepSightWorkLib.Services
                 {
                     using (Image tempImg = (Image)bit)
                     {
-                        for (int i = 0; i < content.Length; i++)
-                        {
-                            DrawString(tempImg, content[i], location[i], color, fontSize, familyName);
-                        }
                         var tempMat = ToMat(tempImg);
                         tempMat.CopyTo(mat);
                         tempMat.Dispose();

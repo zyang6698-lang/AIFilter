@@ -16,11 +16,6 @@ namespace DeepSightWorkLib.Services
     /// </summary>
     public class PanelDataConverter : IPanelDataConverter
     {
-        /// <summary>
-        /// 中台数据字典缓存
-        /// Key: "{LotId}_{SerialNumber}"
-        /// </summary>
-        private readonly ConcurrentDictionary<string, DsCenterInfo> _dsCenterInfoDict = new ConcurrentDictionary<string, DsCenterInfo>();
 
         /// <summary>
         /// JSON 序列化设置（静态复用，避免重复创建）
@@ -47,20 +42,13 @@ namespace DeepSightWorkLib.Services
             {
                 LogTextHelper.Info($"{panelInfo.SerialNumber} {panelInfo.SideIndex} ProductSerial: {panelInfo.ProductSerial}");
 
-                // 1. 解析方案配置
+                //  解析方案配置
                 var solutionInfo = ResolveSolution(panelInfo, context.SolutionConfig, out bool isByPass);
                 result.IsByPass = isByPass;
 
-                // 2. 初始化中台数据
-                var dsInfo = InitializeDsCenterInfo(panelInfo, context.ProjectName);
-                result.DsCenterInfo = dsInfo;
-
-                // 3. 构建 VBInfo
-                result.VBInfo = BuildVBInfo(panelInfo, context, solutionInfo, dsInfo, 
+                //  构建 VBInfo
+                result.VBInfo = BuildVBInfo(panelInfo, context, solutionInfo, 
                     result.DefectIndexList, result.PcsIndexList);
-
-                // 4. 存储中台数据
-                StoreDsCenterInfo(panelInfo, dsInfo);
 
                 return result;
             }
@@ -71,27 +59,6 @@ namespace DeepSightWorkLib.Services
             }
         }
 
-        /// <inheritdoc/>
-        public DsCenterInfo GetDsCenterInfo(string lotId, string serialNumber)
-        {
-            var key = $"{lotId}_{serialNumber}";
-            _dsCenterInfoDict.TryGetValue(key, out var info);
-            return info;
-        }
-
-        /// <inheritdoc/>
-        public void SetDsCenterInfo(string lotId, string serialNumber, DsCenterInfo info)
-        {
-            var key = $"{lotId}_{serialNumber}";
-            _dsCenterInfoDict[key] = info;
-        }
-
-        /// <inheritdoc/>
-        public void ClearDsCenterInfoCache()
-        {
-            _dsCenterInfoDict.Clear();
-            LogTextHelper.Info("PanelDataConverter: 中台数据缓存已清空");
-        }
 
         #region 私有方法
 
@@ -141,64 +108,22 @@ namespace DeepSightWorkLib.Services
         }
 
         /// <summary>
-        /// 初始化中台数据
-        /// </summary>
-        private DsCenterInfo InitializeDsCenterInfo(RootPanelInfo panelInfo, string projectName)
-        {
-            DsCenterInfo dsInfo;
-
-            if (panelInfo.SideIndex == "A")
-            {
-                dsInfo = new DsCenterInfo();
-            }
-            else
-            {
-                // B面从缓存获取A面创建的数据
-                dsInfo = GetDsCenterInfo(panelInfo.LotId, panelInfo.SerialNumber) ?? new DsCenterInfo();
-            }
-
-            return dsInfo;
-        }
-
-        /// <summary>
         /// 构建 VBInfo 对象
         /// </summary>
         private RootVBInfo BuildVBInfo(
             RootPanelInfo panelInfo,
             PanelConvertContext context,
             (string Solution, string Flow, bool IsSwitch) solutionInfo,
-            DsCenterInfo dsInfo,
             List<int> defectList,
             List<int> pcsList)
         {
             var vBInfo = CreateBaseVBInfo(solutionInfo.Solution, solutionInfo.Flow);
 
-            // 创建 PanelData 用于A面
-            PanelData panelData = null;
-            if (panelInfo.SideIndex == "A")
-            {
-                panelData = new PanelData
-                {
-                    Project = context.ProjectName,
-                    Product = panelInfo.ProductSerial,
-                    Lot = panelInfo.LotId,
-                    Sn = panelInfo.SerialNumber,
-                    Avi = panelInfo.StationName,
-                    CustomTags = ""
-                };
-            }
-
             // 处理 PCS 信息
-            ProcessPcsInfo(panelInfo, context, solutionInfo.IsSwitch, dsInfo, panelData, vBInfo, defectList, pcsList);
+            ProcessPcsInfo(panelInfo, context, solutionInfo.IsSwitch,vBInfo, defectList, pcsList);
 
             // 设置 Minio 信息
             SetMinioInfo(vBInfo, context.MinioIP, context.MinioPort);
-
-            // 存储 PanelData 到 dsInfo
-            if (panelInfo.SideIndex == "A" && panelData != null)
-            {
-                dsInfo.Data.Add(panelData);
-            }
 
             return vBInfo;
         }
@@ -241,8 +166,6 @@ namespace DeepSightWorkLib.Services
             RootPanelInfo panelInfo,
             PanelConvertContext context,
             bool isSwitch,
-            DsCenterInfo dsInfo,
-            PanelData panelData,
             RootVBInfo vBInfo,
             List<int> defectList,
             List<int> pcsList)
@@ -250,61 +173,13 @@ namespace DeepSightWorkLib.Services
             for (int i = 0; i < panelInfo.PcsInfo.Count; i++)
             {
                 var pcsKey = (i + 1).ToString();
-                ContentItem item = CreateContentItem(panelInfo, dsInfo, i);
 
                 if (panelInfo.PcsInfo.TryGetValue(pcsKey, out PcsInfo pcsInfo))
                 {
                     LogTextHelper.Info($"SN:{panelInfo.SerialNumber}_{panelInfo.SideIndex}面报点数据为:{pcsInfo.DefectInfo.Count}");
-                    ProcessDefects(panelInfo, context, isSwitch, pcsInfo, i, item, vBInfo, defectList, pcsList);
-                }
-
-                if (panelInfo.SideIndex == "A" && panelData != null)
-                {
-                    panelData.Content.Add(pcsKey, item);
+                    ProcessDefects(panelInfo, context, isSwitch, pcsInfo, i, vBInfo, defectList, pcsList);
                 }
             }
-        }
-
-        /// <summary>
-        /// 创建内容项
-        /// </summary>
-        private ContentItem CreateContentItem(RootPanelInfo panelInfo, DsCenterInfo dsInfo, int index)
-        {
-            ContentItem item;
-            var pcsKey = (index + 1).ToString();
-
-            if (panelInfo.SideIndex == "A")
-            {
-                item = new ContentItem
-                {
-                    MachineName = panelInfo.StationName,
-                    ProductSerial = panelInfo.ProductSerial,
-                    SerialNumber = panelInfo.SerialNumber,
-                    ProcessTimeA = DateTime.Now.ToString("yyyyMMddHHmmssffffff"),
-                    LotId = panelInfo.LotId,
-                    Lot = panelInfo.LotId,
-                    Product = panelInfo.ProductSerial,
-                    OperateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-                    ExpansionAndContraction = null,
-                    PieceIndex = pcsKey,
-                    PieceVesIndex = pcsKey
-                };
-            }
-            else
-            {
-                item = new ContentItem();
-                dsInfo?.Data[0]?.Content?.TryGetValue(pcsKey, out item);
-                if (item != null)
-                {
-                    item.ProcessTimeB = DateTime.Now.ToString("yyyyMMddHHmmssffffff");
-                }
-                else
-                {
-                    item = new ContentItem { ProcessTimeB = DateTime.Now.ToString("yyyyMMddHHmmssffffff") };
-                }
-            }
-
-            return item;
         }
 
         /// <summary>
@@ -316,7 +191,6 @@ namespace DeepSightWorkLib.Services
             bool isSwitch,
             PcsInfo pcsInfo,
             int pcsIndex,
-            ContentItem item,
             RootVBInfo vBInfo,
             List<int> defectList,
             List<int> pcsList)
@@ -325,45 +199,18 @@ namespace DeepSightWorkLib.Services
             {
                 var defect = pcsInfo.DefectInfo[j];
 
-                // 创建中台缺陷信息
-                var dsDefectInfo = CreateDsCenterDefectInfo(panelInfo, pcsIndex, defect);
-
                 // 创建推理图片组
                 var group = CreateInferImageGroup(panelInfo, context, isSwitch, defect);
 
                 // 添加图片信息
-                AddDefectImages(context, defect, group, dsDefectInfo);
+                AddDefectImages(context, defect, group);
 
                 vBInfo.paramsData.InferWholeData.ImageData.DataValue.InferImageGroup.Add(group);
                 group.inspectDetails = new InspectDetails { InferRois = new List<InferRoi>() };
 
                 defectList.Add(j);
                 pcsList.Add(defect.PcsIndex);
-                item.DefectsInfo.Add(dsDefectInfo);
             }
-        }
-
-        /// <summary>
-        /// 创建中台缺陷信息
-        /// </summary>
-        private DsCenterDefectInfo CreateDsCenterDefectInfo(RootPanelInfo panelInfo, int pcsIndex, DefectInfo defect)
-        {
-            return new DsCenterDefectInfo
-            {
-                SideType = panelInfo.SideIndex,
-                SideType2 = panelInfo.SideIndex,
-                PcsIndex = pcsIndex + 1,
-                PcsVesIndex = (pcsIndex + 1).ToString(),
-                DefectRoi = defect.DefectRoi,
-                DefectOriginRoi = defect.DefectOriginRoi,
-                DefectsRoi = new List<int>
-                {
-                    defect.DefectRoi.X,
-                    defect.DefectRoi.Y,
-                    defect.DefectRoi.Height,
-                    defect.DefectRoi.Width
-                }
-            };
         }
 
         /// <summary>
@@ -405,8 +252,8 @@ namespace DeepSightWorkLib.Services
         private void AddDefectImages(
             PanelConvertContext context,
             DefectInfo defect,
-            InferImageGroup group,
-            DsCenterDefectInfo dsDefectInfo)
+            InferImageGroup group
+            )
         {
             var watchConfig = context.AviConfig?.WatchPaths?
                 .FirstOrDefault(o => o.AviName == group.MachineTemplateInfo.MachineName);
@@ -417,11 +264,9 @@ namespace DeepSightWorkLib.Services
                 return;
             }
 
-            AddGroupInfo(defect.DefectVrsImages, "defect", context.Head, group,
-                url => dsDefectInfo.DefectImages.Add(url), watchConfig.MinioConfig);
-            AddGroupInfo(defect.DefectVrsOkImages, "template", context.Head, group, null, watchConfig.MinioConfig);
-            AddGroupInfo(defect.DefectVrsGerberImages, "gerber", context.Head, group,
-                url => dsDefectInfo.DefectGerberImages.Add(url), watchConfig.MinioConfig);
+            AddGroupInfo(defect.DefectVrsImages, "defect", context.Head, group);
+            AddGroupInfo(defect.DefectVrsOkImages, "template", context.Head, group);
+            AddGroupInfo(defect.DefectVrsGerberImages, "gerber", context.Head, group);
         }
 
         /// <summary>
@@ -431,9 +276,7 @@ namespace DeepSightWorkLib.Services
             List<string> images,
             string imageType,
             string head,
-            InferImageGroup group,
-            Action<string> addUrlAction,
-            string minioConfig)
+            InferImageGroup group)
         {
             if (images == null || images.Count == 0) return;
 
@@ -445,7 +288,6 @@ namespace DeepSightWorkLib.Services
                 ImageType = imageType
             });
 
-            addUrlAction?.Invoke($"http://{minioConfig}/{MinioSettingsConfig.DefaultBucket}/{imagePath}");
         }
 
         /// <summary>
@@ -464,25 +306,6 @@ namespace DeepSightWorkLib.Services
                     secret_port = minioPort
                 }
             };
-        }
-
-        /// <summary>
-        /// 存储中台数据信息
-        /// </summary>
-        private void StoreDsCenterInfo(RootPanelInfo panelInfo, DsCenterInfo dsInfo)
-        {
-            var key = $"{panelInfo.LotId}_{panelInfo.SerialNumber}";
-
-            if (panelInfo.SideIndex == "A")
-            {
-                _dsCenterInfoDict.TryAdd(key, dsInfo);
-                LogTextHelper.Info($"{key}_在A面创建dsinfo成功");
-            }
-            else
-            {
-                _dsCenterInfoDict[key] = dsInfo;
-                LogTextHelper.Info($"{key}_在B面更新dsinfo成功");
-            }
         }
 
         #endregion

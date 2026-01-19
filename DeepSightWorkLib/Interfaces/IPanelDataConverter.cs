@@ -64,10 +64,6 @@ namespace DeepSightWorkLib.Interfaces
         /// </summary>
         public bool IsByPass { get; set; }
 
-        /// <summary>
-        /// 中台数据信息
-        /// </summary>
-        public DsCenterInfo DsCenterInfo { get; set; }
     }
 
     /// <summary>
@@ -83,27 +79,6 @@ namespace DeepSightWorkLib.Interfaces
         /// <param name="context">转换上下文（包含配置信息）</param>
         /// <returns>转换结果</returns>
         PanelConvertResult Convert(RootPanelInfo panelInfo, PanelConvertContext context);
-
-        /// <summary>
-        /// 获取或创建指定 Panel 的中台数据信息
-        /// </summary>
-        /// <param name="lotId">批次ID</param>
-        /// <param name="serialNumber">序列号</param>
-        /// <returns>中台数据信息（如果存在）</returns>
-        DsCenterInfo GetDsCenterInfo(string lotId, string serialNumber);
-
-        /// <summary>
-        /// 存储中台数据信息
-        /// </summary>
-        /// <param name="lotId">批次ID</param>
-        /// <param name="serialNumber">序列号</param>
-        /// <param name="info">中台数据信息</param>
-        void SetDsCenterInfo(string lotId, string serialNumber, DsCenterInfo info);
-
-        /// <summary>
-        /// 清空所有中台数据缓存
-        /// </summary>
-        void ClearDsCenterInfoCache();
     }
 }
 

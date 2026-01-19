@@ -19,8 +19,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeepSightCommunication", "D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeepSightDisplay", "DeepSightDisplay\DeepSightDisplay.csproj", "{EE46E3D1-CB3C-4D66-B6EC-317C8FFEF9D6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeepSightHeatMap", "DeepSightHeatMap\DeepSightHeatMap.csproj", "{443CBE76-7A7F-4AD2-A5E1-56290C42BF85}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -178,24 +176,6 @@ Global
 		{EE46E3D1-CB3C-4D66-B6EC-317C8FFEF9D6}.Release|x64.Build.0 = Release|Any CPU
 		{EE46E3D1-CB3C-4D66-B6EC-317C8FFEF9D6}.Release|x86.ActiveCfg = Release|Any CPU
 		{EE46E3D1-CB3C-4D66-B6EC-317C8FFEF9D6}.Release|x86.Build.0 = Release|Any CPU
-		{443CBE76-7A7F-4AD2-A5E1-56290C42BF85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{443CBE76-7A7F-4AD2-A5E1-56290C42BF85}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{443CBE76-7A7F-4AD2-A5E1-56290C42BF85}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{443CBE76-7A7F-4AD2-A5E1-56290C42BF85}.Debug|x64.Build.0 = Debug|Any CPU
-		{443CBE76-7A7F-4AD2-A5E1-56290C42BF85}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{443CBE76-7A7F-4AD2-A5E1-56290C42BF85}.Debug|x86.Build.0 = Debug|Any CPU
-		{443CBE76-7A7F-4AD2-A5E1-56290C42BF85}.DebugRemote|Any CPU.ActiveCfg = Debug|Any CPU
-		{443CBE76-7A7F-4AD2-A5E1-56290C42BF85}.DebugRemote|Any CPU.Build.0 = Debug|Any CPU
-		{443CBE76-7A7F-4AD2-A5E1-56290C42BF85}.DebugRemote|x64.ActiveCfg = Debug|Any CPU
-		{443CBE76-7A7F-4AD2-A5E1-56290C42BF85}.DebugRemote|x64.Build.0 = Debug|Any CPU
-		{443CBE76-7A7F-4AD2-A5E1-56290C42BF85}.DebugRemote|x86.ActiveCfg = Debug|Any CPU
-		{443CBE76-7A7F-4AD2-A5E1-56290C42BF85}.DebugRemote|x86.Build.0 = Debug|Any CPU
-		{443CBE76-7A7F-4AD2-A5E1-56290C42BF85}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{443CBE76-7A7F-4AD2-A5E1-56290C42BF85}.Release|Any CPU.Build.0 = Release|Any CPU
-		{443CBE76-7A7F-4AD2-A5E1-56290C42BF85}.Release|x64.ActiveCfg = Release|Any CPU
-		{443CBE76-7A7F-4AD2-A5E1-56290C42BF85}.Release|x64.Build.0 = Release|Any CPU
-		{443CBE76-7A7F-4AD2-A5E1-56290C42BF85}.Release|x86.ActiveCfg = Release|Any CPU
-		{443CBE76-7A7F-4AD2-A5E1-56290C42BF85}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

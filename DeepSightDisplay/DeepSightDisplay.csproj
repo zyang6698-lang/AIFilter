@@ -66,6 +66,12 @@
     <Compile Include="frFullScreen.Designer.cs">
       <DependentUpon>frFullScreen.cs</DependentUpon>
     </Compile>
+    <Compile Include="HeatMap\HeatMapControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="HeatMap\HeatMapManager.cs" />
+    <Compile Include="HeatMap\HeatMapRenderer.cs" />
+    <Compile Include="ImageHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="src\Caculate.cs" />
     <Compile Include="src\CvDisplay.cs">
@@ -92,6 +98,10 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DeepSightDB\DeepSightDB.csproj">
+      <Project>{7E93DCAE-D40B-4019-A1E9-8F710072B16A}</Project>
+      <Name>DeepSightDB</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DeepSightModel\DeepSightModel.csproj">
       <Project>{C3032123-71AF-4B9F-AAF1-5FDBB73274B0}</Project>
       <Name>DeepSightModel</Name>

@@ -6,7 +6,7 @@ using System.Drawing.Imaging;
 using System.Windows.Forms;
 
 
-namespace DeepSightHeatMap
+namespace DeepSightDisplay.HeatMap
 {
     public partial class HeatMapControl : Control
     {

@@ -20,6 +20,9 @@ namespace DeepSightWorkLib.Services
         private readonly ConfigurationClass _sysConfig;
         private readonly Action<RootPanelInfo, List<DetectInfo>, int, int> _savePanelSideAction;
 
+        // 模型验证测试服务（可选注入）
+        private ModelValidationTestService _validationTestService;
+
         public PostProcessService(IPanelDataConverter panelDataConverter,
             ConfigurationClass sysConfig,
             Action<RootPanelInfo, List<DetectInfo>, int, int> savePanelSideAction)
@@ -27,6 +30,14 @@ namespace DeepSightWorkLib.Services
             _panelDataConverter = panelDataConverter ?? throw new ArgumentNullException(nameof(panelDataConverter));
             _sysConfig = sysConfig ?? throw new ArgumentNullException(nameof(sysConfig));
             _savePanelSideAction = savePanelSideAction ?? throw new ArgumentNullException(nameof(savePanelSideAction));
+        }
+
+        /// <summary>
+        /// 设置验证测试服务（用于处理测试推理结果）
+        /// </summary>
+        public void SetValidationTestService(ModelValidationTestService service)
+        {
+            _validationTestService = service;
         }
 
         public void ProcessInferenceResult(InferenceResultModel resultModel)
@@ -37,6 +48,13 @@ namespace DeepSightWorkLib.Services
 
             try
             {
+                // 如果是验证测试任务，交给验证测试服务处理
+                if (vBModel.IsValidationTest)
+                {
+                    ProcessValidationTestResult(vBModel, msg);
+                    return;
+                }
+
                 // 检查是否需要处理（图片数量为0或超过最大值）
                 if (!resultModel.NeedsProcessing)
                 {
@@ -69,9 +87,6 @@ namespace DeepSightWorkLib.Services
                 if (code == "200")
                 {
                     List<DetectInfo> avi_HeatInfo = new List<DetectInfo>();
-
-                    // 更新中台数据
-                    UpdateDsCenterInfo(panelInfo, obj);
 
                     // 构建 HeatPoint 点信息
                     for (int i = 0; i < obj.Data.InferWholeData.InferResults.Count; i++)
@@ -153,126 +168,61 @@ namespace DeepSightWorkLib.Services
             }
         }
 
-        private void UpdateDsCenterInfo(RootPanelInfo panelInfo, RootVBOutInfo obj)
+        /// <summary>
+        /// 处理验证测试的推理结果
+        /// </summary>
+        private void ProcessValidationTestResult(VBModel vBModel, string rawJsonResult)
         {
-            var dsCenterInfo = _panelDataConverter.GetDsCenterInfo(panelInfo.LotId, panelInfo.SerialNumber);
-            if (dsCenterInfo == null)
+            if (_validationTestService == null)
             {
+                LogTextHelper.Warn($"验证测试服务未注入，跳过测试结果处理: {vBModel.SN}_{vBModel.Side}");
                 return;
             }
-            LogTextHelper.Info($"取得{panelInfo.LotId}_{panelInfo.SerialNumber}的中台数据，准备更新...");
-
-            string time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
             try
             {
-                for (int i = 0; i < obj.Data.InferWholeData.InferResults.Count; i++)
+                // 解析推理结果
+                var inferResults = ExtractInferResults(rawJsonResult);
+
+                // 调用验证测试服务处理结果比对
+                _validationTestService.ProcessValidationTestResult(vBModel, inferResults);
+
+                LogTextHelper.Info($"验证测试结果处理完成: {vBModel.SN}_{vBModel.Side}");
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"处理验证测试结果异常: {vBModel.SN}_{vBModel.Side}, {ex}");
+            }
+        }
+
+        /// <summary>
+        /// 从原始JSON结果中提取推理结果列表
+        /// </summary>
+        private List<string> ExtractInferResults(string rawJsonResult)
+        {
+            var results = new List<string>();
+
+            if (string.IsNullOrEmpty(rawJsonResult))
+                return results;
+
+            try
+            {
+                var obj = JsonConvert.DeserializeObject<RootVBOutInfo>(rawJsonResult);
+                if (obj?.Code?.ToString() == "200" && obj.Data?.InferWholeData?.InferResults != null)
                 {
-                    dsCenterInfo.Data[0].Content["1"].DefectsCount++;
-
-                    try
+                    foreach (var inferResult in obj.Data.InferWholeData.InferResults)
                     {
-                        // 更新中台数据
-                        if (panelInfo.SideIndex == "A")
-                        {
-                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].AiResult = obj.Data.InferWholeData.InferResults[i].Infer_Result.ToLower();
-                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].ManualResult = obj.Data.InferWholeData.InferResults[i].Infer_Result.ToLower();
-                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].ManualDefectCode = obj.Data.InferWholeData.InferResults[i].Defect_name;
-                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].DefectCode = obj.Data.InferWholeData.InferResults[i].Defect_name;
-                        }
-                        else
-                        {
-                            dsCenterInfo.Data[0].Content["1"].EndTime = time;
-                            panelInfo.EndTime = time;
-                            int Bcount = panelInfo.PcsInfo["1"].DefectInfo.Count;
-                            int ALLcount = dsCenterInfo.Data[0].Content["1"].DefectsInfo.Count;
-                            int index = ALLcount - Bcount;
-                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].AiResult = obj.Data.InferWholeData.InferResults[i].Infer_Result.ToLower();
-                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].ManualResult = obj.Data.InferWholeData.InferResults[i].Infer_Result.ToLower();
-                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].ManualDefectCode = obj.Data.InferWholeData.InferResults[i].Defect_name;
-                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].DefectCode = obj.Data.InferWholeData.InferResults[i].Defect_name;
-                        }
+                        // "OK" -> "0", "NG" -> "1"
+                        results.Add(inferResult.Infer_Result == "NG" ? "1" : "0");
                     }
-                    catch (Exception ex)
-                    {
-                        LogTextHelper.Error("更新中台数据异常" + ex.ToString());
-                    }
-
-                    // 构建子缺陷信息到中台数据
-                    for (int j = 0; j < obj.Data.InferWholeData.InferResults[i].InferDetails.Location.Count; j++)
-                    {
-                        DsCenterSubDefectInfo subDefectInfo = new DsCenterSubDefectInfo();
-                        subDefectInfo.SubDefectArea = Convert.ToDouble(obj.Data.InferWholeData.InferResults[i].InferDetails.DefectArea);
-                        string sub_defectName = obj.Data.InferWholeData.InferResults[i].Defect_name;
-                        subDefectInfo.SubDefectCode = sub_defectName;
-
-                        int defectX = 0;
-                        int defectY = 0;
-                        if (panelInfo.SideIndex == "A")
-                        {
-                            defectX = dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].DefectRoi.X;
-                            defectY = dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].DefectRoi.Y;
-                        }
-                        else
-                        {
-                            int Bcount = panelInfo.PcsInfo["1"].DefectInfo.Count;
-                            int ALLcount = dsCenterInfo.Data[0].Content["1"].DefectsInfo.Count;
-                            int index = ALLcount - Bcount;
-                            defectX = dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].DefectRoi.X;
-                            defectY = dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].DefectRoi.Y;
-                        }
-
-                        int subX = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].X);
-                        int subY = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].Y);
-                        int subH = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].Height);
-                        int subW = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].Width);
-
-                        subDefectInfo.SubDefectHeight = subH;
-                        subDefectInfo.SubDefectWidth = subW;
-                        subDefectInfo.SubDefectIndex = j;
-                        subDefectInfo.SubDefectRoi.Add(subX);
-                        subDefectInfo.SubDefectRoi.Add(subY);
-                        subDefectInfo.SubDefectRoi.Add(subW);
-                        subDefectInfo.SubDefectRoi.Add(subH);
-                        // 中心点坐标
-                        int CenterPointX = defectX + subX / 2 + subW / 4;
-                        int CenterPointY = defectY + subY / 2 + subH / 4;
-                        subDefectInfo.CenterPoint.Add(CenterPointX);
-                        subDefectInfo.CenterPoint.Add(CenterPointY);
-
-                        // 更新中台数据
-                        if (panelInfo.SideIndex == "A")
-                        {
-                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[i].SubDefectsInfo.Add(subDefectInfo);
-                        }
-                        else
-                        {
-                            int Bcount = panelInfo.PcsInfo["1"].DefectInfo.Count;
-                            int ALLcount = dsCenterInfo.Data[0].Content["1"].DefectsInfo.Count;
-                            int index = ALLcount - Bcount;
-                            dsCenterInfo.Data[0].Content["1"].DefectsInfo[index + i].SubDefectsInfo.Add(subDefectInfo);
-                        }
-                    }
-                }
-                // B面处理完成判断总结果
-                if (panelInfo.SideIndex == "B")
-                {
-                    if (dsCenterInfo.Data[0].Content["1"].DefectsInfo.Exists(o => o.AiResult.ToLower() == "ng"))
-                    {
-                        dsCenterInfo.Data[0].Content["1"].ConfirmResult = "ng";
-                    }
-                    else
-                    {
-                        dsCenterInfo.Data[0].Content["1"].ConfirmResult = "ok";
-                    }
-                    dsCenterInfo.Data[0].EndTime = time;
-                    dsCenterInfo.Data[0].Content["1"].EndTime = time;
                 }
             }
             catch (Exception ex)
             {
-                LogTextHelper.Error("中台数据处理异常" + ex.ToString());
+                LogTextHelper.Error($"解析推理结果失败: {ex.Message}");
             }
+
+            return results;
         }
     }
 }

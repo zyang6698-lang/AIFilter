@@ -128,7 +128,6 @@
             // queryControl
             // 
             this.queryControl.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.queryControl.EndDate = new System.DateTime(2025, 11, 19, 10, 53, 0, 0);
             this.queryControl.IsDateChecked = false;
             this.queryControl.Location = new System.Drawing.Point(19, 199);
             this.queryControl.LotNumber = "";
@@ -138,7 +137,6 @@
             this.queryControl.PartNumber = "";
             this.queryControl.SelectedSide = "A";
             this.queryControl.Size = new System.Drawing.Size(350, 290);
-            this.queryControl.StartDate = new System.DateTime(2025, 11, 19, 10, 53, 0, 0);
             this.queryControl.TabIndex = 1;
             // 
             // groupBox1

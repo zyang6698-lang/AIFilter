@@ -17,21 +17,19 @@ namespace DeepSightWorkLib.Services
     public class DefectProcessor
     {
         private readonly DefectClass _defect;
-        private readonly ImageDisplayService _display;
         private readonly ImageLoaderService _imageLoader;
         private readonly ConcurrentQueue<VBModel> _aviQueue;
-        private readonly ConcurrentQueue<Tuple<string, string, string, RootAIResult, DsCenterInfo>> _aiResultQueue;
+        private readonly ConcurrentQueue<Tuple<string, string, string, RootAIResult>> _aiResultQueue;
         private readonly ConcurrentQueue<InferenceResultModel> _inferencePostProcessQueue;
 
         public DefectProcessor(DefectClass defect,
             ImageDisplayService display,
             ImageLoaderService imageLoader,
             ConcurrentQueue<VBModel> aviQueue,
-            ConcurrentQueue<Tuple<string, string, string, RootAIResult, DsCenterInfo>> aiResultQueue,
+            ConcurrentQueue<Tuple<string, string, string, RootAIResult>> aiResultQueue,
             ConcurrentQueue<InferenceResultModel> inferencePostProcessQueue)
         {
             _defect = defect ?? throw new ArgumentNullException(nameof(defect));
-            _display = display;
             _imageLoader = imageLoader;
             _aviQueue = aviQueue;
             _aiResultQueue = aiResultQueue;
@@ -41,17 +39,15 @@ namespace DeepSightWorkLib.Services
         /// <summary>
         /// 调用 DefectClass.DefectMethodWithImages 并将返回结果解析为与原 BusinessClass.DefectMethod 相同的输出
         /// </summary>
-        public bool DefectMethod(VBModel vBModel,int maxCount, out List<string> resList, out List<string> detailsList, out PcsResult pcsResult, out string vbJson,int timeoutSeconds = 10)
+        public bool DefectMethod(VBModel vBModel,int maxCount, out List<string> resList, out List<string> detailsList, out string vbJson,int timeoutSeconds = 10)
         {
             resList = new List<string>();
-            pcsResult = new PcsResult();
             detailsList = new List<string>();
             vbJson = string.Empty;
 
             if (vBModel.Mats == null || vBModel.Mats.Count == 0)
             {
                 EnqueuePostProcess(vBModel, "", false);
-                // 使用新的状态发送方式（推荐）
                 TaskStatusSender.SendSkipped(vBModel.SN, vBModel.Side, "缺陷数为0");
                 return true;
             }
@@ -59,13 +55,11 @@ namespace DeepSightWorkLib.Services
             if (vBModel.Mats.Count > maxCount )
             {
                 EnqueuePostProcess(vBModel, "", false);
-                // 使用新的状态发送方式
                 TaskStatusSender.SendSkipped(vBModel.SN, vBModel.Side, $"图片数量超过限制({vBModel.Mats.Count}>{maxCount})");
                 return true;
             }
 
             RootVBInfo info = vBModel.VbInfo;
-            RootPanelInfo panelInfo = vBModel.panelInfo;
             bool result;
             try
             {
@@ -104,7 +98,7 @@ namespace DeepSightWorkLib.Services
 
                 if (string.IsNullOrEmpty(msg))
                 {
-                    LogTextHelper.Error($"算法返回结果为空 for Side {panelInfo.SideIndex}");
+                    LogTextHelper.Error($"算法返回结果为空 for Side {vBModel.Side}");
                     return false;
                 }
 
@@ -113,7 +107,7 @@ namespace DeepSightWorkLib.Services
                 var obj = JsonConvert.DeserializeObject<RootVBOutInfo>(msg);
                 if (obj == null)
                 {
-                    LogTextHelper.Error($"算法返回结果反序列化失败 for Side {panelInfo.SideIndex}，原始消息: {msg}");
+                    LogTextHelper.Error($"算法返回结果反序列化失败 for Side {vBModel.Side}，原始消息: {msg}");
                     TaskStatusSender.SendFailed(vBModel.SN, vBModel.Side, "算法返回结果反序列化失败");
                     return false;
                 }
@@ -140,37 +134,8 @@ namespace DeepSightWorkLib.Services
                         }
                     }
 
-                    pcsResult.vb_List = new List<VBRcvInfp>();
                     for (int i = 0; i < obj.Data.InferWholeData.InferResults.Count; i++)
                     {
-                        VBRcvInfp vBRcv = new VBRcvInfp
-                        {
-                            bbox = new List<List<double>>()
-                        };
-
-                        if (obj.Data.InferWholeData.InferResults[i].Infer_Result != "OK")
-                        {
-                            for (int j = 0; j < obj.Data.InferWholeData.InferResults[i].InferDetails.Location.Count; j++)
-                            {
-                                string sub_defectName = obj.Data.InferWholeData.InferResults[i].Defect_name;
-
-                                int subX = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].X);
-                                int subY = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].Y);
-                                int subH = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].Height);
-                                int subW = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].Width);
-
-                                vBRcv.raw_bbox = new List<double>
-                                {
-                                    subX,
-                                    subY,
-                                    subW,
-                                    subH
-                                };
-                                vBRcv.bbox.Add(vBRcv.raw_bbox);
-                                vBRcv.sub_DefectNames.Add(sub_defectName);
-                            }
-                        }
-
                         if (vBModel.isByPass)
                         {
                             resList.Add("2");
@@ -179,7 +144,6 @@ namespace DeepSightWorkLib.Services
                         {
                             resList.Add(obj.Data.InferWholeData.InferResults[i].Infer_Result == "NG" ? "1" : "0");
                         }
-                        pcsResult.vb_List.Add(vBRcv);
                     }
 
                     vbJson = msg;
@@ -193,7 +157,7 @@ namespace DeepSightWorkLib.Services
                 }
                 else
                 {
-                    LogTextHelper.Warn($"算法调用失败 for Side {panelInfo.SideIndex}，返回码: {code}，返回信息：{message}");
+                    LogTextHelper.Warn($"算法调用失败 for Side {vBModel.Side}，返回码: {code}，返回信息：{message}");
                     TaskStatusSender.SendFailed(vBModel.SN, vBModel.Side, $"Code:{code}, {message}");
                     result = false;
                 }
@@ -204,7 +168,6 @@ namespace DeepSightWorkLib.Services
                 resList = null;
                 detailsList = null;
                 result = false;
-                pcsResult = null;
                 SystemEvent.SendAlarmMsg("算法处理异常" + ex.ToString());
             }
             return result;
@@ -263,8 +226,7 @@ namespace DeepSightWorkLib.Services
             JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
             data.Value = JsonConvert.SerializeObject(writeBackData, Formatting.None, jsonSetting);
 
-            DsCenterInfo dsinfo = null;
-            var dbTub = Tuple.Create(info.Key, info.SN, info.Side, data, dsinfo);
+            var dbTub = Tuple.Create(info.Key, info.SN, info.Side, data);
             _aiResultQueue.Enqueue(dbTub);
         }
     }

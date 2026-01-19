@@ -1,12 +1,9 @@
 ﻿//#define TEST_ENV
 using DeepSightDB;
 using DeepSightDisplay;
-using DeepSightHeatMap;
-using DeepSightModel;
+using DeepSightDisplay.HeatMap;
 using DeepSightTool;
 using HalconDotNet;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using OpenCvSharp;
 using OpenCvSharp.Extensions;
 using Sunny.UI;
@@ -18,7 +15,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 

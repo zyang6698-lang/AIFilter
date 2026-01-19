@@ -25,7 +25,6 @@ namespace DeepSightAI
         public ConcurrentDictionary<string, List<RootPanelInfoWithIP>> dic_Infos = new ConcurrentDictionary<string, List<RootPanelInfoWithIP>>();
         public ConcurrentDictionary<string, List<string>> dic_Results = new ConcurrentDictionary<string, List<string>>();
         public ConcurrentDictionary<string, List<string>> dic_Details = new ConcurrentDictionary<string, List<string>>();
-        public ConcurrentDictionary<string, PcsResult> dic_PcsResult = new ConcurrentDictionary<string, PcsResult>();
         public ConcurrentDictionary<string, List<string>> dic_Paths = new ConcurrentDictionary<string, List<string>>();
 
 
@@ -529,11 +528,9 @@ namespace DeepSightAI
                 List<string> result = null;
                 List<string> details = null;
                 RootPanelInfo panelinfo = null;
-                PcsResult pcsResult;
-                string vbJson;
                 result = await Task.Factory.StartNew(() =>
                 {
-                    Machine.master.workClass.DefectMethod(new VBModel() { VbInfo = vBInfo, panelInfo = panelinfo }, out result, out details, out pcsResult, out vbJson);
+                    Machine.master.workClass.DefectMethod(new VBModel() { VbInfo = vBInfo, panelInfo = panelinfo }, out result, out details, out string vbJson);
                     return result;
                 });
                 if (result.Count() > 0)
@@ -820,9 +817,7 @@ namespace DeepSightAI
                     MaxDegreeOfParallelism = Environment.ProcessorCount - 1,
                     CancellationToken = CancellationToken.None
                 };
-                List<string> res_lbl = null;
-                PcsResult pcsResult;
-                if (dic_Results.TryGetValue(str_SN, out res_lbl) && dic_PcsResult.TryGetValue(str_SN, out pcsResult))
+                if (dic_Results.TryGetValue(str_SN, out List<string> res_lbl))
                 {
                     await Task.Factory.StartNew((Action)(() =>
                     {
@@ -841,12 +836,7 @@ namespace DeepSightAI
                             }
 
                             int index2 = (currentPage - 1) * table_Small.RowCount + item.Index;
-                            VBRcvInfp vbValue = null;
-                            if (pcsResult?.vb_List != null && index2 >= 0 && index2 < pcsResult.vb_List.Count)
-                            {
-                                vbValue = pcsResult.vb_List[index2];
-                            }
-                            Machine.master.workClass.ShowImage(item.Path, (item.Index + 1) * 2 - 2, labelText, vbValue);
+                            Machine.master.workClass.ShowImage(item.Path, (item.Index + 1) * 2 - 2, labelText);
                         });
                     }));
                     await Task.Factory.StartNew((Action)(() =>
@@ -866,12 +856,7 @@ namespace DeepSightAI
                             }
 
                             int index2 = (currentPage - 1) * table_Small.RowCount + item.Index;
-                            VBRcvInfp vbValue = null;
-                            if (pcsResult?.vb_List != null && index2 >= 0 && index2 < pcsResult.vb_List.Count)
-                            {
-                                vbValue = pcsResult.vb_List[index2];
-                            }
-                            Machine.master.workClass.ShowImage(item.Path, (item.Index + 1) * 2 - 1, labelText, vbValue);
+                            Machine.master.workClass.ShowImage(item.Path, (item.Index + 1) * 2 - 1, labelText);
                         });
                     }));
                 }

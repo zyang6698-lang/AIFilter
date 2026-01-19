@@ -56,6 +56,11 @@ namespace DeepSightWorkLib
         private ResultWriterService _resultWriterService;
         private PostProcessService _postProcessService;
 
+        /// <summary>
+        /// 模型验证测试服务
+        /// </summary>
+        private ModelValidationTestService _validationTestService;
+
         #endregion
 
         #region 私有字段 - 数据库批量写入
@@ -165,6 +170,11 @@ namespace DeepSightWorkLib
         /// </summary>
         public ConfigurationClass SysConfig { get; set; } = new ConfigurationClass();
 
+        /// <summary>
+        /// 模型验证测试服务（只读）
+        /// </summary>
+        public ModelValidationTestService ValidationTestService => _validationTestService;
+
         #endregion
 
         #region 构造函数和初始化
@@ -241,7 +251,21 @@ namespace DeepSightWorkLib
 
             var httpInstance = HttpService as HttpClass ?? new HttpClass();
             var ldbUrl = $"{SysConfig.ServerIP}:{SysConfig.ServerPort}";
-            _resultWriterService = new ResultWriterService(httpInstance, _queueManager.ProcessingSnSet, ldbUrl, SysConfig.DsCenterUrl);
+            _resultWriterService = new ResultWriterService(httpInstance, _queueManager.ProcessingSnSet, ldbUrl);
+
+            // 初始化模型验证测试服务
+            var dbHelper = _databaseHelper as DatabaseHelper ?? new DatabaseHelper();
+            _validationTestService = new ModelValidationTestService(
+                dbHelper,
+                _imageLoaderService,
+                _queueManager,
+                SolConfig,
+                AviConfig,
+                SysConfig.endpoint_address,
+                SysConfig.MinioPort);
+
+            // 将验证测试服务注入到后处理服务
+            _postProcessService.SetValidationTestService(_validationTestService);
 
             // 使用 WorkerThreadManager 管理线程
             _workerManager.Start();
@@ -281,9 +305,9 @@ namespace DeepSightWorkLib
         /// <summary>
         /// 显示图片（委托给 ImageDisplayService）
         /// </summary>
-        public void ShowImage(string path, int index, string result = "", VBRcvInfp box = null)
+        public void ShowImage(string path, int index, string result = "")
         {
-            ImageDisplay.ShowImage(path, index, result, box);
+            ImageDisplay.ShowImage(path, index, result);
         }
 
         #endregion
@@ -369,41 +393,60 @@ namespace DeepSightWorkLib
         /// </summary>
         private bool WorkerDefect()
         {
-            if (!IsStart) return false;
+            // 检查队列是否有任务（先 Peek 而不是 Dequeue）
+            if (!_queueManager.AviQueue.TryPeek(out VBModel peekInfo))
+                return false;
+
+            // 如果是验证测试任务，即使 IsStart 为 false 也允许处理
+            bool isValidationTest = peekInfo?.IsValidationTest == true;
+            if (!IsStart && !isValidationTest)
+                return false;
 
             if (_queueManager.AviQueue.TryDequeue(out VBModel info))
             {
                 try
                 {
-                    if (!IsStart)
+                    // 验证测试任务不受 IsStart 限制
+                    if (!IsStart && !info.IsValidationTest)
                     {
                         LogTextHelper.Info($"AI检测任务被暂停中止，SN:{info?.SN}");
                         SystemEvent.SendTaskMsg(info?.SN, "暂停-AI检测已中止");
                         return false;
                     }
 
-                    SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面开始AI检测(缺陷数:{info.Mats.Count})");
+                    // 验证测试任务使用不同的日志前缀
+                    string taskPrefix = info.IsValidationTest ? "[验证测试]" : "";
+                    SystemEvent.SendTaskMsg(info.SN, $"{taskPrefix}{info.Side}面开始AI检测(缺陷数:{info.Mats.Count})");
                     AIStopwatch.Restart();
 
                     if (_defectProcessor.DefectMethod(info, SysConfig.MaxDefectCount,
-                        out List<string> msg, out List<string> details, out PcsResult pcsResult, out string vbJson,
+                        out List<string> msg, out List<string> details, out string vbJson,
                         AviConfig.GetInferResultTimeout))
                     {
-                        if (!IsStart)
+                        // 验证测试任务不受 IsStart 限制
+                        if (!IsStart && !info.IsValidationTest)
                         {
                             LogTextHelper.Info($"AI检测任务被暂停中止（推理完成后），SN:{info.SN}");
                             SystemEvent.SendTaskMsg(info.SN, "暂停-AI检测已中止（结果未回写）");
                             return false;
                         }
-                        SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面AI检测完成");
-                        SystemEvent.SendResultInfo(info.SN, msg, details, pcsResult);
+                        SystemEvent.SendTaskMsg(info.SN, $"{taskPrefix}{info.Side}面AI检测完成");
+                        if (!info.IsValidationTest)
+                        {
+                            SystemEvent.SendResultInfo(info.SN, msg, details);
+                        }
                     }
                     else
                     {
                         LogTextHelper.Warn($"KEY:{info.Key} SN:{info.SN}检测失败！");
-                        SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面已完成");
+                        SystemEvent.SendTaskMsg(info.SN, $"{taskPrefix}{info.Side}面已完成");
                     }
-                    _defectProcessor.EnqueueAIResult(info, msg);
+
+                    // 验证测试任务不需要入队 AIResultQueue（不需要回写到LDB）
+                    if (!info.IsValidationTest)
+                    {
+                        _defectProcessor.EnqueueAIResult(info, msg);
+                    }
                     return true;
                 }
                 catch (Exception ex)
@@ -458,13 +501,21 @@ namespace DeepSightWorkLib
         /// </summary>
         private bool WorkerPostProcess()
         {
-            if (!IsStart) return false;
+            // 检查队列是否有任务
+            if (!_queueManager.PostProcessQueue.TryPeek(out InferenceResultModel peekModel))
+                return false;
+
+            // 如果是验证测试任务，即使 IsStart 为 false 也允许处理
+            bool isValidationTest = peekModel?.VBModel?.IsValidationTest == true;
+            if (!IsStart && !isValidationTest)
+                return false;
 
             if (_queueManager.PostProcessQueue.TryDequeue(out InferenceResultModel resultModel))
             {
                 try
                 {
-                    if (!IsStart)
+                    // 验证测试任务不受 IsStart 限制
+                    if (!IsStart && resultModel.VBModel?.IsValidationTest != true)
                     {
                         LogTextHelper.Info($"后处理任务被暂停中止，SN:{resultModel.VBModel?.SN}");
                         TaskStatusSender.SendSkipped(resultModel.VBModel?.SN, resultModel.VBModel?.panelInfo?.SideIndex, "任务已暂停");
@@ -628,7 +679,7 @@ namespace DeepSightWorkLib
 
         #region 算法调用与结果处理
 
-        public bool DefectMethod(VBModel vBModel, out List<string> resList, out List<string> detailsList, out PcsResult pcsResult, out string vbJson) => _defectProcessor.DefectMethod(vBModel, SysConfig.MaxDefectCount, out resList, out detailsList, out pcsResult, out vbJson);
+        public bool DefectMethod(VBModel vBModel, out List<string> resList, out List<string> detailsList, out string vbJson) => _defectProcessor.DefectMethod(vBModel, SysConfig.MaxDefectCount, out resList, out detailsList, out vbJson);
 
         #endregion
 

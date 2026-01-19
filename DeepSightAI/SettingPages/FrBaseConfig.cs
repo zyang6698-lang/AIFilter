@@ -45,7 +45,6 @@ namespace DeepSightAI.SettingPages
                 Machine.sysConfig.ProjectName = FrBaseConfig.Instance.txt_ProjectName.Text;
                 Machine.sysConfig.endpoint_address = FrBaseConfig.Instance.txt_endpoint_address.Text;
                 Machine.sysConfig.MinioPort = FrBaseConfig.Instance.txt_Minioport.Text;
-                Machine.sysConfig.DsCenterUrl = FrBaseConfig.Instance.txt_DsCenterURL.Text;
                 Machine.sysConfig.ServerIP = this.txt_severIP.Text;
                 Machine.sysConfig.ServerPort = this.txt_severPort.Text;
                 if (int.TryParse(this.txt_MaxDefectCount.Text, out int maxDefectCount))
@@ -69,7 +68,6 @@ namespace DeepSightAI.SettingPages
             this.txt_severPort.Text = Machine.sysConfig.ServerPort;
             this.txt_endpoint_address.Text = Machine.sysConfig.endpoint_address;
             this.txt_Minioport.Text = Machine.sysConfig.MinioPort;
-            this.txt_DsCenterURL.Text = Machine.sysConfig.DsCenterUrl;
             this.txt_MaxDefectCount.Text = Machine.sysConfig.MaxDefectCount.ToString();
             this.txt_AgentShutdownTimeout.Text = Machine.sysConfig.AgentShutdownTimeout.ToString();
         }

@@ -41,10 +41,6 @@ namespace DeepSightModel
         /// </summary>
         public string MinioPort { get; set; }
         /// <summary>
-        /// minio端口
-        /// </summary>
-        public string DsCenterUrl { get; set; }
-        /// <summary>
         /// 最大缺陷数
         /// </summary>
         public int MaxDefectCount { get; set; }
@@ -99,7 +95,6 @@ namespace DeepSightModel
                     LogDay = DefaultValues.LogDay,
                     endpoint_address = DefaultValues.MinioIP,
                     MinioPort = DefaultValues.MinioPort,
-                    DsCenterUrl = DefaultValues.DsCenterUrl,
                     MaxDefectCount = DefaultValues.MaxDefectCount,
                     AgentShutdownTimeout = DefaultValues.AgentShutdownTimeout
                 };

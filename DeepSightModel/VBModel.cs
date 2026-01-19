@@ -23,6 +23,23 @@ namespace DeepSightModel
         public RootPanelInfo panelInfo { get; set; }
         //用于判断ai是否部署该料号，若未部署则为true
         public bool isByPass { get; set; } = false;
+
+        #region 模型验证测试相关属性
+        /// <summary>
+        /// 是否为模型验证测试任务（用于区分正常推理和测试推理）
+        /// </summary>
+        public bool IsValidationTest { get; set; } = false;
+
+        /// <summary>
+        /// 原始推理结果（用于比对）格式: defectIndex -> AIStatus
+        /// </summary>
+        public Dictionary<int, int> OriginalAIResults { get; set; }
+
+        /// <summary>
+        /// 测试任务 ID
+        /// </summary>
+        public string TestTaskId { get; set; }
+        #endregion
     }
 
     /// <summary>

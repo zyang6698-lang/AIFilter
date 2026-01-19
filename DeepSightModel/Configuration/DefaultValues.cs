@@ -39,11 +39,6 @@ namespace DeepSightModel.Configuration
         /// </summary>
         public const string ServerPort = "2000";
 
-        /// <summary>
-        /// 默认中台 URL
-        /// </summary>
-        public const string DsCenterUrl = "http://localhost:82/api/zmq/dataImport";
-
         #endregion
 
         #region Minio 配置

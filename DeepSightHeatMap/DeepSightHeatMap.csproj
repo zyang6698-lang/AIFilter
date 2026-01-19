@@ -54,12 +54,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="HeatMapControl.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="HeatMapManager.cs" />
-    <Compile Include="HeatMapRenderer.cs" />
-    <Compile Include="ImageHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

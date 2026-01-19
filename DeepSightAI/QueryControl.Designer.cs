@@ -74,7 +74,6 @@ namespace DeepSightAI
             this.timePicker.Name = "timePicker";
             this.timePicker.Size = new System.Drawing.Size(241, 25);
             this.timePicker.TabIndex = 2;
-            this.timePicker.Value = new System.DateTime(2025, 11, 19, 10, 53, 0, 0);
             // 
             // labelEndDate
             // 
@@ -93,7 +92,6 @@ namespace DeepSightAI
             this.timePickerEnd.Name = "timePickerEnd";
             this.timePickerEnd.Size = new System.Drawing.Size(241, 25);
             this.timePickerEnd.TabIndex = 13;
-            this.timePickerEnd.Value = new System.DateTime(2025, 11, 19, 10, 53, 0, 0);
             // 
             // label81
             // 
@@ -104,9 +102,9 @@ namespace DeepSightAI
             this.label81.Size = new System.Drawing.Size(52, 15);
             this.label81.TabIndex = 3;
             this.label81.Text = "料号：";
-            // 
+            //
             // cmb_PartNumber
-            // 
+            //
             this.cmb_PartNumber.FormattingEnabled = true;
             this.cmb_PartNumber.Location = new System.Drawing.Point(89, 124);
             this.cmb_PartNumber.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);

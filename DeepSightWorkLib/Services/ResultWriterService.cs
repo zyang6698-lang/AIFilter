@@ -13,17 +13,15 @@ namespace DeepSightWorkLib.Services
         private readonly HttpClass _httpDb;
         private readonly ConcurrentDictionary<string, DateTime> _processingSnSet;
         private readonly string _url;
-        private readonly string _dsCenterUrl;
 
-        public ResultWriterService(HttpClass httpDb, ConcurrentDictionary<string, DateTime> processingSnSet, string url, string dsCenterUrl)
+        public ResultWriterService(HttpClass httpDb, ConcurrentDictionary<string, DateTime> processingSnSet, string url)
         {
             _httpDb = httpDb ?? throw new ArgumentNullException(nameof(httpDb));
             _processingSnSet = processingSnSet ?? throw new ArgumentNullException(nameof(processingSnSet));
             _url = url;
-            _dsCenterUrl = dsCenterUrl;
         }
 
-        public bool ReturnAVI(Tuple<string, string, string, RootAIResult, DsCenterInfo> info)
+        public bool ReturnAVI(Tuple<string, string, string, RootAIResult> info)
         {
             try
             {
@@ -41,12 +39,6 @@ namespace DeepSightWorkLib.Services
                     else
                     {
                         LogTextHelper.Warn($"SN:{info.Item2} Side:{info.Item3} 未在处理集合中找到，可能已被清理或未正确添加");
-                    }
-
-                    if (info.Item5 != null)
-                    {
-                        _httpDb.HttpPostMethod(_dsCenterUrl, info.Item5, 0, out string outInfo);
-                        LogTextHelper.Info($"sn:{info.Item2}_中台数据发送，信息:{outInfo}");
                     }
 
                     return true;

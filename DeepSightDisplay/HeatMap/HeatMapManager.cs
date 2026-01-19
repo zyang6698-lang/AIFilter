@@ -1,5 +1,4 @@
 ﻿using DeepSightDB;
-using DeepSightHeatMap;
 using DeepSightModel;
 using DeepSightTool;
 using OpenCvSharp;
@@ -13,7 +12,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace DeepSightHeatMap
+namespace DeepSightDisplay.HeatMap
 {
     public class HeatMapManager
     {

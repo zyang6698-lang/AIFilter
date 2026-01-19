@@ -30,13 +30,10 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrBaseConfig));
             this.panel1 = new System.Windows.Forms.Panel();
-
-            this.txt_DsCenterURL = new System.Windows.Forms.TextBox();
-            this.label19 = new System.Windows.Forms.Label();
-            this.txt_MaxDefectCount = new System.Windows.Forms.TextBox();
-            this.label21 = new System.Windows.Forms.Label();
             this.txt_AgentShutdownTimeout = new System.Windows.Forms.TextBox();
             this.label22 = new System.Windows.Forms.Label();
+            this.txt_MaxDefectCount = new System.Windows.Forms.TextBox();
+            this.label21 = new System.Windows.Forms.Label();
             this.txt_Minioport = new System.Windows.Forms.TextBox();
             this.label18 = new System.Windows.Forms.Label();
             this.txt_endpoint_address = new System.Windows.Forms.TextBox();
@@ -58,8 +55,6 @@
             this.panel1.Controls.Add(this.label22);
             this.panel1.Controls.Add(this.txt_MaxDefectCount);
             this.panel1.Controls.Add(this.label21);
-            this.panel1.Controls.Add(this.txt_DsCenterURL);
-            this.panel1.Controls.Add(this.label19);
             this.panel1.Controls.Add(this.txt_Minioport);
             this.panel1.Controls.Add(this.label18);
             this.panel1.Controls.Add(this.txt_endpoint_address);
@@ -72,40 +67,29 @@
             this.panel1.Controls.Add(this.label2);
             this.panel1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.panel1.Name = "panel1";
-            //
-            // txt_DsCenterURL
             // 
-            resources.ApplyResources(this.txt_DsCenterURL, "txt_DsCenterURL");
-            this.txt_DsCenterURL.Name = "txt_DsCenterURL";
-            //
-            // label19
-            //
-            resources.ApplyResources(this.label19, "label19");
-            this.label19.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label19.Name = "label19";
-            //
-            // txt_MaxDefectCount
-            //
-            resources.ApplyResources(this.txt_MaxDefectCount, "txt_MaxDefectCount");
-            this.txt_MaxDefectCount.Name = "txt_MaxDefectCount";
-            //
-            // label21
-            //
-            resources.ApplyResources(this.label21, "label21");
-            this.label21.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label21.Name = "label21";
-            //
             // txt_AgentShutdownTimeout
-            //
+            // 
             resources.ApplyResources(this.txt_AgentShutdownTimeout, "txt_AgentShutdownTimeout");
             this.txt_AgentShutdownTimeout.Name = "txt_AgentShutdownTimeout";
-            //
+            // 
             // label22
-            //
+            // 
             resources.ApplyResources(this.label22, "label22");
             this.label22.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.label22.Name = "label22";
-            //
+            // 
+            // txt_MaxDefectCount
+            // 
+            resources.ApplyResources(this.txt_MaxDefectCount, "txt_MaxDefectCount");
+            this.txt_MaxDefectCount.Name = "txt_MaxDefectCount";
+            // 
+            // label21
+            // 
+            resources.ApplyResources(this.label21, "label21");
+            this.label21.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.label21.Name = "label21";
+            // 
             // txt_Minioport
             // 
             resources.ApplyResources(this.txt_Minioport, "txt_Minioport");
@@ -127,7 +111,7 @@
             resources.ApplyResources(this.label17, "label17");
             this.label17.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.label17.Name = "label17";
-            //
+            // 
             // txt_severPort
             // 
             resources.ApplyResources(this.txt_severPort, "txt_severPort");
@@ -149,18 +133,18 @@
             resources.ApplyResources(this.label8, "label8");
             this.label8.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.label8.Name = "label8";
-            //
+            // 
             // txt_ProjectName
-            //
+            // 
             resources.ApplyResources(this.txt_ProjectName, "txt_ProjectName");
             this.txt_ProjectName.Name = "txt_ProjectName";
-            //
+            // 
             // label2
-            //
+            // 
             resources.ApplyResources(this.label2, "label2");
             this.label2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.label2.Name = "label2";
-            //
+            // 
             // FrBaseConfig
             // 
             resources.ApplyResources(this, "$this");
@@ -190,8 +174,6 @@
         internal System.Windows.Forms.Label label18;
         internal System.Windows.Forms.TextBox txt_endpoint_address;
         internal System.Windows.Forms.Label label17;
-        internal System.Windows.Forms.TextBox txt_DsCenterURL;
-        internal System.Windows.Forms.Label label19;
         internal System.Windows.Forms.TextBox txt_MaxDefectCount;
         internal System.Windows.Forms.Label label21;
         internal System.Windows.Forms.TextBox txt_AgentShutdownTimeout;

@@ -36,24 +36,6 @@ namespace DeepSightAI
         }
 
         /// <summary>
-        /// 获取或设置起始日期
-        /// </summary>
-        public DateTime StartDate
-        {
-            get => timePicker.Value;
-            set => timePicker.Value = value;
-        }
-
-        /// <summary>
-        /// 获取或设置结束日期
-        /// </summary>
-        public DateTime EndDate
-        {
-            get => timePickerEnd.Value;
-            set => timePickerEnd.Value = value;
-        }
-
-        /// <summary>
         /// 获取日期选择器是否勾选
         /// </summary>
         public bool IsDateChecked
@@ -63,11 +45,11 @@ namespace DeepSightAI
         }
 
         /// <summary>
-        /// 获取或设置料号
+        /// 获取或设置料号（"全部"返回空字符串表示全选）
         /// </summary>
         public string PartNumber
         {
-            get => cmb_PartNumber.Text;
+            get => cmb_PartNumber.Text == "全部" ? "" : cmb_PartNumber.Text;
             set => cmb_PartNumber.Text = value;
         }
 
@@ -177,6 +159,11 @@ namespace DeepSightAI
         public QueryControl()
         {
             InitializeComponent();
+
+            // 设置起止日期默认为今天
+            timePicker.Value = DateTime.Today;
+            timePickerEnd.Value = DateTime.Today;
+            timePicker.Checked = true;
         }
 
 
@@ -238,6 +225,7 @@ namespace DeepSightAI
                     {
                         QueryResult = await Machine.master.workClass.GetPanelsData(startDate, endDate);
                         PartNumberItems.Clear();
+                        PartNumberItems.Add("全部");
                         // 从查询结果中提取唯一的料号
                         var partNumbers = QueryResult.Select(pn => pn.ProductSerial).Distinct();
                         foreach (var pn in partNumbers)
@@ -246,8 +234,9 @@ namespace DeepSightAI
                         }
                         if (PartNumberItems.Count > 0)
                         {
+                            // 默认选择"全部"
                             PartNumberComboBox.SelectedIndex = 0;
-                            MessageBox.Show($"已加载当天料号列表，请选择至少一个料号后再次查询！");
+                            MessageBox.Show($"已加载 {PartNumberItems.Count - 1} 个料号，请选择料号后再次查询！");
                         }
                     }
                 }

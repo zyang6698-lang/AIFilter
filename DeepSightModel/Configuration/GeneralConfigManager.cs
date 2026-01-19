@@ -28,7 +28,6 @@ namespace DeepSightModel.Configuration
                 LogDay = DefaultValues.LogDay,
                 endpoint_address = DefaultValues.MinioIP,
                 MinioPort = DefaultValues.MinioPort,
-                DsCenterUrl = DefaultValues.DsCenterUrl,
                 MaxDefectCount = DefaultValues.MaxDefectCount,
                 AgentShutdownTimeout = DefaultValues.AgentShutdownTimeout
             };

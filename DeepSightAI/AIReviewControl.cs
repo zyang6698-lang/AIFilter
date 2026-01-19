@@ -1,6 +1,7 @@
 ﻿using DeepSightDB;
 using DeepSightModel;
 using DeepSightTool;
+using DeepSightWorkLib.Services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -62,10 +63,14 @@ namespace DeepSightAI
             treeView_Lots.AfterSelect += TreeView_Lots_AfterSelect;
             treeView_Lots.BeforeExpand += TreeView_Lots_BeforeExpand;
             treeView_Lots.NodeMouseDoubleClick += TreeView_Lots_NodeMouseDoubleClick;
+            treeView_Lots.MouseUp += TreeView_Lots_MouseUp;
 
             // 订阅SN搜索事件
             btn_SnSearch.Click += Btn_SnSearch_Click;
             txt_SnFilter.KeyDown += Txt_SnFilter_KeyDown;
+
+            // 订阅右键菜单事件
+            toolStripMenuItem_RunTest.Click += ToolStripMenuItem_RunTest_Click;
 
             // 初始化绑定列表（使用支持排序的SortableBindingList）
             _bindingList = new SortableBindingList<DefectReviewItem>(_defectItems);
@@ -810,6 +815,124 @@ namespace DeepSightAI
             _bindingList.ResetBindings();
 
             label_LotTitle.Text = $"全局搜索: {filterText} ({filteredItems.Count}条)";
+        }
+
+        /// <summary>
+        /// TreeView 鼠标右键弹起事件 - 显示右键菜单
+        /// </summary>
+        private void TreeView_Lots_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                var node = treeView_Lots.GetNodeAt(e.X, e.Y);
+                if (node != null && node.Level == 0)  // 只对 Lot 节点显示右键菜单
+                {
+                    treeView_Lots.SelectedNode = node;
+                    contextMenuStrip_Lot.Show(treeView_Lots, e.Location);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 运行模型一致性测试菜单项点击事件
+        /// </summary>
+        private async void ToolStripMenuItem_RunTest_Click(object sender, EventArgs e)
+        {
+            var selectedNode = treeView_Lots.SelectedNode;
+            if (selectedNode == null || selectedNode.Level != 0)
+            {
+                MessageBox.Show("请先选择一个Lot节点。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string lotNumber = selectedNode.Name;
+
+            if (!_lotGroups.TryGetValue(lotNumber, out var lotItems) || lotItems.Count == 0)
+            {
+                MessageBox.Show($"Lot {lotNumber} 中没有可测试的数据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // 确认对话框
+            var result = MessageBox.Show(
+                $"是否对 Lot: {lotNumber} 运行模型一致性测试？\n" +
+                $"共 {lotItems.Count} 条记录，将重新进行AI推理并与原结果比对。",
+                "确认测试",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (result != DialogResult.Yes)
+                return;
+
+            await RunValidationTestAsync(lotNumber, lotItems);
+        }
+
+        /// <summary>
+        /// 运行模型验证测试
+        /// </summary>
+        private async Task RunValidationTestAsync(string lotNumber, List<DefectReviewItem> items)
+        {
+            var service = Machine.master?.workClass?.ValidationTestService;
+            if (service == null)
+            {
+                MessageBox.Show("模型验证测试服务未初始化。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            try
+            {
+                this.Enabled = false;
+                label_LotTitle.Text = $"正在启动 Lot: {lotNumber} 的测试任务...";
+
+                // 收集所有 SN+Side 组合
+                var serialNumbers = items.Select(i => i.SerialNumber).Distinct().ToList();
+
+                // 根据 items 的时间范围确定查询条件
+                var startDate = items.Min(i => i.DetectionDate).AddMinutes(-1);
+                var endDate = items.Max(i => i.DetectionDate).AddMinutes(1);
+
+                // 创建测试请求
+                var request = new ValidationTestRequest
+                {
+                    LotNumber = lotNumber,
+                    StartDate = startDate,
+                    EndDate = endDate,
+                    MaxRecords = items.Count * 2,  // 留一些余量
+                    Description = $"Lot {lotNumber} 一致性测试"
+                };
+
+                // 启动测试任务
+                var task = await service.CreateTestTaskAsync(request);
+
+                if (task == null)
+                {
+                    MessageBox.Show("创建测试任务失败。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                // 切换到测试结果页并开始监控
+                validationTestResultControl1.StartMonitoring(task);
+                tabControl_Main.SelectedTab = tabPage_ValidationTest;
+
+                MessageBox.Show(
+                    $"测试任务已启动！\n" +
+                    $"任务ID: {task.TaskId}\n" +
+                    $"预计测试 {task.TotalRecords} 条记录\n\n" +
+                    "请在【模型一致性测试】页查看进度和结果。",
+                    "测试已启动",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"启动测试任务失败: {ex}");
+                MessageBox.Show($"启动测试任务失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                this.Enabled = true;
+                label_LotTitle.Text = $"Lot: {lotNumber}";
+            }
         }
 
         #endregion

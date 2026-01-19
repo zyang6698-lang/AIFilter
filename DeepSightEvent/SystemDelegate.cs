@@ -51,6 +51,6 @@ namespace DeepSightEvent
     /// </summary>
     /// <param name="sn">产品码</param>
     /// <param name="info">产品缺陷信息</param>
-    public delegate void SendDefectResultInfo(string sn, List<string> msg, List<string> details, PcsResult pcsResult);
+    public delegate void SendDefectResultInfo(string sn, List<string> msg, List<string> details);
 
 }

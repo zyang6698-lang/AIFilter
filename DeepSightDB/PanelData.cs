@@ -41,6 +41,11 @@ namespace DeepSightDB
         public int VrsState { get; set; }      // VRS 终判阶段
         // 最终状态：0 待处理 / 1 最终OK / 2 最终NG
         public int FinalState { get; set; }
+
+        // 模型验证测试状态：0 未测试 / 1 一致 / 2 不一致 / 3 测试中 / 4 测试异常
+        public int TestState { get; set; }
+        // 最近一次测试时间
+        public DateTime? LastTestTime { get; set; }
     }
 
     /// <summary>

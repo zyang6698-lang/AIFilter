@@ -404,8 +404,17 @@
       <DependentUpon>FrUserManagement.cs</DependentUpon>
     </Compile>
     <Compile Include="SortableBindingList.cs" />
+    <Compile Include="ValidationTestResultControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ValidationTestResultControl.Designer.cs">
+      <DependentUpon>ValidationTestResultControl.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="AIReviewControl.resx">
       <DependentUpon>AIReviewControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ValidationTestResultControl.resx">
+      <DependentUpon>ValidationTestResultControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="AnalyticsControl.resx">
       <DependentUpon>AnalyticsControl.cs</DependentUpon>
@@ -507,10 +516,6 @@
     <ProjectReference Include="..\DeepSightEvent\DeepSightEvent.csproj">
       <Project>{A9B6C0CB-ADC2-4F0B-B786-AF1A8B752040}</Project>
       <Name>DeepSightEvent</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DeepSightHeatMap\DeepSightHeatMap.csproj">
-      <Project>{443cbe76-7a7f-4ad2-a5e1-56290c42bf85}</Project>
-      <Name>DeepSightHeatMap</Name>
     </ProjectReference>
     <ProjectReference Include="..\DeepSightModel\DeepSightModel.csproj">
       <Project>{c3032123-71af-4b9f-aaf1-5fdbb73274b0}</Project>

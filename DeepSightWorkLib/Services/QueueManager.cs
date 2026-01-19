@@ -26,10 +26,10 @@ namespace DeepSightWorkLib.Services
         public ConcurrentQueue<VBModel> AviQueue { get; } = new ConcurrentQueue<VBModel>();
 
         /// <summary>
-        /// AI 结果回写队列 (Key, SN, Side, RootAIResult, DsCenterInfo)
+        /// AI 结果回写队列 (Key, SN, Side, RootAIResult)
         /// </summary>
-        public ConcurrentQueue<Tuple<string, string, string, RootAIResult, DsCenterInfo>> AIResultQueue { get; } 
-            = new ConcurrentQueue<Tuple<string, string, string, RootAIResult, DsCenterInfo>>();
+        public ConcurrentQueue<Tuple<string, string, string, RootAIResult>> AIResultQueue { get; } 
+            = new ConcurrentQueue<Tuple<string, string, string, RootAIResult>>();
 
         /// <summary>
         /// 推理后处理队列
