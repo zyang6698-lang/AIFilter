@@ -420,7 +420,7 @@ namespace DeepSightWorkLib
                     AIStopwatch.Restart();
 
                     if (_defectProcessor.DefectMethod(info, SysConfig.MaxDefectCount,
-                        out List<string> msg, out List<string> details, out string vbJson,
+                        out List<string> msg,
                         AviConfig.GetInferResultTimeout))
                     {
                         // 验证测试任务不受 IsStart 限制
@@ -433,7 +433,7 @@ namespace DeepSightWorkLib
                         SystemEvent.SendTaskMsg(info.SN, $"{taskPrefix}{info.Side}面AI检测完成");
                         if (!info.IsValidationTest)
                         {
-                            SystemEvent.SendResultInfo(info.SN, msg, details);
+                            SystemEvent.SendResultInfo(info.SN, msg);
                         }
                     }
                     else
@@ -679,7 +679,7 @@ namespace DeepSightWorkLib
 
         #region 算法调用与结果处理
 
-        public bool DefectMethod(VBModel vBModel, out List<string> resList, out List<string> detailsList, out string vbJson) => _defectProcessor.DefectMethod(vBModel, SysConfig.MaxDefectCount, out resList, out detailsList, out vbJson);
+        public bool DefectMethod(VBModel vBModel, out List<string> resList) => _defectProcessor.DefectMethod(vBModel, SysConfig.MaxDefectCount, out resList);
 
         #endregion
 

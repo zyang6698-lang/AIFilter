@@ -39,12 +39,9 @@ namespace DeepSightWorkLib.Services
         /// <summary>
         /// 调用 DefectClass.DefectMethodWithImages 并将返回结果解析为与原 BusinessClass.DefectMethod 相同的输出
         /// </summary>
-        public bool DefectMethod(VBModel vBModel,int maxCount, out List<string> resList, out List<string> detailsList, out string vbJson,int timeoutSeconds = 10)
+        public bool DefectMethod(VBModel vBModel,int maxCount, out List<string> resList, int timeoutSeconds = 10)
         {
             resList = new List<string>();
-            detailsList = new List<string>();
-            vbJson = string.Empty;
-
             if (vBModel.Mats == null || vBModel.Mats.Count == 0)
             {
                 EnqueuePostProcess(vBModel, "", false);
@@ -116,24 +113,6 @@ namespace DeepSightWorkLib.Services
 
                 if (code == "200")
                 {
-                    JObject root = JObject.Parse(msg);
-                    var dataToken = root["data"];
-                    var inferWholeData = (dataToken as JObject)?["infer_whole_data"];
-                    var inferResultsToken = (inferWholeData as JObject)?["infer_results"];
-
-                    if (inferResultsToken is JArray inferResults)
-                    {
-                        foreach (var result1 in inferResults)
-                        {
-                            var inferDetails = (result1 as JObject)?["infer_details"];
-                            if ((inferDetails as JObject)?["node_details"] is JObject nodeDetails)
-                            {
-                                string nodeDetailsJson = nodeDetails.ToString();
-                                detailsList.Add(nodeDetailsJson);
-                            }
-                        }
-                    }
-
                     for (int i = 0; i < obj.Data.InferWholeData.InferResults.Count; i++)
                     {
                         if (vBModel.isByPass)
@@ -146,7 +125,6 @@ namespace DeepSightWorkLib.Services
                         }
                     }
 
-                    vbJson = msg;
                     result = true;
                 }
                 else if (code == "600")
@@ -164,9 +142,7 @@ namespace DeepSightWorkLib.Services
             }
             catch (Exception ex)
             {
-                vbJson = string.Empty;
                 resList = null;
-                detailsList = null;
                 result = false;
                 SystemEvent.SendAlarmMsg("算法处理异常" + ex.ToString());
             }

@@ -126,11 +126,11 @@ namespace DeepSightEvent
         ///
         /// </summary>
         /// <param name="num"></param>
-        public static void SendResultInfo(string Sn, List<string>msg, List<string> details)
+        public static void SendResultInfo(string Sn, List<string>msg)
         {
             if (EventSendDefectResultInfoToUI != null)
             {
-                EventSendDefectResultInfoToUI(Sn, msg, details);
+                EventSendDefectResultInfoToUI(Sn, msg);
             }
         }
     }

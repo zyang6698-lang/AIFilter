@@ -530,7 +530,7 @@ namespace DeepSightAI
                 RootPanelInfo panelinfo = null;
                 result = await Task.Factory.StartNew(() =>
                 {
-                    Machine.master.workClass.DefectMethod(new VBModel() { VbInfo = vBInfo, panelInfo = panelinfo }, out result, out details, out string vbJson);
+                    Machine.master.workClass.DefectMethod(new VBModel() { VbInfo = vBInfo, panelInfo = panelinfo }, out result);
                     return result;
                 });
                 if (result.Count() > 0)

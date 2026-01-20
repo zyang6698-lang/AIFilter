@@ -246,7 +246,6 @@
             this.label_ReviewDetail.Size = new System.Drawing.Size(363, 500);
             this.label_ReviewDetail.TabIndex = 0;
             this.label_ReviewDetail.Text = "复判详情区";
-            this.label_ReviewDetail.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // tabControl_Main
             // 

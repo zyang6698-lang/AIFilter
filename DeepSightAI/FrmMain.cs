@@ -65,7 +65,7 @@ namespace DeepSightAI
 
 
 
-        private void SystemEvent_EventSendDefectResultInfoToUI(string sn, List<string> msg, List<string> details)
+        private void SystemEvent_EventSendDefectResultInfoToUI(string sn, List<string> msg)
         {
             try
             {
@@ -74,13 +74,6 @@ namespace DeepSightAI
                 lock (resultList)
                 {
                     resultList.AddRange(msg);
-                }
-
-                // 细节信息
-                var detailsList = FrHome.Instance.dic_Details.GetOrAdd(sn, _ => new List<string>());
-                lock (detailsList)
-                {
-                    detailsList.AddRange(details);
                 }
 
             }
