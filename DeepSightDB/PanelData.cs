@@ -17,6 +17,10 @@ namespace DeepSightDB
         public int RoiY { get; set; }
         public int Width {  get; set; }
         public int Height { get; set; }
+        public int OriginRoiX { get; set; }
+        public int OriginRoiY { get; set; }
+        public int OriginWidth { get; set; }
+        public int OriginHeight { get; set; }
         public string ImagePath { get; set; }
         // 分阶段状态：0 未运行 / 1 OK / 2 NG / 3 异常
         public int AIStatus { get; set; }

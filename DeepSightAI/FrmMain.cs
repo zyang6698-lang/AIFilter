@@ -124,7 +124,7 @@ namespace DeepSightAI
 
         private void SystemEvent_EventSendAlarmToUI(string massage)
         {
-            LogTextHelper.Warn($"收到异常消息：{massage},任务已停止");
+            LogTextHelper.Error($"收到异常消息：{massage},任务已停止");
         }
         public static object Locker = new object();
         

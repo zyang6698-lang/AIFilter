@@ -121,12 +121,6 @@ namespace DeepSightWorkLib
                 bool previousValue = _isStart;
                 _isStart = value;
 
-                // 当从 true 变为 false 时，清空所有正在处理的队列
-                if (previousValue && !value)
-                {
-                    ClearAllProcessingQueues();
-                    FlushPendingPanelSideRecords();
-                }
                 // 当从 false 变为 true 时，更新推理请求开始时间
                 if (!previousValue && value)
                 {
@@ -344,32 +338,14 @@ namespace DeepSightWorkLib
         /// </summary>
         private bool WorkerImageLoad()
         {
-            if (!IsStart) return false;
-
             if (_queueManager.ImageLoadQueue.TryDequeue(out ImageLoadModel loadModel))
             {
                 try
                 {
-                    if (!IsStart)
-                    {
-                        LogTextHelper.Info($"图片加载任务被暂停中止，SN:{loadModel.Model?.SN}");
-                        TaskStatusSender.SendSkipped(loadModel.Model?.SN, loadModel.Model?.Side, "任务已暂停");
-                        CleanupMats(loadModel.Model?.Mats);
-                        return false;
-                    }
-
                     LogTextHelper.Info($"开始加载图片，SN:{loadModel.Model.SN}，数量：{loadModel.Model.ImageKeys.Count}");
                     TaskStatusSender.SendLoadingImages(loadModel.Model.SN, loadModel.Model.Side);
 
                     loadModel.Model.Mats = _imageLoaderService.LoadImages(loadModel.Model.ImageKeys);
-
-                    if (!IsStart)
-                    {
-                        LogTextHelper.Info($"图片加载后任务被暂停中止，SN:{loadModel.Model.SN}");
-                        TaskStatusSender.SendSkipped(loadModel.Model.SN, loadModel.Model.Side, "任务已暂停");
-                        CleanupMats(loadModel.Model.Mats);
-                        return false;
-                    }
 
                     LogImageLoadResult(loadModel);
 
@@ -394,26 +370,13 @@ namespace DeepSightWorkLib
         private bool WorkerDefect()
         {
             // 检查队列是否有任务（先 Peek 而不是 Dequeue）
-            if (!_queueManager.AviQueue.TryPeek(out VBModel peekInfo))
-                return false;
-
-            // 如果是验证测试任务，即使 IsStart 为 false 也允许处理
-            bool isValidationTest = peekInfo?.IsValidationTest == true;
-            if (!IsStart && !isValidationTest)
+            if (!_queueManager.AviQueue.TryPeek(out _))
                 return false;
 
             if (_queueManager.AviQueue.TryDequeue(out VBModel info))
             {
                 try
                 {
-                    // 验证测试任务不受 IsStart 限制
-                    if (!IsStart && !info.IsValidationTest)
-                    {
-                        LogTextHelper.Info($"AI检测任务被暂停中止，SN:{info?.SN}");
-                        SystemEvent.SendTaskMsg(info?.SN, "暂停-AI检测已中止");
-                        return false;
-                    }
-
                     // 验证测试任务使用不同的日志前缀
                     string taskPrefix = info.IsValidationTest ? "[验证测试]" : "";
                     SystemEvent.SendTaskMsg(info.SN, $"{taskPrefix}{info.Side}面开始AI检测(缺陷数:{info.Mats.Count})");
@@ -423,13 +386,6 @@ namespace DeepSightWorkLib
                         out List<string> msg,
                         AviConfig.GetInferResultTimeout))
                     {
-                        // 验证测试任务不受 IsStart 限制
-                        if (!IsStart && !info.IsValidationTest)
-                        {
-                            LogTextHelper.Info($"AI检测任务被暂停中止（推理完成后），SN:{info.SN}");
-                            SystemEvent.SendTaskMsg(info.SN, "暂停-AI检测已中止（结果未回写）");
-                            return false;
-                        }
                         SystemEvent.SendTaskMsg(info.SN, $"{taskPrefix}{info.Side}面AI检测完成");
                         if (!info.IsValidationTest)
                         {
@@ -438,7 +394,7 @@ namespace DeepSightWorkLib
                     }
                     else
                     {
-                        LogTextHelper.Warn($"KEY:{info.Key} SN:{info.SN}检测失败！");
+                        LogTextHelper.Error($"KEY:{info.Key} SN:{info.SN}检测失败！");
                         SystemEvent.SendTaskMsg(info.SN, $"{taskPrefix}{info.Side}面已完成");
                     }
 
@@ -473,18 +429,10 @@ namespace DeepSightWorkLib
         /// </summary>
         private bool WorkerReturnAVI()
         {
-            if (!IsStart) return false;
-
             if (_queueManager.AIResultQueue.TryDequeue(out var info))
             {
                 try
                 {
-                    if (!IsStart)
-                    {
-                        LogTextHelper.Info($"结果回写任务被暂停中止，SN:{info?.Item2}");
-                        TaskStatusSender.SendSkipped(info?.Item2, info?.Item3, "任务已暂停");
-                        return false;
-                    }
                     _resultWriterService?.ReturnAVI(info);
                     return true;
                 }
@@ -502,25 +450,13 @@ namespace DeepSightWorkLib
         private bool WorkerPostProcess()
         {
             // 检查队列是否有任务
-            if (!_queueManager.PostProcessQueue.TryPeek(out InferenceResultModel peekModel))
-                return false;
-
-            // 如果是验证测试任务，即使 IsStart 为 false 也允许处理
-            bool isValidationTest = peekModel?.VBModel?.IsValidationTest == true;
-            if (!IsStart && !isValidationTest)
+            if (!_queueManager.PostProcessQueue.TryPeek(out _))
                 return false;
 
             if (_queueManager.PostProcessQueue.TryDequeue(out InferenceResultModel resultModel))
             {
                 try
                 {
-                    // 验证测试任务不受 IsStart 限制
-                    if (!IsStart && resultModel.VBModel?.IsValidationTest != true)
-                    {
-                        LogTextHelper.Info($"后处理任务被暂停中止，SN:{resultModel.VBModel?.SN}");
-                        TaskStatusSender.SendSkipped(resultModel.VBModel?.SN, resultModel.VBModel?.panelInfo?.SideIndex, "任务已暂停");
-                        return false;
-                    }
                     _postProcessService.ProcessInferenceResult(resultModel);
                     return true;
                 }

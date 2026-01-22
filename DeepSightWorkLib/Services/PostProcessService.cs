@@ -123,6 +123,14 @@ namespace DeepSightWorkLib.Services
                                     heatInfo.RoiY = subY ;
                                     heatInfo.Width = subW ;
                                     heatInfo.Height = subH ;
+                                    if (TryGetOriginRoi(resultModel.VBModel, i, out int originX, out int originY, out int originW, out int originH))
+                                    {
+                                        heatInfo.OriginRoiX = originX;
+                                        heatInfo.OriginRoiY = originY;
+                                        heatInfo.OriginWidth = originW;
+                                        heatInfo.OriginHeight = originH;
+                                    }
+
                                     if (sub_defectName == "AU10" || sub_defectName == "CU10" || sub_defectName == "CU41"
                                         || sub_defectName == "HO01" || sub_defectName == "SM10")
                                     {
@@ -166,6 +174,38 @@ namespace DeepSightWorkLib.Services
             {
                 LogTextHelper.Error($"处理异常: SN={vBModel.SN}, 错误={ex}");
             }
+        }
+
+        private static bool TryGetOriginRoi(VBModel model, int resultIndex, out int x, out int y, out int w, out int h)
+        {
+            x = 0;
+            y = 0;
+            w = 0;
+            h = 0;
+
+            if (model?.panelInfo?.PcsInfo == null || model.PcsIndex == null || model.DefectIndex == null)
+                return false;
+
+            if (resultIndex < 0 || resultIndex >= model.PcsIndex.Count || resultIndex >= model.DefectIndex.Count)
+                return false;
+
+            var pcsKey = model.PcsIndex[resultIndex].ToString();
+            if (!model.panelInfo.PcsInfo.TryGetValue(pcsKey, out var pcsInfo) || pcsInfo?.DefectInfo == null)
+                return false;
+
+            var defectIndex = model.DefectIndex[resultIndex];
+            if (defectIndex < 0 || defectIndex >= pcsInfo.DefectInfo.Count)
+                return false;
+
+            var origin = pcsInfo.DefectInfo[defectIndex].DefectOriginRoi;
+            if (origin == null || origin.Width <= 0 || origin.Height <= 0)
+                return false;
+
+            x = origin.X;
+            y = origin.Y;
+            w = origin.Width;
+            h = origin.Height;
+            return true;
         }
 
         /// <summary>

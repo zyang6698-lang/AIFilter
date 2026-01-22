@@ -229,6 +229,7 @@ namespace DeepSightWorkLib.Services
             // 构建原始AI结果字典
             var originalResults = new Dictionary<int, int>();
             var imageKeys = new List<string>();
+            var imageDefects = new List<DetectInfo>();
             var defectIndexList = new List<int>();
             var pcsIndexList = new List<int>();
 
@@ -241,6 +242,7 @@ namespace DeepSightWorkLib.Services
                 if (!string.IsNullOrEmpty(defect.ImagePath))
                 {
                     imageKeys.Add(defect.ImagePath);
+                    imageDefects.Add(defect);
                     defectIndexList.Add(i);
                     pcsIndexList.Add(i);  // 简化处理
                 }
@@ -249,7 +251,7 @@ namespace DeepSightWorkLib.Services
             if (imageKeys.Count == 0) return null;
 
             // 构建 VBInfo
-            var vbInfo = CreateValidationVBInfo(panel, side, imageKeys);
+            var vbInfo = CreateValidationVBInfo(panel, side, imageKeys, imageDefects);
 
             return new VBModel
             {
@@ -269,7 +271,7 @@ namespace DeepSightWorkLib.Services
         /// <summary>
         /// 创建验证测试用的 VBInfo
         /// </summary>
-        private RootVBInfo CreateValidationVBInfo(PanelDataRecord panel, SideData side, List<string> imageKeys)
+        private RootVBInfo CreateValidationVBInfo(PanelDataRecord panel, SideData side, List<string> imageKeys, List<DetectInfo> imageDefects)
         {
             // 从配置中查找料号对应的方案和流程
             var solutionFlow = _solutionConfig?.solus?.FirstOrDefault(o => o.ProductSerial == panel.ProductSerial)
@@ -315,8 +317,25 @@ namespace DeepSightWorkLib.Services
             };
 
             // 添加图片信息
-            foreach (var imagePath in imageKeys)
+            for (int i = 0; i < imageKeys.Count; i++)
             {
+                var imagePath = imageKeys[i];
+                var defect = (imageDefects != null && i < imageDefects.Count) ? imageDefects[i] : null;
+
+                int roiX=0;
+                int roiY=0;
+                int roiW=0;
+                int roiH=0;
+
+                if (defect != null && defect.OriginWidth > 0 && defect.OriginHeight > 0)
+                {
+                    roiX = defect.OriginRoiX;
+                    roiY = defect.OriginRoiY;
+                    roiW = defect.OriginWidth;
+                    roiH = defect.OriginHeight;
+                }
+
+
                 var group = new InferImageGroup
                 {
                     GroupUuid = Guid.NewGuid().ToString(),
@@ -335,6 +354,7 @@ namespace DeepSightWorkLib.Services
                         product = panel.ProductSerial,
                         Side = side.Side
                     },
+                    ImgROI = new List<int> { roiX, roiY, roiW, roiH },
                     inspectDetails = new InspectDetails { InferRois = new List<InferRoi>() }
                 };
                 vbInfo.paramsData.InferWholeData.ImageData.DataValue.InferImageGroup.Add(group);
@@ -381,12 +401,11 @@ namespace DeepSightWorkLib.Services
 
                 try
                 {
-                    using(var mat = Cv2.ImRead(defect.ImagePath))
+                    var mat = Cv2.ImRead(defect.ImagePath);
+                    if (mat != null)
                     {
-                        if (mat != null)
-                        {
-                            mats.Add(mat);
-                        }
+                        // 需要保持 Mat 存活到推理调用结束
+                        mats.Add(mat);
                     }
                 }
                 catch (Exception ex)
