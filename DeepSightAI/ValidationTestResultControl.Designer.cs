@@ -26,12 +26,15 @@ namespace DeepSightAI
             this.dataGridView_Results = new System.Windows.Forms.DataGridView();
             this.col_SerialNumber = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.col_Side = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.col_DataSource = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.col_OriginalResult = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.col_NewResult = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.col_IsConsistent = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.col_DefectCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.col_ConsistentCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.col_InconsistentCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.col_MissCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.col_OverKillCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.panel_Filter = new System.Windows.Forms.Panel();
             this.btn_ExportResult = new System.Windows.Forms.Button();
             this.comboBox_Filter = new System.Windows.Forms.ComboBox();
@@ -174,12 +177,15 @@ namespace DeepSightAI
             this.dataGridView_Results.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.col_SerialNumber,
             this.col_Side,
+            this.col_DataSource,
             this.col_OriginalResult,
             this.col_NewResult,
             this.col_IsConsistent,
             this.col_DefectCount,
             this.col_ConsistentCount,
-            this.col_InconsistentCount});
+            this.col_InconsistentCount,
+            this.col_MissCount,
+            this.col_OverKillCount});
             this.dataGridView_Results.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView_Results.Location = new System.Drawing.Point(0, 35);
             this.dataGridView_Results.Name = "dataGridView_Results";
@@ -201,6 +207,13 @@ namespace DeepSightAI
             this.col_Side.Name = "col_Side";
             this.col_Side.ReadOnly = true;
             this.col_Side.FillWeight = 40;
+            //
+            // col_DataSource
+            //
+            this.col_DataSource.HeaderText = "数据来源";
+            this.col_DataSource.Name = "col_DataSource";
+            this.col_DataSource.ReadOnly = true;
+            this.col_DataSource.FillWeight = 60;
             //
             // col_OriginalResult
             //
@@ -244,6 +257,20 @@ namespace DeepSightAI
             this.col_InconsistentCount.ReadOnly = true;
             this.col_InconsistentCount.FillWeight = 50;
             //
+            // col_MissCount
+            //
+            this.col_MissCount.HeaderText = "漏失数";
+            this.col_MissCount.Name = "col_MissCount";
+            this.col_MissCount.ReadOnly = true;
+            this.col_MissCount.FillWeight = 50;
+            //
+            // col_OverKillCount
+            //
+            this.col_OverKillCount.HeaderText = "误报数";
+            this.col_OverKillCount.Name = "col_OverKillCount";
+            this.col_OverKillCount.ReadOnly = true;
+            this.col_OverKillCount.FillWeight = 50;
+            //
             // ValidationTestResultControl
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
@@ -280,12 +307,15 @@ namespace DeepSightAI
         private System.Windows.Forms.Button btn_ExportResult;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_SerialNumber;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_Side;
+        private System.Windows.Forms.DataGridViewTextBoxColumn col_DataSource;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_OriginalResult;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_NewResult;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_IsConsistent;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_DefectCount;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_ConsistentCount;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_InconsistentCount;
+        private System.Windows.Forms.DataGridViewTextBoxColumn col_MissCount;
+        private System.Windows.Forms.DataGridViewTextBoxColumn col_OverKillCount;
     }
 }
 

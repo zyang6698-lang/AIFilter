@@ -34,11 +34,11 @@ namespace DeepSightWorkLib.Services
                     if (_processingSnSet.TryRemove(snKey, out DateTime addTime))
                     {
                         var duration = DateTime.Now - addTime;
-                        LogTextHelper.Info($"SN:{info.Item2} Side:{info.Item3} ´¦ÀíÍê³É£¬ÓÃÊ±£º{duration.TotalSeconds:F2}Ãë£¬ÒÑ´Ó´¦Àí¼¯ºÏÖĞÒÆ³ı");
+                        LogTextHelper.Info($"SN:{info.Item2} Side:{info.Item3} å¤„ç†å®Œæˆï¼Œè€—æ—¶ï¼š{duration.TotalSeconds:F2}ç§’ï¼Œå·²ä»å¤„ç†é›†åˆä¸­ç§»é™¤");
                     }
                     else
                     {
-                        LogTextHelper.Warn($"SN:{info.Item2} Side:{info.Item3} Î´ÔÚ´¦Àí¼¯ºÏÖĞÕÒµ½£¬¿ÉÄÜÒÑ±»ÇåÀí»òÎ´ÕıÈ·Ìí¼Ó");
+                        LogTextHelper.Warn($"SN:{info.Item2} Side:{info.Item3} æœªåœ¨å¤„ç†é›†åˆä¸­æ‰¾åˆ°ï¼Œå¯èƒ½å·²è¢«æ¸…ç†æˆ–æœªæ­£ç¡®æ·»åŠ ");
                     }
 
                     return true;

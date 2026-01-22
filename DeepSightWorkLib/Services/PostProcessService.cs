@@ -100,6 +100,15 @@ namespace DeepSightWorkLib.Services
                             string mergedPath = Path.Combine(basePath, relativePath);
                             heatInfo.ImagePath = mergedPath;
                         }
+                        var imgRoi = obj.Data.InferWholeData.InferResults[i].ImgRoi;
+                        if (imgRoi != null && imgRoi.Count >= 4)
+                        {
+                            heatInfo.OriginRoiX = imgRoi[0];
+                            heatInfo.OriginRoiY = imgRoi[1];
+                            heatInfo.OriginWidth = imgRoi[2];
+                            heatInfo.OriginHeight = imgRoi[3];
+                        }
+
 
                         if (obj.Data.InferWholeData.InferResults[i].Infer_Result == "OK")
                         {
@@ -108,6 +117,7 @@ namespace DeepSightWorkLib.Services
                         else
                         {
                             heatInfo.AIStatus = 2;
+
                             for (int j = 0; j < obj.Data.InferWholeData.InferResults[i].InferDetails.Location.Count; j++)
                             {
                                 string sub_defectName = obj.Data.InferWholeData.InferResults[i].Defect_name;
@@ -116,31 +126,23 @@ namespace DeepSightWorkLib.Services
                                 int subH = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].Height);
                                 int subW = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].Width);
 
-                                if (j == 0)
-                                {
-                                    heatInfo.DefectName = sub_defectName;
-                                    heatInfo.RoiX = subX ;
-                                    heatInfo.RoiY = subY ;
-                                    heatInfo.Width = subW ;
-                                    heatInfo.Height = subH ;
-                                    if (TryGetOriginRoi(resultModel.VBModel, i, out int originX, out int originY, out int originW, out int originH))
-                                    {
-                                        heatInfo.OriginRoiX = originX;
-                                        heatInfo.OriginRoiY = originY;
-                                        heatInfo.OriginWidth = originW;
-                                        heatInfo.OriginHeight = originH;
-                                    }
+                                heatInfo.DefectName = sub_defectName;
+                                heatInfo.RoiX = subX;
+                                heatInfo.RoiY = subY;
+                                heatInfo.Width = subW;
+                                heatInfo.Height = subH;
 
-                                    if (sub_defectName == "AU10" || sub_defectName == "CU10" || sub_defectName == "CU41"
-                                        || sub_defectName == "HO01" || sub_defectName == "SM10")
-                                    {
-                                        heatInfo.DefectShape = "dot";
-                                    }
-                                    else
-                                    {
-                                        heatInfo.DefectShape = "line";
-                                    }
+                                
+                                if (sub_defectName == "AU10" || sub_defectName == "CU10" || sub_defectName == "CU41"
+                                    || sub_defectName == "HO01" || sub_defectName == "SM10")
+                                {
+                                    heatInfo.DefectShape = "dot";
                                 }
+                                else
+                                {
+                                    heatInfo.DefectShape = "line";
+                                }
+
                             }
                         }
 
@@ -197,14 +199,28 @@ namespace DeepSightWorkLib.Services
             if (defectIndex < 0 || defectIndex >= pcsInfo.DefectInfo.Count)
                 return false;
 
+            // 优先使用 DefectOriginRoi，如果为空则降级使用 DefectRoi
             var origin = pcsInfo.DefectInfo[defectIndex].DefectOriginRoi;
-            if (origin == null || origin.Width <= 0 || origin.Height <= 0)
+            var fallbackRoi = pcsInfo.DefectInfo[defectIndex].DefectRoi;
+            
+            // 优先使用 DefectOriginRoi
+            if (origin != null && origin.Width > 0 && origin.Height > 0)
+            {
+                x = origin.X;
+                y = origin.Y;
+                w = origin.Width;
+                h = origin.Height;
+                return true;
+            }
+            
+            // 降级使用 DefectRoi（与 PanelDataConverter 中的 ImgROI 一致）
+            if (fallbackRoi == null || fallbackRoi.Width <= 0 || fallbackRoi.Height <= 0)
                 return false;
 
-            x = origin.X;
-            y = origin.Y;
-            w = origin.Width;
-            h = origin.Height;
+            x = fallbackRoi.X;
+            y = fallbackRoi.Y;
+            w = fallbackRoi.Width;
+            h = fallbackRoi.Height;
             return true;
         }
 

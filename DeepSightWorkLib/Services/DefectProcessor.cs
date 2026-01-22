@@ -37,7 +37,7 @@ namespace DeepSightWorkLib.Services
         }
 
         /// <summary>
-        /// µ÷ÓÃ DefectClass.DefectMethodWithImages ²¢½«·µ»Ø½á¹û½âÎöÎªÓëÔ­ BusinessClass.DefectMethod ÏàÍ¬µÄÊä³ö
+        /// è°ƒç”¨ DefectClass.DefectMethodWithImages è¿›è¡Œæ¨ç†ï¼Œç»“æœå¤„ç†ä¸åŸ BusinessClass.DefectMethod ç›¸åŒçš„é€»è¾‘
         /// </summary>
         public bool DefectMethod(VBModel vBModel,int maxCount, out List<string> resList, int timeoutSeconds = 10)
         {
@@ -45,14 +45,14 @@ namespace DeepSightWorkLib.Services
             if (vBModel.Mats == null || vBModel.Mats.Count == 0)
             {
                 EnqueuePostProcess(vBModel, "", false);
-                TaskStatusSender.SendSkipped(vBModel.SN, vBModel.Side, "È±ÏİÊıÎª0");
+                TaskStatusSender.SendSkipped(vBModel.SN, vBModel.Side, "ç¼ºé™·æ•°ä¸º0");
                 return true;
             }
 
             if (vBModel.Mats.Count > maxCount )
             {
                 EnqueuePostProcess(vBModel, "", false);
-                TaskStatusSender.SendSkipped(vBModel.SN, vBModel.Side, $"Í¼Æ¬ÊıÁ¿³¬¹ıÏŞÖÆ({vBModel.Mats.Count}>{maxCount})");
+                TaskStatusSender.SendSkipped(vBModel.SN, vBModel.Side, $"å›¾ç‰‡æ•°é‡è¶…è¿‡æœ€å¤§å€¼({vBModel.Mats.Count}>{maxCount})");
                 return true;
             }
 
@@ -62,12 +62,12 @@ namespace DeepSightWorkLib.Services
             {
                 JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
                 string infoJson = JsonConvert.SerializeObject(info, Formatting.None, jsonSetting);
-                LogTextHelper.Info($"{vBModel.SN} {vBModel.Side}  ×¼±¸µ÷ÓÃËã·¨,²ÎÊıÎª£º" + infoJson);
+                LogTextHelper.Info($"{vBModel.SN} {vBModel.Side}  å‡†å¤‡è°ƒç”¨ç®—æ³•,å‚æ•°ä¸ºï¼š" + infoJson);
 
                 string msg = null;
                 bool timedOut = false;
 
-                // Ê¹ÓÃTask°ü×°Ëã·¨µ÷ÓÃÒÔÊµÏÖ³¬Ê±¿ØÖÆ
+                // ä½¿ç”¨Taskå°è£…ç®—æ³•è°ƒç”¨å®ç°è¶…æ—¶æœºåˆ¶
                 var task = Task.Run(() =>
                 {
                     _defect.DefectMethodWithImages(info, vBModel.Mats, out string outMsg);
@@ -81,21 +81,21 @@ namespace DeepSightWorkLib.Services
                 else
                 {
                     timedOut = true;
-                    LogTextHelper.Warn($"{vBModel.SN} {vBModel.Side} Ëã·¨µ÷ÓÃ³¬Ê± (³¬¹ı {timeoutSeconds}Ãë)");
+                    LogTextHelper.Warn($"{vBModel.SN} {vBModel.Side} ç®—æ³•è°ƒç”¨è¶…æ—¶ (è¶…è¿‡ {timeoutSeconds}ç§’)");
                 }
 
                 if (timedOut)
                 {
                     EnqueuePostProcess(vBModel, "", false);
-                    TaskStatusSender.SendFailed(vBModel.SN, vBModel.Side, $"Ëã·¨µ÷ÓÃ³¬Ê±(>{timeoutSeconds}Ãë)");
+                    TaskStatusSender.SendFailed(vBModel.SN, vBModel.Side, $"ç®—æ³•è°ƒç”¨è¶…æ—¶(>{timeoutSeconds}ç§’)");
                     return true;
                 }
 
-                LogTextHelper.Info($"{vBModel.SN} {vBModel.Side} Ëã·¨·µ»ØÔ­Ê¼½á¹û: {msg}");
+                LogTextHelper.Info($"{vBModel.SN} {vBModel.Side} ç®—æ³•è¿”å›åŸå§‹ç»“æœ: {msg}");
 
                 if (string.IsNullOrEmpty(msg))
                 {
-                    LogTextHelper.Error($"Ëã·¨·µ»Ø½á¹ûÎª¿Õ for Side {vBModel.Side}");
+                    LogTextHelper.Error($"ç®—æ³•è¿”å›ç»“æœä¸ºç©º for Side {vBModel.Side}");
                     return false;
                 }
 
@@ -104,8 +104,8 @@ namespace DeepSightWorkLib.Services
                 var obj = JsonConvert.DeserializeObject<RootVBOutInfo>(msg);
                 if (obj == null)
                 {
-                    LogTextHelper.Error($"Ëã·¨·µ»Ø½á¹û·´ĞòÁĞ»¯Ê§°Ü for Side {vBModel.Side}£¬Ô­Ê¼ÏûÏ¢: {msg}");
-                    TaskStatusSender.SendFailed(vBModel.SN, vBModel.Side, "Ëã·¨·µ»Ø½á¹û·´ĞòÁĞ»¯Ê§°Ü");
+                    LogTextHelper.Error($"ç®—æ³•è¿”å›ç»“æœååºåˆ—åŒ–å¤±è´¥ for Side {vBModel.Side}ï¼ŒåŸå§‹æ¶ˆæ¯: {msg}");
+                    TaskStatusSender.SendFailed(vBModel.SN, vBModel.Side, "ç®—æ³•è¿”å›ç»“æœååºåˆ—åŒ–å¤±è´¥");
                     return false;
                 }
                 string code = obj.Code.ToString();
@@ -129,13 +129,13 @@ namespace DeepSightWorkLib.Services
                 }
                 else if (code == "600")
                 {
-                    LogTextHelper.Info($"{vBModel.SN} Ëã·¨·µ»ØÂë600: {message}");
+                    LogTextHelper.Info($"{vBModel.SN} ç®—æ³•è¿”å›ç 600: {message}");
                     TaskStatusSender.SendSkipped(vBModel.SN, vBModel.Side, $"Code:600, {message}");
                     result = true;
                 }
                 else
                 {
-                    LogTextHelper.Warn($"Ëã·¨µ÷ÓÃÊ§°Ü for Side {vBModel.Side}£¬·µ»ØÂë: {code}£¬·µ»ØĞÅÏ¢£º{message}");
+                    LogTextHelper.Warn($"ç®—æ³•å¤„ç†å¤±è´¥ for Side {vBModel.Side}ï¼Œé”™è¯¯ç : {code}ï¼Œé”™è¯¯ä¿¡æ¯ï¼š{message}");
                     TaskStatusSender.SendFailed(vBModel.SN, vBModel.Side, $"Code:{code}, {message}");
                     result = false;
                 }
@@ -144,7 +144,7 @@ namespace DeepSightWorkLib.Services
             {
                 resList = null;
                 result = false;
-                SystemEvent.SendAlarmMsg("Ëã·¨´¦ÀíÒì³£" + ex.ToString());
+                SystemEvent.SendAlarmMsg("ç®—æ³•è°ƒç”¨å¼‚å¸¸" + ex.ToString());
             }
             return result;
         }
@@ -160,15 +160,15 @@ namespace DeepSightWorkLib.Services
             };
 
             _inferencePostProcessQueue.Enqueue(resultModel);
-            LogTextHelper.Info($"ÍÆÀí½á¹ûÒÑ¼ÓÈëºó´¦Àí¶ÓÁĞ: SN={vBModel.SN}, QueueCount={_inferencePostProcessQueue.Count}");
+            LogTextHelper.Info($"æ¨ç†ç»“æœå·²åŠ å…¥åå¤„ç†é˜Ÿåˆ—: SN={vBModel.SN}, QueueCount={_inferencePostProcessQueue.Count}");
         }
 
         public void EnqueueAIResult(VBModel info, List<string> msg)
         {
-            // Ê¹ÓÃĞÂµÄ×´Ì¬·¢ËÍ·½Ê½
+            // ä½¿ç”¨æ–°çš„çŠ¶æ€å‘é€æ–¹å¼
             TaskStatusSender.SendWritingResults(info.SN, info.Side);
-            // »òÕß¼ÌĞøÊ¹ÓÃ¾É·½Ê½
-            // SystemEvent.SendTaskMsg(info.SN, $"{info.Side}ÃæÕıÔÚ»ØĞ´½á¹û");
+            // è€é€»è¾‘ä»ä½¿ç”¨æ—§æ–¹å¼
+            // SystemEvent.SendTaskMsg(info.SN, $"{info.Side}é¢æ­£åœ¨å›å†™ç»“æœ");
             
             RootAIResult data = new RootAIResult
             {

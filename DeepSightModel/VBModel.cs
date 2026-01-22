@@ -36,6 +36,16 @@ namespace DeepSightModel
         public Dictionary<int, int> OriginalAIResults { get; set; }
 
         /// <summary>
+        /// 原始VVS复判结果（用于比对）格式: defectIndex -> VVSStatus
+        /// </summary>
+        public Dictionary<int, int> OriginalVVSResults { get; set; }
+
+        /// <summary>
+        /// 是否包含VVS数据
+        /// </summary>
+        public bool HasVVSData { get; set; } = false;
+
+        /// <summary>
         /// 测试任务 ID
         /// </summary>
         public string TestTaskId { get; set; }

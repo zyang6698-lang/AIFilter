@@ -16,6 +16,15 @@ namespace DeepSightModel
     }
 
     /// <summary>
+    /// 原始数据来源枚举
+    /// </summary>
+    public enum OriginalDataSourceType
+    {
+        AI = 0,     // 原始数据来源为AI判定
+        VVS = 1     // 原始数据来源为VVS复判
+    }
+
+    /// <summary>
     /// 单个缺陷的测试比对结果
     /// </summary>
     public class DefectTestResult
@@ -23,8 +32,28 @@ namespace DeepSightModel
         public int DefectIndex { get; set; }
         public string ImagePath { get; set; }
         public int OriginalAIStatus { get; set; }
+        /// <summary>
+        /// 原始VVS状态（如果有VVS数据）
+        /// </summary>
+        public int OriginalVVSStatus { get; set; }
         public int NewAIStatus { get; set; }
-        public bool IsConsistent => OriginalAIStatus == NewAIStatus;
+        /// <summary>
+        /// 数据来源（AI或VVS）
+        /// </summary>
+        public OriginalDataSourceType DataSource { get; set; }
+        /// <summary>
+        /// 用于比对的原始状态（如果有VVS则用VVS，否则用AI）
+        /// </summary>
+        public int EffectiveOriginalStatus => DataSource == OriginalDataSourceType.VVS ? OriginalVVSStatus : OriginalAIStatus;
+        public bool IsConsistent => EffectiveOriginalStatus == NewAIStatus;
+        /// <summary>
+        /// 是否为漏失（VVS=NG但新AI=OK），仅VVS数据有效
+        /// </summary>
+        public bool IsMiss => DataSource == OriginalDataSourceType.VVS && OriginalVVSStatus == 2 && NewAIStatus == 1;
+        /// <summary>
+        /// 是否为误报（VVS=OK但新AI=NG），仅VVS数据有效
+        /// </summary>
+        public bool IsOverKill => DataSource == OriginalDataSourceType.VVS && OriginalVVSStatus == 1 && NewAIStatus == 2;
     }
 
     /// <summary>
@@ -52,6 +81,36 @@ namespace DeepSightModel
         /// 新面级别判定 (OK/NG)
         /// </summary>
         public string NewSideResult { get; set; }
+
+        /// <summary>
+        /// 数据来源（AI或VVS）
+        /// </summary>
+        public OriginalDataSourceType DataSource { get; set; }
+
+        /// <summary>
+        /// 是否包含VVS数据
+        /// </summary>
+        public bool HasVVSData => DataSource == OriginalDataSourceType.VVS;
+
+        /// <summary>
+        /// 漏失数量（仅VVS数据有效）：VVS=NG但新AI=OK
+        /// </summary>
+        public int MissCount { get; set; }
+
+        /// <summary>
+        /// 误报数量（仅VVS数据有效）：VVS=OK但新AI=NG
+        /// </summary>
+        public int OverKillCount { get; set; }
+
+        /// <summary>
+        /// 漏失率（仅VVS数据有效）
+        /// </summary>
+        public double MissRate => HasVVSData && TotalDefects > 0 ? (double)MissCount / TotalDefects * 100 : 0;
+
+        /// <summary>
+        /// 误报率（仅VVS数据有效）
+        /// </summary>
+        public double OverKillRate => HasVVSData && TotalDefects > 0 ? (double)OverKillCount / TotalDefects * 100 : 0;
     }
 
     /// <summary>
@@ -85,6 +144,19 @@ namespace DeepSightModel
         public int ConsistentRecords { get; set; }
         public int InconsistentRecords { get; set; }
         public int ErrorRecords { get; set; }
+
+        /// <summary>
+        /// 包含VVS数据的记录数
+        /// </summary>
+        public int VVSRecords { get; set; }
+        /// <summary>
+        /// 总漏失数（仅VVS数据）
+        /// </summary>
+        public int TotalMissCount { get; set; }
+        /// <summary>
+        /// 总误报数（仅VVS数据）
+        /// </summary>
+        public int TotalOverKillCount { get; set; }
 
         /// <summary>
         /// 入队进度（任务入队到推理队列的进度）

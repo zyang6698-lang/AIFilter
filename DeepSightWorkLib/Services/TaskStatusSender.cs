@@ -5,12 +5,12 @@ using System;
 namespace DeepSightWorkLib.Services
 {
     /// <summary>
-    /// ÈÎÎñ×´Ì¬¸¨ÖúÀà - ¼ò»¯DefectProcessorÖĞµÄ×´Ì¬·¢ËÍµ÷ÓÃ
+    /// ä»»åŠ¡çŠ¶æ€å‘é€å™¨ - ä»DefectProcessorä¸­çš„çŠ¶æ€å‘é€æŠ½ç¦»
     /// </summary>
     public static class TaskStatusSender
     {
         /// <summary>
-        /// ·¢ËÍÅÅ¶Ó×´Ì¬
+        /// å‘é€æ’é˜ŸçŠ¶æ€
         /// </summary>
         public static void SendQueued(string serialNumber)
         {
@@ -18,7 +18,7 @@ namespace DeepSightWorkLib.Services
         }
 
         /// <summary>
-        /// ·¢ËÍÕıÔÚ¶ÁÈ¡Êı¾İ×´Ì¬
+        /// å‘é€æ­£åœ¨è¯»å–æ•°æ®çŠ¶æ€
         /// </summary>
         public static void SendReadingData(string serialNumber, string side)
         {
@@ -26,7 +26,7 @@ namespace DeepSightWorkLib.Services
         }
 
         /// <summary>
-        /// ·¢ËÍÕıÔÚ¼ÓÔØÍ¼Æ¬×´Ì¬
+        /// å‘é€æ­£åœ¨åŠ è½½å›¾ç‰‡çŠ¶æ€
         /// </summary>
         public static void SendLoadingImages(string serialNumber, string side)
         {
@@ -34,16 +34,16 @@ namespace DeepSightWorkLib.Services
         }
 
         /// <summary>
-        /// ·¢ËÍÍ¼Æ¬¼ÓÔØÍê³É×´Ì¬
+        /// å‘é€å›¾ç‰‡åŠ è½½å®ŒæˆçŠ¶æ€
         /// </summary>
         public static void SendImagesLoaded(string serialNumber, string side, int imageCount = 0)
         {
-            string message = imageCount > 0 ? $"ÒÑ¼ÓÔØ{imageCount}ÕÅÍ¼Æ¬" : "";
+            string message = imageCount > 0 ? $"å·²åŠ è½½{imageCount}å¼ å›¾ç‰‡" : "";
             SystemEvent.SendTaskStatus(TaskStatusInfo.Create(serialNumber, TaskStatus.ImagesLoaded, side, message));
         }
 
         /// <summary>
-        /// ·¢ËÍ¿ªÊ¼AI¼ì²â×´Ì¬
+        /// å‘é€å¼€å§‹AIæ£€æµ‹çŠ¶æ€
         /// </summary>
         public static void SendAIDetecting(string serialNumber, string side)
         {
@@ -51,7 +51,7 @@ namespace DeepSightWorkLib.Services
         }
 
         /// <summary>
-        /// ·¢ËÍAI¼ì²âÍê³É×´Ì¬
+        /// å‘é€AIæ£€æµ‹å®ŒæˆçŠ¶æ€
         /// </summary>
         public static void SendAICompleted(string serialNumber, string side, long processingTimeMs = 0)
         {
@@ -59,7 +59,7 @@ namespace DeepSightWorkLib.Services
         }
 
         /// <summary>
-        /// ·¢ËÍÕıÔÚ»ØĞ´½á¹û×´Ì¬
+        /// å‘é€æ­£åœ¨å›å†™ç»“æœçŠ¶æ€
         /// </summary>
         public static void SendWritingResults(string serialNumber, string side)
         {
@@ -67,7 +67,7 @@ namespace DeepSightWorkLib.Services
         }
 
         /// <summary>
-        /// ·¢ËÍÒÑÍê³É×´Ì¬
+        /// å‘é€å®ŒæˆçŠ¶æ€
         /// </summary>
         public static void SendCompleted(string serialNumber, string side, long processingTimeMs = 0)
         {
@@ -75,7 +75,7 @@ namespace DeepSightWorkLib.Services
         }
 
         /// <summary>
-        /// ·¢ËÍÌø¹ı¼ì²â×´Ì¬
+        /// å‘é€è·³è¿‡å¤„ç†çŠ¶æ€
         /// </summary>
         public static void SendSkipped(string serialNumber, string side, string reason)
         {
@@ -83,7 +83,7 @@ namespace DeepSightWorkLib.Services
         }
 
         /// <summary>
-        /// ·¢ËÍÊ§°Ü×´Ì¬
+        /// å‘é€å¤±è´¥çŠ¶æ€
         /// </summary>
         public static void SendFailed(string serialNumber, string side, string errorMessage)
         {

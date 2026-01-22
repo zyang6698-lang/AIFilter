@@ -108,12 +108,16 @@ namespace DeepSightAI
                 {
                     SerialNumber = result.SerialNumber,
                     Side = result.Side,
+                    DataSourceText = result.HasVVSData ? "VVS" : "AI",
+                    HasVVSData = result.HasVVSData,
                     OriginalResult = result.OriginalSideResult ?? "-",
                     NewResult = result.NewSideResult ?? "-",
                     IsConsistent = isConsistent ? "✓ 一致" : "✗ 不一致",
                     DefectCount = result.TotalDefects,
                     ConsistentCount = result.ConsistentCount,
                     InconsistentCount = result.InconsistentCount,
+                    MissCount = result.MissCount,
+                    OverKillCount = result.OverKillCount,
                     IsConsistentBool = isConsistent,
                     Details = result.DefectResults
                 });
@@ -167,12 +171,16 @@ namespace DeepSightAI
                 {
                     SerialNumber = result.SerialNumber,
                     Side = result.Side,
+                    DataSourceText = result.HasVVSData ? "VVS" : "AI",
+                    HasVVSData = result.HasVVSData,
                     OriginalResult = result.OriginalSideResult ?? "-",
                     NewResult = result.NewSideResult ?? "-",
                     IsConsistent = isConsistent ? "✓ 一致" : "✗ 不一致",
                     DefectCount = result.TotalDefects,
                     ConsistentCount = result.ConsistentCount,
                     InconsistentCount = result.InconsistentCount,
+                    MissCount = result.MissCount,
+                    OverKillCount = result.OverKillCount,
                     IsConsistentBool = isConsistent,
                     Details = result.DefectResults
                 });
@@ -205,8 +213,21 @@ namespace DeepSightAI
             int inconsistent = total - consistent;
             double rate = total > 0 ? (double)consistent / total * 100 : 0;
 
-            label_Summary.Text = $"总测试数: {total} | 一致: {consistent} | 不一致: {inconsistent} | " +
+            // 统计VVS数据的漏失和误报
+            int vvsCount = _allResults.Count(r => r.HasVVSData);
+            int totalMiss = _allResults.Where(r => r.HasVVSData).Sum(r => r.MissCount);
+            int totalOverKill = _allResults.Where(r => r.HasVVSData).Sum(r => r.OverKillCount);
+
+            string summaryText = $"总测试数: {total} | 一致: {consistent} | 不一致: {inconsistent} | " +
                 $"一致率: {rate:F1}% | 总体一致率: {_currentTask.OverallConsistencyRate:F1}%";
+
+            // 如果有VVS数据，显示漏失和误报指标
+            if (vvsCount > 0)
+            {
+                summaryText += $"\nVVS数据: {vvsCount} | 漏失: {totalMiss} | 误报: {totalOverKill}";
+            }
+
+            label_Summary.Text = summaryText;
         }
 
         private void ApplyFilter()
@@ -234,20 +255,33 @@ namespace DeepSightAI
             dataGridView_Results.Rows.Clear();
             foreach (var result in _filteredResults)
             {
+                // 漏失和误报仅对VVS数据显示数值，AI数据显示"-"
+                string missDisplay = result.HasVVSData ? result.MissCount.ToString() : "-";
+                string overKillDisplay = result.HasVVSData ? result.OverKillCount.ToString() : "-";
+
                 int rowIndex = dataGridView_Results.Rows.Add(
                     result.SerialNumber,
                     result.Side,
+                    result.DataSourceText,
                     result.OriginalResult,
                     result.NewResult,
                     result.IsConsistent,
                     result.DefectCount,
                     result.ConsistentCount,
-                    result.InconsistentCount);
+                    result.InconsistentCount,
+                    missDisplay,
+                    overKillDisplay);
 
                 // 设置不一致行的颜色
                 if (!result.IsConsistentBool)
                 {
                     dataGridView_Results.Rows[rowIndex].DefaultCellStyle.BackColor = Color.FromArgb(120, 50, 50);
+                }
+
+                // VVS数据来源的行用不同颜色标识
+                if (result.HasVVSData)
+                {
+                    dataGridView_Results.Rows[rowIndex].Cells["col_DataSource"].Style.ForeColor = Color.Cyan;
                 }
             }
         }
@@ -271,8 +305,12 @@ namespace DeepSightAI
         private void ShowDefectDetails(SideTestResultDisplay result)
         {
             var sb = new StringBuilder();
-            sb.AppendLine($"序列号: {result.SerialNumber}  面别: {result.Side}");
+            sb.AppendLine($"序列号: {result.SerialNumber}  面别: {result.Side}  数据来源: {result.DataSourceText}");
             sb.AppendLine($"原判定: {result.OriginalResult}  新判定: {result.NewResult}");
+            if (result.HasVVSData)
+            {
+                sb.AppendLine($"漏失: {result.MissCount}  误报: {result.OverKillCount}");
+            }
             sb.AppendLine(new string('-', 50));
             sb.AppendLine($"缺陷对比详情 (共 {result.DefectCount} 个):");
             sb.AppendLine();
@@ -280,10 +318,24 @@ namespace DeepSightAI
             int index = 1;
             foreach (var defect in result.Details)
             {
-                string orig = defect.OriginalAIStatus == 1 ? "OK" : "NG";
+                string orig;
+                if (defect.DataSource == OriginalDataSourceType.VVS)
+                {
+                    orig = defect.OriginalVVSStatus == 1 ? "OK(VVS)" : "NG(VVS)";
+                }
+                else
+                {
+                    orig = defect.OriginalAIStatus == 1 ? "OK(AI)" : "NG(AI)";
+                }
                 string newR = defect.NewAIStatus == 1 ? "OK" : "NG";
                 string status = defect.IsConsistent ? "✓" : "✗";
-                sb.AppendLine($"  {index}. 缺陷{defect.DefectIndex}: 原={orig} 新={newR} {status}");
+
+                // 标记漏失和误报
+                string extraInfo = "";
+                if (defect.IsMiss) extraInfo = " [漏失]";
+                else if (defect.IsOverKill) extraInfo = " [误报]";
+
+                sb.AppendLine($"  {index}. 缺陷{defect.DefectIndex}: 原={orig} 新={newR} {status}{extraInfo}");
                 index++;
             }
 
@@ -326,17 +378,28 @@ namespace DeepSightAI
             lines.Add($"一致数,{_currentTask.ConsistentRecords}");
             lines.Add($"不一致数,{_currentTask.InconsistentRecords}");
             lines.Add($"一致率,{_currentTask.OverallConsistencyRate:F2}%");
+
+            // VVS相关统计
+            if (_currentTask.VVSRecords > 0)
+            {
+                lines.Add($"VVS数据记录数,{_currentTask.VVSRecords}");
+                lines.Add($"总漏失数,{_currentTask.TotalMissCount}");
+                lines.Add($"总误报数,{_currentTask.TotalOverKillCount}");
+            }
             lines.Add("");
 
             // 详细结果表头
-            lines.Add("序列号,面别,原判定,新判定,是否一致,缺陷总数,一致数,不一致数");
+            lines.Add("序列号,面别,数据来源,原判定,新判定,是否一致,缺陷总数,一致数,不一致数,漏失数,误报数");
 
             // 详细结果
             foreach (var result in _allResults)
             {
-                lines.Add($"{result.SerialNumber},{result.Side},{result.OriginalResult}," +
+                string missDisplay = result.HasVVSData ? result.MissCount.ToString() : "-";
+                string overKillDisplay = result.HasVVSData ? result.OverKillCount.ToString() : "-";
+
+                lines.Add($"{result.SerialNumber},{result.Side},{result.DataSourceText},{result.OriginalResult}," +
                     $"{result.NewResult},{(result.IsConsistentBool ? "一致" : "不一致")}," +
-                    $"{result.DefectCount},{result.ConsistentCount},{result.InconsistentCount}");
+                    $"{result.DefectCount},{result.ConsistentCount},{result.InconsistentCount},{missDisplay},{overKillDisplay}");
             }
 
             File.WriteAllLines(filePath, lines, Encoding.UTF8);
@@ -355,12 +418,28 @@ namespace DeepSightAI
     {
         public string SerialNumber { get; set; }
         public string Side { get; set; }
+        /// <summary>
+        /// 数据来源显示文本（AI/VVS）
+        /// </summary>
+        public string DataSourceText { get; set; }
+        /// <summary>
+        /// 是否包含VVS数据
+        /// </summary>
+        public bool HasVVSData { get; set; }
         public string OriginalResult { get; set; }
         public string NewResult { get; set; }
         public string IsConsistent { get; set; }
         public int DefectCount { get; set; }
         public int ConsistentCount { get; set; }
         public int InconsistentCount { get; set; }
+        /// <summary>
+        /// 漏失数（仅VVS数据有效）
+        /// </summary>
+        public int MissCount { get; set; }
+        /// <summary>
+        /// 误报数（仅VVS数据有效）
+        /// </summary>
+        public int OverKillCount { get; set; }
         public bool IsConsistentBool { get; set; }
         public List<DefectTestResult> Details { get; set; }
     }

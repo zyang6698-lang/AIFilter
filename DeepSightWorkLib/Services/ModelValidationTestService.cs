@@ -226,17 +226,22 @@ namespace DeepSightWorkLib.Services
         /// </summary>
         private VBModel BuildValidationVBModel(ValidationTestTask task, PanelDataRecord panel, SideData side)
         {
-            // 构建原始AI结果字典
+            // 构建原始AI结果字典和VVS结果字典
             var originalResults = new Dictionary<int, int>();
+            var originalVVSResults = new Dictionary<int, int>();
             var imageKeys = new List<string>();
             var imageDefects = new List<DetectInfo>();
             var defectIndexList = new List<int>();
             var pcsIndexList = new List<int>();
 
+            // 检查是否有VVS数据（任一缺陷有VVS状态）
+            bool hasVVSData = side.VvsState > 0 || side.DetectPoints.Any(d => d.VVSStatus > 0);
+
             for (int i = 0; i < side.DetectPoints.Count; i++)
             {
                 var defect = side.DetectPoints[i];
                 originalResults[i] = defect.AIStatus;
+                originalVVSResults[i] = defect.VVSStatus;
 
                 // 从 ImagePath 提取 Minio 路径
                 if (!string.IsNullOrEmpty(defect.ImagePath))
@@ -264,6 +269,8 @@ namespace DeepSightWorkLib.Services
                 VbInfo = vbInfo,
                 IsValidationTest = true,
                 OriginalAIResults = originalResults,
+                OriginalVVSResults = originalVVSResults,
+                HasVVSData = hasVVSData,
                 TestTaskId = task.TaskId
             };
         }
@@ -316,36 +323,68 @@ namespace DeepSightWorkLib.Services
                 }
             };
 
+            // 构造模板图片路径 (格式: TemplateImages/{ProductSerial}/{MachineName}/{ProductSerial}[{Side}].jpg)
+            string tempImgPath = BuildTemplateImagePath(panel.ProductSerial, panel.MachineId, side.Side);
+
             // 添加图片信息
             for (int i = 0; i < imageKeys.Count; i++)
             {
                 var imagePath = imageKeys[i];
                 var defect = (imageDefects != null && i < imageDefects.Count) ? imageDefects[i] : null;
 
-                int roiX=0;
-                int roiY=0;
-                int roiW=0;
-                int roiH=0;
+                // 修复1: img_roi - 优先使用 RoiX/RoiY/Width/Height，如果为0则使用 Origin 版本
+                int roiX = 0;
+                int roiY = 0;
+                int roiW = 0;
+                int roiH = 0;
 
-                if (defect != null && defect.OriginWidth > 0 && defect.OriginHeight > 0)
+                if (defect != null)
                 {
-                    roiX = defect.OriginRoiX;
-                    roiY = defect.OriginRoiY;
-                    roiW = defect.OriginWidth;
-                    roiH = defect.OriginHeight;
+                    // 优先使用非Origin的ROI值（这是实际的绝对坐标）
+                    if (defect.Width > 0 && defect.Height > 0)
+                    {
+                        roiX = defect.RoiX;
+                        roiY = defect.RoiY;
+                        roiW = defect.Width;
+                        roiH = defect.Height;
+                    }
+                    // 如果没有，则使用Origin版本
+                    else if (defect.OriginWidth > 0 && defect.OriginHeight > 0)
+                    {
+                        roiX = defect.OriginRoiX;
+                        roiY = defect.OriginRoiY;
+                        roiW = defect.OriginWidth;
+                        roiH = defect.OriginHeight;
+                    }
                 }
 
+                // 提取缺陷图片的minio路径
+                string defectMinioPath = ExtractMinioPath(imagePath);
+                
+                // 修复2: group_infos - 构造template图片路径（在文件名后加[E]）
+                string templateMinioPath = BuildTemplateMinioPath(defectMinioPath);
+
+                // 修复3: defect_code - 使用缺陷类型
+                string defectCode = defect?.DefectType ?? "";
 
                 var group = new InferImageGroup
                 {
                     GroupUuid = Guid.NewGuid().ToString(),
                     GroupInfos = new List<GroupInfo>
                     {
+                        // defect 图片
                         new GroupInfo
                         {
-                            ImagePath = ExtractMinioPath(imagePath),
+                            ImagePath = defectMinioPath,
                             ImageUuid = Guid.NewGuid().ToString(),
                             ImageType = "defect"
+                        },
+                        // template 图片
+                        new GroupInfo
+                        {
+                            ImagePath = templateMinioPath,
+                            ImageUuid = Guid.NewGuid().ToString(),
+                            ImageType = "template"
                         }
                     },
                     MachineTemplateInfo = new MachineTemplateInfo
@@ -354,13 +393,54 @@ namespace DeepSightWorkLib.Services
                         product = panel.ProductSerial,
                         Side = side.Side
                     },
+                    // 修复1: 使用正确的ROI值
                     ImgROI = new List<int> { roiX, roiY, roiW, roiH },
+                    // 修复3: 添加 defect_code
+                    DefectCode = defectCode,
+                    // 修复4: 添加 tempImgPath
+                    TempImgPath = tempImgPath,
                     inspectDetails = new InspectDetails { InferRois = new List<InferRoi>() }
                 };
                 vbInfo.paramsData.InferWholeData.ImageData.DataValue.InferImageGroup.Add(group);
             }
 
             return vbInfo;
+        }
+
+        /// <summary>
+        /// 构造模板图片本地路径
+        /// </summary>
+        private string BuildTemplateImagePath(string productSerial, string machineName, string side)
+        {
+            if (string.IsNullOrEmpty(productSerial) || string.IsNullOrEmpty(machineName))
+                return "";
+
+            // 格式: TemplateImages/{ProductSerial}/{MachineName}/{ProductSerial}[{Side}].jpg
+            // BaseDirectory 是 Bin 目录，需要取其父目录
+            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            string parentDir = System.IO.Directory.GetParent(baseDir.TrimEnd('\\')).FullName;
+            string templatePath = System.IO.Path.Combine(parentDir, "TemplateImages", productSerial, machineName, $"{productSerial}[{side}].jpg");
+            return templatePath;
+        }
+
+        /// <summary>
+        /// 从defect图片路径构造template图片路径（在文件名后添加[E]）
+        /// 例如: xxx/[001][00138,00084][00192x00208].jpg -> xxx/[001][00138,00084][00192x00208][E].jpg
+        /// </summary>
+        private string BuildTemplateMinioPath(string defectPath)
+        {
+            if (string.IsNullOrEmpty(defectPath))
+                return "";
+
+            // 在扩展名前插入[E]
+            int lastDotIndex = defectPath.LastIndexOf('.');
+            if (lastDotIndex > 0)
+            {
+                return defectPath.Substring(0, lastDotIndex) + "[E]" + defectPath.Substring(lastDotIndex);
+            }
+            
+            // 如果没有扩展名，直接在末尾添加[E]
+            return defectPath + "[E]";
         }
 
         /// <summary>
@@ -464,12 +544,20 @@ namespace DeepSightWorkLib.Services
                         else
                             task.ErrorRecords++;
 
+                        // 更新VVS相关统计
+                        if (sideResult.HasVVSData)
+                        {
+                            task.VVSRecords++;
+                            task.TotalMissCount += sideResult.MissCount;
+                            task.TotalOverKillCount += sideResult.OverKillCount;
+                        }
+
                         // 检查任务是否真正完成（所有入队的记录都已返回结果）
                         if (task.IsReallyCompleted && task.State == ValidationTestTaskState.Running)
                         {
                             task.State = ValidationTestTaskState.Completed;
                             task.EndTime = DateTime.Now;
-                            LogTextHelper.Info($"测试任务 {task.TaskId} 全部完成: 一致={task.ConsistentRecords}, 不一致={task.InconsistentRecords}, 错误={task.ErrorRecords}");
+                            LogTextHelper.Info($"测试任务 {task.TaskId} 全部完成: 一致={task.ConsistentRecords}, 不一致={task.InconsistentRecords}, 错误={task.ErrorRecords}, VVS记录={task.VVSRecords}, 漏失={task.TotalMissCount}, 误报={task.TotalOverKillCount}");
                         }
                     }
                 }
@@ -495,7 +583,8 @@ namespace DeepSightWorkLib.Services
             {
                 SerialNumber = vbModel.SN,
                 Side = vbModel.Side,
-                TotalDefects = vbModel.OriginalAIResults?.Count ?? 0
+                TotalDefects = vbModel.OriginalAIResults?.Count ?? 0,
+                DataSource = vbModel.HasVVSData ? OriginalDataSourceType.VVS : OriginalDataSourceType.AI
             };
 
             if (vbModel.OriginalAIResults == null || inferResults == null)
@@ -514,8 +603,10 @@ namespace DeepSightWorkLib.Services
             for (int i = 0; i < Math.Min(vbModel.DefectIndex.Count, inferResults.Count); i++)
             {
                 var defectIdx = vbModel.DefectIndex[i];
-                var originalStatus = vbModel.OriginalAIResults.ContainsKey(defectIdx)
+                var originalAIStatus = vbModel.OriginalAIResults.ContainsKey(defectIdx)
                     ? vbModel.OriginalAIResults[defectIdx] : 0;
+                var originalVVSStatus = vbModel.OriginalVVSResults != null && vbModel.OriginalVVSResults.ContainsKey(defectIdx)
+                    ? vbModel.OriginalVVSResults[defectIdx] : 0;
 
                 // 新结果: "0"=OK, "1"=NG, "2"=ByPass
                 int newStatus = 0;
@@ -524,16 +615,21 @@ namespace DeepSightWorkLib.Services
                     newStatus = parsed == 0 ? 1 : 2;  // 转换为 AIStatus 格式: 1=OK, 2=NG
                 }
 
-                // 判断面级别是否有NG (AIStatus: 1=OK, 2=NG)
-                if (originalStatus == 2) hasOriginalNG = true;
+                // 确定用于比对的原始状态（优先使用VVS）
+                int effectiveOriginalStatus = vbModel.HasVVSData && originalVVSStatus > 0 ? originalVVSStatus : originalAIStatus;
+
+                // 判断面级别是否有NG (Status: 1=OK, 2=NG)
+                if (effectiveOriginalStatus == 2) hasOriginalNG = true;
                 if (newStatus == 2) hasNewNG = true;
 
                 var defectResult = new DefectTestResult
                 {
                     DefectIndex = defectIdx,
                     ImagePath = i < vbModel.ImageKeys.Count ? vbModel.ImageKeys[i] : null,
-                    OriginalAIStatus = originalStatus,
-                    NewAIStatus = newStatus
+                    OriginalAIStatus = originalAIStatus,
+                    OriginalVVSStatus = originalVVSStatus,
+                    NewAIStatus = newStatus,
+                    DataSource = vbModel.HasVVSData && originalVVSStatus > 0 ? OriginalDataSourceType.VVS : OriginalDataSourceType.AI
                 };
 
                 result.DefectResults.Add(defectResult);
@@ -542,6 +638,12 @@ namespace DeepSightWorkLib.Services
                     result.ConsistentCount++;
                 else
                     result.InconsistentCount++;
+
+                // 统计漏失和误报（仅VVS数据有效）
+                if (defectResult.IsMiss)
+                    result.MissCount++;
+                if (defectResult.IsOverKill)
+                    result.OverKillCount++;
             }
 
             // 设置面级别判定结果 (任一缺陷为NG则面为NG)
