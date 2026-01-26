@@ -224,13 +224,13 @@ namespace DeepSightAI
 
 
         public System.Timers.Timer uph_timer = new System.Timers.Timer();
-        
+
         /// <summary>
         /// 用于防止定时器重入的标志和同步锁
         /// </summary>
         private volatile bool _isUpdateRunning = false;
         private object _updateLock = new object();
-        
+
         private void Uph_timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             // 防止重入：如果上一次更新还在运行，则跳过本次更新
@@ -243,7 +243,7 @@ namespace DeepSightAI
             try
             {
                 _isUpdateRunning = true;
-                
+
                 // 使用Task.Run在后台线程执行异步操作，避免阻塞定时器线程
                 Task.Run(async () => await Uph_timer_UpdateAsync());
             }
@@ -270,10 +270,10 @@ namespace DeepSightAI
                 {
                     // 更新右下角统计信息
                     UpdateMainBorad();
-                    
+
                     // 更新机台看板（异步操作）
                     await UpdateMachineBoardWithTimeout(cts.Token);
-                    
+
                     // 更新LotSn
                     UpdateLotSn();
                 }
@@ -391,9 +391,6 @@ namespace DeepSightAI
                         DispWin2[index].OnCallBackFullShowPro += FrHome_OnCallBackFullShowPro;
                         DispWin2[index].OnCallBackRoiIndexAndInfo -= FrHome_OnCallBackRoiIndexAndInfo;
                         DispWin2[index].OnCallBackRoiIndexAndInfo += FrHome_OnCallBackRoiIndexAndInfo;
-                        //0604增加单图测试
-                        DispWin2[index].OnCallBackSingleTest -= FrHome_OnCallBackSingleTest;
-                        DispWin2[index].OnCallBackSingleTest += FrHome_OnCallBackSingleTest;
                         table_Small.Controls.Add(DispWin2[index], j, i);
                         index++;
                     }
@@ -403,151 +400,6 @@ namespace DeepSightAI
             catch (Exception ex)
             {
                 LogTextHelper.Error("Error", ex);
-            }
-        }
-        //单图测试
-        private async void FrHome_OnCallBackSingleTest(int index)
-        {
-            try
-            {
-
-                if (Machine.master.workClass.IsStart)
-                {
-                    MessageBox.Show("当前系统正在运行中,请先点击暂停", "运行提示", MessageBoxButtons.OK, MessageBoxIcon.Question);
-                    return;
-                }
-                if (imagePaths.Count <= 0)//|| imagePaths_Gerber.Count <= 0 || imagePaths_Template.Count <= 0)
-                {
-                    MessageBox.Show("缺陷图路径列表为空", "提示", MessageBoxButtons.OK, MessageBoxIcon.Question);
-                    return;
-                }
-                if (index % 2 == 0)//点击了gerber图或者是tem图
-                {
-                    MessageBox.Show("请点击缺陷图进行单图测试", "测试提示", MessageBoxButtons.OK, MessageBoxIcon.Question);
-                    return;
-                }
-
-                this.Invoke(new MethodInvoker(() =>
-                {
-                    Machine.master.workClass.DefectService.AiDefect.Vision_Show_View(1);
-                }));
-
-
-                //传图给VB
-                RootVBInfo vBInfo = new RootVBInfo
-                {
-                    MessageType = "visionbuilder_inference",
-                    paramsData = new ParamsData()
-                };
-                //同一个任务的UUID是否要保持一致；
-                vBInfo.paramsData.InferResUuid = Guid.NewGuid().ToString();
-                vBInfo.paramsData.InferWholeData = new InferWholeData();
-                vBInfo.paramsData.InferWholeData.ImageInferParams = new ImageInferParams();
-                //solution_name
-                vBInfo.paramsData.InferWholeData.ImageInferParams.PipelineName = Machine.solution; //"Test";
-                vBInfo.paramsData.InferWholeData.ImageInferParams.NodeParams = new List<NodeParam>();
-                vBInfo.paramsData.InferWholeData.ImageInferParams.NodeParams.Add(
-                  new NodeParam()
-                  {
-                      NodeName = Machine.flow,//"1",
-                      height = 200,
-                      width = 200,
-                  });
-
-                vBInfo.paramsData.InferWholeData.ImageData = new ImageData();
-
-                //#使⽤minio获取 则固定字段"minio"
-                vBInfo.paramsData.InferWholeData.ImageData.DataType = "minio";
-                vBInfo.paramsData.InferWholeData.ImageData.DataValue = new DataValue();
-                vBInfo.paramsData.InferWholeData.ImageData.DataValue.InferImageGroup = new List<InferImageGroup>();
-
-                InferImageGroup group = new InferImageGroup();
-                group.MachineTemplateInfo = new MachineTemplateInfo()
-                {
-                };
-                group.GroupUuid = Guid.NewGuid().ToString();
-                group.GroupInfos = new List<GroupInfo>();
-                group.DefectCode = "";
-                if (Machine.isSwitch)
-                {
-                    group.DefectCode = disInfosList[(currentPage - 1) * table_Small.RowCount + index].defect_code;
-                }
-                for (int k = 0; k < 3; k++)
-                {
-                    switch (k)
-                    {
-                        case 0:
-                            if (imagePaths != null && imagePaths.Count > 0)
-                            {
-                                group.GroupInfos.Add(new GroupInfo()
-                                {
-                                    ImagePath = imagePaths[(currentPage - 1) * table_Small.RowCount + index / 2].Split(':').ToArray()[0].ToString(),//"20250508152421059165/discolor/20250508152421059165-A-discolor-pcs-X1Y1-vrs0-0.jpg",
-                                    ImageUuid = Guid.NewGuid().ToString(),
-                                    ImageType = "defect",
-                                });
-                            }
-                            break;
-                        case 1:
-                            if (imagePaths_Template != null && imagePaths_Template.Count > 0)
-                            {
-                                group.GroupInfos.Add(new GroupInfo()
-                                {
-                                    ImagePath = imagePaths_Template[(currentPage - 1) * table_Small.RowCount + index / 2].Split(':').ToArray()[0].ToString(),//"20250508152421059165/discolor/20250508152421059165-A-discolor-pcs-X1Y1-vrs0-0-template-1.jpg",
-                                    ImageUuid = Guid.NewGuid().ToString(),
-                                    ImageType = "template",
-                                });
-                            }
-                            break;
-                        case 2:
-                            if (imagePaths_Gerber != null && imagePaths_Gerber.Count > 0)
-                            {
-                                group.GroupInfos.Add(new GroupInfo()
-                                {
-                                    ImagePath = imagePaths_Gerber[(currentPage - 1) * table_Small.RowCount + index / 2].Split(':').ToArray()[0].ToString(),//"20250508152421059165/discolor/20250508152421059165-A-discolor-pcs-X1Y1-vrs0-0-gerber-1.jpg",
-                                    ImageUuid = Guid.NewGuid().ToString(),
-                                    ImageType = "gerber",
-                                });
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                vBInfo.paramsData.InferWholeData.ImageData.DataValue.InferImageGroup.Add(group);
-                group.inspectDetails = new InspectDetails();
-                group.inspectDetails.InferRois = new List<InferRoi>() { };
-
-                vBInfo.paramsData.InferWholeData.OtherInfos = new Others();
-                vBInfo.paramsData.InferWholeData.OtherInfos.imageminio = new ImageMminio();
-                vBInfo.paramsData.InferWholeData.OtherInfos.imageminio.access_key_id = "deepiobjectdata";
-                vBInfo.paramsData.InferWholeData.OtherInfos.imageminio.bucket = "deepiresults";
-                vBInfo.paramsData.InferWholeData.OtherInfos.imageminio.endpoint_url = "127.0.0.1";
-                vBInfo.paramsData.InferWholeData.OtherInfos.imageminio.secret_key = "deepiobject2019";
-                vBInfo.paramsData.InferWholeData.OtherInfos.imageminio.secret_port = "9102";
-
-                List<string> result = null;
-                List<string> details = null;
-                RootPanelInfo panelinfo = null;
-                result = await Task.Factory.StartNew(() =>
-                {
-                    Machine.master.workClass.DefectMethod(new VBModel() { VbInfo = vBInfo, panelInfo = panelinfo }, out result);
-                    return result;
-                });
-                if (result.Count() > 0)
-                {
-                    string res = Convert.ToInt32(result[0]) == 1 ? "NG" : "OK";
-                    LogTextHelper.Info($"算法单图处理结果：{res}");
-                    MessageBox.Show($"算法单图处理结果：{res}");
-                }
-                else
-                {
-                    LogTextHelper.Info($"算法单图处理失败，返回为空！");
-                    MessageBox.Show($"算法单图处理失败，返回为空！");
-                }
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error("单图处理异常" + ex.ToString());
             }
         }
         /// <summary>
@@ -594,7 +446,7 @@ namespace DeepSightAI
         {
             try
             {
-              
+
             }
             catch (Exception ex)
             {

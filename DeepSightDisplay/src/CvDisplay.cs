@@ -22,9 +22,6 @@ namespace DeepSightDisplay
         //回调返回页面点击索引
         public delegate void CallBackRoiIndexAndInfo(int index, DisPlayInfo info);
         public event CallBackRoiIndexAndInfo OnCallBackRoiIndexAndInfo;
-        //单图测试
-        public delegate void CallBackSingleTest(int index);
-        public event CallBackSingleTest OnCallBackSingleTest;
 
         /// <summary>
         /// 选中还是取消
@@ -190,7 +187,6 @@ namespace DeepSightDisplay
             this.ContextMenuStrip = new ContextMenuStrip();
 
             ContextMenuStrip.Items.Add("全屏显示", null, OnShowFullClick);
-            ContextMenuStrip.Items.Add("单图测试", null, OnTestImageClick);
             //ContextMenuStrip.Items.Add("ROI", null, OnRoiClick);
             ContextMenuStrip.Items.Add("Fit image", null, OnFitImageClick);
             ContextMenuStrip.Items.Add("Original image", null, OnOriginalImageClick);
@@ -289,23 +285,6 @@ namespace DeepSightDisplay
         protected virtual void OnFullImageClick(object sender, EventArgs e)
         {
             Full();
-        }
-        protected virtual void OnTestImageClick(object sender, EventArgs e)
-        {
-            //测试流程
-            if (stationIndex == 0)
-            {
-                return;
-            }
-            if (Image == null)
-            {
-                MessageBox.Show("图像为空");
-                return;
-            }
-            if (OnCallBackSingleTest != null)
-            {
-                OnCallBackSingleTest(stationIndex);
-            }
         }
         protected virtual void OnSaveAsClick(object sender, EventArgs e)
         {
@@ -598,10 +577,6 @@ namespace DeepSightDisplay
             {
                 if (!string.IsNullOrWhiteSpace(lable))
                 {
-                    //if (OnCallBackClickOpreation!=null)
-                    //{
-                    //    OnCallBackClickOpreation(stationIndex,true);
-                    //}
                     gh.DrawString(lable, bigFont, Brushes.Blue, 1, Font.GetHeight() * 3 + 3);
                 }
             }
