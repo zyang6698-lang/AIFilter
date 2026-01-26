@@ -379,12 +379,6 @@
     <Compile Include="SettingPages\FrBaseConfig.Designer.cs">
       <DependentUpon>FrBaseConfig.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingPages\FrCreateMaterial.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SettingPages\FrCreateMaterial.Designer.cs">
-      <DependentUpon>FrCreateMaterial.cs</DependentUpon>
-    </Compile>
     <Compile Include="SettingPages\FrHWConfig.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -473,9 +467,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingPages\FrBaseConfig.resx">
       <DependentUpon>FrBaseConfig.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingPages\FrCreateMaterial.resx">
-      <DependentUpon>FrCreateMaterial.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingPages\FrHWConfig.resx">
       <DependentUpon>FrHWConfig.cs</DependentUpon>

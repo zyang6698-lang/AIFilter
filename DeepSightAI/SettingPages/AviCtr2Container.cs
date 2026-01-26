@@ -1,5 +1,4 @@
-﻿using DeepSightAI.Properties;
-using DeepSightDB;
+﻿using DeepSightDB;
 using DeepSightModel;
 using DeepSightTool;
 using System;
@@ -7,7 +6,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,9 +16,6 @@ namespace DeepSightAI.SettingPages
     public partial class AviCtr2Container : UserControl
     {
         private List<AviCtr2> aviCtr2Controls = new List<AviCtr2>();
-        // 缓存处理过的背景，避免每次 OnPaint 重新应用 ColorMatrix 和缩放
-        private Bitmap _cachedBackground;
-        private readonly object _bgLock = new object();
 
         /// <summary>
         /// 控制所有子控件的删除按钮是否可见
@@ -254,86 +249,6 @@ namespace DeepSightAI.SettingPages
             }
         }
 
-        readonly ColorMatrix colorMatrix = new ColorMatrix(new float[][]
-        {
-            new float[] {1, 0, 0, 0, 0},
-            new float[] {0, 1, 0, 0, 0},
-            new float[] {0, 0, 1, 0, 0},
-            new float[] {0, 0, 0, 0.725f, 0},
-            new float[] {0, 0, 0, 0, 1}
-        });
-
-        // 减少背景重复绘制开销
-        private void RebuildBackgroundCache()
-        {
-            lock (_bgLock)
-            {
-                _cachedBackground?.Dispose();
-                _cachedBackground = null;
-                var source = Resources.background;
-                if (source == null || Width <= 0 || Height <= 0) return;
-                var bmp = new Bitmap(Width, Height);
-                using (var g = Graphics.FromImage(bmp))
-                using (var attr = new ImageAttributes())
-                {
-                    attr.SetColorMatrix(colorMatrix, ColorMatrixFlag.Default, ColorAdjustType.Bitmap);
-                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                    g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
-                    g.DrawImage(source, new Rectangle(0, 0, Width, Height), 0, 0, source.Width, source.Height, GraphicsUnit.Pixel, attr);
-                }
-                _cachedBackground = bmp;
-            }
-            Invalidate(); // 刷新显示
-        }
-
-        protected override void OnHandleCreated(EventArgs e)
-        {
-            base.OnHandleCreated(e);
-            RebuildBackgroundCache();
-        }
-
-        protected override void OnSizeChanged(EventArgs e)
-        {
-            base.OnSizeChanged(e);
-            RebuildBackgroundCache();
-        }
-
-        // 避免默认背景擦除导致闪烁
-        protected override void OnPaintBackground(PaintEventArgs pevent)
-        {
-            // 不调用 base，改由 OnPaint 使用缓存图
-        }
-
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            base.OnPaint(e); // 保留子控件等绘制
-            try
-            {
-                lock (_bgLock)
-                {
-                    if (_cachedBackground != null)
-                    {
-                        e.Graphics.DrawImageUnscaled(_cachedBackground, 0, 0);
-                        return;
-                    }
-                }
-                // 兜底路径（首次或资源为空）
-                Image backgroundImage = Resources.background;
-                if (backgroundImage != null)
-                {
-                    using (var imageAttributes = new ImageAttributes())
-                    {
-                        imageAttributes.SetColorMatrix(colorMatrix, ColorMatrixFlag.Default, ColorAdjustType.Bitmap);
-                        var destRect = new Rectangle(0, 0, this.Width, this.Height);
-                        e.Graphics.DrawImage(backgroundImage, destRect, 0, 0, backgroundImage.Width, backgroundImage.Height, GraphicsUnit.Pixel, imageAttributes);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Failed to draw background image: " + ex.Message);
-            }
-        }
 
 
 

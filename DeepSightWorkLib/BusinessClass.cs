@@ -568,7 +568,6 @@ namespace DeepSightWorkLib
                     Head = head,
                     SolutionConfig = SolConfig,
                     AviConfig = AviConfig,
-                    ProjectName = SysConfig.ProjectName
                 };
                 var convertResult = _panelDataConverter.Convert(obj, context);
 

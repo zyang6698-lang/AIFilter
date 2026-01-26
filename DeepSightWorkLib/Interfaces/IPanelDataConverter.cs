@@ -32,11 +32,6 @@ namespace DeepSightWorkLib.Interfaces
         /// AVI 配置
         /// </summary>
         public AVIConfig AviConfig { get; set; }
-
-        /// <summary>
-        /// 项目名称
-        /// </summary>
-        public string ProjectName { get; set; }
     }
 
     /// <summary>

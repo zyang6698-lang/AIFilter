@@ -105,7 +105,6 @@ namespace DeepSightAI
                 this.treeNode1.Text = "常规配置";
                 this.treeNode2.Text = "算法方案配置";
                 this.treeNode3.Text = "机台配置";
-                this.treeNode4.Text = "工具配置";
             }
             else
             {
@@ -113,7 +112,6 @@ namespace DeepSightAI
                 this.treeNode1.Text = "conventional";
                 this.treeNode2.Text = "AVI";
                 this.treeNode3.Text = "AI";
-                this.treeNode4.Text = "工具配置";
             }
 
         }
@@ -144,27 +142,6 @@ namespace DeepSightAI
                 FrHWConfig.Instance.Dock = DockStyle.Fill;
                 FrHWConfig.Instance.Show();
 
-                ////制作料号
-                panel4.Controls.Clear();
-                FrCreateMaterial.Instance.TopLevel = false;
-                FrCreateMaterial.Instance.Parent = panel4;
-                FrCreateMaterial.Instance.Dock = DockStyle.Fill;
-                FrCreateMaterial.Instance.Show();
-
-                ////设备变更
-                //panel5.Controls.Clear();
-                //FrChangeInfo.Instance.TopLevel = false;
-                //FrChangeInfo.Instance.Parent = panel5;
-                //FrChangeInfo.Instance.Dock = DockStyle.Fill;
-                //FrChangeInfo.Instance.Show();
-
-                ////点检维护
-                //panel6.Controls.Clear();
-                //FrCheckMonthInfo.Instance.TopLevel = false;
-                //FrCheckMonthInfo.Instance.Parent = panel6;
-                //FrCheckMonthInfo.Instance.Dock = DockStyle.Fill;
-                //FrCheckMonthInfo.Instance.Show();
-
                 ////后处理调参
                 panel7.Controls.Clear();
                 FrUserManagement.Instance.TopLevel = false;
@@ -194,18 +171,6 @@ namespace DeepSightAI
         {
             try
             {
-                //if (string.IsNullOrWhiteSpace(Machine.LoginUserName))
-                //{
-                //    btnSave.Enabled = true;
-                //}
-                //else if (Machine.LoginUserName.Contains("操作员") || Machine.LoginUserName.Contains("Operator"))
-                //{
-                //    btnSave.Enabled = true;
-                //}
-                //else if (Machine.LoginUserName.Contains("工程师") || Machine.LoginUserName.Contains("管理员"))
-                //{
-                //    btnSave.Enabled = true;
-                //}
                 btnSave.Visible = true;
                 TreeNode node = tvw_setting.SelectedNode;
                 switch (node.Text)
@@ -252,20 +217,6 @@ namespace DeepSightAI
 
                         break;
 
-                    case "工具配置":
-                        panel4.Dock = DockStyle.Fill;
-
-                        panel1.Visible = false;
-                        panel2.Visible = false;
-                        panel3.Visible = false;
-                        panel4.Visible = true;
-                        panel5.Visible = false;
-                        panel6.Visible = false;
-                        panel7.Visible = false;
-                        panel8.Visible = false;
-
-                        break;
-
                     case "用户管理":
                     case "user":
                         panel7.Dock = DockStyle.Fill;
@@ -279,20 +230,6 @@ namespace DeepSightAI
                         panel7.Visible = true;
                         panel8.Visible = false;
                         break;
-                        //case "测厚参数配置":
-                        //case "Thickness Parameters":
-                        //    panel8.Dock = DockStyle.Fill;
-
-                        //    panel1.Visible = false;
-                        //    panel2.Visible = false;
-                        //    panel3.Visible = false;
-                        //    panel4.Visible = false;
-                        //    panel5.Visible = false;
-                        //    panel6.Visible = false;
-                        //    panel7.Visible = false;
-                        //    panel8.Visible = true;
-                        //    FrmThickness.Instance.Language(Machine.sysConfig.Language);
-                        //    break;
                 }
             }
             catch (Exception ex)
