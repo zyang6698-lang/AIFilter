@@ -33,6 +33,7 @@
             this.panel_Main = new System.Windows.Forms.Panel();
             this.splitContainer_Main = new System.Windows.Forms.SplitContainer();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.QueryControl = new DeepSightAI.QueryControl();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.btn_Save = new System.Windows.Forms.Button();
             this.btn_LoadImages = new System.Windows.Forms.Button();
@@ -61,12 +62,11 @@
             this.txt_SnFilter = new System.Windows.Forms.TextBox();
             this.label_LotTitle = new System.Windows.Forms.Label();
             this.tabPage_Details = new System.Windows.Forms.TabPage();
+            this.defectDetailControl1 = new DeepSightAI.DefectDetailControl();
             this.tabPage_ValidationTest = new System.Windows.Forms.TabPage();
+            this.validationTestResultControl1 = new DeepSightAI.ValidationTestResultControl();
             this.contextMenuStrip_Lot = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripMenuItem_RunTest = new System.Windows.Forms.ToolStripMenuItem();
-            this.QueryControl = new DeepSightAI.QueryControl();
-            this.defectDetailControl1 = new DeepSightAI.DefectDetailControl();
-            this.validationTestResultControl1 = new DeepSightAI.ValidationTestResultControl();
             this.panel_Main.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer_Main)).BeginInit();
             this.splitContainer_Main.Panel1.SuspendLayout();
@@ -140,6 +140,21 @@
             this.splitContainer1.Size = new System.Drawing.Size(363, 870);
             this.splitContainer1.SplitterDistance = 422;
             this.splitContainer1.TabIndex = 1;
+            // 
+            // QueryControl
+            // 
+            this.QueryControl.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.QueryControl.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.QueryControl.IsDateChecked = true;
+            this.QueryControl.Location = new System.Drawing.Point(0, 0);
+            this.QueryControl.LotNumber = "";
+            this.QueryControl.MachineID = "";
+            this.QueryControl.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
+            this.QueryControl.Name = "QueryControl";
+            this.QueryControl.PartNumber = "";
+            this.QueryControl.SelectedSide = "A";
+            this.QueryControl.Size = new System.Drawing.Size(363, 422);
+            this.QueryControl.TabIndex = 0;
             // 
             // splitContainer2
             // 
@@ -485,6 +500,16 @@
             this.tabPage_Details.Text = "缺陷详情";
             this.tabPage_Details.UseVisualStyleBackColor = true;
             // 
+            // defectDetailControl1
+            // 
+            this.defectDetailControl1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.defectDetailControl1.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.defectDetailControl1.Location = new System.Drawing.Point(4, 4);
+            this.defectDetailControl1.Margin = new System.Windows.Forms.Padding(5);
+            this.defectDetailControl1.Name = "defectDetailControl1";
+            this.defectDetailControl1.Size = new System.Drawing.Size(1059, 836);
+            this.defectDetailControl1.TabIndex = 0;
+            // 
             // tabPage_ValidationTest
             // 
             this.tabPage_ValidationTest.Controls.Add(this.validationTestResultControl1);
@@ -496,6 +521,17 @@
             this.tabPage_ValidationTest.TabIndex = 2;
             this.tabPage_ValidationTest.Text = "模型一致性测试";
             this.tabPage_ValidationTest.UseVisualStyleBackColor = true;
+            // 
+            // validationTestResultControl1
+            // 
+            this.validationTestResultControl1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(30)))));
+            this.validationTestResultControl1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.validationTestResultControl1.Font = new System.Drawing.Font("微软雅黑", 9F);
+            this.validationTestResultControl1.Location = new System.Drawing.Point(4, 4);
+            this.validationTestResultControl1.Margin = new System.Windows.Forms.Padding(4);
+            this.validationTestResultControl1.Name = "validationTestResultControl1";
+            this.validationTestResultControl1.Size = new System.Drawing.Size(1059, 836);
+            this.validationTestResultControl1.TabIndex = 0;
             // 
             // contextMenuStrip_Lot
             // 
@@ -510,42 +546,6 @@
             this.toolStripMenuItem_RunTest.Name = "toolStripMenuItem_RunTest";
             this.toolStripMenuItem_RunTest.Size = new System.Drawing.Size(184, 22);
             this.toolStripMenuItem_RunTest.Text = "运行模型一致性测试";
-            // 
-            // QueryControl
-            // 
-            this.QueryControl.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.QueryControl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.QueryControl.IsDateChecked = true;
-            this.QueryControl.Location = new System.Drawing.Point(0, 0);
-            this.QueryControl.LotNumber = "";
-            this.QueryControl.MachineID = "";
-            this.QueryControl.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
-            this.QueryControl.Name = "QueryControl";
-            this.QueryControl.PartNumber = "";
-            this.QueryControl.SelectedSide = "A";
-            this.QueryControl.Size = new System.Drawing.Size(363, 422);
-            this.QueryControl.TabIndex = 0;
-            // 
-            // defectDetailControl1
-            // 
-            this.defectDetailControl1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.defectDetailControl1.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.defectDetailControl1.Location = new System.Drawing.Point(4, 4);
-            this.defectDetailControl1.Margin = new System.Windows.Forms.Padding(5);
-            this.defectDetailControl1.Name = "defectDetailControl1";
-            this.defectDetailControl1.Size = new System.Drawing.Size(1059, 836);
-            this.defectDetailControl1.TabIndex = 0;
-            // 
-            // validationTestResultControl1
-            // 
-            this.validationTestResultControl1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(30)))));
-            this.validationTestResultControl1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.validationTestResultControl1.Font = new System.Drawing.Font("微软雅黑", 9F);
-            this.validationTestResultControl1.Location = new System.Drawing.Point(4, 4);
-            this.validationTestResultControl1.Margin = new System.Windows.Forms.Padding(4);
-            this.validationTestResultControl1.Name = "validationTestResultControl1";
-            this.validationTestResultControl1.Size = new System.Drawing.Size(1059, 836);
-            this.validationTestResultControl1.TabIndex = 0;
             // 
             // AIReviewControl
             // 

@@ -27,7 +27,6 @@ namespace DeepSightAI
         private readonly ConcurrentDictionary<string, List<DetectInfo>> dic_heatPints = new ConcurrentDictionary<string, List<DetectInfo>>();
         private readonly HeatMapManager _heatMapManager = new HeatMapManager();
         private Mat SourceImage = null;
-        private ConcurrentDictionary<string, List<string>> dic_PN_SNList = new ConcurrentDictionary<string, List<string>>();
 
         /// <summary>
         /// 产品图原点坐标距离大图原点坐标的偏移,渲染热力图坐标时需要减去此坐标
@@ -50,6 +49,10 @@ namespace DeepSightAI
         private Button _loadMoreButton = null;
         private const int mockPointsCount = 30;
         private string[,] _arrayConfig = null;
+        /// <summary>
+        /// 当前加载的模板图像路径，用于裁剪后保存
+        /// </summary>
+        private string _currentTemplateImagePath = null;
 
         #endregion
 
@@ -72,13 +75,13 @@ namespace DeepSightAI
 
         private void HeatMapControl2_VisibleChanged(object sender, EventArgs e)
         {
-            // 确保只在控件变为可见时加载，并且只加载一次
+            // 确保只在控件变为可见时初始化，并且只初始化一次
             if (this.Visible)
             {
-                LoadInitialImage();
+                // 不再自动加载背景图，改为根据查询条件动态加载模板图像
                 InitializeHeatMap();
 
-                // 取消订阅，避免重复加载
+                // 取消订阅，避免重复初始化
                 this.VisibleChanged -= HeatMapControl2_VisibleChanged;
             }
         }
@@ -117,36 +120,131 @@ namespace DeepSightAI
             _heatMapManager.InitializeHeatMap(SourceImage);
         }
 
-        private void LoadInitialImage()
+        /// <summary>
+        /// 根据料号、机台号和正反面加载模板图像
+        /// 路径格式: TemplateImages/{料号}/{机台号}/{图片文件}
+        /// 文件名末尾为A表示正面，为B表示反面
+        /// </summary>
+        /// <param name="partNumber">料号</param>
+        /// <param name="machineId">机台号</param>
+        /// <param name="side">正反面 (A=正面, B=反面, 空=全部)</param>
+        /// <returns>是否成功加载</returns>
+        private bool LoadTemplateImage(string partNumber, string machineId, string side)
         {
-            string dirPath = Path.Combine(Application.StartupPath, "HotImage");
-            string filePath = Path.Combine(dirPath, "background.png");
-
-            if (File.Exists(filePath))
+            if (string.IsNullOrEmpty(partNumber))
             {
-                try
+                return false;
+            }
+
+            try
+            {
+                // 构建模板图像目录路径（使用Application.StartupPath的上一级目录）
+                string parentDir = Directory.GetParent(Application.StartupPath)?.FullName ?? Application.StartupPath;
+                string templateDir = Path.Combine(parentDir, "TemplateImages", partNumber);
+
+                // 如果指定了机台号，则进入机台号子目录
+                if (!string.IsNullOrEmpty(machineId))
                 {
-                    Mat mt = Cv2.ImRead(filePath);
-                    if (!mt.Empty())
+                    templateDir = Path.Combine(templateDir, machineId);
+                }
+
+                if (!Directory.Exists(templateDir))
+                {
+                    LogTextHelper.Warn($"模板图像目录不存在: {templateDir}");
+                    return false;
+                }
+
+                // 获取目录下的所有图片文件
+                var imageExtensions = new[] { ".png", ".jpg", ".jpeg", ".bmp", ".tiff" };
+                var imageFiles = Directory.GetFiles(templateDir)
+                    .Where(f => imageExtensions.Contains(Path.GetExtension(f).ToLower()))
+                    .ToList();
+
+                if (imageFiles.Count == 0)
+                {
+                    LogTextHelper.Warn($"模板图像目录中没有图片文件: {templateDir}");
+                    return false;
+                }
+
+                // 根据正反面筛选图片
+                string targetFile = null;
+                if (!string.IsNullOrEmpty(side))
+                {
+                    // 优先查找裁剪后的版本（文件名格式：xxx{side}_cropped_offsetX_offsetY）
+                    targetFile = imageFiles.FirstOrDefault(f =>
                     {
-                        SourceImage = mt;
-                        DispWinHeatMap.Image = mt;
-                        DispWinHeatMap.Invalidate();
-                    }
-                    else
+                        string nameWithoutExt = Path.GetFileNameWithoutExtension(f);
+                        return nameWithoutExt.Contains("_cropped_") && nameWithoutExt.Contains(side);
+                    });
+
+                    // 如果没有裁剪版本，查找原始版本
+                    if (string.IsNullOrEmpty(targetFile))
                     {
-                        //MessageBox.Show("热力图自动加载背景图失败，图片为空，请手动加载。");
+                        targetFile = imageFiles.FirstOrDefault(f =>
+                        {
+                            string nameWithoutExt = Path.GetFileNameWithoutExtension(f);
+                            return nameWithoutExt.EndsWith(side, StringComparison.OrdinalIgnoreCase)
+                                   && !nameWithoutExt.Contains("_cropped_");
+                        });
                     }
                 }
-                catch (Exception ex)
+
+                // 如果没有找到指定面的图片，或者未指定面，则使用第一张图片
+                if (string.IsNullOrEmpty(targetFile))
                 {
-                    LogTextHelper.Error($"热力图自动加载背景图失败: {ex.Message}");
-                  //  MessageBox.Show("热力图自动加载背景图失败，请手动加载。");
+                    // 优先选择A面裁剪版本
+                    targetFile = imageFiles.FirstOrDefault(f =>
+                    {
+                        string nameWithoutExt = Path.GetFileNameWithoutExtension(f);
+                        return nameWithoutExt.Contains("_cropped_") && nameWithoutExt.Contains("A");
+                    });
+
+                    // 其次选择A面原始版本
+                    if (string.IsNullOrEmpty(targetFile))
+                    {
+                        targetFile = imageFiles.FirstOrDefault(f =>
+                        {
+                            string nameWithoutExt = Path.GetFileNameWithoutExtension(f);
+                            return nameWithoutExt.EndsWith("A", StringComparison.OrdinalIgnoreCase)
+                                   && !nameWithoutExt.Contains("_cropped_");
+                        }) ?? imageFiles.First();
+                    }
+                }
+
+                // 从文件名解析offset信息（如果是裁剪版本）
+                ParseOffsetFromFileName(targetFile);
+
+                // 加载图片
+                Mat mt = Cv2.ImRead(targetFile);
+                if (!mt.Empty())
+                {
+                    SourceImage = mt;
+                    DispWinHeatMap.Image = mt;
+
+                    // 记录当前模板图路径，用于裁剪后保存
+                    _currentTemplateImagePath = targetFile;
+
+                    // 更新热力图管理器的背景
+                    if (_heatMapManager.HeatMapControl != null)
+                    {
+                        _heatMapManager.SetBackgroundImage(mt.ToBitmap());
+                        SourceImage = mt;
+                    }
+
+                    DispWinHeatMap.Invalidate();
+                    LogTextHelper.Info($"成功加载模板图像: {targetFile}");
+                    return true;
+                }
+                else
+                {
+                    LogTextHelper.Warn($"模板图像加载失败（图片为空）: {targetFile}");
+                    return false;
                 }
             }
-            else
+            catch (Exception ex)
             {
-               // MessageBox.Show("未找到可自动加载的背景图，请手动加载。");
+                LogTextHelper.Error($"加载模板图像异常: {ex.Message}");
+                return false;
             }
         }
 
@@ -173,13 +271,31 @@ namespace DeepSightAI
             dic_heatPints.Clear();
             _heatMapManager.ClearHeatPoints();
 
+            // 尝试根据料号、机台号和正反面加载模板图像
+            string partNumber = queryControl.PartNumber;
+            string machineId = queryControl.MachineID;
+            string side = queryControl.SelectedSide;
+
+            if (!string.IsNullOrEmpty(partNumber))
+            {
+                LoadTemplateImage(partNumber, machineId, side);
+                InitializeHeatMap();
+
+            }
+
             foreach (var res in queryControl.GetQueryResult())
             {
                 if (!dic_heatPints.ContainsKey(res.SerialNumber))
                 {
-                    if (res.Sides != null && res.Sides.Count > 0)
+                    // 汇总所有面的检测点（QueryControl已根据选择的面进行过滤）
+                    var allDetectPoints = res.Sides?
+                        .Where(s => s.DetectPoints != null)
+                        .SelectMany(s => s.DetectPoints)
+                        .ToList() ?? new List<DetectInfo>();
+
+                    if (allDetectPoints.Count > 0)
                     {
-                        dic_heatPints[res.SerialNumber] = res.Sides[0].DetectPoints;
+                        dic_heatPints[res.SerialNumber] = allDetectPoints;
                     }
                 }
             }
@@ -190,36 +306,27 @@ namespace DeepSightAI
 
         private async Task btn_queryHeatPoint_Click(object sender, EventArgs e)
         {
-#if TEST_ENV
-           List<string> sn_list=  new List<string> { "test_sn11", "test_sn22", "test_sn03" };
-#else
-            List<string>sn_list=new List<string>();
-#endif
+            // 点击查询：只获取数据并填充料号列表，不加载图片
+            // 图片加载和热力图更新在选中料号后触发（FilterChanged事件）
 
             dic_heatPints.Clear();
             _heatMapManager.ClearHeatPoints();
 
-#if TEST_ENV
-            sn_list.ForEach(sn => GenerateMockHeatPoints(sn));
-#else
-
-            foreach (var res in queryControl.GetQueryResult())
+            // 清空缺陷复选框
+            this.Invoke(new Action(() =>
             {
-                if (!dic_heatPints.ContainsKey(res.SerialNumber))
-                {
-                    dic_heatPints[res.SerialNumber] = res.Sides[0].DetectPoints;
-                }
-            } 
-#endif
+                flowLayoutPanel_Defects.Controls.Clear();
+            }));
 
-            int maxRow = 0;
-            int maxCol = 0;
-
-            await UpdatePanelGrid(maxRow + 1, maxCol + 1);
-
+#if TEST_ENV
+            List<string> sn_list = new List<string> { "test_sn11", "test_sn22", "test_sn03" };
+            sn_list.ForEach(sn => GenerateMockHeatPoints(sn));
             UpdateDefectCheckboxes();
-            await UpdateHeatMapPointsAsync();
-
+#else
+            // 查询完成后，QueryControl会自动填充料号列表
+            // 用户选择料号后会触发 FilterChanged 事件，届时再加载图片和热力图
+            LogTextHelper.Info($"查询完成，共获取 {queryControl.GetQueryResult()?.Count ?? 0} 条记录，请选择料号");
+#endif
         }
 
         private async void btn_loadArryImage_Click(object sender, EventArgs e)
@@ -357,7 +464,7 @@ namespace DeepSightAI
 
         private async Task UpdatePanelGrid(int rows, int columns)
         {
-            if (SourceImage.Empty())
+            if (SourceImage == null || SourceImage.Empty())
             {
                 LogTextHelper.Error("无法读取源图像");
                 return;
@@ -400,12 +507,12 @@ namespace DeepSightAI
 
         private async Task UpdateHeatMapPointsAsync()
         {
-            if (DispWinHeatMap.Image == null)
+            // 如果没有背景图，跳过热力图更新（不再弹出提示）
+            if (DispWinHeatMap.Image == null || SourceImage == null)
             {
-                MessageBox.Show("请先加载Array图像");
+                LogTextHelper.Warn("热力图更新跳过：未加载背景图像");
                 return;
             }
-
 
             var selectedDefectNames = new List<string>();
             this.Invoke(new Action(() =>
@@ -419,7 +526,11 @@ namespace DeepSightAI
             await _heatMapManager.UpdateHeatMapPointsAsync(
                 dic_heatPints,
                 selectedDefectNames,
-                (sn, row, col) => TryParseSnPosition(sn, out row, out col),
+                (sn) =>
+                {
+                    bool success = TryParseSnPosition(sn, out int row, out int col);
+                    return new HeatMapManager.SnPositionResult { Success = success, Row = row, Col = col };
+                },
                 SourceImage,
                 (mat) => DispWinHeatMap.Image = mat);
 
@@ -500,32 +611,6 @@ namespace DeepSightAI
 
         #endregion
 
-        #region Data Access
-
-        private List<string> GetSnByPnTime(DateTime date)
-        {
-            var stopwatch = Stopwatch.StartNew();
-            try
-            {
-                List<string> rtn_list = new List<string>();
-                dic_PN_SNList.Clear();
-                return rtn_list.Distinct().ToList();
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error("GetSnByPnTime 异常: " + ex.ToString());
-                return new List<string>();
-            }
-            finally
-            {
-                stopwatch.Stop();
-                LogTextHelper.Info($"GetSnByPnTime(Date: {date:yyyy-MM-dd}) 耗时: {stopwatch.ElapsedMilliseconds} ms");
-            }
-        }
-
-
-        #endregion
-
         #region Image Processing & Utilities
 
         private bool TryParseSnPosition(string sn, out int row, out int col)
@@ -556,7 +641,7 @@ namespace DeepSightAI
                     }
                 }
                 // If we are in array mode but have no config, or SN not found, we can't position it.
-                return false;
+                return true;
             }
             
             char rowChar = sn[sn.Length - 2];
@@ -892,11 +977,88 @@ namespace DeepSightAI
                 SourceImage = croppedImage;
                 DispWinHeatMap.Invalidate();
                 SaveBackgroundImage(croppedImage);
+
+                // 保存裁剪后的图像到模板图目录，用于下次自动加载
+                SaveCroppedTemplateImage(croppedImage);
             }
             catch (Exception ex)
             {
                 LogTextHelper.Error($"裁剪图像时出错: {ex.Message}");
                 MessageBox.Show("裁剪图像时出错，请检查日志。");
+            }
+        }
+
+        /// <summary>
+        /// 从文件名解析offset信息
+        /// 文件名格式：xxx_cropped_offsetX_offsetY.扩展名
+        /// </summary>
+        /// <param name="filePath">文件路径</param>
+        private void ParseOffsetFromFileName(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath))
+                return;
+
+            string nameWithoutExt = Path.GetFileNameWithoutExtension(filePath);
+
+            // 检查是否包含 _cropped_ 标记
+            int croppedIndex = nameWithoutExt.IndexOf("_cropped_", StringComparison.OrdinalIgnoreCase);
+            if (croppedIndex < 0)
+            {
+                // 不是裁剪版本，重置offset
+                offsetX = 0;
+                offsetY = 0;
+                return;
+            }
+
+            try
+            {
+                // 提取 _cropped_ 后面的部分：offsetX_offsetY
+                string offsetPart = nameWithoutExt.Substring(croppedIndex + "_cropped_".Length);
+                string[] parts = offsetPart.Split('_');
+
+                if (parts.Length >= 2 && int.TryParse(parts[0], out int x) && int.TryParse(parts[1], out int y))
+                {
+                    offsetX = x;
+                    offsetY = y;
+                    LogTextHelper.Info($"从文件名解析offset: X={offsetX}, Y={offsetY}");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Warn($"解析offset失败: {ex.Message}");
+                offsetX = 0;
+                offsetY = 0;
+            }
+        }
+
+        /// <summary>
+        /// 保存裁剪后的图像到模板图目录（保留原图，另存一份裁剪版本）
+        /// 文件名格式：原文件名_cropped_offsetX_offsetY.扩展名
+        /// </summary>
+        /// <param name="croppedImage">裁剪后的图像</param>
+        private void SaveCroppedTemplateImage(Mat croppedImage)
+        {
+            if (string.IsNullOrEmpty(_currentTemplateImagePath))
+            {
+                LogTextHelper.Warn("未记录模板图路径，无法保存裁剪后的模板图");
+                return;
+            }
+
+            try
+            {
+                // 生成裁剪后的文件路径：原文件名_cropped_offsetX_offsetY.扩展名
+                string directory = Path.GetDirectoryName(_currentTemplateImagePath);
+                string fileNameWithoutExt = Path.GetFileNameWithoutExtension(_currentTemplateImagePath);
+                string extension = Path.GetExtension(_currentTemplateImagePath);
+                string croppedFilePath = Path.Combine(directory, $"{fileNameWithoutExt}_cropped_{offsetX}_{offsetY}{extension}");
+
+                // 保存裁剪后的图像
+                Cv2.ImWrite(croppedFilePath, croppedImage);
+                LogTextHelper.Info($"裁剪后的模板图已保存: {croppedFilePath}");
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"保存裁剪后的模板图失败: {ex.Message}");
             }
         }
         private async void DisplayHeatPointDetailsInSelection(Rect selectionRect)
@@ -940,8 +1102,8 @@ namespace DeepSightAI
                                         SN = sn,
                                         PointInfo = pointInfo,
                                         DisplayLocation = new PointF(
-                                            (pointInfo.RoiX * 0.1f - offsetX) + colOffset,
-                                            (pointInfo.RoiY * 0.1f - offsetY) + rowOffset
+                                            (pointInfo.OriginRoiX  - offsetX) + colOffset,
+                                            (pointInfo.OriginRoiY  - offsetY) + rowOffset
                                         )
                                     });
                         })
@@ -1064,7 +1226,7 @@ namespace DeepSightAI
 
                 var label = new Label
                 {
-                    Text = $"SN: {p.SN}\n缺陷: {p.PointInfo.DefectName}\n坐标: ({p.PointInfo.X}, {p.PointInfo.Y})",
+                    Text = $"SN: {p.SN}\n缺陷: {p.PointInfo.DefectName}\n坐标: ({p.PointInfo.RoiX}, {p.PointInfo.RoiY})",
                     AutoSize = true,
                     ForeColor = Color.White,
                     Margin = new Padding(10, 5, 5, 5),

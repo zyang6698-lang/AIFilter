@@ -40,10 +40,27 @@ namespace DeepSightDisplay.HeatMap
             }
         }
 
+        /// <summary>
+        /// 位置解析结果
+        /// </summary>
+        public struct SnPositionResult
+        {
+            public bool Success;
+            public int Row;
+            public int Col;
+        }
+
+        /// <summary>
+        /// SN位置解析委托类型
+        /// </summary>
+        /// <param name="sn">序列号</param>
+        /// <returns>解析结果（成功与否、行、列）</returns>
+        public delegate SnPositionResult TryParseSnPositionDelegate(string sn);
+
         public async Task UpdateHeatMapPointsAsync(
             ConcurrentDictionary<string, List<DetectInfo>> dicHeatPints,
             List<string> selectedDefectNames,
-            Func<string,  int,  int, bool> tryParseSnPosition,
+            TryParseSnPositionDelegate tryParseSnPosition,
             Mat sourceImage,
             Action<Mat> updateDisplayAction)
         {
@@ -59,25 +76,26 @@ namespace DeepSightDisplay.HeatMap
                 .SelectMany(kvp =>
                 {
                     var sn = kvp.Key;
-                    int row=0, col=0;
-                    if (!tryParseSnPosition(sn,  row,  col))
+                    var posResult = tryParseSnPosition(sn);
+                    if (!posResult.Success)
                     {
-                        return Enumerable.Empty<HeatPointRenderer>();
+                        posResult.Row = 0;
+                        posResult.Col = 0;
                     }
 
                     float productWidth = sourceImage?.Width ?? 0;
                     float productHeight = sourceImage?.Height ?? 0;
-                    float colOffset = col * productWidth;
-                    float rowOffset = row * productHeight;
+                    float colOffset = posResult.Col * productWidth;
+                    float rowOffset = posResult.Row * productHeight;
 
                     return kvp.Value.Where(p => selectedDefectNames.Contains(p.DefectName))
                         .Select(pointInfo => new HeatPointRenderer(
                             location: new PointF(
-                                (pointInfo.RoiX * 0.1f - OffsetX) + colOffset,
-                                (pointInfo.RoiY * 0.1f - OffsetY) + rowOffset
+                                (pointInfo.OriginRoiX - OffsetX) + colOffset,
+                                (pointInfo.OriginRoiY - OffsetY) + rowOffset
                             ),
                             intensity: 0.25f,
-                            radius: 25
+                            radius: 250
                         ));
                 })
                 .ToList();

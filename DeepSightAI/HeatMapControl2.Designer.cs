@@ -108,8 +108,8 @@
             this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 552F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 72F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(406, 901);
             this.tableLayoutPanel1.TabIndex = 3;
             // 
@@ -122,13 +122,13 @@
             this.panel13.Location = new System.Drawing.Point(3, 2);
             this.panel13.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panel13.Name = "panel13";
-            this.panel13.Size = new System.Drawing.Size(400, 512);
+            this.panel13.Size = new System.Drawing.Size(400, 548);
             this.panel13.TabIndex = 1;
             // 
             // queryControl
             // 
             this.queryControl.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.queryControl.IsDateChecked = false;
+            this.queryControl.IsDateChecked = true;
             this.queryControl.Location = new System.Drawing.Point(19, 199);
             this.queryControl.LotNumber = "";
             this.queryControl.MachineID = "";
@@ -136,7 +136,7 @@
             this.queryControl.Name = "queryControl";
             this.queryControl.PartNumber = "";
             this.queryControl.SelectedSide = "A";
-            this.queryControl.Size = new System.Drawing.Size(350, 290);
+            this.queryControl.Size = new System.Drawing.Size(349, 359);
             this.queryControl.TabIndex = 1;
             // 
             // groupBox1
@@ -191,7 +191,7 @@
             // 
             this.rbn_Panel.AutoSize = true;
             this.rbn_Panel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.rbn_Panel.Location = new System.Drawing.Point(90, 22);
+            this.rbn_Panel.Location = new System.Drawing.Point(91, 22);
             this.rbn_Panel.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.rbn_Panel.Name = "rbn_Panel";
             this.rbn_Panel.Size = new System.Drawing.Size(68, 19);
@@ -269,11 +269,11 @@
             this.flowLayoutPanel_Defects.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.flowLayoutPanel_Defects.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel_Defects.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
-            this.flowLayoutPanel_Defects.Location = new System.Drawing.Point(3, 518);
+            this.flowLayoutPanel_Defects.Location = new System.Drawing.Point(3, 554);
             this.flowLayoutPanel_Defects.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.flowLayoutPanel_Defects.Name = "flowLayoutPanel_Defects";
             this.flowLayoutPanel_Defects.Padding = new System.Windows.Forms.Padding(20, 0, 0, 0);
-            this.flowLayoutPanel_Defects.Size = new System.Drawing.Size(400, 381);
+            this.flowLayoutPanel_Defects.Size = new System.Drawing.Size(400, 345);
             this.flowLayoutPanel_Defects.TabIndex = 140;
             this.flowLayoutPanel_Defects.WrapContents = false;
             // 
