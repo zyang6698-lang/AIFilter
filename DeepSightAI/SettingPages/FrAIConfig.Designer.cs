@@ -82,60 +82,65 @@
             this.panel2.Controls.Add(this.btn_GetAgain);
             resources.ApplyResources(this.panel2, "panel2");
             this.panel2.Name = "panel2";
-            // 
+            //
             // btnAutoAdd
-            // 
+            //
+            this.btnAutoAdd.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
             resources.ApplyResources(this.btnAutoAdd, "btnAutoAdd");
             this.btnAutoAdd.FlatAppearance.BorderSize = 0;
             this.btnAutoAdd.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
             this.btnAutoAdd.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
             this.btnAutoAdd.ForeColor = System.Drawing.Color.White;
             this.btnAutoAdd.Name = "btnAutoAdd";
-            this.btnAutoAdd.UseVisualStyleBackColor = true;
+            this.btnAutoAdd.UseVisualStyleBackColor = false;
             this.btnAutoAdd.Click += new System.EventHandler(this.btnAutoAdd_Click);
-            // 
+            //
             // btn_Delete
-            // 
+            //
+            this.btn_Delete.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
             resources.ApplyResources(this.btn_Delete, "btn_Delete");
             this.btn_Delete.FlatAppearance.BorderSize = 0;
             this.btn_Delete.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
             this.btn_Delete.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
             this.btn_Delete.ForeColor = System.Drawing.Color.White;
             this.btn_Delete.Name = "btn_Delete";
-            this.btn_Delete.UseVisualStyleBackColor = true;
+            this.btn_Delete.UseVisualStyleBackColor = false;
             this.btn_Delete.Click += new System.EventHandler(this.btn_Delete_Click);
-            // 
+            //
             // btn_Add
-            // 
+            //
+            this.btn_Add.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
             resources.ApplyResources(this.btn_Add, "btn_Add");
             this.btn_Add.FlatAppearance.BorderSize = 0;
             this.btn_Add.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
             this.btn_Add.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
             this.btn_Add.ForeColor = System.Drawing.Color.White;
             this.btn_Add.Name = "btn_Add";
-            this.btn_Add.UseVisualStyleBackColor = true;
+            this.btn_Add.UseVisualStyleBackColor = false;
             this.btn_Add.Click += new System.EventHandler(this.btn_Add_Click);
-            // 
+            //
             // btn_setSolution
-            // 
+            //
+            this.btn_setSolution.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
             resources.ApplyResources(this.btn_setSolution, "btn_setSolution");
             this.btn_setSolution.FlatAppearance.BorderSize = 0;
             this.btn_setSolution.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
             this.btn_setSolution.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
             this.btn_setSolution.ForeColor = System.Drawing.Color.White;
             this.btn_setSolution.Name = "btn_setSolution";
-            this.btn_setSolution.UseVisualStyleBackColor = true;
+            this.btn_setSolution.UseVisualStyleBackColor = false;
             this.btn_setSolution.Click += new System.EventHandler(this.btn_setSolution_Click);
-            // 
+            //
             // btn_GetAgain
-            // 
+            //
+            this.btn_GetAgain.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
             resources.ApplyResources(this.btn_GetAgain, "btn_GetAgain");
             this.btn_GetAgain.FlatAppearance.BorderSize = 0;
             this.btn_GetAgain.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
             this.btn_GetAgain.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
             this.btn_GetAgain.ForeColor = System.Drawing.Color.White;
             this.btn_GetAgain.Name = "btn_GetAgain";
-            this.btn_GetAgain.UseVisualStyleBackColor = true;
+            this.btn_GetAgain.UseVisualStyleBackColor = false;
             this.btn_GetAgain.Click += new System.EventHandler(this.btn_GetAgain_Click);
             // 
             // panel3
