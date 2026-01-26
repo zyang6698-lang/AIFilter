@@ -22,6 +22,11 @@ namespace DeepSightAI
         /// </summary>
         public event EventHandler QueryClicked;
 
+        /// <summary>
+        /// 筛选条件变化事件（料号或机台号选择变化时触发）
+        /// </summary>
+        public event EventHandler FilterChanged;
+
         #endregion
 
         #region Properties
@@ -164,6 +169,15 @@ namespace DeepSightAI
             timePicker.Value = DateTime.Today;
             timePickerEnd.Value = DateTime.Today;
             timePicker.Checked = true;
+
+            // 绑定料号和机台号下拉框的选择变化事件
+            cmb_PartNumber.SelectedIndexChanged += Cmb_PartNumber_SelectedIndexChanged;
+            cmb_MachineID.SelectedIndexChanged += Cmb_MachineID_SelectedIndexChanged;
+
+            // 绑定正反面选择变化事件
+            rbn_Front.CheckedChanged += Rbn_Side_CheckedChanged;
+            rbn_Back.CheckedChanged += Rbn_Side_CheckedChanged;
+            rbn_All.CheckedChanged += Rbn_Side_CheckedChanged;
         }
 
 
@@ -177,6 +191,44 @@ namespace DeepSightAI
             QueryClicked?.Invoke(this, EventArgs.Empty);
         }
 
+        /// <summary>
+        /// 料号下拉框选择变化事件处理
+        /// </summary>
+        private void Cmb_PartNumber_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // 当选中非"全部"选项时，触发筛选变化事件
+            if (QueryResult != null && QueryResult.Count > 0)
+            {
+                FilterChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        /// <summary>
+        /// 机台号下拉框选择变化事件处理
+        /// </summary>
+        private void Cmb_MachineID_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // 当选中非"全部"选项时，触发筛选变化事件
+            if (QueryResult != null && QueryResult.Count > 0)
+            {
+                FilterChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        /// <summary>
+        /// 正反面选择变化事件处理
+        /// </summary>
+        private void Rbn_Side_CheckedChanged(object sender, EventArgs e)
+        {
+            // 只在RadioButton被选中时触发，避免重复触发
+            if (sender is RadioButton rbn && rbn.Checked)
+            {
+                if (QueryResult != null && QueryResult.Count > 0)
+                {
+                    FilterChanged?.Invoke(this, EventArgs.Empty);
+                }
+            }
+        }
 
         #endregion
 

@@ -329,16 +329,16 @@ namespace DeepSightAI
 
                 this.BeginInvoke(new Action(() =>
                 {
-                    lbl_SnTotalCount.Text = $"今日产量Array\n{boardStat.AviPanelCount}";
+                    lbl_SnTotalCount.Text = $"今日总产量\n{boardStat.AviPanelCount}";
                     lbl_totalDefectCount.Text = $"AVI产生图片数\n{boardStat.AiFilterCount}";
                     lbl_AiAllCount.Text = $"AI推理图片数\n{aiProcessedCount}";
 
-                    lbl_aiFilterOKCount.Text = $"AI Pass 图片数\n{boardStat.AiFilterOKCount}";
-                    lbl_aviPassRateCount.Text = $"AVI Pass Rate_AI前\n{aviPassRateBefore}";
-                    lbl_filteredOkCount.Text = $"AI Pass Rate\n{aiPassRate}";
+                    lbl_aiFilterOKCount.Text = $"AI通过图片数\n{boardStat.AiFilterOKCount}";
+                    lbl_aviPassRateCount.Text = $"AVI一次通过率\n{aviPassRateBefore}";
+                    lbl_filteredOkCount.Text = $"报点过滤率\n{aiPassRate}";
 
                     lbl_utilizationRate.Text = $"今日机台利用率\n{boardStat.Utilization:P1}";
-                    lbl_boardAiPassRate.Text = $"AVI Pass Rate_AI后\n{aviPassRateAfter}";
+                    lbl_boardAiPassRate.Text = $"AI通过率\n{aviPassRateAfter}";
                     lbl_CountPerPanel.Text = $"平均报点数\n{avgDefectText}";
                 }));
             }

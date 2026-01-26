@@ -37,6 +37,11 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.splitContainer4 = new System.Windows.Forms.SplitContainer();
             this.dataGridViewData = new System.Windows.Forms.DataGridView();
+            this.Code = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.AVI = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.AI = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Time = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Status = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.rich_log = new System.Windows.Forms.RichTextBox();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.btnClearLog = new System.Windows.Forms.ToolStripMenuItem();
@@ -60,11 +65,6 @@
             this.lbl_aiFilterOKCount = new System.Windows.Forms.Label();
             this.lbl_aviPassRateCount = new System.Windows.Forms.Label();
             this.lbl_filteredOkCount = new System.Windows.Forms.Label();
-            this.Code = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.AVI = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.AI = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Time = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Status = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.table_main.SuspendLayout();
             this.panel_show.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -132,7 +132,7 @@
             // 
             this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
             this.splitContainer1.Size = new System.Drawing.Size(1755, 845);
-            this.splitContainer1.SplitterDistance = 420;
+            this.splitContainer1.SplitterDistance = 494;
             this.splitContainer1.TabIndex = 0;
             // 
             // splitContainer4
@@ -149,7 +149,7 @@
             // splitContainer4.Panel2
             // 
             this.splitContainer4.Panel2.Controls.Add(this.rich_log);
-            this.splitContainer4.Size = new System.Drawing.Size(420, 845);
+            this.splitContainer4.Size = new System.Drawing.Size(494, 845);
             this.splitContainer4.SplitterDistance = 550;
             this.splitContainer4.TabIndex = 1;
             // 
@@ -205,9 +205,53 @@
             this.dataGridViewData.ShowCellToolTips = false;
             this.dataGridViewData.ShowEditingIcon = false;
             this.dataGridViewData.ShowRowErrors = false;
-            this.dataGridViewData.Size = new System.Drawing.Size(420, 550);
+            this.dataGridViewData.Size = new System.Drawing.Size(494, 550);
             this.dataGridViewData.TabIndex = 2;
             this.dataGridViewData.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewData_CellClick);
+            // 
+            // Code
+            // 
+            this.Code.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.Code.DataPropertyName = "Code";
+            this.Code.FillWeight = 180F;
+            this.Code.HeaderText = "SN任务队列";
+            this.Code.MinimumWidth = 6;
+            this.Code.Name = "Code";
+            this.Code.ReadOnly = true;
+            this.Code.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            // 
+            // AVI
+            // 
+            this.AVI.HeaderText = "AVI";
+            this.AVI.MinimumWidth = 6;
+            this.AVI.Name = "AVI";
+            this.AVI.ReadOnly = true;
+            this.AVI.Width = 50;
+            // 
+            // AI
+            // 
+            this.AI.HeaderText = "AI";
+            this.AI.MinimumWidth = 6;
+            this.AI.Name = "AI";
+            this.AI.ReadOnly = true;
+            this.AI.Width = 50;
+            // 
+            // Time
+            // 
+            this.Time.HeaderText = "时间(ms)";
+            this.Time.MinimumWidth = 6;
+            this.Time.Name = "Time";
+            this.Time.ReadOnly = true;
+            // 
+            // Status
+            // 
+            this.Status.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.Status.FillWeight = 150F;
+            this.Status.HeaderText = "状态";
+            this.Status.MinimumWidth = 8;
+            this.Status.Name = "Status";
+            this.Status.ReadOnly = true;
+            this.Status.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             // 
             // rich_log
             // 
@@ -219,7 +263,7 @@
             this.rich_log.Margin = new System.Windows.Forms.Padding(6);
             this.rich_log.Name = "rich_log";
             this.rich_log.ReadOnly = true;
-            this.rich_log.Size = new System.Drawing.Size(420, 291);
+            this.rich_log.Size = new System.Drawing.Size(494, 291);
             this.rich_log.TabIndex = 12;
             this.rich_log.Text = "";
             // 
@@ -261,7 +305,7 @@
             // 
             this.splitContainer2.Panel2.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.splitContainer2.Panel2.Controls.Add(this.splitContainer3);
-            this.splitContainer2.Size = new System.Drawing.Size(1331, 845);
+            this.splitContainer2.Size = new System.Drawing.Size(1257, 845);
             this.splitContainer2.SplitterDistance = 564;
             this.splitContainer2.TabIndex = 0;
             // 
@@ -272,7 +316,7 @@
             this.avi_panel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.avi_panel.Location = new System.Drawing.Point(0, 0);
             this.avi_panel.Name = "avi_panel";
-            this.avi_panel.Size = new System.Drawing.Size(1331, 564);
+            this.avi_panel.Size = new System.Drawing.Size(1257, 564);
             this.avi_panel.TabIndex = 0;
             // 
             // aviCtr2Container
@@ -282,7 +326,7 @@
             this.aviCtr2Container.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.aviCtr2Container.Name = "aviCtr2Container";
             this.aviCtr2Container.ShowDeleteButtons = true;
-            this.aviCtr2Container.Size = new System.Drawing.Size(1331, 564);
+            this.aviCtr2Container.Size = new System.Drawing.Size(1257, 564);
             this.aviCtr2Container.TabIndex = 0;
             // 
             // splitContainer3
@@ -298,8 +342,8 @@
             // splitContainer3.Panel2
             // 
             this.splitContainer3.Panel2.Controls.Add(this.panel1);
-            this.splitContainer3.Size = new System.Drawing.Size(1331, 277);
-            this.splitContainer3.SplitterDistance = 578;
+            this.splitContainer3.Size = new System.Drawing.Size(1257, 277);
+            this.splitContainer3.SplitterDistance = 545;
             this.splitContainer3.TabIndex = 0;
             // 
             // splitContainer5
@@ -319,7 +363,7 @@
             this.splitContainer5.Panel2.Controls.Add(this.lblPageInfo);
             this.splitContainer5.Panel2.Controls.Add(this.btnPrevious);
             this.splitContainer5.Panel2.Controls.Add(this.btnNext);
-            this.splitContainer5.Size = new System.Drawing.Size(578, 277);
+            this.splitContainer5.Size = new System.Drawing.Size(545, 277);
             this.splitContainer5.SplitterDistance = 236;
             this.splitContainer5.TabIndex = 0;
             // 
@@ -337,7 +381,7 @@
             this.table_Small.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 766F));
             this.table_Small.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 766F));
             this.table_Small.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 766F));
-            this.table_Small.Size = new System.Drawing.Size(578, 236);
+            this.table_Small.Size = new System.Drawing.Size(545, 236);
             this.table_Small.TabIndex = 11;
             // 
             // lblPageInfo
@@ -368,7 +412,7 @@
             // btnNext
             // 
             this.btnNext.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnNext.Location = new System.Drawing.Point(490, 12);
+            this.btnNext.Location = new System.Drawing.Point(457, 12);
             this.btnNext.Name = "btnNext";
             this.btnNext.Size = new System.Drawing.Size(75, 32);
             this.btnNext.TabIndex = 44;
@@ -391,7 +435,7 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(749, 277);
+            this.panel1.Size = new System.Drawing.Size(708, 277);
             this.panel1.TabIndex = 0;
             // 
             // lbl_CountPerPanel
@@ -510,50 +554,6 @@
             this.lbl_filteredOkCount.TabIndex = 4;
             this.lbl_filteredOkCount.Text = "-";
             this.lbl_filteredOkCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // Code
-            // 
-            this.Code.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Code.DataPropertyName = "Code";
-            this.Code.FillWeight = 180F;
-            this.Code.HeaderText = "SN任务队列";
-            this.Code.MinimumWidth = 6;
-            this.Code.Name = "Code";
-            this.Code.ReadOnly = true;
-            this.Code.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            // 
-            // AVI
-            // 
-            this.AVI.HeaderText = "AVI";
-            this.AVI.MinimumWidth = 6;
-            this.AVI.Name = "AVI";
-            this.AVI.ReadOnly = true;
-            this.AVI.Width = 50;
-            // 
-            // AI
-            // 
-            this.AI.HeaderText = "AI";
-            this.AI.MinimumWidth = 6;
-            this.AI.Name = "AI";
-            this.AI.ReadOnly = true;
-            this.AI.Width = 50;
-            // 
-            // Time
-            // 
-            this.Time.HeaderText = "时间(ms)";
-            this.Time.MinimumWidth = 6;
-            this.Time.Name = "Time";
-            this.Time.ReadOnly = true;
-            // 
-            // Status
-            // 
-            this.Status.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Status.FillWeight = 150F;
-            this.Status.HeaderText = "状态";
-            this.Status.MinimumWidth = 8;
-            this.Status.Name = "Status";
-            this.Status.ReadOnly = true;
-            this.Status.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             // 
             // FrHome
             // 

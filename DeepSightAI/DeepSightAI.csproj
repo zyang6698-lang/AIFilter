@@ -288,6 +288,12 @@
     <Compile Include="DefectDetailControl.Designer.cs">
       <DependentUpon>DefectDetailControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="DefectImageItemControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="DefectImageItemControl.Designer.cs">
+      <DependentUpon>DefectImageItemControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="FrAlarm.cs">
       <SubType>Form</SubType>
     </Compile>

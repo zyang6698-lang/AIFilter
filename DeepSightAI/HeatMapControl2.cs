@@ -67,6 +67,7 @@ namespace DeepSightAI
         {
             // 订阅查询控件的事件
             queryControl.QueryClicked += HeatMapQueryControl_QueryClicked;
+            queryControl.FilterChanged += QueryControl_FilterChanged;
         }
 
         private void HeatMapControl2_VisibleChanged(object sender, EventArgs e)
@@ -160,6 +161,30 @@ namespace DeepSightAI
 
         private async void HeatMapQueryControl_SideSelectionChanged(object sender, EventArgs e)
         {
+            await UpdateHeatMapPointsAsync();
+        }
+
+        /// <summary>
+        /// 筛选条件变化事件处理（料号或机台号选择变化时自动筛选）
+        /// </summary>
+        private async void QueryControl_FilterChanged(object sender, EventArgs e)
+        {
+            // 根据筛选条件重新加载热力图数据
+            dic_heatPints.Clear();
+            _heatMapManager.ClearHeatPoints();
+
+            foreach (var res in queryControl.GetQueryResult())
+            {
+                if (!dic_heatPints.ContainsKey(res.SerialNumber))
+                {
+                    if (res.Sides != null && res.Sides.Count > 0)
+                    {
+                        dic_heatPints[res.SerialNumber] = res.Sides[0].DetectPoints;
+                    }
+                }
+            }
+
+            UpdateDefectCheckboxes();
             await UpdateHeatMapPointsAsync();
         }
 

@@ -27,7 +27,11 @@ namespace DeepSightDB
         public int VVSStatus { get; set; }
         public int VrsState { get; set; }
         public int FinalState { get; set; }
-
+        /// <summary>
+        /// 用于显示的序列号（非持久化字段，由界面赋值）
+        /// </summary>
+        [Newtonsoft.Json.JsonIgnore]
+        public string DisplaySN { get; set; }
     }
 
     /// <summary>

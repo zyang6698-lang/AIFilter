@@ -30,6 +30,14 @@ namespace DeepSightAI
         private int _vvsOkCount = 0;
         private int _vvsNgCount = 0;
         private int _vvsNotSetCount = 0;
+        // 统计指标字段（用于显示）
+        private int _totalPanelCount = 0;       // 总面板数
+        private int _aviOkPanelCount = 0;       // AVI OK面板数
+        private int _aiOkPanelCount = 0;        // AI OK面板数
+        private int _totalPointCount = 0;       // 总报点数
+        private int _aiOkPointCount = 0;        // AI OK报点数
+        // 按Lot分组的统计数据（包含所有面板，用于计算统计指标）
+        private Dictionary<string, LotStatistics> _lotStatistics = new Dictionary<string, LotStatistics>();
 
         #endregion
 
@@ -45,6 +53,7 @@ namespace DeepSightAI
         {
             // 订阅查询控件事件
             QueryControl.QueryClicked += HeatMapQueryControl_QueryClicked;
+            QueryControl.FilterChanged += QueryControl_FilterChanged;
 
             // 订阅DataGridView事件
             dataGridView_Defects.CellDoubleClick += DataGridView_Defects_CellDoubleClick;
@@ -115,17 +124,42 @@ namespace DeepSightAI
                 _defectItems.Clear();
                 _allDefectItems.Clear();
                 _lotGroups.Clear();
+                _lotStatistics.Clear();
                 treeView_Lots.Nodes.Clear();
                 defectDetailControl1.ClearDetails();
                 _currentSelectedLot = null;
 
-                // 收集所有数据
+                // 收集所有数据，同时统计指标
                 foreach (var panel in QueryControl.GetQueryResult())
                 {
                     if (panel.Sides == null) continue;
+                    string lotNumber = panel.LotNumber ?? "未知Lot";
+
+                    // 确保该Lot的统计数据存在
+                    if (!_lotStatistics.ContainsKey(lotNumber))
+                    {
+                        _lotStatistics[lotNumber] = new LotStatistics();
+                    }
+                    var stat = _lotStatistics[lotNumber];
+
                     foreach (var side in panel.Sides)
                     {
-                        if (side != null && side.AviState != 1)
+                        if (side == null) continue;
+
+                        // 统计所有面板数据（用于计算统计指标）
+                        stat.TotalPanelCount++;
+                        if (side.AviState == 1) stat.AviOkPanelCount++;
+                        if (side.AiState == 1) stat.AiOkPanelCount++;
+
+                        // 统计报点数据
+                        if (side.DetectPoints != null)
+                        {
+                            stat.TotalPointCount += side.DetectPoints.Count;
+                            stat.AiOkPointCount += side.DetectPoints.Count(p => p.AIStatus == 1);
+                        }
+
+                        // 只有 AVI NG 的数据才加入复判列表
+                        if (side.AviState != 1)
                         {
                             _allDefectItems.Add(CreateDefectReviewItem(panel, side));
                         }
@@ -152,6 +186,82 @@ namespace DeepSightAI
             {
                 LogTextHelper.Error($"查询异常: {ex}");
                 MessageBox.Show("查询失败，请检查日志。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                this.Enabled = true;
+            }
+        }
+
+        /// <summary>
+        /// 筛选条件变化事件处理（料号或机台号选择变化时自动筛选）
+        /// </summary>
+        private void QueryControl_FilterChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                this.Enabled = false;
+                _defectItems.Clear();
+                _allDefectItems.Clear();
+                _lotGroups.Clear();
+                _lotStatistics.Clear();
+                treeView_Lots.Nodes.Clear();
+                defectDetailControl1.ClearDetails();
+                _currentSelectedLot = null;
+
+                // 根据筛选条件重新收集数据，同时统计指标
+                foreach (var panel in QueryControl.GetQueryResult())
+                {
+                    if (panel.Sides == null) continue;
+                    string lotNumber = panel.LotNumber ?? "未知Lot";
+
+                    // 确保该Lot的统计数据存在
+                    if (!_lotStatistics.ContainsKey(lotNumber))
+                    {
+                        _lotStatistics[lotNumber] = new LotStatistics();
+                    }
+                    var stat = _lotStatistics[lotNumber];
+
+                    foreach (var side in panel.Sides)
+                    {
+                        if (side == null) continue;
+
+                        // 统计所有面板数据（用于计算统计指标）
+                        stat.TotalPanelCount++;
+                        if (side.AviState == 1) stat.AviOkPanelCount++;
+                        if (side.AiState == 1) stat.AiOkPanelCount++;
+
+                        // 统计报点数据
+                        if (side.DetectPoints != null)
+                        {
+                            stat.TotalPointCount += side.DetectPoints.Count;
+                            stat.AiOkPointCount += side.DetectPoints.Count(p => p.AIStatus == 1);
+                        }
+
+                        // 只有 AVI NG 的数据才加入复判列表
+                        if (side.AviState != 1)
+                        {
+                            _allDefectItems.Add(CreateDefectReviewItem(panel, side));
+                        }
+                    }
+                }
+
+                // 按Lot分组
+                _lotGroups = _allDefectItems
+                    .GroupBy(x => x.LotNumber ?? "未知Lot")
+                    .ToDictionary(g => g.Key, g => g.ToList());
+
+                // 构建TreeView节点
+                BuildLotTreeNodes();
+
+                // 更新表格显示
+                _defectItems.Clear();
+                _bindingList = new SortableBindingList<DefectReviewItem>(_defectItems);
+                dataGridView_Defects.DataSource = _bindingList;
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"筛选异常: {ex}");
             }
             finally
             {
@@ -598,10 +708,8 @@ namespace DeepSightAI
                         {
                             _currentReviewLot = firstItem.LotNumber;
                             _currentReviewTime = firstItem.DetectionDate;
-                            // 统计所有项目的VVS状态总和
-                            _vvsOkCount = itemsToDisplay.Sum(item => item.HeatPoints?.Count(hp => hp.VVSStatus == 1) ?? 0);
-                            _vvsNgCount = itemsToDisplay.Sum(item => item.HeatPoints?.Count(hp => hp.VVSStatus == 2) ?? 0);
-                            _vvsNotSetCount = itemsToDisplay.Sum(item => item.HeatPoints?.Count(hp => hp.VVSStatus == 0) ?? 0);
+                            // 更新统计数据（包括VVS状态和统计指标）
+                            UpdateVvsStatusSummary();
                             RefreshReviewDetailDisplay();
                         }
                     }
@@ -988,7 +1096,7 @@ namespace DeepSightAI
             return new DefectReviewItem
             {
                 SerialNumber = panel.SerialNumber,
-                LotNumber = panel.LotNumber,
+                LotNumber = panel.LotNumber ?? "未知Lot",
                 MachineId = panel.MachineId,
                 ProductSerial = panel.ProductSerial,
                 Side = sideData.Side,
@@ -1021,7 +1129,7 @@ namespace DeepSightAI
 
 
         /// <summary>
-        /// 统计当前VVS状态
+        /// 统计当前VVS状态和其他统计指标
         /// </summary>
         private void UpdateVvsStatusSummary()
         {
@@ -1029,11 +1137,28 @@ namespace DeepSightAI
             _vvsNgCount = 0;
             _vvsNotSetCount = 0;
 
+            // 从预计算的统计数据获取面板和报点统计（包含所有数据，不仅仅是 AVI NG）
+            int totalPanelCount = 0;
+            int aviOkPanelCount = 0;
+            int aiOkPanelCount = 0;
+            int totalPointCount = 0;
+            int aiOkPointCount = 0;
+
+            if (!string.IsNullOrEmpty(_currentReviewLot) && _lotStatistics.TryGetValue(_currentReviewLot, out var stat))
+            {
+                totalPanelCount = stat.TotalPanelCount;
+                aviOkPanelCount = stat.AviOkPanelCount;
+                aiOkPanelCount = stat.AiOkPanelCount;
+                totalPointCount = stat.TotalPointCount;
+                aiOkPointCount = stat.AiOkPointCount;
+            }
+
+            // VVS 状态统计需要从当前数据实时计算（因为用户可能会修改 VVS 状态）
             foreach (var item in _allDefectItems)
             {
-                if (item.LotNumber==_currentReviewLot)
+                if (item.LotNumber == _currentReviewLot)
                 {
-                    if (item != null && item.HeatPoints != null)
+                    if (item.HeatPoints != null)
                     {
                         foreach (var hp in item.HeatPoints)
                         {
@@ -1045,6 +1170,12 @@ namespace DeepSightAI
                 }
             }
 
+            // 更新显示用的局部变量供 RefreshReviewDetailDisplay 使用
+            _totalPanelCount = totalPanelCount;
+            _aviOkPanelCount = aviOkPanelCount;
+            _aiOkPanelCount = aiOkPanelCount;
+            _totalPointCount = totalPointCount;
+            _aiOkPointCount = aiOkPointCount;
         }
 
         /// <summary>
@@ -1052,13 +1183,22 @@ namespace DeepSightAI
         /// </summary>
         private void RefreshReviewDetailDisplay()
         {
-            string detail = string.Empty;
+            string detail;
 
             if (!string.IsNullOrEmpty(_currentReviewLot))
             {
+                // 计算统计指标
+                string pointFilterRate = FormatPercent(_aiOkPointCount, _totalPointCount);
+                string aviPassRate = FormatPercent(_aviOkPanelCount, _totalPanelCount);
+                string aiPassRate = FormatPercent(_aiOkPanelCount, _totalPanelCount);
+
                 detail = $"【复判详情】\n\n";
                 detail += $"Lot号: {_currentReviewLot}\n";
                 detail += $"检测时间: {_currentReviewTime:yyyy-MM-dd HH:mm:ss}\n\n";
+                detail += $"【统计指标】\n";
+                detail += $"报点过滤率: {pointFilterRate}\n";
+                detail += $"AVI一次通过率: {aviPassRate}\n";
+                detail += $"AI通过率: {aiPassRate}\n\n";
                 detail += $"【VVS状态统计】\n";
                 detail += $"OK: {_vvsOkCount}\n";
                 detail += $"NG: {_vvsNgCount}\n";
@@ -1071,6 +1211,18 @@ namespace DeepSightAI
             }
 
             label_ReviewDetail.Text = detail;
+        }
+
+        /// <summary>
+        /// 格式化百分比显示
+        /// </summary>
+        private string FormatPercent(int numerator, int denominator)
+        {
+            if (denominator <= 0)
+            {
+                return "0.0%";
+            }
+            return ((double)numerator / denominator * 100).ToString("0.0") + "%";
         }
 
         private async Task SaveManualReviewResults(List<DefectReviewItem> items)
@@ -1174,6 +1326,18 @@ namespace DeepSightAI
         public List<DetectInfo> HeatPoints { get; set; }
         [Browsable(false)]
         public bool IsModified { get; set; }
+    }
+
+    /// <summary>
+    /// Lot统计数据（包含所有面板，用于计算统计指标）
+    /// </summary>
+    public class LotStatistics
+    {
+        public int TotalPanelCount { get; set; }       // 总面板数
+        public int AviOkPanelCount { get; set; }       // AVI OK面板数
+        public int AiOkPanelCount { get; set; }        // AI OK面板数
+        public int TotalPointCount { get; set; }       // 总报点数
+        public int AiOkPointCount { get; set; }        // AI OK报点数
     }
 
     #endregion

@@ -126,6 +126,11 @@ namespace DeepSightWorkLib
                 {
                     _aviReaderService.fetchTime = DateTime.Now;
                 }
+                // 停止后自动将暂存数据库信息写入
+                if (previousValue&& !value)
+                {
+                    FlushPendingPanelSideRecords();
+                }
             }
         }
 

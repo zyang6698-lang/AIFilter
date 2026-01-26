@@ -1,0 +1,169 @@
+namespace DeepSightAI
+{
+    partial class DefectImageItemControl
+    {
+        /// <summary>
+        /// 必需的设计器变量。
+        /// </summary>
+        private System.ComponentModel.IContainer components = null;
+
+        /// <summary>
+        /// ToolTip用于显示按钮提示
+        /// </summary>
+        private System.Windows.Forms.ToolTip _toolTip;
+
+        /// <summary>
+        /// 清理所有正在使用的资源。
+        /// </summary>
+        /// <param name="disposing">如果应释放托管资源，为 true；否则为 false。</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _toolTip?.Dispose();
+                pictureBox_OriginalImage?.Image?.Dispose();
+                pictureBox_TemplateImage?.Image?.Dispose();
+                components?.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        #region 组件设计器生成的代码
+
+        /// <summary> 
+        /// 设计器支持所需的方法 - 不要修改
+        /// 使用代码编辑器修改此方法的内容。
+        /// </summary>
+        private void InitializeComponent()
+        {
+            this.panel_Header = new System.Windows.Forms.Panel();
+            this.label_SN = new System.Windows.Forms.Label();
+            this.button_Run = new System.Windows.Forms.Button();
+            this.pictureBox_OriginalImage = new System.Windows.Forms.PictureBox();
+            this.pictureBox_TemplateImage = new System.Windows.Forms.PictureBox();
+            this.panel_Status = new System.Windows.Forms.Panel();
+            this.label_Status = new System.Windows.Forms.Label();
+            this.panel_Header.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox_OriginalImage)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox_TemplateImage)).BeginInit();
+            this.panel_Status.SuspendLayout();
+            this.SuspendLayout();
+            // 
+            // panel_Header
+            // 
+            this.panel_Header.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(55)))));
+            this.panel_Header.Controls.Add(this.label_SN);
+            this.panel_Header.Controls.Add(this.button_Run);
+            this.panel_Header.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panel_Header.Location = new System.Drawing.Point(0, 0);
+            this.panel_Header.Name = "panel_Header";
+            this.panel_Header.Size = new System.Drawing.Size(300, 28);
+            this.panel_Header.TabIndex = 0;
+            // 
+            // label_SN
+            // 
+            this.label_SN.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.label_SN.Font = new System.Drawing.Font("微软雅黑", 8.5F);
+            this.label_SN.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(200)))), ((int)(((byte)(200)))));
+            this.label_SN.Location = new System.Drawing.Point(0, 0);
+            this.label_SN.Name = "label_SN";
+            this.label_SN.Padding = new System.Windows.Forms.Padding(5, 0, 0, 0);
+            this.label_SN.Size = new System.Drawing.Size(272, 28);
+            this.label_SN.TabIndex = 0;
+            this.label_SN.Text = "SN: -";
+            this.label_SN.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // button_Run
+            // 
+            this.button_Run.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(65)))));
+            this.button_Run.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.button_Run.Dock = System.Windows.Forms.DockStyle.Right;
+            this.button_Run.FlatAppearance.BorderSize = 0;
+            this.button_Run.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.button_Run.Font = new System.Drawing.Font("Segoe UI Symbol", 10F);
+            this.button_Run.ForeColor = System.Drawing.Color.LightGreen;
+            this.button_Run.Location = new System.Drawing.Point(272, 0);
+            this.button_Run.Name = "button_Run";
+            this.button_Run.Size = new System.Drawing.Size(28, 28);
+            this.button_Run.TabIndex = 1;
+            this.button_Run.TabStop = false;
+            this.button_Run.Text = "▶";
+            this.button_Run.UseVisualStyleBackColor = false;
+            // 
+            // pictureBox_OriginalImage
+            // 
+            this.pictureBox_OriginalImage.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
+            this.pictureBox_OriginalImage.Dock = System.Windows.Forms.DockStyle.Top;
+            this.pictureBox_OriginalImage.Location = new System.Drawing.Point(0, 28);
+            this.pictureBox_OriginalImage.Name = "pictureBox_OriginalImage";
+            this.pictureBox_OriginalImage.Size = new System.Drawing.Size(300, 200);
+            this.pictureBox_OriginalImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pictureBox_OriginalImage.TabIndex = 1;
+            this.pictureBox_OriginalImage.TabStop = false;
+            // 
+            // pictureBox_TemplateImage
+            // 
+            this.pictureBox_TemplateImage.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
+            this.pictureBox_TemplateImage.Dock = System.Windows.Forms.DockStyle.Top;
+            this.pictureBox_TemplateImage.Location = new System.Drawing.Point(0, 228);
+            this.pictureBox_TemplateImage.Name = "pictureBox_TemplateImage";
+            this.pictureBox_TemplateImage.Size = new System.Drawing.Size(300, 200);
+            this.pictureBox_TemplateImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pictureBox_TemplateImage.TabIndex = 2;
+            this.pictureBox_TemplateImage.TabStop = false;
+            // 
+            // panel_Status
+            // 
+            this.panel_Status.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(55)))));
+            this.panel_Status.Controls.Add(this.label_Status);
+            this.panel_Status.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.panel_Status.Location = new System.Drawing.Point(0, 428);
+            this.panel_Status.Name = "panel_Status";
+            this.panel_Status.Size = new System.Drawing.Size(300, 40);
+            this.panel_Status.TabIndex = 3;
+            // 
+            // label_Status
+            // 
+            this.label_Status.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.label_Status.Font = new System.Drawing.Font("微软雅黑", 9F);
+            this.label_Status.ForeColor = System.Drawing.Color.White;
+            this.label_Status.Location = new System.Drawing.Point(0, 0);
+            this.label_Status.Name = "label_Status";
+            this.label_Status.Padding = new System.Windows.Forms.Padding(5, 0, 5, 0);
+            this.label_Status.Size = new System.Drawing.Size(300, 40);
+            this.label_Status.TabIndex = 0;
+            this.label_Status.Text = "AI: 未检测  |  VVS: 未检测";
+            this.label_Status.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // DefectImageItemControl
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
+            this.Controls.Add(this.panel_Status);
+            this.Controls.Add(this.pictureBox_TemplateImage);
+            this.Controls.Add(this.pictureBox_OriginalImage);
+            this.Controls.Add(this.panel_Header);
+            this.Font = new System.Drawing.Font("微软雅黑", 9F);
+            this.Margin = new System.Windows.Forms.Padding(3);
+            this.Name = "DefectImageItemControl";
+            this.Size = new System.Drawing.Size(300, 468);
+            this.panel_Header.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox_OriginalImage)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox_TemplateImage)).EndInit();
+            this.panel_Status.ResumeLayout(false);
+            this.ResumeLayout(false);
+        }
+
+        #endregion
+
+        private System.Windows.Forms.Panel panel_Header;
+        private System.Windows.Forms.Label label_SN;
+        private System.Windows.Forms.Button button_Run;
+        private System.Windows.Forms.PictureBox pictureBox_OriginalImage;
+        private System.Windows.Forms.PictureBox pictureBox_TemplateImage;
+        private System.Windows.Forms.Panel panel_Status;
+        private System.Windows.Forms.Label label_Status;
+    }
+}
+

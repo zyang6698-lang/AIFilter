@@ -15,14 +15,9 @@ namespace DeepSightAI
         {
             InitializeComponent();
 
-
             treeNode1 = new System.Windows.Forms.TreeNode("常规配置");
             treeNode2 = new System.Windows.Forms.TreeNode("算法方案配置");
             treeNode3 = new System.Windows.Forms.TreeNode("机台配置");
-            treeNode4 = new System.Windows.Forms.TreeNode("相机配置");
-            //treeNode5 = new System.Windows.Forms.TreeNode("运动控制");
-            //treeNode6 = new System.Windows.Forms.TreeNode("IO监控");
-            //treeNode7 = new System.Windows.Forms.TreeNode("用户管理");
 
             treeNode1.Name = "节点0";
             treeNode1.Text = "常规配置";
@@ -30,23 +25,11 @@ namespace DeepSightAI
             treeNode2.Text = "算法方案配置";
             treeNode3.Name = "节点0";
             treeNode3.Text = "机台配置";
-            treeNode4.Name = "节点0";
-            treeNode4.Text = "相机配置";
-            //treeNode5.Name = "节点0";
-            //treeNode5.Text = "运动控制";
-            //treeNode6.Name = "节点0";
-            //treeNode6.Text = "IO监控";
-            //treeNode7.Name = "节点0";
-            //treeNode7.Text = "用户管理";
 
             this.tvw_setting.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
             treeNode1,
             treeNode2,
             treeNode3,
-            treeNode4,
-            //treeNode5,
-            //treeNode6,
-            //treeNode7,
             });
 
             Load += FrSetting_Load;
@@ -92,10 +75,6 @@ namespace DeepSightAI
         System.Windows.Forms.TreeNode treeNode1;
         System.Windows.Forms.TreeNode treeNode2;
         System.Windows.Forms.TreeNode treeNode3;
-        System.Windows.Forms.TreeNode treeNode4;
-        //System.Windows.Forms.TreeNode treeNode5;
-        //System.Windows.Forms.TreeNode treeNode6;
-        //System.Windows.Forms.TreeNode treeNode7;
         public void Language(int language)
         {
             if (language == 1)
@@ -113,7 +92,6 @@ namespace DeepSightAI
                 this.treeNode2.Text = "AVI";
                 this.treeNode3.Text = "AI";
             }
-
         }
 
 
@@ -149,12 +127,6 @@ namespace DeepSightAI
                 FrUserManagement.Instance.Dock = DockStyle.Fill;
                 FrUserManagement.Instance.Show();
 
-                ////测厚参数配置
-                //panel8.Controls.Clear();
-                //FrmThickness.Instance.TopLevel = false;
-                //FrmThickness.Instance.Parent = panel8;
-                //FrmThickness.Instance.Dock = DockStyle.Fill;
-                //FrmThickness.Instance.Show();
             }
             catch (Exception ex)
             {
@@ -216,20 +188,6 @@ namespace DeepSightAI
                         panel8.Visible = false;
 
                         break;
-
-                    case "用户管理":
-                    case "user":
-                        panel7.Dock = DockStyle.Fill;
-
-                        panel1.Visible = false;
-                        panel2.Visible = false;
-                        panel3.Visible = false;
-                        panel4.Visible = false;
-                        panel5.Visible = false;
-                        panel6.Visible = false;
-                        panel7.Visible = true;
-                        panel8.Visible = false;
-                        break;
                 }
             }
             catch (Exception ex)
@@ -290,81 +248,7 @@ namespace DeepSightAI
             {
                 throw;
             }
-            //try
-            //{
-            //    if (tvw_setting.SelectedNode.Text == "常规")
-            //    {
-            //        if (Machine.objAdmin.GeneralSet != 1)
-            //        {
-            //            FrMessageBox.Instance.MessageBoxShow($"当前登录用户:{Machine.objAdmin.LoginName}\r\n不具有更改常规设置权限", TipType.Warn);
-            //            return;
-            //        }
-            //        else
-            //        {
-            //            GetBaseParam();
-            //            FrCameraConfig.Instance.GetStationParam();
-            //            if (Machine.config_class.Save(Machine.sysConfig))
-            //            {
-            //                FrMessageBox.Instance.MessageBoxShow(string.Format("\r\n {0}", Machine.sysConfig.Language == 1 ? "保存参数成功！" : "Saving parameters succeeded !"), TipType.Tip);
-            //                LogTextHelper.Enable = Machine.sysConfig.LogEnable;
-            //                for (int i = 0; i < Machine.sysConfig.stationParam.Count; i++)
-            //                {
-            //                    try
-            //                    {
-            //                        Machine.masterWorkClass.stationWorkClass[i].SetBaseConfig(Machine.sysConfig.ImagePath, Machine.sysConfig.CutImagePath, Machine.sysConfig.ImageEnable,
-            //                            Machine.sysConfig.ImageSuffix, Machine.sysConfig.SharedIP, Machine.sysConfig.SharedUserName,
-            //                            Machine.sysConfig.SharedUserPwd, Machine.sysConfig.TestFlag, Machine.sysConfig.CutFlag,
-            //                            Machine.sysConfig.FiltrationFlag, Machine.sysConfig.VisualizeFlag, Machine.sysConfig.SnapImgSaveFlag,
-            //                            Machine.sysConfig.AgainSnap, Machine.sysConfig.ShowFilt, Machine.sysConfig.CutImgSaveFlag, Machine.sysConfig.SaveJsonFlag, Machine.sysConfig.ResultImgResize);
-            //                        Machine.masterWorkClass.stationWorkClass[i].SeStationConfig(Machine.sysConfig.stationParam[i]);
-            //                    }
-            //                    catch (Exception ex)
-            //                    {
-            //                        LogTextHelper.Error("Error", ex);
-            //                    }
-            //                }
-            //            }
-            //        }
-            //    }
-            //    else if (tvw_setting.SelectedNode.Text == "项目")
-            //    {
-            //        if (Machine.objAdmin.ProSet != 1)
-            //        {
-            //            FrMessageBox.Instance.MessageBoxShow($"当前登录用户:{Machine.objAdmin.LoginName}\r\n不具有更改项目权限", TipType.Warn);
-            //            return;
-            //        }
-            //        else
-            //        {
-            //            GetBaseParam();
-            //            FrCameraConfig.Instance.GetStationParam();
-            //            if (Machine.config_class.Save(Machine.sysConfig))
-            //            {
-            //                FrMessageBox.Instance.MessageBoxShow(string.Format("\r\n {0}", Machine.sysConfig.Language == 1 ? "保存参数成功！" : "Saving parameters succeeded !"), TipType.Tip);
-            //                LogTextHelper.Enable = Machine.sysConfig.LogEnable;
-            //                for (int i = 0; i < Machine.sysConfig.stationParam.Count; i++)
-            //                {
-            //                    try
-            //                    {
-            //                        Machine.masterWorkClass.stationWorkClass[i].SetBaseConfig(Machine.sysConfig.ImagePath, Machine.sysConfig.CutImagePath, Machine.sysConfig.ImageEnable,
-            //                            Machine.sysConfig.ImageSuffix, Machine.sysConfig.SharedIP, Machine.sysConfig.SharedUserName,
-            //                            Machine.sysConfig.SharedUserPwd, Machine.sysConfig.TestFlag, Machine.sysConfig.CutFlag,
-            //                            Machine.sysConfig.FiltrationFlag, Machine.sysConfig.VisualizeFlag, Machine.sysConfig.SnapImgSaveFlag,
-            //                            Machine.sysConfig.AgainSnap, Machine.sysConfig.ShowFilt, Machine.sysConfig.CutImgSaveFlag, Machine.sysConfig.SaveJsonFlag, Machine.sysConfig.ResultImgResize);
-            //                        Machine.masterWorkClass.stationWorkClass[i].SeStationConfig(Machine.sysConfig.stationParam[i]);
-            //                    }
-            //                    catch (Exception ex)
-            //                    {
-            //                        LogTextHelper.Error("Error", ex);
-            //                    }
-            //                }
-            //            }
-            //        }
-            //    }
-            //}
-            //catch (Exception ex)
-            //{
-            //    LogTextHelper.Error("Error", ex);
-            //}
+        
         }
 
         public void RestartApplication(string appDirectory, string exeName, int timeoutMs = 2000, bool isRun = false)
@@ -518,59 +402,6 @@ namespace DeepSightAI
         // 使用示例
         public string appPath = System.AppDomain.CurrentDomain.BaseDirectory + "ATS_Agent_EXE";// @"D:\DSCode\DeepSightAI\Bin\ATS_Agent_EXE";
         public string appExe = "ATS_Agent.exe";
-
-        private void GetBaseParam()
-        {
-            try
-            {
-                //Machine.sysConfig.ProjectName = FrBaseConfig.Instance.txt_ProjectName.Text;
-                //Machine.sysConfig.Line = FrBaseConfig.Instance.txt_Line.Text;
-                //Machine.sysConfig.ImagePath = FrBaseConfig.Instance.txt_ImagePath.Text;
-                //Machine.sysConfig.CutImagePath = FrBaseConfig.Instance.txt_cutPath.Text;
-                //if (FrBaseConfig.Instance.radioImg1.Checked)
-                //{
-                //    Machine.sysConfig.ImageEnable = 0;
-                //}
-                //if (FrBaseConfig.Instance.radioImg2.Checked)
-                //{
-                //    Machine.sysConfig.ImageEnable = 1;
-                //}
-                //if (FrBaseConfig.Instance.radioImg3.Checked)
-                //{
-                //    Machine.sysConfig.ImageEnable = 2;
-                //}
-
-                //Machine.sysConfig.LogDay = (int)FrBaseConfig.Instance.txt_log_day.Value;
-                //if (FrBaseConfig.Instance.radioLog1.Checked)
-                //{
-                //    Machine.sysConfig.LogEnable = true;
-                //}
-                //if (FrBaseConfig.Instance.radioLog2.Checked)
-                //{
-                //    Machine.sysConfig.LogEnable = false;
-                //}
-
-                //Machine.sysConfig.shifts.DayShift = FrBaseConfig.Instance.txt_DayShift.Value;
-                //Machine.sysConfig.shifts.NightShift = FrBaseConfig.Instance.txt_NightShift.Value;
-
-                //Machine.sysConfig.SnapImgSaveFlag = FrBaseConfig.Instance.checkBigImg.Checked;
-                //Machine.sysConfig.TestFlag = !FrBaseConfig.Instance.checkImageDetection.Checked;
-                //Machine.sysConfig.cehouFlag = FrBaseConfig.Instance.checkCeHou.Checked;
-                //Machine.sysConfig.ShowFilt = FrBaseConfig.Instance.checkFilt.Checked;
-                //Machine.sysConfig.ImageSuffix = FrBaseConfig.Instance.cmb_ImageSuffix.SelectedItem.ToString();
-                //Machine.sysConfig.CutImgSaveFlag = FrBaseConfig.Instance.checkCutImgSaveFlag.Checked;
-                //Machine.sysConfig.SaveJsonFlag = FrBaseConfig.Instance.checkSaveJsonFlag.Checked;
-
-                //Machine.sysConfig.CameraView = (double)FrBaseConfig.Instance.txt_CameraView.Value;
-                //Machine.sysConfig.ImageWidth = (int)FrBaseConfig.Instance.txt_ImageWidth.Value;
-                //Machine.sysConfig.ImageHeight = (int)FrBaseConfig.Instance.txt_ImageHeight.Value;
-                //Machine.sysConfig.NgMeters = (double)FrBaseConfig.Instance.txt_NgMeters.Value;
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error("Error", ex);
-            }
-        }
 
         private void FrSetting_Activated(object sender, EventArgs e)
         {

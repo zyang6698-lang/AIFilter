@@ -1,13 +1,9 @@
-﻿using DeepSightModel;
-using DeepSightTool;
-using System;
+﻿using System;
 using System.Drawing;
-using System.IO;
 using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Linq;
 using DeepSightDB;
-using DeepSightDisplay;
 
 namespace DeepSightAI
 {
@@ -17,7 +13,7 @@ namespace DeepSightAI
         private List<DetectInfo> _allHeatPoints;
         private List<DetectInfo> _filteredHeatPoints; // For filtered data
         private int _currentPage = 1;
-        private const int PageSize = 5; //
+        private const int PageSize = 5;
         private int _totalPages;
         private string _aiFilter = "All";
         private string _vvsFilter = "All";
@@ -25,7 +21,7 @@ namespace DeepSightAI
         // 存储原始的DefectReviewItem列表，用于按SN分组检查VVS状态
         private List<DefectReviewItem> _sourceItems;
         // 记录已经触发过完成事件的SN（避免重复触发）
-        private HashSet<string> _completedSnSet = new HashSet<string>();
+        private readonly HashSet<string> _completedSnSet = new HashSet<string>();
 
         /// <summary>
         /// 当需要切换到下一行记录时触发（按Tab键时）
@@ -41,6 +37,11 @@ namespace DeepSightAI
         /// 当VVS状态改变时触发
         /// </summary>
         public event EventHandler VvsStatusChanged;
+
+        /// <summary>
+        /// 当请求单图测试时触发
+        /// </summary>
+        public event EventHandler<SingleImageTestEventArgs> SingleImageTestRequested;
 
         public DefectDetailControl()
         {
@@ -214,49 +215,37 @@ namespace DeepSightAI
 
             var control = flowLayoutPanel_DefectImages.Controls[_selectedIndex];
 
-            if (control is Panel panel)
+            if (control is DefectImageItemControl itemControl)
             {
-                var imageContainer = panel.Controls.OfType<Panel>().FirstOrDefault();
-                if (imageContainer == null) return;
+                var heatPoint = itemControl.HeatPoint;
+                if (heatPoint == null) return;
 
-                var topPictureBox = imageContainer.Controls.OfType<PictureBox>().FirstOrDefault();
-                if (topPictureBox != null)
+                if (isAiTag)
                 {
-                    var label = topPictureBox.Controls.OfType<Label>().FirstOrDefault();
-                    if (label != null)
-                    {
-                        var heatPoint = label.Tag as DetectInfo;
-                        if (heatPoint != null)
-                        {
-                            if (isAiTag)
-                            {
-                                // AI Status is not editable
-                            }
-                            else
-                            {
-                                // VVSStatus: 0 未设置 / 1 OK / 2 NG
-                                if (tag == "VVS_OK")
-                                    heatPoint.VVSStatus = 1;
-                                else if (tag == "VVS_NG")
-                                    heatPoint.VVSStatus = 2;
-                                else if (tag == "VVS_NotSet")
-                                    heatPoint.VVSStatus = 0;
-
-                                // 检查是否所有缺陷点都已完成VVS复判
-                                CheckAllVvsStatusSet();
-                                
-                                // 触发VVS状态改变事件，用于更新左下角复判详情
-                                VvsStatusChanged?.Invoke(this, EventArgs.Empty);
-                            }
-
-                            label.Text = $"AI: {GetStatusText(heatPoint.AIStatus)}\n" +
-                                         $"VVS: {GetStatusText(heatPoint.VVSStatus)}";
-
-                            // Update border color after tagging
-                            UpdatePanelAppearance(panel, true);
-                        }
-                    }
+                    // AI Status is not editable
                 }
+                else
+                {
+                    // VVSStatus: 0 未设置 / 1 OK / 2 NG
+                    if (tag == "VVS_OK")
+                        heatPoint.VVSStatus = 1;
+                    else if (tag == "VVS_NG")
+                        heatPoint.VVSStatus = 2;
+                    else if (tag == "VVS_NotSet")
+                        heatPoint.VVSStatus = 0;
+
+                    // 检查是否所有缺陷点都已完成VVS复判
+                    CheckAllVvsStatusSet();
+
+                    // 触发VVS状态改变事件，用于更新左下角复判详情
+                    VvsStatusChanged?.Invoke(this, EventArgs.Empty);
+                }
+
+                // 更新状态显示
+                itemControl.UpdateStatusLabel();
+
+                // 更新边框颜色
+                itemControl.IsSelected = true;
             }
         }
 
@@ -303,21 +292,6 @@ namespace DeepSightAI
             }
         }
 
-        /// <summary>
-        /// 将状态码转换为显示文本
-        /// </summary>
-        private string GetStatusText(int status)
-        {
-            switch (status)
-            {
-                case 0: return "未检测";
-                case 1: return "OK";
-                case 2: return "NG";
-                case 3: return "异常";
-                default: return status.ToString();
-            }
-        }
-
         public void DisplayDefectDetails(DefectReviewItem item)
         {
             // 单个item显示，包装成列表调用
@@ -333,12 +307,17 @@ namespace DeepSightAI
             _sourceItems = items;
             _completedSnSet.Clear();
 
-            // 合并所有HeatPoints
+            // 合并所有HeatPoints，并设置DisplaySN
             _allHeatPoints = new List<DetectInfo>();
             foreach (var item in items)
             {
                 if (item.HeatPoints != null)
                 {
+                    // 为每个缺陷点设置所属的SN和Side
+                    foreach (var hp in item.HeatPoints)
+                    {
+                        hp.DisplaySN = $"{item.SerialNumber} ({item.Side})";
+                    }
                     _allHeatPoints.AddRange(item.HeatPoints);
                 }
             }
@@ -384,10 +363,13 @@ namespace DeepSightAI
             _currentPage = page;
             var heatPointsToShow = _filteredHeatPoints.Skip((_currentPage - 1) * PageSize).Take(PageSize).ToList();
 
+            // 计算控件高度
+            int itemHeight = flowLayoutPanel_DefectImages.ClientSize.Height - flowLayoutPanel_DefectImages.Padding.Vertical - 6;
+
             for (int i = 0; i < heatPointsToShow.Count; i++)
             {
-                var panel = CreateDefectImagePanel(heatPointsToShow[i], i);
-                flowLayoutPanel_DefectImages.Controls.Add(panel);
+                var itemControl = CreateDefectImageItemControl(heatPointsToShow[i], i, itemHeight);
+                flowLayoutPanel_DefectImages.Controls.Add(itemControl);
             }
 
             if (flowLayoutPanel_DefectImages.Controls.Count > 0)
@@ -396,6 +378,34 @@ namespace DeepSightAI
             }
 
             UpdatePaginationButtons();
+        }
+
+        /// <summary>
+        /// 创建缺陷图片项控件
+        /// </summary>
+        private DefectImageItemControl CreateDefectImageItemControl(DetectInfo heatPoint, int index, int height)
+        {
+            var itemControl = new DefectImageItemControl
+            {
+                Width = 300,
+                Height = height,
+                Margin = new Padding(3),
+                HeatPoint = heatPoint
+            };
+
+            // 调整图片高度
+            itemControl.AdjustImageHeight(height);
+
+            // 绑定点击事件
+            itemControl.ItemClicked += (s, e) => SelectImage(index);
+
+            // 绑定运行测试事件
+            itemControl.RunTestRequested += (s, e) =>
+            {
+                SingleImageTestRequested?.Invoke(this, e);
+            };
+
+            return itemControl;
         }
 
         private void UpdatePaginationButtons()
@@ -413,65 +423,22 @@ namespace DeepSightAI
             // Deselect old
             if (_selectedIndex >= 0 && _selectedIndex < flowLayoutPanel_DefectImages.Controls.Count)
             {
-                if (flowLayoutPanel_DefectImages.Controls[_selectedIndex] is Panel oldP)
+                if (flowLayoutPanel_DefectImages.Controls[_selectedIndex] is DefectImageItemControl oldItem)
                 {
-                    UpdatePanelAppearance(oldP, false);
+                    oldItem.IsSelected = false;
                 }
             }
 
             // Select new
             _selectedIndex = index;
-            if (flowLayoutPanel_DefectImages.Controls[_selectedIndex] is Panel newP)
+            if (flowLayoutPanel_DefectImages.Controls[_selectedIndex] is DefectImageItemControl newItem)
             {
-                UpdatePanelAppearance(newP, true);
-                flowLayoutPanel_DefectImages.ScrollControlIntoView(newP);
-                newP.Focus();
+                newItem.IsSelected = true;
+                flowLayoutPanel_DefectImages.ScrollControlIntoView(newItem);
+                // 将焦点设置到UserControl本身，确保ProcessCmdKey能正确处理键盘事件
+                this.Focus();
             }
         }
-
-        private void UpdatePanelAppearance(Panel panel, bool isSelected)
-        {
-            var imageContainer = panel.Controls.OfType<Panel>().FirstOrDefault();
-            if (imageContainer == null) return;
-
-            var topPictureBox = imageContainer.Controls.OfType<PictureBox>().FirstOrDefault();
-            if (topPictureBox != null)
-            {
-                var label = topPictureBox.Controls.OfType<Label>().FirstOrDefault();
-                if (label != null && label.Tag is DetectInfo heatPoint)
-                {
-                    Color borderColor;
-
-                    if (isSelected)
-                    {
-                        // 选中状态：使用醒目的高亮颜色（亮青色）
-                        borderColor = Color.FromArgb(0, 200, 255);
-                        panel.Padding = new Padding(6);
-                    }
-                    else
-                    {
-                        // 未选中状态：根据VVS状态显示边框颜色
-                        // VVSStatus: 0 未运行 / 1 OK / 2 NG
-                        switch (heatPoint.VVSStatus)
-                        {
-                            case 1: // OK
-                                borderColor = Color.Green;
-                                break;
-                            case 2: // NG
-                                borderColor = Color.Red;
-                                break;
-                            default: // 0 未运行 或其他
-                                borderColor = Color.FromArgb(60, 60, 60);
-                                break;
-                        }
-                        panel.Padding = new Padding(2);
-                    }
-
-                    panel.BackColor = borderColor;
-                }
-            }
-        }
-
         private void SelectNextImage()
         {
             if (_filteredHeatPoints == null || _filteredHeatPoints.Count == 0) return;
@@ -504,118 +471,6 @@ namespace DeepSightAI
                 LoadDefectsPage(prevPage);
             }
             SelectImage(prevLocalIndex);
-        }
-
-        private Panel CreateDefectImagePanel(DetectInfo heatPoint, int index)
-        {
-            var panel = new Panel
-            {
-                Width = 300,
-                // Adjust height to fit the container, accounting for margins
-                Height = flowLayoutPanel_DefectImages.ClientSize.Height - flowLayoutPanel_DefectImages.Padding.Vertical - 6, // 6 for top/bottom margin
-                Margin = new Padding(3),
-                BackColor = Color.FromArgb(37, 37, 38)
-            };
-            panel.Click += (s, e) => SelectImage(index);
-
-            // Main container for the two images
-            var imageContainer = new Panel { Dock = DockStyle.Fill };
-            panel.Controls.Add(imageContainer);
-
-            // Top PictureBox for the original image
-            var topPictureBox = new PictureBox
-            {
-                Dock = DockStyle.Top,
-                Height = imageContainer.Height / 2,
-                SizeMode = PictureBoxSizeMode.Zoom,
-                BackColor = Color.FromArgb(45, 45, 48)
-            };
-            topPictureBox.Click += (s, e) => SelectImage(index);
-            imageContainer.Controls.Add(topPictureBox);
-
-            // Bottom PictureBox for the template image
-            var bottomPictureBox = new PictureBox
-            {
-                Dock = DockStyle.Bottom,
-                Height = imageContainer.Height / 2,
-                SizeMode = PictureBoxSizeMode.Zoom,
-                BackColor = Color.FromArgb(45, 45, 48)
-            };
-            bottomPictureBox.Click += (s, e) => SelectImage(index);
-            imageContainer.Controls.Add(bottomPictureBox);
-
-            // Load original image
-            if (!string.IsNullOrEmpty(heatPoint.ImagePath) && File.Exists(heatPoint.ImagePath))
-            {
-                try
-                {
-                    using (var img = Image.FromFile(heatPoint.ImagePath))
-                    {
-                        // 绘制带缺陷框和缺陷名称的图片
-                        topPictureBox.Image =ImageHelper.DrawDefectBoxOnImage(img, heatPoint);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    LogTextHelper.Error($"加载图片失败: {heatPoint.ImagePath}, {ex.Message}");
-                }
-
-                // Load template image
-                try
-                {
-                    string dir = Path.GetDirectoryName(heatPoint.ImagePath);
-                    string filename = Path.GetFileNameWithoutExtension(heatPoint.ImagePath);
-                    string ext = Path.GetExtension(heatPoint.ImagePath);
-
-                    // 新逻辑：在同目录中查找包含原图名、包含"template"并且扩展名相同的文件
-                    var candidates = Directory.EnumerateFiles(dir)
-                        .Where(p => string.Equals(Path.GetExtension(p), ext, StringComparison.OrdinalIgnoreCase))
-                        .Where(p =>
-                        {
-                            var name = Path.GetFileNameWithoutExtension(p);
-                            return name.IndexOf(filename, StringComparison.OrdinalIgnoreCase) >= 0
-                                   && name.IndexOf("template", StringComparison.OrdinalIgnoreCase) >= 0;
-                        })
-                        .ToList();
-
-                    string templatePath = candidates.FirstOrDefault();
-
-                    if (!string.IsNullOrEmpty(templatePath) && File.Exists(templatePath))
-                    {
-                        using (var img = Image.FromFile(templatePath))
-                        {
-                            bottomPictureBox.Image = new Bitmap(img);
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    LogTextHelper.Error($"加载模板图片失败: {ex.Message}");
-                }
-            }
-
-            // 信息显示
-            var infoLabel = new Label
-            {
-                Text = $"AI: {GetStatusText(heatPoint.AIStatus)}\n" +
-                       $"VVS: {GetStatusText(heatPoint.VVSStatus)}",
-                AutoSize = false,
-                Dock = DockStyle.Bottom,
-                Height = 40,
-                ForeColor = Color.White,
-                BackColor = Color.FromArgb(128, 0, 0, 0),
-                Font = new Font("微软雅黑", 9F),
-                TextAlign = ContentAlignment.MiddleRight,
-                Padding = new Padding(0, 0, 5, 0)
-            };
-            infoLabel.Tag = heatPoint;
-            infoLabel.Click += (s, e) => SelectImage(index);
-
-            topPictureBox.Controls.Add(infoLabel);
-
-            UpdatePanelAppearance(panel, false); // Set initial appearance
-
-            return panel;
         }
 
         public void ClearDetails()
@@ -672,5 +527,16 @@ namespace DeepSightAI
         /// NG数量
         /// </summary>
         public int NgCount { get; set; }
+    }
+
+    /// <summary>
+    /// 单图测试事件参数
+    /// </summary>
+    public class SingleImageTestEventArgs : EventArgs
+    {
+        /// <summary>
+        /// 要测试的缺陷点信息
+        /// </summary>
+        public DetectInfo HeatPoint { get; set; }
     }
 }
