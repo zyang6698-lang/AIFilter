@@ -140,7 +140,6 @@ namespace DeepSightAI.SettingPages
             {
                 FrHWConfig.Instance.txt_station_count.Value = Machine.aviconfig.WatchPaths.Count;
                 FrHWConfig.Instance.txt_max_wait_time.Text = Machine.aviconfig.MaxWaitTime.ToString(); ;
-                FrHWConfig.Instance.txt_LDB_endpoint.Text = Machine.aviconfig.LDBEndpoint;
                 FrHWConfig.Instance.txt_get_infer_result_interval.Text = Machine.aviconfig.GetInferResultInterval.ToString();
                 FrHWConfig.Instance.txt_infer_request_timeout.Text = Machine.aviconfig.InferRequestTimeout.ToString();
                 FrHWConfig.Instance.txt_get_infer_result_timeout.Text = Machine.aviconfig.GetInferResultTimeout.ToString();
@@ -175,7 +174,6 @@ namespace DeepSightAI.SettingPages
                 Machine.aviconfig.WatchPaths.Clear();
                 //公共参数
                 Machine.aviconfig.MaxWaitTime = Convert.ToInt32(FrHWConfig.Instance.txt_max_wait_time.Text);
-                Machine.aviconfig.LDBEndpoint = FrHWConfig.Instance.txt_LDB_endpoint.Text;
                 Machine.aviconfig.GetInferResultInterval = Convert.ToInt32(FrHWConfig.Instance.txt_get_infer_result_interval.Text);
                 Machine.aviconfig.InferRequestTimeout = Convert.ToInt32(FrHWConfig.Instance.txt_infer_request_timeout.Text);
                 Machine.aviconfig.GetInferResultTimeout = Convert.ToInt32(FrHWConfig.Instance.txt_get_infer_result_timeout.Text);

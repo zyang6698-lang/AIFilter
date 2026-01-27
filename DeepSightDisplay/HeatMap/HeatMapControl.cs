@@ -13,6 +13,11 @@ namespace DeepSightDisplay.HeatMap
         public Bitmap _backgroundImage;
         public Bitmap _heatMapOverlay;
 
+        /// <summary>
+        /// Lock object for thread-safe access to bitmap objects
+        /// </summary>
+        public readonly object BitmapLock = new object();
+
         private List<HeatPointRenderer> _heatPoints;
         private HeatMapRenderer _renderer;
         private Bitmap _currentHeatMap;
@@ -63,30 +68,36 @@ namespace DeepSightDisplay.HeatMap
         {
             if (Width == 0 || Height == 0) return;
 
-            _heatMapOverlay?.Dispose();
-            _heatMapOverlay = _renderer.GenerateHeatMapOverlay(_heatPoints,BackgroundImage.Size);
-           
+            lock (BitmapLock)
+            {
+                _heatMapOverlay?.Dispose();
+                _heatMapOverlay = _renderer.GenerateHeatMapOverlay(_heatPoints, BackgroundImage.Size);
+            }
+
             Invalidate();
         }
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
-            if (_backgroundImage != null)
+            lock (BitmapLock)
             {
-                e.Graphics.DrawImage(_backgroundImage, ClientRectangle);
-            }
-            else
-            {
-                using (var brush = new SolidBrush(BackColor))
-                    e.Graphics.FillRectangle(brush, ClientRectangle);
-            }
+                if (_backgroundImage != null)
+                {
+                    e.Graphics.DrawImage(_backgroundImage, ClientRectangle);
+                }
+                else
+                {
+                    using (var brush = new SolidBrush(BackColor))
+                        e.Graphics.FillRectangle(brush, ClientRectangle);
+                }
 
-            if (_heatMapOverlay != null)
-            {
-                e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBilinear;
-                e.Graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+                if (_heatMapOverlay != null)
+                {
+                    e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBilinear;
+                    e.Graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
 
-                e.Graphics.DrawImage(_heatMapOverlay, ClientRectangle);
+                    e.Graphics.DrawImage(_heatMapOverlay, ClientRectangle);
+                }
             }
 
             // 绘制边框

@@ -49,6 +49,11 @@ namespace DeepSightModel
         /// 测试任务 ID
         /// </summary>
         public string TestTaskId { get; set; }
+
+        /// <summary>
+        /// 是否为单图测试任务
+        /// </summary>
+        public bool IsSingleImageTest { get; set; } = false;
         #endregion
     }
 

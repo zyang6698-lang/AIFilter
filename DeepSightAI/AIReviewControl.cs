@@ -68,6 +68,9 @@ namespace DeepSightAI
             // 订阅VVS状态改变事件 - 用于更新左下角复判详情显示
             defectDetailControl1.VvsStatusChanged += DefectDetailControl_VvsStatusChanged;
 
+            // 订阅单图测试事件
+            defectDetailControl1.SingleImageTestRequested += DefectDetailControl_SingleImageTestRequested;
+
             // 订阅TreeView事件
             treeView_Lots.AfterSelect += TreeView_Lots_AfterSelect;
             treeView_Lots.BeforeExpand += TreeView_Lots_BeforeExpand;
@@ -379,6 +382,114 @@ namespace DeepSightAI
             {
                 UpdateVvsStatusSummary();
                 RefreshReviewDetailDisplay();
+            }
+        }
+
+        /// <summary>
+        /// 当请求单图测试时触发
+        /// </summary>
+        private async void DefectDetailControl_SingleImageTestRequested(object sender, SingleImageTestEventArgs e)
+        {
+            if (e?.HeatPoint == null)
+                return;
+
+            var service = Machine.master?.workClass?.ValidationTestService;
+            if (service == null)
+            {
+                MessageBox.Show("模型验证测试服务未初始化。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // 查找当前缺陷所属的DefectReviewItem以获取料号、机台等信息
+            var sourceItem = FindSourceItemForHeatPoint(e.HeatPoint);
+            if (sourceItem == null)
+            {
+                MessageBox.Show("无法确定缺陷所属的记录信息，无法进行测试。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            try
+            {
+                this.Enabled = false;
+                this.Cursor = Cursors.WaitCursor;
+
+                var result = await service.RunSingleImageTestAsync(
+                    e.HeatPoint,
+                    sourceItem.ProductSerial,
+                    sourceItem.MachineId,
+                    sourceItem.Side,
+                    timeout: 30);
+
+                if (result.Success)
+                {
+                    string originalStatusText = GetAIStatusText(result.OriginalAIStatus);
+                    string newStatusText = GetAIStatusText(result.NewAIStatus);
+                    string consistentText = result.IsConsistent ? "✓ 一致" : "✗ 不一致";
+
+                    MessageBox.Show(
+                        $"单图测试完成！\n\n" +
+                        $"原始AI结果: {originalStatusText}\n" +
+                        $"新AI结果: {newStatusText}\n" +
+                        $"比对结果: {consistentText}",
+                        "单图测试结果",
+                        MessageBoxButtons.OK,
+                        result.IsConsistent ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+                }
+                else
+                {
+                    MessageBox.Show(
+                        $"单图测试失败：{result.ErrorMessage}",
+                        "测试失败",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"单图测试异常: {ex}");
+                MessageBox.Show($"单图测试异常: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                this.Enabled = true;
+                this.Cursor = Cursors.Default;
+            }
+        }
+
+        /// <summary>
+        /// 根据缺陷点查找其所属的DefectReviewItem
+        /// </summary>
+        private DefectReviewItem FindSourceItemForHeatPoint(DeepSightDB.DetectInfo heatPoint)
+        {
+            // 先在当前显示的列表中查找
+            foreach (var item in _defectItems)
+            {
+                if (item.HeatPoints != null && item.HeatPoints.Contains(heatPoint))
+                    return item;
+            }
+
+            // 如果没找到，在全部数据中查找
+            foreach (var item in _allDefectItems)
+            {
+                if (item.HeatPoints != null && item.HeatPoints.Contains(heatPoint))
+                    return item;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 获取AI状态的显示文本
+        /// </summary>
+        private string GetAIStatusText(int status)
+        {
+            switch (status)
+            {
+                case 0: return "未检测";
+                case 1: return "OK";
+                case 2: return "NG";
+                case 3: return "异常";
+                default: return status.ToString();
             }
         }
 

@@ -103,15 +103,41 @@ namespace DeepSightDisplay.HeatMap
             _heatPoints.AddRange(heatPoints);
             LogTextHelper.Info($"热力点位数：{_heatPoints.Count}");
 
+            // Clone bitmaps on UI thread before passing to background thread to avoid GDI+ threading issues
+            Bitmap backgroundClone = null;
+            Bitmap overlayClone = null;
+
+            HeatMapControl.SetHeatPoints(_heatPoints);
+
+            lock (HeatMapControl.BitmapLock)
+            {
+                if (HeatMapControl.BackgroundImage != null)
+                {
+                    backgroundClone = (Bitmap)HeatMapControl.BackgroundImage.Clone();
+                }
+                if (HeatMapControl._heatMapOverlay != null)
+                {
+                    overlayClone = (Bitmap)HeatMapControl._heatMapOverlay.Clone();
+                }
+            }
+
             await Task.Run(() =>
             {
                 Stopwatch sw = new Stopwatch();
                 sw.Start();
-                HeatMapControl.SetHeatPoints(_heatPoints);
-                if (HeatMapControl._heatMapOverlay != null)
+                try
                 {
-                    var finalImage = ImageHelper.CombineHeatMapWithBackground(HeatMapControl.BackgroundImage, HeatMapControl._heatMapOverlay);
-                    updateDisplayAction(BitmapConverter.ToMat(finalImage));
+                    if (overlayClone != null)
+                    {
+                        var finalImage = ImageHelper.CombineHeatMapWithBackground(backgroundClone, overlayClone);
+                        updateDisplayAction(BitmapConverter.ToMat(finalImage));
+                        finalImage?.Dispose();
+                    }
+                }
+                finally
+                {
+                    backgroundClone?.Dispose();
+                    overlayClone?.Dispose();
                 }
                 sw.Stop();
                 LogTextHelper.Info($"COST :{sw.ElapsedMilliseconds} ms");

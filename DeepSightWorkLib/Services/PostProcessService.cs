@@ -240,10 +240,17 @@ namespace DeepSightWorkLib.Services
                 // 解析推理结果
                 var inferResults = ExtractInferResults(rawJsonResult);
 
-                // 调用验证测试服务处理结果比对
-                _validationTestService.ProcessValidationTestResult(vBModel, inferResults);
-
-                LogTextHelper.Info($"验证测试结果处理完成: {vBModel.SN}_{vBModel.Side}");
+                // 根据是否为单图测试，调用不同的处理方法
+                if (vBModel.IsSingleImageTest)
+                {
+                    _validationTestService.ProcessSingleImageTestResult(vBModel, inferResults);
+                    LogTextHelper.Info($"单图测试结果处理完成: {vBModel.SN}");
+                }
+                else
+                {
+                    _validationTestService.ProcessValidationTestResult(vBModel, inferResults);
+                    LogTextHelper.Info($"验证测试结果处理完成: {vBModel.SN}_{vBModel.Side}");
+                }
             }
             catch (Exception ex)
             {

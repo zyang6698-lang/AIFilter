@@ -42,8 +42,6 @@
             this.label7 = new System.Windows.Forms.Label();
             this.txt_severIP = new System.Windows.Forms.TextBox();
             this.label8 = new System.Windows.Forms.Label();
-            this.btnClearDatabase = new System.Windows.Forms.Button();
-            this.btnZipPic = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -51,8 +49,6 @@
             // 
             resources.ApplyResources(this.panel1, "panel1");
             this.panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.panel1.Controls.Add(this.btnClearDatabase);
-            this.panel1.Controls.Add(this.btnZipPic);
             this.panel1.Controls.Add(this.txt_AgentShutdownTimeout);
             this.panel1.Controls.Add(this.label22);
             this.panel1.Controls.Add(this.txt_MaxDefectCount);
@@ -134,30 +130,6 @@
             this.label8.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.label8.Name = "label8";
             // 
-            // btnClearDatabase
-            // 
-            this.btnClearDatabase.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
-            this.btnClearDatabase.FlatAppearance.BorderSize = 0;
-            this.btnClearDatabase.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
-            this.btnClearDatabase.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
-            this.btnClearDatabase.ForeColor = System.Drawing.Color.White;
-            resources.ApplyResources(this.btnClearDatabase, "btnClearDatabase");
-            this.btnClearDatabase.Name = "btnClearDatabase";
-            this.btnClearDatabase.UseVisualStyleBackColor = false;
-            this.btnClearDatabase.Click += new System.EventHandler(this.btnClearDatabase_Click);
-            // 
-            // btnZipPic
-            // 
-            this.btnZipPic.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
-            this.btnZipPic.FlatAppearance.BorderSize = 0;
-            this.btnZipPic.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
-            this.btnZipPic.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
-            this.btnZipPic.ForeColor = System.Drawing.Color.White;
-            resources.ApplyResources(this.btnZipPic, "btnZipPic");
-            this.btnZipPic.Name = "btnZipPic";
-            this.btnZipPic.UseVisualStyleBackColor = false;
-            this.btnZipPic.Click += new System.EventHandler(this.btnZipPic_Click);
-            // 
             // FrBaseConfig
             // 
             resources.ApplyResources(this, "$this");
@@ -189,7 +161,5 @@
         internal System.Windows.Forms.Label label21;
         internal System.Windows.Forms.TextBox txt_AgentShutdownTimeout;
         internal System.Windows.Forms.Label label22;
-        public System.Windows.Forms.Button btnClearDatabase;
-        public System.Windows.Forms.Button btnZipPic;
     }
 }

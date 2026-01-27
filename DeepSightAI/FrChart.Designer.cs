@@ -48,7 +48,7 @@
             this.tabPage9.Name = "tabPage9";
             this.tabPage9.Size = new System.Drawing.Size(1373, 792);
             this.tabPage9.TabIndex = 5;
-            this.tabPage9.Text = "报表展示";
+            this.tabPage9.Text = "Debug功能";
             this.tabPage9.UseVisualStyleBackColor = true;
             // 
             // analyticsControl1

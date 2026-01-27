@@ -660,6 +660,283 @@ namespace DeepSightWorkLib.Services
 
         #endregion
 
+        #region 单图测试
+
+        /// <summary>
+        /// 单图测试结果
+        /// </summary>
+        public class SingleImageTestResult
+        {
+            public bool Success { get; set; }
+            public string ErrorMessage { get; set; }
+            public int OriginalAIStatus { get; set; }
+            public int NewAIStatus { get; set; }
+            public bool IsConsistent => OriginalAIStatus == NewAIStatus;
+            public string ImagePath { get; set; }
+        }
+
+        // 单图测试的等待结果
+        private readonly ConcurrentDictionary<string, TaskCompletionSource<SingleImageTestResult>> _singleImageTestResults
+            = new ConcurrentDictionary<string, TaskCompletionSource<SingleImageTestResult>>();
+
+        /// <summary>
+        /// 运行单图测试
+        /// </summary>
+        /// <param name="detectInfo">缺陷信息</param>
+        /// <param name="productSerial">料号（用于确定推理方案）</param>
+        /// <param name="machineId">机台ID</param>
+        /// <param name="side">面别（A/B）</param>
+        /// <param name="timeout">超时时间（秒），默认30秒</param>
+        public async Task<SingleImageTestResult> RunSingleImageTestAsync(
+            DetectInfo detectInfo,
+            string productSerial,
+            string machineId,
+            string side,
+            int timeout = 30)
+        {
+            if (detectInfo == null || string.IsNullOrEmpty(detectInfo.ImagePath))
+            {
+                return new SingleImageTestResult
+                {
+                    Success = false,
+                    ErrorMessage = "缺陷信息或图片路径为空"
+                };
+            }
+
+            // 生成唯一的测试Key
+            var testKey = $"SINGLE_{Guid.NewGuid():N}";
+
+            try
+            {
+                // 创建任务完成源用于等待结果
+                var tcs = new TaskCompletionSource<SingleImageTestResult>();
+                _singleImageTestResults[testKey] = tcs;
+
+                // 构建VBModel
+                var vbModel = BuildSingleImageVBModel(testKey, detectInfo, productSerial, machineId, side);
+                if (vbModel == null)
+                {
+                    return new SingleImageTestResult
+                    {
+                        Success = false,
+                        ErrorMessage = "构建推理模型失败",
+                        ImagePath = detectInfo.ImagePath
+                    };
+                }
+
+                // 加载图片
+                var mat = Cv2.ImRead(detectInfo.ImagePath);
+                if (mat == null || mat.Empty())
+                {
+                    return new SingleImageTestResult
+                    {
+                        Success = false,
+                        ErrorMessage = "加载图片失败",
+                        ImagePath = detectInfo.ImagePath
+                    };
+                }
+
+                vbModel.Mats = new List<Mat> { mat };
+
+                // 入队到推理队列
+                _queueManager.AviQueue.Enqueue(vbModel);
+                LogTextHelper.Info($"单图测试入队: {testKey}, 图片: {detectInfo.ImagePath}");
+
+                // 等待结果，带超时
+                var timeoutTask = Task.Delay(TimeSpan.FromSeconds(timeout));
+                var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
+
+                if (completedTask == timeoutTask)
+                {
+                    return new SingleImageTestResult
+                    {
+                        Success = false,
+                        ErrorMessage = "测试超时",
+                        ImagePath = detectInfo.ImagePath,
+                        OriginalAIStatus = detectInfo.AIStatus
+                    };
+                }
+
+                return await tcs.Task;
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"单图测试异常: {testKey}, {ex}");
+                return new SingleImageTestResult
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message,
+                    ImagePath = detectInfo.ImagePath
+                };
+            }
+            finally
+            {
+                _singleImageTestResults.TryRemove(testKey, out _);
+            }
+        }
+
+        /// <summary>
+        /// 构建单图测试用的VBModel
+        /// </summary>
+        private VBModel BuildSingleImageVBModel(string testKey, DetectInfo detectInfo, string productSerial, string machineId, string side)
+        {
+            // 从配置中查找料号对应的方案和流程
+            var solutionFlow = _solutionConfig?.solus?.FirstOrDefault(o => o.ProductSerial == productSerial)
+                ?? _solutionConfig?.solus?.FirstOrDefault(o => o.ProductSerial?.ToUpper() == "DEFAULT");
+
+            string solution = side == "A" ? (solutionFlow?.Asolution ?? "default") : (solutionFlow?.Bsolution ?? "default");
+            string flow = side == "A" ? (solutionFlow?.Aflow ?? "1") : (solutionFlow?.Bflow ?? "1");
+
+            // 构建ROI信息
+            int roiX = detectInfo.Width > 0 ? detectInfo.RoiX : detectInfo.OriginRoiX;
+            int roiY = detectInfo.Width > 0 ? detectInfo.RoiY : detectInfo.OriginRoiY;
+            int roiW = detectInfo.Width > 0 ? detectInfo.Width : detectInfo.OriginWidth;
+            int roiH = detectInfo.Width > 0 ? detectInfo.Height : detectInfo.OriginHeight;
+
+            // 提取Minio路径
+            string defectMinioPath = ExtractMinioPath(detectInfo.ImagePath);
+            string templateMinioPath = BuildTemplateMinioPath(defectMinioPath);
+            string tempImgPath = BuildTemplateImagePath(productSerial, machineId, side);
+
+            var vbInfo = new RootVBInfo
+            {
+                MessageType = "visionbuilder_inference",
+                paramsData = new ParamsData
+                {
+                    InferResUuid = Guid.NewGuid().ToString(),
+                    InferWholeData = new InferWholeData
+                    {
+                        ImageInferParams = new ImageInferParams
+                        {
+                            PipelineName = solution,
+                            NodeParams = new List<NodeParam>
+                            {
+                                new NodeParam { NodeName = flow, height = 200, width = 200 }
+                            }
+                        },
+                        ImageData = new ImageData
+                        {
+                            DataType = "minio",
+                            DataValue = new DataValue { InferImageGroup = new List<InferImageGroup>() }
+                        },
+                        OtherInfos = new Others
+                        {
+                            imageminio = new ImageMminio
+                            {
+                                access_key_id = "deepiobjectdata",
+                                bucket = "deepiresults",
+                                endpoint_url = _minioIP,
+                                secret_key = "deepiobject2019",
+                                secret_port = _minioPort
+                            }
+                        }
+                    }
+                }
+            };
+
+            // 添加图片信息
+            var group = new InferImageGroup
+            {
+                GroupUuid = Guid.NewGuid().ToString(),
+                GroupInfos = new List<GroupInfo>
+                {
+                    new GroupInfo
+                    {
+                        ImagePath = defectMinioPath,
+                        ImageUuid = Guid.NewGuid().ToString(),
+                        ImageType = "defect"
+                    },
+                    new GroupInfo
+                    {
+                        ImagePath = templateMinioPath,
+                        ImageUuid = Guid.NewGuid().ToString(),
+                        ImageType = "template"
+                    }
+                },
+                MachineTemplateInfo = new MachineTemplateInfo
+                {
+                    MachineName = machineId,
+                    product = productSerial,
+                    Side = side
+                },
+                ImgROI = new List<int> { roiX, roiY, roiW, roiH },
+                DefectCode = detectInfo.DefectType ?? "",
+                TempImgPath = tempImgPath,
+                inspectDetails = new InspectDetails { InferRois = new List<InferRoi>() }
+            };
+            vbInfo.paramsData.InferWholeData.ImageData.DataValue.InferImageGroup.Add(group);
+
+            return new VBModel
+            {
+                Key = testKey,
+                SN = testKey,
+                Side = side,
+                DefectIndex = new List<int> { 0 },
+                PcsIndex = new List<int> { 0 },
+                ImageKeys = new List<string> { detectInfo.ImagePath },
+                VbInfo = vbInfo,
+                IsValidationTest = true,
+                IsSingleImageTest = true,
+                OriginalAIResults = new Dictionary<int, int> { { 0, detectInfo.AIStatus } },
+                TestTaskId = testKey
+            };
+        }
+
+        /// <summary>
+        /// 处理单图测试的推理结果（供 PostProcessService 调用）
+        /// </summary>
+        public void ProcessSingleImageTestResult(VBModel vbModel, List<string> inferResults)
+        {
+            if (!vbModel.IsSingleImageTest || string.IsNullOrEmpty(vbModel.TestTaskId))
+                return;
+
+            var testKey = vbModel.TestTaskId;
+
+            if (!_singleImageTestResults.TryGetValue(testKey, out var tcs))
+            {
+                LogTextHelper.Warn($"单图测试结果无对应等待任务: {testKey}");
+                return;
+            }
+
+            try
+            {
+                var originalStatus = vbModel.OriginalAIResults?.ContainsKey(0) == true
+                    ? vbModel.OriginalAIResults[0] : 0;
+
+                // 解析新结果: "0"=OK, "1"=NG, "2"=ByPass
+                int newStatus = 0;
+                if (inferResults != null && inferResults.Count > 0)
+                {
+                    if (int.TryParse(inferResults[0], out int parsed))
+                    {
+                        newStatus = parsed == 0 ? 1 : 2;  // 转换为 AIStatus 格式: 1=OK, 2=NG
+                    }
+                }
+
+                var result = new SingleImageTestResult
+                {
+                    Success = true,
+                    OriginalAIStatus = originalStatus,
+                    NewAIStatus = newStatus,
+                    ImagePath = vbModel.ImageKeys?.FirstOrDefault()
+                };
+
+                tcs.TrySetResult(result);
+                LogTextHelper.Info($"单图测试完成: {testKey}, 原状态={originalStatus}, 新状态={newStatus}, 一致={result.IsConsistent}");
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"处理单图测试结果异常: {testKey}, {ex}");
+                tcs.TrySetResult(new SingleImageTestResult
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message
+                });
+            }
+        }
+
+        #endregion
+
         #region 任务查询接口
 
         /// <summary>
