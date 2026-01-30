@@ -89,6 +89,7 @@
     <Compile Include="DisPlayInfo.cs" />
     <Compile Include="ImageDataInfo.cs" />
     <Compile Include="InferenceResultModel.cs" />
+    <Compile Include="InferenceTaskModel.cs" />
     <Compile Include="PanelInfo.cs" />
     <Compile Include="ProductModeConfig.cs" />
     <Compile Include="ProductState.cs" />

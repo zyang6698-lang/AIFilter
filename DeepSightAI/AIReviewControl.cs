@@ -83,6 +83,7 @@ namespace DeepSightAI
 
             // 订阅右键菜单事件
             toolStripMenuItem_RunTest.Click += ToolStripMenuItem_RunTest_Click;
+            toolStripMenuItem_SecondaryInference.Click += ToolStripMenuItem_SecondaryInference_Click;
 
             // 初始化绑定列表（使用支持排序的SortableBindingList）
             _bindingList = new SortableBindingList<DefectReviewItem>(_defectItems);
@@ -1146,6 +1147,114 @@ namespace DeepSightAI
             {
                 LogTextHelper.Error($"启动测试任务失败: {ex}");
                 MessageBox.Show($"启动测试任务失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                this.Enabled = true;
+                label_LotTitle.Text = $"Lot: {lotNumber}";
+            }
+        }
+
+        /// <summary>
+        /// 运行二次推理菜单项点击事件
+        /// </summary>
+        private async void ToolStripMenuItem_SecondaryInference_Click(object sender, EventArgs e)
+        {
+            var selectedNode = treeView_Lots.SelectedNode;
+            if (selectedNode == null || selectedNode.Level != 0)
+            {
+                MessageBox.Show("请先选择一个Lot节点。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string lotNumber = selectedNode.Name;
+
+            if (!_lotGroups.TryGetValue(lotNumber, out var lotItems) || lotItems.Count == 0)
+            {
+                MessageBox.Show($"Lot {lotNumber} 中没有可推理的数据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // 统计 AI NG 的数量
+            int ngCount = lotItems.Count(i => i.AiStatus == "NG");
+            if (ngCount == 0)
+            {
+                MessageBox.Show($"Lot {lotNumber} 中没有 AI NG 的数据，无需二次推理。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            // 确认对话框
+            var result = MessageBox.Show(
+                $"是否对 Lot: {lotNumber} 运行二次推理？\n" +
+                $"共 {lotItems.Count} 条记录，其中 {ngCount} 条 AI NG。\n\n" +
+                "二次推理将重新对 AI NG 的点进行推理，并【覆盖】原有的 AI 状态。",
+                "确认二次推理",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (result != DialogResult.Yes)
+                return;
+
+            await RunSecondaryInferenceAsync(lotNumber, lotItems);
+        }
+
+        /// <summary>
+        /// 运行二次推理
+        /// </summary>
+        private async Task RunSecondaryInferenceAsync(string lotNumber, List<DefectReviewItem> items)
+        {
+            var service = Machine.master?.workClass?.ValidationTestService;
+            if (service == null)
+            {
+                MessageBox.Show("模型验证测试服务未初始化。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            try
+            {
+                this.Enabled = false;
+                label_LotTitle.Text = $"正在启动 Lot: {lotNumber} 的二次推理任务...";
+
+                // 根据 items 的时间范围确定查询条件
+                var startDate = items.Min(i => i.DetectionDate).AddMinutes(-1);
+                var endDate = items.Max(i => i.DetectionDate).AddMinutes(1);
+
+                // 创建二次推理请求
+                var request = new SecondaryInferenceRequest
+                {
+                    LotNumber = lotNumber,
+                    StartDate = startDate,
+                    EndDate = endDate,
+                    MaxRecords = items.Count * 2,  // 留一些余量
+                    Description = $"Lot {lotNumber} 二次推理"
+                };
+
+                // 启动二次推理任务
+                var task = await service.CreateSecondaryInferenceTaskAsync(request);
+
+                if (task == null)
+                {
+                    MessageBox.Show("创建二次推理任务失败。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                // 切换到测试结果页并开始监控（复用现有控件）
+                validationTestResultControl1.StartMonitoringSecondaryInference(task);
+                tabControl_Main.SelectedTab = tabPage_ValidationTest;
+
+                MessageBox.Show(
+                    $"二次推理任务已启动！\n" +
+                    $"任务ID: {task.TaskId}\n" +
+                    $"预计处理 {task.TotalRecords} 条记录\n\n" +
+                    "请在【模型一致性测试】页查看进度和结果。",
+                    "二次推理已启动",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"启动二次推理任务失败: {ex}");
+                MessageBox.Show($"启动二次推理任务失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {

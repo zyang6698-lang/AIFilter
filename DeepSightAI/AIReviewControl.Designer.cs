@@ -64,6 +64,7 @@
             this.tabPage_ValidationTest = new System.Windows.Forms.TabPage();
             this.contextMenuStrip_Lot = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripMenuItem_RunTest = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem_SecondaryInference = new System.Windows.Forms.ToolStripMenuItem();
             this.QueryControl = new DeepSightAI.QueryControl();
             this.defectDetailControl1 = new DeepSightAI.DefectDetailControl();
             this.validationTestResultControl1 = new DeepSightAI.ValidationTestResultControl();
@@ -512,18 +513,25 @@
             this.tabPage_ValidationTest.UseVisualStyleBackColor = true;
             // 
             // contextMenuStrip_Lot
-            // 
+            //
             this.contextMenuStrip_Lot.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.contextMenuStrip_Lot.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripMenuItem_RunTest});
+            this.toolStripMenuItem_RunTest,
+            this.toolStripMenuItem_SecondaryInference});
             this.contextMenuStrip_Lot.Name = "contextMenuStrip_Lot";
-            this.contextMenuStrip_Lot.Size = new System.Drawing.Size(214, 28);
-            // 
+            this.contextMenuStrip_Lot.Size = new System.Drawing.Size(214, 56);
+            //
             // toolStripMenuItem_RunTest
-            // 
+            //
             this.toolStripMenuItem_RunTest.Name = "toolStripMenuItem_RunTest";
             this.toolStripMenuItem_RunTest.Size = new System.Drawing.Size(213, 24);
             this.toolStripMenuItem_RunTest.Text = "运行模型一致性测试";
+            //
+            // toolStripMenuItem_SecondaryInference
+            //
+            this.toolStripMenuItem_SecondaryInference.Name = "toolStripMenuItem_SecondaryInference";
+            this.toolStripMenuItem_SecondaryInference.Size = new System.Drawing.Size(213, 24);
+            this.toolStripMenuItem_SecondaryInference.Text = "运行二次推理";
             // 
             // QueryControl
             // 
@@ -636,5 +644,6 @@
         private ValidationTestResultControl validationTestResultControl1;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip_Lot;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem_RunTest;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem_SecondaryInference;
     }
 }

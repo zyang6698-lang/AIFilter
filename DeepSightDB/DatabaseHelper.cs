@@ -37,6 +37,10 @@ namespace DeepSightDB
         private NpgsqlCommand _upsertPanelCmd;
         private NpgsqlCommand _upsertPanelSideCmd;
 
+        // 兼容性标志：是否存在 TestState 和 LastTestTime 列（静态缓存，避免重复检查）
+        private static bool? _hasTestStateColumn = null;
+        private static readonly object _columnCheckLock = new object();
+
         /// <summary>
         /// 使用默认配置的构造函数（保持向后兼容）
         /// </summary>
@@ -195,6 +199,7 @@ namespace DeepSightDB
 
         /// <summary>
         /// 从 DataReader 读取 SideData（抽取公共逻辑）
+        /// 兼容老版本数据库：如果 TestState/LastTestTime 列不存在，使用默认值
         /// </summary>
         private SideData ReadSideData(NpgsqlDataReader reader)
         {
@@ -205,10 +210,20 @@ namespace DeepSightDB
                 AiState = reader.IsDBNull(11) ? 0 : reader.GetInt32(11),
                 VvsState = reader.IsDBNull(12) ? 0 : reader.GetInt32(12),
                 VrsState = reader.IsDBNull(13) ? 0 : reader.GetInt32(13),
-                FinalState = reader.IsDBNull(14) ? 0 : reader.GetInt32(14),
-                TestState = reader.IsDBNull(15) ? 0 : reader.GetInt32(15),
-                LastTestTime = reader.IsDBNull(16) ? (DateTime?)null : reader.GetDateTime(16)
+                FinalState = reader.IsDBNull(14) ? 0 : reader.GetInt32(14)
             };
+
+            // 兼容老版本：检查列数是否足够（TestState 和 LastTestTime 是后加的列）
+            if (reader.FieldCount > 15)
+            {
+                sideData.TestState = reader.IsDBNull(15) ? 0 : reader.GetInt32(15);
+                sideData.LastTestTime = reader.IsDBNull(16) ? (DateTime?)null : reader.GetDateTime(16);
+            }
+            else
+            {
+                sideData.TestState = 0;
+                sideData.LastTestTime = null;
+            }
 
             if (!reader.IsDBNull(9))
             {
@@ -256,6 +271,56 @@ namespace DeepSightDB
             }
 
             return panelRecords.Values.ToList();
+        }
+
+        /// <summary>
+        /// 检查 PanelSides 表是否存在 TestState 列（用于老版本数据库兼容）
+        /// </summary>
+        private bool CheckHasTestStateColumn(NpgsqlConnection connection)
+        {
+            if (_hasTestStateColumn.HasValue)
+                return _hasTestStateColumn.Value;
+
+            lock (_columnCheckLock)
+            {
+                if (_hasTestStateColumn.HasValue)
+                    return _hasTestStateColumn.Value;
+
+                try
+                {
+                    using (var cmd = new NpgsqlCommand(
+                        "SELECT 1 FROM information_schema.columns WHERE table_name='panelsides' AND column_name='teststate'",
+                        connection))
+                    {
+                        var result = cmd.ExecuteScalar();
+                        _hasTestStateColumn = result != null;
+                        LogTextHelper.Info($"数据库列检查：TestState 列 {(_hasTestStateColumn.Value ? "存在" : "不存在")}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Warn($"检查 TestState 列时出错: {ex.Message}，假设列不存在");
+                    _hasTestStateColumn = false;
+                }
+
+                return _hasTestStateColumn.Value;
+            }
+        }
+
+        /// <summary>
+        /// 获取 PanelSides 的查询字段列表（根据列是否存在动态生成）
+        /// </summary>
+        private string GetPanelSidesSelectFields(NpgsqlConnection connection)
+        {
+            var baseFields = "ps.Side, ps.HeatPoints, ps.AviState, ps.AiState, ps.VvsState, ps.VrsState, ps.FinalState";
+
+            if (CheckHasTestStateColumn(connection))
+            {
+                return baseFields + ", ps.TestState, ps.LastTestTime";
+            }
+
+            // 老版本数据库：使用默认值
+            return baseFields + ", 0 AS TestState, NULL AS LastTestTime";
         }
 
         #endregion
@@ -774,11 +839,11 @@ namespace DeepSightDB
                         return;
                     }
 
-                    // 构建 SQL 查询
-                    var sqlBuilder = new System.Text.StringBuilder(@"
+                    // 动态构建 SQL 查询（兼容老版本数据库）
+                    var panelSidesFields = GetPanelSidesSelectFields(connection);
+                    var sqlBuilder = new System.Text.StringBuilder($@"
                         SELECT p.Id, p.MachineId, p.SerialNumber, p.LotNumber, p.ProductSerial, p.DetectionDate, p.PathIndex, p.AviCreationTime,
-                               ps.Side, ps.HeatPoints, ps.AviState, ps.AiState, ps.VvsState, ps.VrsState, ps.FinalState,
-                               ps.TestState, ps.LastTestTime
+                               {panelSidesFields}
                         FROM Panels p
                         LEFT JOIN PanelSides ps ON p.Id = ps.PanelId
                         WHERE p.LotNumber = @LotNumber");
@@ -823,11 +888,11 @@ namespace DeepSightDB
             {
                 try
                 {
-                    // 构建 SQL 查询
-                    var sqlBuilder = new System.Text.StringBuilder(@"
+                    // 动态构建 SQL 查询（兼容老版本数据库）
+                    var panelSidesFields = GetPanelSidesSelectFields(connection);
+                    var sqlBuilder = new System.Text.StringBuilder($@"
                         SELECT p.Id, p.MachineId, p.SerialNumber, p.LotNumber, p.ProductSerial, p.DetectionDate, p.PathIndex, p.AviCreationTime,
-                               ps.Side, ps.HeatPoints, ps.AviState, ps.AiState, ps.VvsState, ps.VrsState, ps.FinalState,
-                               ps.TestState, ps.LastTestTime
+                               {panelSidesFields}
                         FROM Panels p
                         LEFT JOIN PanelSides ps ON p.Id = ps.PanelId
                         WHERE p.DetectionDate BETWEEN @Start AND @End");
@@ -873,6 +938,14 @@ namespace DeepSightDB
             {
                 try
                 {
+                    // 兼容老版本：检查列是否存在
+                    if (!CheckHasTestStateColumn(connection))
+                    {
+                        LogTextHelper.Warn($"UpdateTestState: 数据库不支持 TestState 列，跳过更新");
+                        tcs.SetResult(false);
+                        return;
+                    }
+
                     using (var cmd = new NpgsqlCommand(@"
                         UPDATE PanelSides ps
                         SET TestState = @TestState, LastTestTime = @LastTestTime
@@ -891,6 +964,46 @@ namespace DeepSightDB
                 catch (Exception ex)
                 {
                     LogTextHelper.Error($"UpdateTestState 失败: {ex.Message}");
+                    tcs.SetException(ex);
+                }
+            });
+            return tcs.Task;
+        }
+
+        /// <summary>
+        /// 更新 PanelSide 的 HeatPoints 和 AiState（用于二次推理）
+        /// </summary>
+        /// <param name="serialNumber">序列号</param>
+        /// <param name="side">面别 (A/B)</param>
+        /// <param name="heatPoints">更新后的缺陷点列表</param>
+        /// <param name="aiState">AI状态</param>
+        public Task UpdatePanelSideAiStateAsync(string serialNumber, string side, List<DetectInfo> heatPoints, int aiState)
+        {
+            var tcs = new TaskCompletionSource<bool>();
+            var heatPointsJson = JsonConvert.SerializeObject(heatPoints ?? new List<DetectInfo>());
+
+            _dbQueue.Add(connection =>
+            {
+                try
+                {
+                    using (var cmd = new NpgsqlCommand(@"
+                        UPDATE PanelSides ps
+                        SET HeatPoints = @HeatPoints, AiState = @AiState
+                        FROM Panels p
+                        WHERE ps.PanelId = p.Id AND p.SerialNumber = @SerialNumber AND ps.Side = @Side", connection))
+                    {
+                        cmd.Parameters.AddWithValue("@SerialNumber", serialNumber);
+                        cmd.Parameters.AddWithValue("@Side", side);
+                        cmd.Parameters.AddWithValue("@HeatPoints", heatPointsJson);
+                        cmd.Parameters.AddWithValue("@AiState", aiState);
+                        int affected = cmd.ExecuteNonQuery();
+                        LogTextHelper.Info($"UpdatePanelSideAiState: SN={serialNumber}, Side={side}, AiState={aiState}, 影响行数={affected}");
+                    }
+                    tcs.SetResult(true);
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error($"UpdatePanelSideAiState 失败: {ex.Message}");
                     tcs.SetException(ex);
                 }
             });

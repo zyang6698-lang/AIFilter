@@ -240,11 +240,17 @@ namespace DeepSightWorkLib.Services
                 // 解析推理结果
                 var inferResults = ExtractInferResults(rawJsonResult);
 
-                // 根据是否为单图测试，调用不同的处理方法
+                // 根据任务类型调用不同的处理方法
                 if (vBModel.IsSingleImageTest)
                 {
                     _validationTestService.ProcessSingleImageTestResult(vBModel, inferResults);
                     LogTextHelper.Info($"单图测试结果处理完成: {vBModel.SN}");
+                }
+                else if (vBModel.IsSecondaryInference)
+                {
+                    // 二次推理：异步处理并更新数据库
+                    _ = _validationTestService.ProcessSecondaryInferenceResultAsync(vBModel, inferResults);
+                    LogTextHelper.Info($"二次推理结果处理已启动: {vBModel.SN}_{vBModel.Side}");
                 }
                 else
                 {

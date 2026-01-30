@@ -24,11 +24,21 @@ namespace DeepSightModel
         //用于判断ai是否部署该料号，若未部署则为true
         public bool isByPass { get; set; } = false;
 
-        #region 模型验证测试相关属性
+        #region 推理测试相关属性
         /// <summary>
-        /// 是否为模型验证测试任务（用于区分正常推理和测试推理）
+        /// 是否为测试任务（用于区分正常推理和测试推理）
         /// </summary>
         public bool IsValidationTest { get; set; } = false;
+
+        /// <summary>
+        /// 推理模式（一致性测试/二次推理/单图测试）
+        /// </summary>
+        public InferenceMode InferenceMode { get; set; } = InferenceMode.ConsistencyTest;
+
+        /// <summary>
+        /// 测试任务 ID
+        /// </summary>
+        public string TestTaskId { get; set; }
 
         /// <summary>
         /// 原始推理结果（用于比对）格式: defectIndex -> AIStatus
@@ -46,14 +56,14 @@ namespace DeepSightModel
         public bool HasVVSData { get; set; } = false;
 
         /// <summary>
-        /// 测试任务 ID
+        /// 原始缺陷索引到DetectInfo的映射（用于二次推理更新数据库）
         /// </summary>
-        public string TestTaskId { get; set; }
+        public Dictionary<int, object> OriginalDetectInfos { get; set; }
 
-        /// <summary>
-        /// 是否为单图测试任务
-        /// </summary>
-        public bool IsSingleImageTest { get; set; } = false;
+        // 兼容属性 - 基于 InferenceMode 计算
+        public bool IsSingleImageTest => InferenceMode == InferenceMode.SingleImageTest;
+        public bool IsSecondaryInference => InferenceMode == InferenceMode.SecondaryInference;
+        public bool IsConsistencyTest => InferenceMode == InferenceMode.ConsistencyTest;
         #endregion
     }
 

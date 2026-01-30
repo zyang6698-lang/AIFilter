@@ -180,6 +180,7 @@
     <Compile Include="Services\WorkerThreadManager.cs" />
     <Compile Include="Services\PanelDataConverter.cs" />
     <Compile Include="Services\ModelValidationTestService.cs" />
+    <Compile Include="Services\VBModelBuilder.cs" />
     <Compile Include="Interfaces\IPanelDataConverter.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -19,7 +19,7 @@ namespace DeepSightAI
     {
         #region Fields
 
-        private ValidationTestTask _currentTask;
+        private InferenceTask _currentTask;
         private List<SideTestResultDisplay> _allResults = new List<SideTestResultDisplay>();
         private List<SideTestResultDisplay> _filteredResults = new List<SideTestResultDisplay>();
         private Timer _refreshTimer;
@@ -72,7 +72,7 @@ namespace DeepSightAI
         /// <summary>
         /// 开始监控测试任务
         /// </summary>
-        public void StartMonitoring(ValidationTestTask task)
+        public void StartMonitoring(InferenceTask task)
         {
             _currentTask = task;
             _allResults.Clear();
@@ -91,16 +91,98 @@ namespace DeepSightAI
             _refreshTimer.Stop();
         }
 
+        #region 二次推理监控
+
+        private bool _isSecondaryInferenceMode = false;
+
+        /// <summary>
+        /// 开始监控二次推理任务
+        /// </summary>
+        public void StartMonitoringSecondaryInference(InferenceTask task)
+        {
+            _currentTask = task;
+            _isSecondaryInferenceMode = true;
+            _allResults.Clear();
+            _filteredResults.Clear();
+
+            label_Title.Text = $"二次推理 - {task.Description ?? task.TaskId}";
+            UpdateSecondaryInferenceProgress();
+            _refreshTimer.Start();
+        }
+
+        /// <summary>
+        /// 刷新二次推理进度
+        /// </summary>
+        private void UpdateSecondaryInferenceProgress()
+        {
+            if (_currentTask == null) return;
+
+            int progress = (int)_currentTask.Progress;
+            progressBar_Test.Value = Math.Min(progress, 100);
+
+            string progressText = $"处理进度: {progress}% ({_currentTask.ProcessedRecords}/{_currentTask.TotalRecords})";
+            if (_currentTask.EnqueuedRecords != _currentTask.ProcessedRecords)
+            {
+                progressText += $" | 入队: {_currentTask.EnqueuedRecords}";
+            }
+            label_Progress.Text = progressText;
+
+            // 更新统计信息 - 二次推理显示OK/NG变化
+            int total = _currentTask.SecondaryResults.Count;
+            int changedToOk = _currentTask.SecondaryResults.Sum(r => r.ChangedToOkCount);
+            int stillNg = _currentTask.SecondaryResults.Sum(r => r.FinalNgCount);
+
+            string summaryText = $"总处理数: {total} | OK面: {_currentTask.OkRecords} | NG面: {_currentTask.NgRecords} | " +
+                $"变为OK点数: {changedToOk} | 仍为NG点数: {stillNg}";
+
+            label_Summary.Text = summaryText;
+        }
+
+        /// <summary>
+        /// 刷新二次推理结果列表
+        /// </summary>
+        private void RefreshSecondaryInferenceResults()
+        {
+            if (_currentTask == null) return;
+
+            _allResults.Clear();
+            foreach (var result in _currentTask.SecondaryResults)
+            {
+                // 二次推理：显示原NG数->最终NG数的变化
+                _allResults.Add(new SideTestResultDisplay
+                {
+                    SerialNumber = result.SerialNumber,
+                    Side = result.Side,
+                    DataSourceText = "二次推理",
+                    HasVVSData = false,
+                    OriginalResult = $"NG: {result.OriginalNgCount}",
+                    NewResult = $"NG: {result.FinalNgCount}",
+                    IsConsistent = result.ChangedToOkCount > 0 ? $"↓ 减少 {result.ChangedToOkCount}" : "无变化",
+                    DefectCount = result.OriginalNgCount,
+                    ConsistentCount = result.ChangedToOkCount, // 复用字段：变为OK的数量
+                    InconsistentCount = result.FinalNgCount,   // 复用字段：仍为NG的数量
+                    MissCount = 0,
+                    OverKillCount = 0,
+                    IsConsistentBool = result.ChangedToOkCount > 0, // 有变化视为"一致"（绿色显示）
+                    Details = null
+                });
+            }
+
+            ApplyFilter();
+        }
+
+        #endregion
+
         /// <summary>
         /// 显示测试结果
         /// </summary>
-        public void DisplayResults(ValidationTestTask task)
+        public void DisplayResults(InferenceTask task)
         {
             _currentTask = task;
             _refreshTimer.Stop();
 
             _allResults.Clear();
-            foreach (var result in task.Results)
+            foreach (var result in task.ConsistencyResults)
             {
                 // 根据一致/不一致数量判断整体结果
                 bool isConsistent = result.InconsistentCount == 0 && result.State != ValidationTestState.TestError;
@@ -133,6 +215,14 @@ namespace DeepSightAI
 
         private void RefreshTimer_Tick(object sender, EventArgs e)
         {
+            // 二次推理模式
+            if (_isSecondaryInferenceMode)
+            {
+                RefreshSecondaryInferenceTimer();
+                return;
+            }
+
+            // 一致性测试模式
             if (_currentTask == null) return;
 
             // 获取最新的任务状态
@@ -149,21 +239,49 @@ namespace DeepSightAI
 
             // 只有在任务真正完成（所有结果都返回）后才停止刷新
             // 使用 IsReallyCompleted 而不是仅依赖 State
-            if (_currentTask.State == ValidationTestTaskState.Failed ||
-                _currentTask.State == ValidationTestTaskState.Cancelled ||
-                (_currentTask.State == ValidationTestTaskState.Completed && _currentTask.IsReallyCompleted))
+            if (_currentTask.State == InferenceTaskState.Failed ||
+                _currentTask.State == InferenceTaskState.Cancelled ||
+                (_currentTask.State == InferenceTaskState.Completed && _currentTask.IsReallyCompleted))
             {
                 _refreshTimer.Stop();
             }
         }
 
         /// <summary>
+        /// 二次推理模式的定时刷新
+        /// </summary>
+        private void RefreshSecondaryInferenceTimer()
+        {
+            if (_currentTask == null) return;
+
+            var service = Machine.master?.workClass?.ValidationTestService;
+            if (service == null) return;
+
+            var latestTask = service.GetTaskStatus(_currentTask.TaskId);
+            if (latestTask != null)
+            {
+                _currentTask = latestTask;
+                UpdateSecondaryInferenceProgress();
+                RefreshSecondaryInferenceResults();
+            }
+
+            // 检查任务是否完成
+            if (_currentTask.State == InferenceTaskState.Failed ||
+                _currentTask.State == InferenceTaskState.Cancelled ||
+                (_currentTask.State == InferenceTaskState.Completed && _currentTask.IsReallyCompleted))
+            {
+                _refreshTimer.Stop();
+                _isSecondaryInferenceMode = false;
+            }
+        }
+
+        /// <summary>
         /// 内部刷新方法，不停止定时器
         /// </summary>
-        private void RefreshResultsInternal(ValidationTestTask task)
+        private void RefreshResultsInternal(InferenceTask task)
         {
             _allResults.Clear();
-            foreach (var result in task.Results)
+            foreach (var result in task.ConsistencyResults)
             {
                 // 根据一致/不一致数量判断整体结果
                 bool isConsistent = result.InconsistentCount == 0 && result.State != ValidationTestState.TestError;

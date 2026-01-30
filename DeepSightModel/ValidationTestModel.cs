@@ -113,81 +113,6 @@ namespace DeepSightModel
         public double OverKillRate => HasVVSData && TotalDefects > 0 ? (double)OverKillCount / TotalDefects * 100 : 0;
     }
 
-    /// <summary>
-    /// 批量测试任务
-    /// </summary>
-    public class ValidationTestTask
-    {
-        public string TaskId { get; set; } = Guid.NewGuid().ToString();
-        public DateTime CreateTime { get; set; } = DateTime.Now;
-        public DateTime? StartTime { get; set; }
-        public DateTime? EndTime { get; set; }
-        public string Description { get; set; }
-
-        // 筛选条件
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
-        public string LotNumber { get; set; }
-        public string ProductSerial { get; set; }
-        public int? MaxRecords { get; set; }
-
-        // 进度
-        public int TotalRecords { get; set; }
-        /// <summary>
-        /// 已入队等待推理的记录数（用于显示入队进度）
-        /// </summary>
-        public int EnqueuedRecords { get; set; }
-        /// <summary>
-        /// 已完成推理并返回结果的记录数（用于计算实际进度）
-        /// </summary>
-        public int ProcessedRecords { get; set; }
-        public int ConsistentRecords { get; set; }
-        public int InconsistentRecords { get; set; }
-        public int ErrorRecords { get; set; }
-
-        /// <summary>
-        /// 包含VVS数据的记录数
-        /// </summary>
-        public int VVSRecords { get; set; }
-        /// <summary>
-        /// 总漏失数（仅VVS数据）
-        /// </summary>
-        public int TotalMissCount { get; set; }
-        /// <summary>
-        /// 总误报数（仅VVS数据）
-        /// </summary>
-        public int TotalOverKillCount { get; set; }
-
-        /// <summary>
-        /// 入队进度（任务入队到推理队列的进度）
-        /// </summary>
-        public double EnqueueProgress => TotalRecords > 0 ? (double)EnqueuedRecords / TotalRecords * 100 : 0;
-        /// <summary>
-        /// 实际处理进度（推理结果返回的进度）
-        /// </summary>
-        public double Progress => TotalRecords > 0 ? (double)ProcessedRecords / TotalRecords * 100 : 0;
-        public double OverallConsistencyRate => ProcessedRecords > 0
-            ? (double)ConsistentRecords / ProcessedRecords * 100 : 0;
-        /// <summary>
-        /// 判断任务是否真正完成（所有入队的记录都已返回结果）
-        /// </summary>
-        public bool IsReallyCompleted => EnqueuedRecords > 0 && ProcessedRecords >= EnqueuedRecords;
-
-        public ValidationTestTaskState State { get; set; } = ValidationTestTaskState.Created;
-        public List<SideTestResult> Results { get; set; } = new List<SideTestResult>();
-    }
-
-    /// <summary>
-    /// 测试任务状态
-    /// </summary>
-    public enum ValidationTestTaskState
-    {
-        Created = 0,
-        Running = 1,
-        Completed = 2,
-        Cancelled = 3,
-        Failed = 4
-    }
 
     /// <summary>
     /// 用于提取测试数据的查询请求
@@ -200,6 +125,79 @@ namespace DeepSightModel
         public string ProductSerial { get; set; }
         public int? MaxRecords { get; set; } = 100;
         public string Description { get; set; }
+    }
+
+    /// <summary>
+    /// 二次推理请求
+    /// </summary>
+    public class SecondaryInferenceRequest
+    {
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public string LotNumber { get; set; }
+        public string ProductSerial { get; set; }
+        public int? MaxRecords { get; set; } = 100;
+        public string Description { get; set; }
+    }
+
+
+    /// <summary>
+    /// 二次推理单条结果
+    /// </summary>
+    public class SecondaryInferenceResult
+    {
+        public string SerialNumber { get; set; }
+        public string Side { get; set; }
+        public DateTime InferenceTime { get; set; }
+        /// <summary>
+        /// 推理前的NG点数
+        /// </summary>
+        public int OriginalNgCount { get; set; }
+        /// <summary>
+        /// 推理后仍为NG的点数
+        /// </summary>
+        public int FinalNgCount { get; set; }
+        /// <summary>
+        /// 推理后变为OK的点数
+        /// </summary>
+        public int ChangedToOkCount { get; set; }
+        /// <summary>
+        /// 各点的详细结果
+        /// </summary>
+        public List<SecondaryInferencePointResult> PointResults { get; set; } = new List<SecondaryInferencePointResult>();
+        public SecondaryInferenceResultState State { get; set; }
+        public string ErrorMessage { get; set; }
+    }
+
+    /// <summary>
+    /// 二次推理单点结果
+    /// </summary>
+    public class SecondaryInferencePointResult
+    {
+        public int DefectIndex { get; set; }
+        public string ImagePath { get; set; }
+        /// <summary>
+        /// 原始AI状态（推理前，都是NG=2）
+        /// </summary>
+        public int OriginalAIStatus { get; set; }
+        /// <summary>
+        /// 新AI状态（推理后）
+        /// </summary>
+        public int NewAIStatus { get; set; }
+        /// <summary>
+        /// 是否发生变化（从NG变为OK）
+        /// </summary>
+        public bool IsChanged => OriginalAIStatus == 2 && NewAIStatus == 1;
+    }
+
+    /// <summary>
+    /// 二次推理结果状态
+    /// </summary>
+    public enum SecondaryInferenceResultState
+    {
+        Pending = 0,
+        Completed = 1,
+        Error = 2
     }
 }
 

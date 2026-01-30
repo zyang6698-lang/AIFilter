@@ -1,12 +1,10 @@
 using DeepSightDB;
 using DeepSightModel;
 using DeepSightTool;
-using Newtonsoft.Json;
 using OpenCvSharp;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,24 +12,20 @@ using System.Threading.Tasks;
 namespace DeepSightWorkLib.Services
 {
     /// <summary>
-    /// 模型验证测试服务 - 用于验证模型一致性
-    /// 深度集成现有推理通道，复用 QueueManager 和 DefectProcessor
+    /// 模型推理测试服务 - 统一处理一致性测试、二次推理、单图测试
     /// </summary>
     public class ModelValidationTestService
     {
         private readonly DatabaseHelper _databaseHelper;
-        private readonly ImageLoaderService _imageLoaderService;
         private readonly QueueManager _queueManager;
-        private readonly SolutionConfig _solutionConfig;
-        private readonly AVIConfig _aviConfig;
-        private readonly string _minioIP;
-        private readonly string _minioPort;
+        private readonly VBModelBuilder _vbModelBuilder;
 
-        // 测试任务管理
-        private readonly ConcurrentDictionary<string, ValidationTestTask> _activeTasks = new ConcurrentDictionary<string, ValidationTestTask>();
+        // 统一任务管理
+        private readonly ConcurrentDictionary<string, InferenceTask> _activeTasks = new ConcurrentDictionary<string, InferenceTask>();
 
-        // 等待测试完成的结果收集
-        private readonly ConcurrentDictionary<string, SideTestResult> _pendingResults = new ConcurrentDictionary<string, SideTestResult>();
+        // 单图测试等待结果
+        private readonly ConcurrentDictionary<string, TaskCompletionSource<SingleImageTestResult>> _singleImageTestResults
+            = new ConcurrentDictionary<string, TaskCompletionSource<SingleImageTestResult>>();
 
         public ModelValidationTestService(
             DatabaseHelper databaseHelper,
@@ -43,22 +37,21 @@ namespace DeepSightWorkLib.Services
             string minioPort)
         {
             _databaseHelper = databaseHelper ?? throw new ArgumentNullException(nameof(databaseHelper));
-            _imageLoaderService = imageLoaderService ?? throw new ArgumentNullException(nameof(imageLoaderService));
             _queueManager = queueManager ?? throw new ArgumentNullException(nameof(queueManager));
-            _solutionConfig = solutionConfig;
-            _aviConfig = aviConfig;
-            _minioIP = minioIP;
-            _minioPort = minioPort;
+            _vbModelBuilder = new VBModelBuilder(solutionConfig, minioIP, minioPort);
         }
 
+        #region 统一任务创建接口
+
         /// <summary>
-        /// 创建并启动验证测试任务
+        /// 创建并启动推理任务（统一入口）
         /// </summary>
-        public async Task<ValidationTestTask> CreateTestTaskAsync(ValidationTestRequest request, CancellationToken cancellationToken = default)
+        public async Task<InferenceTask> CreateTaskAsync(InferenceTaskRequest request, CancellationToken cancellationToken = default)
         {
-            var task = new ValidationTestTask
+            var task = new InferenceTask
             {
-                Description = request.Description ?? $"模型验证测试 {DateTime.Now:yyyy-MM-dd HH:mm}",
+                Mode = request.Mode,
+                Description = request.Description ?? GetDefaultDescription(request.Mode),
                 StartDate = request.StartDate,
                 EndDate = request.EndDate,
                 LotNumber = request.LotNumber,
@@ -67,66 +60,124 @@ namespace DeepSightWorkLib.Services
             };
 
             _activeTasks[task.TaskId] = task;
-            LogTextHelper.Info($"创建模型验证测试任务: {task.TaskId}, 描述: {task.Description}");
+            LogTextHelper.Info($"创建{GetModeName(request.Mode)}任务: {task.TaskId}, 描述: {task.Description}");
 
-            // 异步执行测试
-            _ = Task.Run(() => ExecuteTestTaskAsync(task, cancellationToken), cancellationToken);
+            // 异步执行任务
+            _ = Task.Run(() => ExecuteTaskAsync(task, cancellationToken), cancellationToken);
 
             return task;
         }
 
         /// <summary>
-        /// 执行测试任务
+        /// 兼容旧接口：创建一致性测试任务
         /// </summary>
-        private async Task ExecuteTestTaskAsync(ValidationTestTask task, CancellationToken cancellationToken)
+        public async Task<InferenceTask> CreateTestTaskAsync(ValidationTestRequest request, CancellationToken cancellationToken = default)
+        {
+            return await CreateTaskAsync(new InferenceTaskRequest
+            {
+                Mode = InferenceMode.ConsistencyTest,
+                StartDate = request.StartDate,
+                EndDate = request.EndDate,
+                LotNumber = request.LotNumber,
+                ProductSerial = request.ProductSerial,
+                MaxRecords = request.MaxRecords,
+                Description = request.Description
+            }, cancellationToken);
+        }
+
+        /// <summary>
+        /// 兼容旧接口：创建二次推理任务
+        /// </summary>
+        public async Task<InferenceTask> CreateSecondaryInferenceTaskAsync(SecondaryInferenceRequest request, CancellationToken cancellationToken = default)
+        {
+            return await CreateTaskAsync(new InferenceTaskRequest
+            {
+                Mode = InferenceMode.SecondaryInference,
+                StartDate = request.StartDate,
+                EndDate = request.EndDate,
+                LotNumber = request.LotNumber,
+                ProductSerial = request.ProductSerial,
+                MaxRecords = request.MaxRecords,
+                Description = request.Description
+            }, cancellationToken);
+        }
+
+        private string GetDefaultDescription(InferenceMode mode)
+        {
+            switch (mode)
+            {
+                case InferenceMode.ConsistencyTest: return $"一致性测试 {DateTime.Now:yyyy-MM-dd HH:mm}";
+                case InferenceMode.SecondaryInference: return $"二次推理 {DateTime.Now:yyyy-MM-dd HH:mm}";
+                case InferenceMode.SingleImageTest: return $"单图测试 {DateTime.Now:yyyy-MM-dd HH:mm}";
+                default: return $"推理任务 {DateTime.Now:yyyy-MM-dd HH:mm}";
+            }
+        }
+
+        private string GetModeName(InferenceMode mode)
+        {
+            switch (mode)
+            {
+                case InferenceMode.ConsistencyTest: return "一致性测试";
+                case InferenceMode.SecondaryInference: return "二次推理";
+                case InferenceMode.SingleImageTest: return "单图测试";
+                default: return "推理";
+            }
+        }
+
+        #endregion
+
+        #region 统一任务执行
+
+        /// <summary>
+        /// 执行推理任务
+        /// </summary>
+        private async Task ExecuteTaskAsync(InferenceTask task, CancellationToken cancellationToken)
         {
             try
             {
-                task.State = ValidationTestTaskState.Running;
+                task.State = InferenceTaskState.Running;
                 task.StartTime = DateTime.Now;
 
-                // 1. 从数据库获取历史数据
-                var records = await GetTestDataAsync(task);
+                // 获取数据
+                var records = await GetTaskDataAsync(task);
                 task.TotalRecords = records.Count;
-                LogTextHelper.Info($"测试任务 {task.TaskId}: 获取到 {records.Count} 条待测试数据");
+                LogTextHelper.Info($"{GetModeName(task.Mode)}任务 {task.TaskId}: 获取到 {records.Count} 条数据");
 
                 if (records.Count == 0)
                 {
-                    task.State = ValidationTestTaskState.Completed;
+                    task.State = InferenceTaskState.Completed;
                     task.EndTime = DateTime.Now;
                     return;
                 }
 
-                // 2. 构建测试任务并入队
+                // 处理每条记录
                 foreach (var record in records)
                 {
                     if (cancellationToken.IsCancellationRequested)
                     {
-                        task.State = ValidationTestTaskState.Cancelled;
+                        task.State = InferenceTaskState.Cancelled;
                         break;
                     }
 
-                    await ProcessSingleRecordAsync(task, record, cancellationToken);
+                    await ProcessRecordAsync(task, record);
                 }
 
-                // 注意：这里只是入队完成，不能标记为 Completed
-                // 任务状态保持 Running，等待所有推理结果返回后在 ProcessValidationTestResult 中判断是否完成
-                LogTextHelper.Info($"测试任务 {task.TaskId} 入队完成: 总数={task.TotalRecords}, 已入队={task.EnqueuedRecords}, 错误={task.ErrorRecords}");
+                LogTextHelper.Info($"{GetModeName(task.Mode)}任务 {task.TaskId} 入队完成: 总数={task.TotalRecords}, 已入队={task.EnqueuedRecords}, 错误={task.ErrorRecords}");
             }
             catch (Exception ex)
             {
-                task.State = ValidationTestTaskState.Failed;
+                task.State = InferenceTaskState.Failed;
                 task.EndTime = DateTime.Now;
-                LogTextHelper.Error($"测试任务 {task.TaskId} 执行失败: {ex}");
+                LogTextHelper.Error($"{GetModeName(task.Mode)}任务 {task.TaskId} 执行失败: {ex}");
             }
         }
 
         /// <summary>
-        /// 从数据库获取测试数据
+        /// 获取任务数据
         /// </summary>
-        private async Task<List<(PanelDataRecord Panel, SideData Side)>> GetTestDataAsync(ValidationTestTask task)
+        private async Task<List<(PanelDataRecord Panel, SideData Side, List<DetectInfo> DefectPoints)>> GetTaskDataAsync(InferenceTask task)
         {
-            var results = new List<(PanelDataRecord, SideData)>();
+            var results = new List<(PanelDataRecord, SideData, List<DetectInfo>)>();
 
             List<PanelDataRecord> panels;
             if (!string.IsNullOrEmpty(task.LotNumber))
@@ -139,19 +190,33 @@ namespace DeepSightWorkLib.Services
             }
             else
             {
-                // 默认获取最近7天数据
                 panels = await _databaseHelper.GetPanelsData(DateTime.Now.AddDays(-7), DateTime.Now);
             }
-            // 筛选有缺陷数据的记录
+
             foreach (var panel in panels)
             {
                 if (panel.Sides == null) continue;
                 foreach (var side in panel.Sides)
                 {
-                    // 只测试有缺陷且已完成AI推理的记录
-                    if (side.DetectPoints != null && side.DetectPoints.Count > 0 && side.AiState > 0)
+                    if (side.DetectPoints == null || side.DetectPoints.Count == 0) continue;
+
+                    // 根据模式筛选缺陷点
+                    List<DetectInfo> defectPoints;
+                    if (task.Mode == InferenceMode.SecondaryInference)
                     {
-                        results.Add((panel, side));
+                        // 二次推理：只选择AI状态为NG的点
+                        defectPoints = side.DetectPoints.Where(p => p.AIStatus == 2).ToList();
+                    }
+                    else
+                    {
+                        // 一致性测试：选择所有已完成AI推理的点
+                        if (side.AiState <= 0) continue;
+                        defectPoints = side.DetectPoints;
+                    }
+
+                    if (defectPoints.Count > 0)
+                    {
+                        results.Add((panel, side, defectPoints));
                         if (task.MaxRecords.HasValue && results.Count >= task.MaxRecords.Value)
                             return results;
                     }
@@ -162,339 +227,66 @@ namespace DeepSightWorkLib.Services
         }
 
         /// <summary>
-        /// 处理单条记录的测试
+        /// 处理单条记录
         /// </summary>
-        private async Task ProcessSingleRecordAsync(ValidationTestTask task, (PanelDataRecord Panel, SideData Side) record, CancellationToken cancellationToken)
+        private async Task ProcessRecordAsync(InferenceTask task, (PanelDataRecord Panel, SideData Side, List<DetectInfo> DefectPoints) record)
         {
-            var (panel, side) = record;
-            var testKey = $"{task.TaskId}_{panel.SerialNumber}_{side.Side}";
+            var (panel, side, defectPoints) = record;
 
             try
             {
-                // 更新数据库状态为"测试中"
-                await UpdateTestStateAsync(panel.SerialNumber, side.Side, ValidationTestState.Testing);
+                if (task.Mode == InferenceMode.ConsistencyTest)
+                {
+                    await UpdateTestStateAsync(panel.SerialNumber, side.Side, ValidationTestState.Testing);
+                }
 
-                // 构建测试用的 VBModel
-                var vbModel = BuildValidationVBModel(task, panel, side);
+                // 使用统一的 VBModelBuilder 构建 VBModel
+                var context = new VBModelBuildContext
+                {
+                    Mode = task.Mode,
+                    TaskId = task.TaskId,
+                    SerialNumber = panel.SerialNumber,
+                    SideName = side.Side,
+                    ProductSerial = panel.ProductSerial,
+                    MachineId = panel.MachineId,
+                    Side = side,
+                    DefectPoints = defectPoints
+                };
+
+                var vbModel = _vbModelBuilder.Build(context);
 
                 if (vbModel == null || vbModel.ImageKeys == null || vbModel.ImageKeys.Count == 0)
                 {
                     task.ErrorRecords++;
-                    await UpdateTestStateAsync(panel.SerialNumber, side.Side, ValidationTestState.TestError);
-                    LogTextHelper.Warn($"测试记录 {panel.SerialNumber}_{side.Side} 无有效图片");
+                    if (task.Mode == InferenceMode.ConsistencyTest)
+                    {
+                        await UpdateTestStateAsync(panel.SerialNumber, side.Side, ValidationTestState.TestError);
+                    }
+                    LogTextHelper.Warn($"{GetModeName(task.Mode)}记录 {panel.SerialNumber}_{side.Side} 无有效图片");
                     return;
                 }
 
-                // 创建待处理结果
-                var pendingResult = new SideTestResult
-                {
-                    SerialNumber = panel.SerialNumber,
-                    Side = side.Side,
-                    TotalDefects = side.DetectPoints.Count,
-                    State = ValidationTestState.Testing
-                };
-                _pendingResults[testKey] = pendingResult;
+                // 加载图片
+                vbModel.Mats = _vbModelBuilder.LoadImages(defectPoints);
 
-                // 加载图片并入队到现有推理通道
-                var loadModel = new ImageLoadModel
-                {
-                    Model = vbModel,
-                    RootPanelInfo = null  // 测试任务不需要完整的 PanelInfo
-                };
-
-                // 直接加载图片
-                var mats = LoadImagesForTest(side.DetectPoints);
-                vbModel.Mats = mats;
-
-                // 入队到 AviQueue（复用现有推理通道）
+                // 入队到推理队列
                 _queueManager.AviQueue.Enqueue(vbModel);
-                LogTextHelper.Info($"测试任务入队: {panel.SerialNumber}_{side.Side}, 缺陷数: {mats.Count}");
+                LogTextHelper.Info($"{GetModeName(task.Mode)}任务入队: {panel.SerialNumber}_{side.Side}, 缺陷数: {defectPoints.Count}");
 
-                // 注意：这里只增加入队计数，ProcessedRecords 在推理结果返回后由 ProcessValidationTestResult 增加
                 task.EnqueuedRecords++;
             }
             catch (Exception ex)
             {
                 task.ErrorRecords++;
-                await UpdateTestStateAsync(panel.SerialNumber, side.Side, ValidationTestState.TestError);
-                LogTextHelper.Error($"处理测试记录异常 {panel.SerialNumber}_{side.Side}: {ex}");
-            }
-        }
-
-        /// <summary>
-        /// 构建验证测试用的 VBModel
-        /// </summary>
-        private VBModel BuildValidationVBModel(ValidationTestTask task, PanelDataRecord panel, SideData side)
-        {
-            // 构建原始AI结果字典和VVS结果字典
-            var originalResults = new Dictionary<int, int>();
-            var originalVVSResults = new Dictionary<int, int>();
-            var imageKeys = new List<string>();
-            var imageDefects = new List<DetectInfo>();
-            var defectIndexList = new List<int>();
-            var pcsIndexList = new List<int>();
-
-            // 检查是否有VVS数据（任一缺陷有VVS状态）
-            bool hasVVSData = side.VvsState > 0 || side.DetectPoints.Any(d => d.VVSStatus > 0);
-
-            for (int i = 0; i < side.DetectPoints.Count; i++)
-            {
-                var defect = side.DetectPoints[i];
-                originalResults[i] = defect.AIStatus;
-                originalVVSResults[i] = defect.VVSStatus;
-
-                // 从 ImagePath 提取 Minio 路径
-                if (!string.IsNullOrEmpty(defect.ImagePath))
+                if (task.Mode == InferenceMode.ConsistencyTest)
                 {
-                    imageKeys.Add(defect.ImagePath);
-                    imageDefects.Add(defect);
-                    defectIndexList.Add(i);
-                    pcsIndexList.Add(i);  // 简化处理
+                    await UpdateTestStateAsync(panel.SerialNumber, side.Side, ValidationTestState.TestError);
                 }
+                LogTextHelper.Error($"处理{GetModeName(task.Mode)}记录异常 {panel.SerialNumber}_{side.Side}: {ex}");
             }
-
-            if (imageKeys.Count == 0) return null;
-
-            // 构建 VBInfo
-            var vbInfo = CreateValidationVBInfo(panel, side, imageKeys, imageDefects);
-
-            return new VBModel
-            {
-                Key = $"TEST_{task.TaskId}_{panel.SerialNumber}_{side.Side}",
-                SN = panel.SerialNumber,
-                Side = side.Side,
-                DefectIndex = defectIndexList,
-                PcsIndex = pcsIndexList,
-                ImageKeys = imageKeys,
-                VbInfo = vbInfo,
-                IsValidationTest = true,
-                OriginalAIResults = originalResults,
-                OriginalVVSResults = originalVVSResults,
-                HasVVSData = hasVVSData,
-                TestTaskId = task.TaskId
-            };
         }
 
-        /// <summary>
-        /// 创建验证测试用的 VBInfo
-        /// </summary>
-        private RootVBInfo CreateValidationVBInfo(PanelDataRecord panel, SideData side, List<string> imageKeys, List<DetectInfo> imageDefects)
-        {
-            // 从配置中查找料号对应的方案和流程
-            var solutionFlow = _solutionConfig?.solus?.FirstOrDefault(o => o.ProductSerial == panel.ProductSerial)
-                ?? _solutionConfig?.solus?.FirstOrDefault(o => o.ProductSerial?.ToUpper() == "DEFAULT");
-
-            string solution = side.Side == "A" ? (solutionFlow?.Asolution ?? "default") : (solutionFlow?.Bsolution ?? "default");
-            string flow = side.Side == "A" ? (solutionFlow?.Aflow ?? "1") : (solutionFlow?.Bflow ?? "1");
-
-            var vbInfo = new RootVBInfo
-            {
-                MessageType = "visionbuilder_inference",
-                paramsData = new ParamsData
-                {
-                    InferResUuid = Guid.NewGuid().ToString(),
-                    InferWholeData = new InferWholeData
-                    {
-                        ImageInferParams = new ImageInferParams
-                        {
-                            PipelineName = solution,
-                            NodeParams = new List<NodeParam>
-                            {
-                                new NodeParam { NodeName = flow, height = 200, width = 200 }
-                            }
-                        },
-                        ImageData = new ImageData
-                        {
-                            DataType = "minio",
-                            DataValue = new DataValue { InferImageGroup = new List<InferImageGroup>() }
-                        },
-                        OtherInfos = new Others
-                        {
-                            imageminio = new ImageMminio
-                            {
-                                access_key_id = "deepiobjectdata",
-                                bucket = "deepiresults",
-                                endpoint_url = _minioIP,
-                                secret_key = "deepiobject2019",
-                                secret_port = _minioPort
-                            }
-                        }
-                    }
-                }
-            };
-
-            // 构造模板图片路径 (格式: TemplateImages/{ProductSerial}/{MachineName}/{ProductSerial}[{Side}].jpg)
-            string tempImgPath = BuildTemplateImagePath(panel.ProductSerial, panel.MachineId, side.Side);
-
-            // 添加图片信息
-            for (int i = 0; i < imageKeys.Count; i++)
-            {
-                var imagePath = imageKeys[i];
-                var defect = (imageDefects != null && i < imageDefects.Count) ? imageDefects[i] : null;
-
-                // 修复1: img_roi - 优先使用 RoiX/RoiY/Width/Height，如果为0则使用 Origin 版本
-                int roiX = 0;
-                int roiY = 0;
-                int roiW = 0;
-                int roiH = 0;
-
-                if (defect != null)
-                {
-                    // 优先使用非Origin的ROI值（这是实际的绝对坐标）
-                    if (defect.Width > 0 && defect.Height > 0)
-                    {
-                        roiX = defect.RoiX;
-                        roiY = defect.RoiY;
-                        roiW = defect.Width;
-                        roiH = defect.Height;
-                    }
-                    // 如果没有，则使用Origin版本
-                    else if (defect.OriginWidth > 0 && defect.OriginHeight > 0)
-                    {
-                        roiX = defect.OriginRoiX;
-                        roiY = defect.OriginRoiY;
-                        roiW = defect.OriginWidth;
-                        roiH = defect.OriginHeight;
-                    }
-                }
-
-                // 提取缺陷图片的minio路径
-                string defectMinioPath = ExtractMinioPath(imagePath);
-                
-                // 修复2: group_infos - 构造template图片路径（在文件名后加[E]）
-                string templateMinioPath = BuildTemplateMinioPath(defectMinioPath);
-
-                // 修复3: defect_code - 使用缺陷类型
-                string defectCode = defect?.DefectType ?? "";
-
-                var group = new InferImageGroup
-                {
-                    GroupUuid = Guid.NewGuid().ToString(),
-                    GroupInfos = new List<GroupInfo>
-                    {
-                        // defect 图片
-                        new GroupInfo
-                        {
-                            ImagePath = defectMinioPath,
-                            ImageUuid = Guid.NewGuid().ToString(),
-                            ImageType = "defect"
-                        },
-                        // template 图片
-                        new GroupInfo
-                        {
-                            ImagePath = templateMinioPath,
-                            ImageUuid = Guid.NewGuid().ToString(),
-                            ImageType = "template"
-                        }
-                    },
-                    MachineTemplateInfo = new MachineTemplateInfo
-                    {
-                        MachineName = panel.MachineId,
-                        product = panel.ProductSerial,
-                        Side = side.Side
-                    },
-                    // 修复1: 使用正确的ROI值
-                    ImgROI = new List<int> { roiX, roiY, roiW, roiH },
-                    // 修复3: 添加 defect_code
-                    DefectCode = defectCode,
-                    // 修复4: 添加 tempImgPath
-                    TempImgPath = tempImgPath,
-                    inspectDetails = new InspectDetails { InferRois = new List<InferRoi>() }
-                };
-                vbInfo.paramsData.InferWholeData.ImageData.DataValue.InferImageGroup.Add(group);
-            }
-
-            return vbInfo;
-        }
-
-        /// <summary>
-        /// 构造模板图片本地路径
-        /// </summary>
-        private string BuildTemplateImagePath(string productSerial, string machineName, string side)
-        {
-            if (string.IsNullOrEmpty(productSerial) || string.IsNullOrEmpty(machineName))
-                return "";
-
-            // 格式: TemplateImages/{ProductSerial}/{MachineName}/{ProductSerial}[{Side}].jpg
-            // BaseDirectory 是 Bin 目录，需要取其父目录
-            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            string parentDir = System.IO.Directory.GetParent(baseDir.TrimEnd('\\')).FullName;
-            string templatePath = System.IO.Path.Combine(parentDir, "TemplateImages", productSerial, machineName, $"{productSerial}[{side}].jpg");
-            return templatePath;
-        }
-
-        /// <summary>
-        /// 从defect图片路径构造template图片路径（在文件名后添加[E]）
-        /// 例如: xxx/[001][00138,00084][00192x00208].jpg -> xxx/[001][00138,00084][00192x00208][E].jpg
-        /// </summary>
-        private string BuildTemplateMinioPath(string defectPath)
-        {
-            if (string.IsNullOrEmpty(defectPath))
-                return "";
-
-            // 在扩展名前插入[E]
-            int lastDotIndex = defectPath.LastIndexOf('.');
-            if (lastDotIndex > 0)
-            {
-                return defectPath.Substring(0, lastDotIndex) + "[E]" + defectPath.Substring(lastDotIndex);
-            }
-            
-            // 如果没有扩展名，直接在末尾添加[E]
-            return defectPath + "[E]";
-        }
-
-        /// <summary>
-        /// 从完整路径提取 Minio 相对路径
-        /// </summary>
-        private string ExtractMinioPath(string fullPath)
-        {
-            if (string.IsNullOrEmpty(fullPath)) return fullPath;
-
-            // 路径格式可能是: "deepiresults\xxx\xxx.jpg" 或 "ip:xxx/xxx.jpg"
-            int index = fullPath.IndexOf("deepiresults", StringComparison.OrdinalIgnoreCase);
-            if (index != -1)
-            {
-                var relativePath = fullPath.Substring(index + "deepiresults".Length).TrimStart('\\', '/');
-                return relativePath.Replace('\\', '/');
-            }
-
-            // 如果是 ip:path 格式
-            if (fullPath.Contains(":"))
-            {
-                var parts = fullPath.Split(':');
-                if (parts.Length >= 2)
-                    return parts[1];
-            }
-
-            return fullPath;
-        }
-
-        /// <summary>
-        /// 加载测试用图片
-        /// </summary>
-        private List<Mat> LoadImagesForTest(List<DetectInfo> defects)
-        {
-            var mats = new List<Mat>();
-            foreach (var defect in defects)
-            {
-                if (string.IsNullOrEmpty(defect.ImagePath)) continue;
-
-                try
-                {
-                    var mat = Cv2.ImRead(defect.ImagePath);
-                    if (mat != null)
-                    {
-                        // 需要保持 Mat 存活到推理调用结束
-                        mats.Add(mat);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    LogTextHelper.Warn($"加载测试图片失败: {defect.ImagePath}, {ex.Message}");
-                }
-            }
-            return mats;
-        }
+        #endregion
 
         /// <summary>
         /// 更新数据库测试状态
@@ -521,8 +313,6 @@ namespace DeepSightWorkLib.Services
             if (!vbModel.IsValidationTest || string.IsNullOrEmpty(vbModel.TestTaskId))
                 return;
 
-            var testKey = $"{vbModel.TestTaskId}_{vbModel.SN}_{vbModel.Side}";
-
             try
             {
                 // 比对结果
@@ -534,7 +324,7 @@ namespace DeepSightWorkLib.Services
                 {
                     lock (task)
                     {
-                        task.Results.Add(sideResult);
+                        task.ConsistencyResults.Add(sideResult);
                         task.ProcessedRecords++;  // 在推理结果返回时增加处理计数
 
                         if (sideResult.State == ValidationTestState.Consistent)
@@ -553,9 +343,9 @@ namespace DeepSightWorkLib.Services
                         }
 
                         // 检查任务是否真正完成（所有入队的记录都已返回结果）
-                        if (task.IsReallyCompleted && task.State == ValidationTestTaskState.Running)
+                        if (task.IsReallyCompleted && task.State == InferenceTaskState.Running)
                         {
-                            task.State = ValidationTestTaskState.Completed;
+                            task.State = InferenceTaskState.Completed;
                             task.EndTime = DateTime.Now;
                             LogTextHelper.Info($"测试任务 {task.TaskId} 全部完成: 一致={task.ConsistentRecords}, 不一致={task.InconsistentRecords}, 错误={task.ErrorRecords}, VVS记录={task.VVSRecords}, 漏失={task.TotalMissCount}, 误报={task.TotalOverKillCount}");
                         }
@@ -663,30 +453,8 @@ namespace DeepSightWorkLib.Services
         #region 单图测试
 
         /// <summary>
-        /// 单图测试结果
+        /// 运行单图测试（同步等待结果）
         /// </summary>
-        public class SingleImageTestResult
-        {
-            public bool Success { get; set; }
-            public string ErrorMessage { get; set; }
-            public int OriginalAIStatus { get; set; }
-            public int NewAIStatus { get; set; }
-            public bool IsConsistent => OriginalAIStatus == NewAIStatus;
-            public string ImagePath { get; set; }
-        }
-
-        // 单图测试的等待结果
-        private readonly ConcurrentDictionary<string, TaskCompletionSource<SingleImageTestResult>> _singleImageTestResults
-            = new ConcurrentDictionary<string, TaskCompletionSource<SingleImageTestResult>>();
-
-        /// <summary>
-        /// 运行单图测试
-        /// </summary>
-        /// <param name="detectInfo">缺陷信息</param>
-        /// <param name="productSerial">料号（用于确定推理方案）</param>
-        /// <param name="machineId">机台ID</param>
-        /// <param name="side">面别（A/B）</param>
-        /// <param name="timeout">超时时间（秒），默认30秒</param>
         public async Task<SingleImageTestResult> RunSingleImageTestAsync(
             DetectInfo detectInfo,
             string productSerial,
@@ -703,26 +471,27 @@ namespace DeepSightWorkLib.Services
                 };
             }
 
-            // 生成唯一的测试Key
             var testKey = $"SINGLE_{Guid.NewGuid():N}";
 
             try
             {
-                // 创建任务完成源用于等待结果
                 var tcs = new TaskCompletionSource<SingleImageTestResult>();
                 _singleImageTestResults[testKey] = tcs;
 
-                // 构建VBModel
-                var vbModel = BuildSingleImageVBModel(testKey, detectInfo, productSerial, machineId, side);
-                if (vbModel == null)
+                // 使用 VBModelBuilder 构建 VBModel
+                var context = new VBModelBuildContext
                 {
-                    return new SingleImageTestResult
-                    {
-                        Success = false,
-                        ErrorMessage = "构建推理模型失败",
-                        ImagePath = detectInfo.ImagePath
-                    };
-                }
+                    Mode = InferenceMode.SingleImageTest,
+                    TaskId = testKey,
+                    SerialNumber = testKey,
+                    SideName = side,
+                    ProductSerial = productSerial,
+                    MachineId = machineId,
+                    DefectPoints = new List<DetectInfo> { detectInfo }
+                };
+
+                var vbModel = _vbModelBuilder.Build(context);
+                vbModel.OriginalAIResults = new Dictionary<int, int> { { 0, detectInfo.AIStatus } };
 
                 // 加载图片
                 var mat = Cv2.ImRead(detectInfo.ImagePath);
@@ -738,11 +507,10 @@ namespace DeepSightWorkLib.Services
 
                 vbModel.Mats = new List<Mat> { mat };
 
-                // 入队到推理队列
                 _queueManager.AviQueue.Enqueue(vbModel);
                 LogTextHelper.Info($"单图测试入队: {testKey}, 图片: {detectInfo.ImagePath}");
 
-                // 等待结果，带超时
+                // 等待结果
                 var timeoutTask = Task.Delay(TimeSpan.FromSeconds(timeout));
                 var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
 
@@ -776,110 +544,104 @@ namespace DeepSightWorkLib.Services
         }
 
         /// <summary>
-        /// 构建单图测试用的VBModel
+        /// 处理二次推理的推理结果（供 PostProcessService 调用）
         /// </summary>
-        private VBModel BuildSingleImageVBModel(string testKey, DetectInfo detectInfo, string productSerial, string machineId, string side)
+        public async Task ProcessSecondaryInferenceResultAsync(VBModel vbModel, List<string> inferResults)
         {
-            // 从配置中查找料号对应的方案和流程
-            var solutionFlow = _solutionConfig?.solus?.FirstOrDefault(o => o.ProductSerial == productSerial)
-                ?? _solutionConfig?.solus?.FirstOrDefault(o => o.ProductSerial?.ToUpper() == "DEFAULT");
+            if (!vbModel.IsSecondaryInference || string.IsNullOrEmpty(vbModel.TestTaskId))
+                return;
 
-            string solution = side == "A" ? (solutionFlow?.Asolution ?? "default") : (solutionFlow?.Bsolution ?? "default");
-            string flow = side == "A" ? (solutionFlow?.Aflow ?? "1") : (solutionFlow?.Bflow ?? "1");
-
-            // 构建ROI信息
-            int roiX = detectInfo.Width > 0 ? detectInfo.RoiX : detectInfo.OriginRoiX;
-            int roiY = detectInfo.Width > 0 ? detectInfo.RoiY : detectInfo.OriginRoiY;
-            int roiW = detectInfo.Width > 0 ? detectInfo.Width : detectInfo.OriginWidth;
-            int roiH = detectInfo.Width > 0 ? detectInfo.Height : detectInfo.OriginHeight;
-
-            // 提取Minio路径
-            string defectMinioPath = ExtractMinioPath(detectInfo.ImagePath);
-            string templateMinioPath = BuildTemplateMinioPath(defectMinioPath);
-            string tempImgPath = BuildTemplateImagePath(productSerial, machineId, side);
-
-            var vbInfo = new RootVBInfo
+            try
             {
-                MessageType = "visionbuilder_inference",
-                paramsData = new ParamsData
+                var sideResult = new SecondaryInferenceResult
                 {
-                    InferResUuid = Guid.NewGuid().ToString(),
-                    InferWholeData = new InferWholeData
+                    SerialNumber = vbModel.SN,
+                    Side = vbModel.Side,
+                    InferenceTime = DateTime.Now,
+                    OriginalNgCount = vbModel.DefectIndex?.Count ?? 0
+                };
+
+                // 获取原始 DetectInfo 列表用于更新
+                var updatedDetectInfos = new List<DetectInfo>();
+                int changedToOkCount = 0;
+
+                if (vbModel.OriginalDetectInfos != null && inferResults != null)
+                {
+                    for (int i = 0; i < Math.Min(vbModel.DefectIndex.Count, inferResults.Count); i++)
                     {
-                        ImageInferParams = new ImageInferParams
+                        var defectIdx = vbModel.DefectIndex[i];
+                        if (vbModel.OriginalDetectInfos.TryGetValue(defectIdx, out var detectInfoObj) && detectInfoObj is DetectInfo detectInfo)
                         {
-                            PipelineName = solution,
-                            NodeParams = new List<NodeParam>
+                            var originalStatus = detectInfo.AIStatus;
+                            // 解析新的推理结果: "0" = OK(1), "1" = NG(2)
+                            int newStatus = 0;
+                            if (int.TryParse(inferResults[i], out int parsed))
                             {
-                                new NodeParam { NodeName = flow, height = 200, width = 200 }
+                                newStatus = parsed == 0 ? 1 : 2;
                             }
-                        },
-                        ImageData = new ImageData
-                        {
-                            DataType = "minio",
-                            DataValue = new DataValue { InferImageGroup = new List<InferImageGroup>() }
-                        },
-                        OtherInfos = new Others
-                        {
-                            imageminio = new ImageMminio
+
+                            // 记录点结果
+                            sideResult.PointResults.Add(new SecondaryInferencePointResult
                             {
-                                access_key_id = "deepiobjectdata",
-                                bucket = "deepiresults",
-                                endpoint_url = _minioIP,
-                                secret_key = "deepiobject2019",
-                                secret_port = _minioPort
+                                DefectIndex = defectIdx,
+                                OriginalAIStatus = originalStatus,
+                                NewAIStatus = newStatus
+                            });
+
+                            // 更新 DetectInfo 的 AIStatus
+                            detectInfo.AIStatus = newStatus;
+                            updatedDetectInfos.Add(detectInfo);
+
+                            // 统计变化
+                            if (originalStatus == 2 && newStatus == 1)
+                            {
+                                changedToOkCount++;
                             }
                         }
                     }
                 }
-            };
 
-            // 添加图片信息
-            var group = new InferImageGroup
-            {
-                GroupUuid = Guid.NewGuid().ToString(),
-                GroupInfos = new List<GroupInfo>
+                sideResult.ChangedToOkCount = changedToOkCount;
+                sideResult.State = SecondaryInferenceResultState.Completed;
+
+                // 更新数据库
+                if (updatedDetectInfos.Count > 0)
                 {
-                    new GroupInfo
+                    // 计算新的 AI 状态：如果所有点都是 OK(1)，则面状态为 OK(1)，否则为 NG(2)
+                    int newAiState = updatedDetectInfos.All(d => d.AIStatus == 1) ? 1 : 2;
+                    await _databaseHelper.UpdatePanelSideAiStateAsync(vbModel.SN, vbModel.Side, updatedDetectInfos, newAiState);
+                    LogTextHelper.Info($"二次推理数据库更新完成: {vbModel.SN}_{vbModel.Side}, 更新点数={updatedDetectInfos.Count}, 转OK数={changedToOkCount}");
+                }
+
+                // 更新任务统计
+                if (_activeTasks.TryGetValue(vbModel.TestTaskId, out var task))
+                {
+                    lock (task)
                     {
-                        ImagePath = defectMinioPath,
-                        ImageUuid = Guid.NewGuid().ToString(),
-                        ImageType = "defect"
-                    },
-                    new GroupInfo
-                    {
-                        ImagePath = templateMinioPath,
-                        ImageUuid = Guid.NewGuid().ToString(),
-                        ImageType = "template"
+                        task.SecondaryResults.Add(sideResult);
+                        task.ProcessedRecords++;
+
+                        if (changedToOkCount > 0)
+                            task.OkRecords += changedToOkCount;
+                        task.NgRecords += sideResult.OriginalNgCount - changedToOkCount;
+
+                        // 检查任务是否真正完成
+                        if (task.IsReallyCompleted && task.State == InferenceTaskState.Running)
+                        {
+                            task.State = InferenceTaskState.Completed;
+                            task.EndTime = DateTime.Now;
+                            LogTextHelper.Info($"二次推理任务 {task.TaskId} 全部完成: 总点数={task.OkRecords + task.NgRecords}, 转OK={task.OkRecords}");
+                        }
                     }
-                },
-                MachineTemplateInfo = new MachineTemplateInfo
-                {
-                    MachineName = machineId,
-                    product = productSerial,
-                    Side = side
-                },
-                ImgROI = new List<int> { roiX, roiY, roiW, roiH },
-                DefectCode = detectInfo.DefectType ?? "",
-                TempImgPath = tempImgPath,
-                inspectDetails = new InspectDetails { InferRois = new List<InferRoi>() }
-            };
-            vbInfo.paramsData.InferWholeData.ImageData.DataValue.InferImageGroup.Add(group);
+                }
 
-            return new VBModel
+                sideResult.FinalNgCount = sideResult.OriginalNgCount - changedToOkCount;
+                LogTextHelper.Info($"二次推理结果: {vbModel.SN}_{vbModel.Side}, 原NG数={sideResult.OriginalNgCount}, 转OK={changedToOkCount}, 最终NG={sideResult.FinalNgCount}");
+            }
+            catch (Exception ex)
             {
-                Key = testKey,
-                SN = testKey,
-                Side = side,
-                DefectIndex = new List<int> { 0 },
-                PcsIndex = new List<int> { 0 },
-                ImageKeys = new List<string> { detectInfo.ImagePath },
-                VbInfo = vbInfo,
-                IsValidationTest = true,
-                IsSingleImageTest = true,
-                OriginalAIResults = new Dictionary<int, int> { { 0, detectInfo.AIStatus } },
-                TestTaskId = testKey
-            };
+                LogTextHelper.Error($"处理二次推理结果异常: {vbModel.SN}_{vbModel.Side}, {ex}");
+            }
         }
 
         /// <summary>
@@ -903,13 +665,12 @@ namespace DeepSightWorkLib.Services
                 var originalStatus = vbModel.OriginalAIResults?.ContainsKey(0) == true
                     ? vbModel.OriginalAIResults[0] : 0;
 
-                // 解析新结果: "0"=OK, "1"=NG, "2"=ByPass
                 int newStatus = 0;
                 if (inferResults != null && inferResults.Count > 0)
                 {
                     if (int.TryParse(inferResults[0], out int parsed))
                     {
-                        newStatus = parsed == 0 ? 1 : 2;  // 转换为 AIStatus 格式: 1=OK, 2=NG
+                        newStatus = parsed == 0 ? 1 : 2;
                     }
                 }
 
@@ -942,7 +703,7 @@ namespace DeepSightWorkLib.Services
         /// <summary>
         /// 获取测试任务状态
         /// </summary>
-        public ValidationTestTask GetTaskStatus(string taskId)
+        public InferenceTask GetTaskStatus(string taskId)
         {
             _activeTasks.TryGetValue(taskId, out var task);
             return task;
@@ -951,7 +712,7 @@ namespace DeepSightWorkLib.Services
         /// <summary>
         /// 获取所有活跃任务
         /// </summary>
-        public List<ValidationTestTask> GetActiveTasks()
+        public List<InferenceTask> GetActiveTasks()
         {
             return _activeTasks.Values.ToList();
         }
@@ -963,7 +724,7 @@ namespace DeepSightWorkLib.Services
         {
             if (_activeTasks.TryGetValue(taskId, out var task))
             {
-                task.State = ValidationTestTaskState.Cancelled;
+                task.State = InferenceTaskState.Cancelled;
                 task.EndTime = DateTime.Now;
                 return true;
             }
