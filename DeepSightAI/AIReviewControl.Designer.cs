@@ -29,10 +29,11 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.panel_Main = new System.Windows.Forms.Panel();
             this.splitContainer_Main = new System.Windows.Forms.SplitContainer();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.QueryControl = new DeepSightAI.QueryControl();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.btn_Save = new System.Windows.Forms.Button();
             this.btn_LoadImages = new System.Windows.Forms.Button();
@@ -61,13 +62,12 @@
             this.txt_SnFilter = new System.Windows.Forms.TextBox();
             this.label_LotTitle = new System.Windows.Forms.Label();
             this.tabPage_Details = new System.Windows.Forms.TabPage();
+            this.defectDetailControl1 = new DeepSightAI.DefectDetailControl();
             this.tabPage_ValidationTest = new System.Windows.Forms.TabPage();
+            this.validationTestResultControl1 = new DeepSightAI.ValidationTestResultControl();
             this.contextMenuStrip_Lot = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripMenuItem_RunTest = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem_SecondaryInference = new System.Windows.Forms.ToolStripMenuItem();
-            this.QueryControl = new DeepSightAI.QueryControl();
-            this.defectDetailControl1 = new DeepSightAI.DefectDetailControl();
-            this.validationTestResultControl1 = new DeepSightAI.ValidationTestResultControl();
             this.panel_Main.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer_Main)).BeginInit();
             this.splitContainer_Main.Panel1.SuspendLayout();
@@ -98,7 +98,7 @@
             this.panel_Main.Controls.Add(this.splitContainer_Main);
             this.panel_Main.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel_Main.Location = new System.Drawing.Point(0, 0);
-            this.panel_Main.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.panel_Main.Margin = new System.Windows.Forms.Padding(5);
             this.panel_Main.Name = "panel_Main";
             this.panel_Main.Size = new System.Drawing.Size(1924, 1088);
             this.panel_Main.TabIndex = 0;
@@ -108,7 +108,7 @@
             this.splitContainer_Main.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer_Main.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
             this.splitContainer_Main.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer_Main.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.splitContainer_Main.Margin = new System.Windows.Forms.Padding(5);
             this.splitContainer_Main.Name = "splitContainer_Main";
             // 
             // splitContainer_Main.Panel1
@@ -127,7 +127,7 @@
             // 
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer1.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.splitContainer1.Margin = new System.Windows.Forms.Padding(4);
             this.splitContainer1.Name = "splitContainer1";
             this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
@@ -144,11 +144,26 @@
             this.splitContainer1.SplitterWidth = 5;
             this.splitContainer1.TabIndex = 1;
             // 
+            // QueryControl
+            // 
+            this.QueryControl.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.QueryControl.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.QueryControl.IsDateChecked = true;
+            this.QueryControl.Location = new System.Drawing.Point(0, 0);
+            this.QueryControl.LotNumber = "";
+            this.QueryControl.MachineID = "";
+            this.QueryControl.Margin = new System.Windows.Forms.Padding(5, 2, 5, 2);
+            this.QueryControl.Name = "QueryControl";
+            this.QueryControl.PartNumber = "";
+            this.QueryControl.SelectedSide = "A";
+            this.QueryControl.Size = new System.Drawing.Size(363, 355);
+            this.QueryControl.TabIndex = 0;
+            // 
             // splitContainer2
             // 
             this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer2.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.splitContainer2.Margin = new System.Windows.Forms.Padding(4);
             this.splitContainer2.Name = "splitContainer2";
             this.splitContainer2.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
@@ -173,7 +188,7 @@
             this.btn_Save.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.btn_Save.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.btn_Save.Location = new System.Drawing.Point(5, 5);
-            this.btn_Save.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.btn_Save.Margin = new System.Windows.Forms.Padding(5);
             this.btn_Save.Name = "btn_Save";
             this.btn_Save.Size = new System.Drawing.Size(107, 38);
             this.btn_Save.TabIndex = 0;
@@ -188,7 +203,7 @@
             this.btn_LoadImages.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.btn_LoadImages.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.btn_LoadImages.Location = new System.Drawing.Point(120, 5);
-            this.btn_LoadImages.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btn_LoadImages.Margin = new System.Windows.Forms.Padding(4);
             this.btn_LoadImages.Name = "btn_LoadImages";
             this.btn_LoadImages.Size = new System.Drawing.Size(107, 38);
             this.btn_LoadImages.TabIndex = 2;
@@ -203,7 +218,7 @@
             this.btn_Export.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.btn_Export.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.btn_Export.Location = new System.Drawing.Point(236, 5);
-            this.btn_Export.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.btn_Export.Margin = new System.Windows.Forms.Padding(5);
             this.btn_Export.Name = "btn_Export";
             this.btn_Export.Size = new System.Drawing.Size(107, 38);
             this.btn_Export.TabIndex = 1;
@@ -216,7 +231,7 @@
             this.panel_ReviewDetail.Controls.Add(this.label_ReviewDetail);
             this.panel_ReviewDetail.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel_ReviewDetail.Location = new System.Drawing.Point(0, 0);
-            this.panel_ReviewDetail.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.panel_ReviewDetail.Margin = new System.Windows.Forms.Padding(4);
             this.panel_ReviewDetail.Name = "panel_ReviewDetail";
             this.panel_ReviewDetail.Size = new System.Drawing.Size(363, 672);
             this.panel_ReviewDetail.TabIndex = 0;
@@ -241,7 +256,7 @@
             this.tabControl_Main.Controls.Add(this.tabPage_ValidationTest);
             this.tabControl_Main.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl_Main.Location = new System.Drawing.Point(0, 0);
-            this.tabControl_Main.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.tabControl_Main.Margin = new System.Windows.Forms.Padding(5);
             this.tabControl_Main.Name = "tabControl_Main";
             this.tabControl_Main.SelectedIndex = 0;
             this.tabControl_Main.Size = new System.Drawing.Size(1554, 1088);
@@ -251,9 +266,9 @@
             // 
             this.tabPage_Grid.Controls.Add(this.panel_Grid);
             this.tabPage_Grid.Location = new System.Drawing.Point(4, 25);
-            this.tabPage_Grid.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.tabPage_Grid.Margin = new System.Windows.Forms.Padding(5);
             this.tabPage_Grid.Name = "tabPage_Grid";
-            this.tabPage_Grid.Padding = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.tabPage_Grid.Padding = new System.Windows.Forms.Padding(5);
             this.tabPage_Grid.Size = new System.Drawing.Size(1546, 1059);
             this.tabPage_Grid.TabIndex = 0;
             this.tabPage_Grid.Text = "缺陷列表";
@@ -266,7 +281,7 @@
             this.panel_Grid.Controls.Add(this.panel_LotList);
             this.panel_Grid.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel_Grid.Location = new System.Drawing.Point(5, 5);
-            this.panel_Grid.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.panel_Grid.Margin = new System.Windows.Forms.Padding(5);
             this.panel_Grid.Name = "panel_Grid";
             this.panel_Grid.Size = new System.Drawing.Size(1536, 1049);
             this.panel_Grid.TabIndex = 1;
@@ -290,17 +305,17 @@
             this.col_DefectCount,
             this.col_PathIndex,
             this.col_DetectionDate});
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dataGridView_Defects.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dataGridView_Defects.DefaultCellStyle = dataGridViewCellStyle1;
             this.dataGridView_Defects.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView_Defects.Location = new System.Drawing.Point(272, 0);
-            this.dataGridView_Defects.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.dataGridView_Defects.Margin = new System.Windows.Forms.Padding(5);
             this.dataGridView_Defects.MultiSelect = false;
             this.dataGridView_Defects.Name = "dataGridView_Defects";
             this.dataGridView_Defects.RowHeadersVisible = false;
@@ -399,7 +414,7 @@
             // splitter_LotGrid
             // 
             this.splitter_LotGrid.Location = new System.Drawing.Point(267, 0);
-            this.splitter_LotGrid.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.splitter_LotGrid.Margin = new System.Windows.Forms.Padding(4);
             this.splitter_LotGrid.Name = "splitter_LotGrid";
             this.splitter_LotGrid.Size = new System.Drawing.Size(5, 1049);
             this.splitter_LotGrid.TabIndex = 3;
@@ -412,7 +427,7 @@
             this.panel_LotList.Controls.Add(this.label_LotTitle);
             this.panel_LotList.Dock = System.Windows.Forms.DockStyle.Left;
             this.panel_LotList.Location = new System.Drawing.Point(0, 0);
-            this.panel_LotList.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.panel_LotList.Margin = new System.Windows.Forms.Padding(4);
             this.panel_LotList.Name = "panel_LotList";
             this.panel_LotList.Size = new System.Drawing.Size(267, 1049);
             this.panel_LotList.TabIndex = 2;
@@ -427,7 +442,7 @@
             this.treeView_Lots.FullRowSelect = true;
             this.treeView_Lots.HideSelection = false;
             this.treeView_Lots.Location = new System.Drawing.Point(0, 69);
-            this.treeView_Lots.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.treeView_Lots.Margin = new System.Windows.Forms.Padding(4);
             this.treeView_Lots.Name = "treeView_Lots";
             this.treeView_Lots.Size = new System.Drawing.Size(267, 980);
             this.treeView_Lots.TabIndex = 1;
@@ -439,9 +454,9 @@
             this.panel_SnSearch.Controls.Add(this.txt_SnFilter);
             this.panel_SnSearch.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel_SnSearch.Location = new System.Drawing.Point(0, 31);
-            this.panel_SnSearch.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.panel_SnSearch.Margin = new System.Windows.Forms.Padding(4);
             this.panel_SnSearch.Name = "panel_SnSearch";
-            this.panel_SnSearch.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.panel_SnSearch.Padding = new System.Windows.Forms.Padding(4);
             this.panel_SnSearch.Size = new System.Drawing.Size(267, 38);
             this.panel_SnSearch.TabIndex = 2;
             // 
@@ -454,7 +469,7 @@
             this.btn_SnSearch.Font = new System.Drawing.Font("微软雅黑", 8F);
             this.btn_SnSearch.ForeColor = System.Drawing.Color.White;
             this.btn_SnSearch.Location = new System.Drawing.Point(212, 4);
-            this.btn_SnSearch.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btn_SnSearch.Margin = new System.Windows.Forms.Padding(4);
             this.btn_SnSearch.Name = "btn_SnSearch";
             this.btn_SnSearch.Size = new System.Drawing.Size(51, 30);
             this.btn_SnSearch.TabIndex = 1;
@@ -469,7 +484,7 @@
             this.txt_SnFilter.Font = new System.Drawing.Font("微软雅黑", 9F);
             this.txt_SnFilter.ForeColor = System.Drawing.Color.White;
             this.txt_SnFilter.Location = new System.Drawing.Point(4, 4);
-            this.txt_SnFilter.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.txt_SnFilter.Margin = new System.Windows.Forms.Padding(4);
             this.txt_SnFilter.Name = "txt_SnFilter";
             this.txt_SnFilter.Size = new System.Drawing.Size(259, 27);
             this.txt_SnFilter.TabIndex = 0;
@@ -492,61 +507,13 @@
             // 
             this.tabPage_Details.Controls.Add(this.defectDetailControl1);
             this.tabPage_Details.Location = new System.Drawing.Point(4, 25);
-            this.tabPage_Details.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.tabPage_Details.Margin = new System.Windows.Forms.Padding(5);
             this.tabPage_Details.Name = "tabPage_Details";
-            this.tabPage_Details.Padding = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.tabPage_Details.Padding = new System.Windows.Forms.Padding(5);
             this.tabPage_Details.Size = new System.Drawing.Size(1546, 1059);
             this.tabPage_Details.TabIndex = 1;
             this.tabPage_Details.Text = "缺陷详情";
             this.tabPage_Details.UseVisualStyleBackColor = true;
-            // 
-            // tabPage_ValidationTest
-            // 
-            this.tabPage_ValidationTest.Controls.Add(this.validationTestResultControl1);
-            this.tabPage_ValidationTest.Location = new System.Drawing.Point(4, 25);
-            this.tabPage_ValidationTest.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
-            this.tabPage_ValidationTest.Name = "tabPage_ValidationTest";
-            this.tabPage_ValidationTest.Padding = new System.Windows.Forms.Padding(5, 5, 5, 5);
-            this.tabPage_ValidationTest.Size = new System.Drawing.Size(1546, 1059);
-            this.tabPage_ValidationTest.TabIndex = 2;
-            this.tabPage_ValidationTest.Text = "模型一致性测试";
-            this.tabPage_ValidationTest.UseVisualStyleBackColor = true;
-            // 
-            // contextMenuStrip_Lot
-            //
-            this.contextMenuStrip_Lot.ImageScalingSize = new System.Drawing.Size(20, 20);
-            this.contextMenuStrip_Lot.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripMenuItem_RunTest,
-            this.toolStripMenuItem_SecondaryInference});
-            this.contextMenuStrip_Lot.Name = "contextMenuStrip_Lot";
-            this.contextMenuStrip_Lot.Size = new System.Drawing.Size(214, 56);
-            //
-            // toolStripMenuItem_RunTest
-            //
-            this.toolStripMenuItem_RunTest.Name = "toolStripMenuItem_RunTest";
-            this.toolStripMenuItem_RunTest.Size = new System.Drawing.Size(213, 24);
-            this.toolStripMenuItem_RunTest.Text = "运行模型一致性测试";
-            //
-            // toolStripMenuItem_SecondaryInference
-            //
-            this.toolStripMenuItem_SecondaryInference.Name = "toolStripMenuItem_SecondaryInference";
-            this.toolStripMenuItem_SecondaryInference.Size = new System.Drawing.Size(213, 24);
-            this.toolStripMenuItem_SecondaryInference.Text = "运行二次推理";
-            // 
-            // QueryControl
-            // 
-            this.QueryControl.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.QueryControl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.QueryControl.IsDateChecked = true;
-            this.QueryControl.Location = new System.Drawing.Point(0, 0);
-            this.QueryControl.LotNumber = "";
-            this.QueryControl.MachineID = "";
-            this.QueryControl.Margin = new System.Windows.Forms.Padding(5, 2, 5, 2);
-            this.QueryControl.Name = "QueryControl";
-            this.QueryControl.PartNumber = "";
-            this.QueryControl.SelectedSide = "A";
-            this.QueryControl.Size = new System.Drawing.Size(363, 355);
-            this.QueryControl.TabIndex = 0;
             // 
             // defectDetailControl1
             // 
@@ -557,6 +524,18 @@
             this.defectDetailControl1.Name = "defectDetailControl1";
             this.defectDetailControl1.Size = new System.Drawing.Size(1536, 1049);
             this.defectDetailControl1.TabIndex = 0;
+            // 
+            // tabPage_ValidationTest
+            // 
+            this.tabPage_ValidationTest.Controls.Add(this.validationTestResultControl1);
+            this.tabPage_ValidationTest.Location = new System.Drawing.Point(4, 25);
+            this.tabPage_ValidationTest.Margin = new System.Windows.Forms.Padding(5);
+            this.tabPage_ValidationTest.Name = "tabPage_ValidationTest";
+            this.tabPage_ValidationTest.Padding = new System.Windows.Forms.Padding(5);
+            this.tabPage_ValidationTest.Size = new System.Drawing.Size(1546, 1059);
+            this.tabPage_ValidationTest.TabIndex = 2;
+            this.tabPage_ValidationTest.Text = "模型一致性测试";
+            this.tabPage_ValidationTest.UseVisualStyleBackColor = true;
             // 
             // validationTestResultControl1
             // 
@@ -569,12 +548,33 @@
             this.validationTestResultControl1.Size = new System.Drawing.Size(1536, 1049);
             this.validationTestResultControl1.TabIndex = 0;
             // 
+            // contextMenuStrip_Lot
+            // 
+            this.contextMenuStrip_Lot.ImageScalingSize = new System.Drawing.Size(20, 20);
+            this.contextMenuStrip_Lot.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItem_RunTest,
+            this.toolStripMenuItem_SecondaryInference});
+            this.contextMenuStrip_Lot.Name = "contextMenuStrip_Lot";
+            this.contextMenuStrip_Lot.Size = new System.Drawing.Size(214, 52);
+            // 
+            // toolStripMenuItem_RunTest
+            // 
+            this.toolStripMenuItem_RunTest.Name = "toolStripMenuItem_RunTest";
+            this.toolStripMenuItem_RunTest.Size = new System.Drawing.Size(213, 24);
+            this.toolStripMenuItem_RunTest.Text = "运行模型一致性测试";
+            // 
+            // toolStripMenuItem_SecondaryInference
+            // 
+            this.toolStripMenuItem_SecondaryInference.Name = "toolStripMenuItem_SecondaryInference";
+            this.toolStripMenuItem_SecondaryInference.Size = new System.Drawing.Size(213, 24);
+            this.toolStripMenuItem_SecondaryInference.Text = "运行二次推理";
+            // 
             // AIReviewControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.panel_Main);
-            this.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.Margin = new System.Windows.Forms.Padding(5);
             this.Name = "AIReviewControl";
             this.Size = new System.Drawing.Size(1924, 1088);
             this.panel_Main.ResumeLayout(false);

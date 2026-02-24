@@ -139,10 +139,6 @@ namespace DeepSightAI.SettingPages
             try
             {
                 FrHWConfig.Instance.txt_station_count.Value = Machine.aviconfig.WatchPaths.Count;
-                FrHWConfig.Instance.txt_max_wait_time.Text = Machine.aviconfig.MaxWaitTime.ToString(); ;
-                FrHWConfig.Instance.txt_get_infer_result_interval.Text = Machine.aviconfig.GetInferResultInterval.ToString();
-                FrHWConfig.Instance.txt_infer_request_timeout.Text = Machine.aviconfig.InferRequestTimeout.ToString();
-                FrHWConfig.Instance.txt_get_infer_result_timeout.Text = Machine.aviconfig.GetInferResultTimeout.ToString();
 
                 aviCtr2Container1.CreateMachinePanels(Machine.aviconfig.WatchPaths);
             }
@@ -172,15 +168,10 @@ namespace DeepSightAI.SettingPages
             try
             {
                 Machine.aviconfig.WatchPaths.Clear();
-                //公共参数
-                Machine.aviconfig.MaxWaitTime = Convert.ToInt32(FrHWConfig.Instance.txt_max_wait_time.Text);
-                Machine.aviconfig.GetInferResultInterval = Convert.ToInt32(FrHWConfig.Instance.txt_get_infer_result_interval.Text);
-                Machine.aviconfig.InferRequestTimeout = Convert.ToInt32(FrHWConfig.Instance.txt_infer_request_timeout.Text);
-                Machine.aviconfig.GetInferResultTimeout = Convert.ToInt32(FrHWConfig.Instance.txt_get_infer_result_timeout.Text);
 
                 var watchPaths = aviCtr2Container1.GetAllConfigs();
 
-                for (int i = 0; i < FrHWConfig.Instance.txt_station_count.Value; i++)
+                for (int i = 0; i < txt_station_count.Value; i++)
                 {
                     //工站信息
                     WatchPathConfig stationParam = watchPaths[i];

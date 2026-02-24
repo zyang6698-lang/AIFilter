@@ -30,6 +30,8 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrBaseConfig));
             this.panel1 = new System.Windows.Forms.Panel();
+            this.txt_GetInferResultTimeout = new System.Windows.Forms.TextBox();
+            this.label23 = new System.Windows.Forms.Label();
             this.txt_AgentShutdownTimeout = new System.Windows.Forms.TextBox();
             this.label22 = new System.Windows.Forms.Label();
             this.txt_MaxDefectCount = new System.Windows.Forms.TextBox();
@@ -44,11 +46,13 @@
             this.label8 = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
-            // 
+            //
             // panel1
-            // 
+            //
             resources.ApplyResources(this.panel1, "panel1");
             this.panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.panel1.Controls.Add(this.txt_GetInferResultTimeout);
+            this.panel1.Controls.Add(this.label23);
             this.panel1.Controls.Add(this.txt_AgentShutdownTimeout);
             this.panel1.Controls.Add(this.label22);
             this.panel1.Controls.Add(this.txt_MaxDefectCount);
@@ -63,14 +67,35 @@
             this.panel1.Controls.Add(this.label8);
             this.panel1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.panel1.Name = "panel1";
-            // 
+            //
+            // txt_GetInferResultTimeout
+            //
+            this.txt_GetInferResultTimeout.Location = new System.Drawing.Point(220, 254);
+            this.txt_GetInferResultTimeout.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.txt_GetInferResultTimeout.Name = "txt_GetInferResultTimeout";
+            this.txt_GetInferResultTimeout.Size = new System.Drawing.Size(153, 27);
+            this.txt_GetInferResultTimeout.TabIndex = 241;
+            this.txt_GetInferResultTimeout.Text = "60";
+            //
+            // label23
+            //
+            this.label23.AutoSize = true;
+            this.label23.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.label23.Location = new System.Drawing.Point(36, 256);
+            this.label23.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label23.Name = "label23";
+            this.label23.Size = new System.Drawing.Size(178, 20);
+            this.label23.TabIndex = 240;
+            this.label23.Text = "推理结果最大等待时间(s)：";
+            this.label23.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            //
             // txt_AgentShutdownTimeout
-            // 
+            //
             resources.ApplyResources(this.txt_AgentShutdownTimeout, "txt_AgentShutdownTimeout");
             this.txt_AgentShutdownTimeout.Name = "txt_AgentShutdownTimeout";
-            // 
+            //
             // label22
-            // 
+            //
             resources.ApplyResources(this.label22, "label22");
             this.label22.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.label22.Name = "label22";
@@ -161,5 +186,7 @@
         internal System.Windows.Forms.Label label21;
         internal System.Windows.Forms.TextBox txt_AgentShutdownTimeout;
         internal System.Windows.Forms.Label label22;
+        internal System.Windows.Forms.TextBox txt_GetInferResultTimeout;
+        internal System.Windows.Forms.Label label23;
     }
 }
