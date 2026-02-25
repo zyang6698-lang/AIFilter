@@ -276,6 +276,9 @@ namespace DeepSightAI
 
                     // 更新LotSn
                     UpdateLotSn();
+
+                    // 检查所有工站是否超时（10秒无数据则状态变灰）
+                    CheckAllStationsTimeout();
                 }
                 catch (OperationCanceledException)
                 {
@@ -558,13 +561,13 @@ namespace DeepSightAI
                     int index = 0;
                     for (int i = 0; i < info.Count; i++)
                     {
-                        string path = string.Empty;
-                        string result = string.Empty;
-                        Machine.master.workClass.ParseMinioPath(info[i].rootInfo.LocalDescribePath, out path, out result);
+                       // string path = string.Empty;
+                     //   string result = string.Empty;
+                        //Machine.master.workClass.ParseMinioPath(info[i].Head, out path, out result);
 
-                        for (int j = 0; j < info[i].rootInfo.PcsInfo.Count; j++)
+                        for (int j = 0; j < info[i].RootInfo.PcsInfo.Count; j++)
                         {
-                            if (info[i].rootInfo.PcsInfo.TryGetValue((j + 1).ToString(), out PcsInfo pcsInfo))
+                            if (info[i].RootInfo.PcsInfo.TryGetValue((j + 1).ToString(), out PcsInfo pcsInfo))
                             {
                                 for (int k = 0; k < pcsInfo.DefectInfo.Count; k++)
                                 {
@@ -572,29 +575,29 @@ namespace DeepSightAI
                                     {
                                         defect_code = pcsInfo.DefectInfo[k].DefectCode,
                                         defect_index = pcsInfo.DefectInfo[k].DefectIndex.ToString(),
-                                        product_serial = info[i].rootInfo.ProductSerial,
+                                        product_serial = info[i].RootInfo.ProductSerial,
                                         pcs_index = pcsInfo.DefectInfo[k].PcsIndex.ToString(),
                                         defect_location = pcsInfo.DefectInfo[k].DefectLocation,
                                         sn = SN,//info[i].rootInfo.SerialNumber,
-                                        process_time = info[i].rootInfo.EndTime,
+                                        process_time = info[i].RootInfo.EndTime,
                                         ai_infer_result = pcsInfo.DefectInfo[k].AiInferResult,
-                                        station_name = info[i].rootInfo.StationName,
+                                        station_name = info[i].RootInfo.StationName,
                                         dateil = "",
-                                        side_index = info[i].rootInfo.SideIndex,
-                                        lot_id = info[i].rootInfo.LotId,
-                                        lot_batch = info[i].rootInfo.LotBatch,
+                                        side_index = info[i].RootInfo.SideIndex,
+                                        lot_id = info[i].RootInfo.LotId,
+                                        lot_batch = info[i].RootInfo.LotBatch,
                                     });
                                     if (pcsInfo.DefectInfo[k].DefectVrsImages != null)
                                     {
-                                        imagePaths.Add($"{result}/{pcsInfo.DefectInfo[k].DefectVrsImages[0].ToString()}:{info[i].IP}");
+                                        imagePaths.Add($"{info[i].Head}/{pcsInfo.DefectInfo[k].DefectVrsImages[0].ToString()}:{info[i].IP}");
                                     }
                                     if (pcsInfo.DefectInfo[k].DefectVrsGerberImages != null)
                                     {
-                                        imagePaths_Gerber.Add($"{result}/{pcsInfo.DefectInfo[k].DefectVrsGerberImages[0].ToString()}:{info[i].IP}");
+                                        imagePaths_Gerber.Add($"{info[i].Head}/{pcsInfo.DefectInfo[k].DefectVrsGerberImages[0].ToString()}:{info[i].IP}");
                                     }
                                     if (pcsInfo.DefectInfo[k].DefectVrsOkImages != null)
                                     {
-                                        imagePaths_Template.Add($"{result}/{pcsInfo.DefectInfo[k].DefectVrsOkImages[0].ToString()}:{info[i].IP}");
+                                        imagePaths_Template.Add($"{info[i].Head}/{pcsInfo.DefectInfo[k].DefectVrsOkImages[0].ToString()}:{info[i].IP}");
                                     }
                                     index++;
                                 }
@@ -780,7 +783,34 @@ namespace DeepSightAI
         /// </summary>
         public void RefreshAviCtrConfigs()
         {
-            aviCtr2Container.UpdateAllMachinePanels(Machine.aviconfig.WatchPaths);
+            if (this.IsHandleCreated)
+            {
+                if (this.InvokeRequired)
+                {
+                    this.BeginInvoke(new Action(() => aviCtr2Container.CreateMachinePanels(Machine.aviconfig.WatchPaths)));
+                }
+                else
+                {
+                    aviCtr2Container.CreateMachinePanels(Machine.aviconfig.WatchPaths);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 更新指定工站的数据接收时间（状态变为绿色）
+        /// </summary>
+        /// <param name="machineName">工站名称</param>
+        public void UpdateStationDataReceived(string machineName)
+        {
+            aviCtr2Container.UpdateStationDataReceived(machineName);
+        }
+
+        /// <summary>
+        /// 检查所有工站是否超时，超时则将状态设为灰色
+        /// </summary>
+        public void CheckAllStationsTimeout()
+        {
+            aviCtr2Container.CheckAllStationsTimeout();
         }
 
     }

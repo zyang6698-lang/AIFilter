@@ -175,6 +175,24 @@ namespace DeepSightAI.SettingPages
             }
         }
 
+        /// <summary>
+        /// 最后接收数据的时间，用于检测工站是否超时
+        /// </summary>
+        private DateTime _lastDataTime = DateTime.MinValue;
+        public DateTime LastDataTime
+        {
+            get => _lastDataTime;
+            set
+            {
+                _lastDataTime = value;
+            }
+        }
+
+        /// <summary>
+        /// 工站超时时间阈值（秒），超过此时间没有新数据则状态变灰
+        /// </summary>
+        public static int TimeoutSeconds { get; set; } = 10;
+
         public WatchPathConfig ctrConfig
         {
             get => _ctrConfig;
@@ -427,6 +445,54 @@ namespace DeepSightAI.SettingPages
                 {
                     pictureBoxStatus.Image = bmp;
                 }
+            }
+        }
+
+        /// <summary>
+        /// 检查工站是否超时并更新状态
+        /// </summary>
+        /// <returns>true 如果超时（状态变灰），false 如果未超时</returns>
+        public bool CheckTimeoutAndUpdateStatus()
+        {
+            // 如果工站未启用，保持灰色状态
+            if (ctrConfig == null || !ctrConfig.IsEnable)
+            {
+                SetStatus(ControlStatus.Disabled);
+                return true;
+            }
+
+            // 如果从未接收过数据，则保持灰色（等待首次数据）
+            if (_lastDataTime == DateTime.MinValue)
+            {
+                SetStatus(ControlStatus.Disabled);
+                return true;
+            }
+
+            // 检查是否超时
+            var elapsed = DateTime.Now - _lastDataTime;
+            if (elapsed.TotalSeconds > TimeoutSeconds)
+            {
+                // 超时，
+                SetStatus(ControlStatus.Warning);
+                return true;
+            }
+            else
+            {
+                // 未超时，状态为绿色
+                SetStatus(ControlStatus.Normal);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 更新最后数据接收时间为当前时间，并将状态设为绿色
+        /// </summary>
+        public void UpdateDataReceived()
+        {
+            _lastDataTime = DateTime.Now;
+            if (ctrConfig != null && ctrConfig.IsEnable)
+            {
+                SetStatus(ControlStatus.Normal);
             }
         }
         /// <summary>

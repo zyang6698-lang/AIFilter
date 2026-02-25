@@ -245,7 +245,7 @@ namespace DeepSightModel
         public Dictionary<string, object> SubDefectDetails { get; set; }
 
         [JsonProperty("sub_defect_height")]
-        public int SubDefectHeight { get; set; }
+        public double SubDefectHeight { get; set; }
 
         [JsonProperty("sub_defect_index")]
         public int SubDefectIndex { get; set; }
@@ -254,7 +254,7 @@ namespace DeepSightModel
         public List<SubDefectRoi> SubDefectRoi { get; set; }
 
         [JsonProperty("sub_defect_width")]
-        public int SubDefectWidth { get; set; }
+        public double SubDefectWidth { get; set; }
     }
 
     public class SubDefectRoi
@@ -291,6 +291,7 @@ namespace DeepSightModel
     public class RootPanelInfoWithIP
     {
         public string IP { get; set; }
-        public RootPanelInfo rootInfo { get; set; }
+        public string Head { get; set; }
+        public RootPanelInfo RootInfo { get; set; }
     }
 }

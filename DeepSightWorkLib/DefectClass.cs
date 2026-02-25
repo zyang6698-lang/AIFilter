@@ -26,12 +26,6 @@ namespace DeepSightWorkLib
         /// </summary>
         public AI_DefectClass AiDefect => _aiDefect;
 
-        /// <summary>
-        /// 兼容旧代码的属性（已弃用，请使用 AiDefect）
-        /// </summary>
-        [Obsolete("请使用 AiDefect 属性")]
-        public AI_DefectClass ai_Defect => _aiDefect;
-
         public DefectClass()
         {
             _aiDefect = new AI_DefectClass();

@@ -10,45 +10,45 @@ using System.Collections.Generic;
 using Sunny.UI;
 
 namespace DeepSightAI.SettingPages
-{ 
+{
     /// <summary>
-    /// 基础参数
+    /// 算法配置界面 - 以算法流程为核心，料号为从属
     /// </summary>
     public partial class FrAIConfig : Form
     {
-        // 可下拉
+        // Mode 枚举
         public enum PicOptMode
         {
             by_machine = 0,
-            copy =1,
-            cut=2,
+            copy = 1,
+            cut = 2,
         }
-        DeepSight_ProductMode_class ProductModeConfig ;
 
-        public FrAIConfig()
+        // 内部数据结构：一个算法流程配置对应多个料号
+        private class PipelineConfig
         {
-            InitializeComponent();
-            InitParNumberConfig();
-            Control.CheckForIllegalCrossThreadCalls = false;
-            SetStyle(ControlStyles.UserPaint, true);
-            SetStyle(ControlStyles.AllPaintingInWmPaint, true); // 禁止擦除背景.
-            SetStyle(ControlStyles.DoubleBuffer, true); // 双缓冲
-            MaximizedBounds = Screen.PrimaryScreen.WorkingArea;
-            dataPost.CellValueChanged -= dataPost_CellValueChanged;
-            GetSolutionFlow();
-            dataPost.CellValueChanged += dataPost_CellValueChanged;
-            dataPost.RowsAdded += (s, e) => UpdateRowIndices();
-            dataPost.RowsRemoved += (s, e) => UpdateRowIndices();
+            public string ConfigName { get; set; }
+            public string ASolution { get; set; }
+            public string AFlow { get; set; }
+            public string BSolution { get; set; }
+            public string BFlow { get; set; }
+            public bool IsSwitch { get; set; }
+            public List<ProductEntry> Products { get; set; } = new List<ProductEntry>();
         }
-        private void UpdateRowIndices()
+
+        private class ProductEntry
         {
-            for (int i = 0; i < dataPost.Rows.Count; i++)
-            {
-                if (dataPost.Rows[i].IsNewRow) continue;
-                dataPost.Rows[i].Cells["Index"].Value = i + 1;
-            }
+            public string ProductSerial { get; set; }
+            public string Mode { get; set; } = "by_machine";
         }
+
+        // 内部数据
+        private List<PipelineConfig> _pipelineConfigs = new List<PipelineConfig>();
         private Dictionary<string, List<string>> dic_solutionAndFlow = new Dictionary<string, List<string>>();
+        private DeepSight_ProductMode_class ProductModeConfig;
+
+        private bool _isUpdating = false; // 防止递归触发事件
+
         /// <summary>
         /// 窗体实例对象
         /// </summary>
@@ -61,17 +61,57 @@ namespace DeepSightAI.SettingPages
                 {
                     _instance = new FrAIConfig();
                 }
-
                 return _instance;
             }
         }
+
+        public FrAIConfig()
+        {
+            InitializeComponent();
+            InitParNumberConfig();
+            CheckForIllegalCrossThreadCalls = false;
+            SetStyle(ControlStyles.UserPaint, true);
+            SetStyle(ControlStyles.AllPaintingInWmPaint, true); // 禁止擦除背景.
+            SetStyle(ControlStyles.DoubleBuffer, true); // 双缓冲
+            MaximizedBounds = Screen.PrimaryScreen.WorkingArea;
+
+            // 初始化并加载数据
+            GetSolutionFlow();
+
+            // 绑定右侧料号列表行号更新事件
+            dgvProducts.RowsAdded += (s, e) => UpdateProductRowIndices();
+            dgvProducts.RowsRemoved += (s, e) => UpdateProductRowIndices();
+        }
+
+        private void UpdateProductRowIndices()
+        {
+            for (int i = 0; i < dgvProducts.Rows.Count; i++)
+            {
+                if (dgvProducts.Rows[i].IsNewRow) continue;
+                dgvProducts.Rows[i].Cells["colIndex"].Value = i + 1;
+            }
+        }
+
+        private void UpdatePipelineProductCount()
+        {
+            for (int i = 0; i < dgvPipeline.Rows.Count; i++)
+            {
+                if (dgvPipeline.Rows[i].IsNewRow) continue;
+                if (i < _pipelineConfigs.Count)
+                {
+                    dgvPipeline.Rows[i].Cells["colProductCount"].Value = _pipelineConfigs[i].Products.Count;
+                }
+            }
+        }
+
         /// <summary>
-        /// 获取方案流程
+        /// 获取方案流程列表并初始化界面
         /// </summary>
-        /// <param name="isInface">是否从接口获取 true:接口获取 false：文件获取</param>
         public void GetSolutionFlow(bool isInface = false)
         {
-            dataPost.Rows.Clear();
+            dgvPipeline.Rows.Clear();
+            dgvProducts.Rows.Clear();
+            _pipelineConfigs.Clear();
             try
             {
                 var json = JsonConvert.SerializeObject(new
@@ -94,62 +134,41 @@ namespace DeepSightAI.SettingPages
                         Solution = item["solution"].ToString(),
                         FlowList = item["flow_list"].Select(flow => flow.ToString()).ToList()
                     });
-                
+
                 dic_solutionAndFlow.Clear();
                 foreach (var sol in solutions)
                 {
-                    if (sol.FlowList.Count == 0)
-                    {
-                        dataPost.Rows.Add(
-                            dataPost.Rows.Count, // Index placeholder
-                            "A",                 // liaohao
-                            sol.Solution,        // A_solution
-                            "(空流程)",           // A_flow
-                            sol.Solution,        // B_solution(可按需求决定是否同 A)
-                            "(空流程)",           // B_flow
-                            false,               // isSwitch
-                            PicOptMode.by_machine.ToString() // Mode
-                        );
-                    }
-
                     if (!dic_solutionAndFlow.ContainsKey(sol.Solution))
                     {
-                        dic_solutionAndFlow.Add(sol.Solution, sol.FlowList);
+                        dic_solutionAndFlow.Add(sol.Solution, sol.FlowList.Count > 0 ? sol.FlowList : new List<string> { "(空流程)" });
                     }
                 }
-                ((DataGridViewComboBoxColumn)dataPost.Columns["A_solution"]).DataSource = dic_solutionAndFlow.Keys.ToList();
-                ((DataGridViewComboBoxColumn)dataPost.Columns["A_flow"]).DataSource = dic_solutionAndFlow.Values.SelectMany(list => list).Distinct().ToList();
-                ((DataGridViewComboBoxColumn)dataPost.Columns["B_solution"]).DataSource = dic_solutionAndFlow.Keys.ToList();
-                ((DataGridViewComboBoxColumn)dataPost.Columns["B_flow"]).DataSource = dic_solutionAndFlow.Values.SelectMany(list => list).Distinct().ToList();
+
+                // 更新左侧表格的ComboBox数据源
+                var solutionList = dic_solutionAndFlow.Keys.ToList();
+                var allFlows = dic_solutionAndFlow.Values.SelectMany(list => list).Distinct().ToList();
+                colASolution.DataSource = solutionList;
+                colAFlow.DataSource = allFlows;
+                colBSolution.DataSource = solutionList;
+                colBFlow.DataSource = allFlows;
             }
             catch (Exception ex)
             {
                 LogTextHelper.Error("获取方案流程失败: " + ex.ToString());
                 dic_solutionAndFlow.Clear();
-                // 添加默认空行
-                dataPost.Rows.Add(
-                    1, // Index placeholder
-                    "Default",
-                    "DefaultSolution",
-                    "(空流程)",
-                    "DefaultSolution",
-                    "(空流程)",
-                    false,
-                    PicOptMode.by_machine.ToString()
-                );
-                // 更新ComboBox数据源
+                dic_solutionAndFlow.Add("DefaultSolution", new List<string> { "(空流程)" });
+
                 var defaultKeys = new List<string> { "DefaultSolution" };
                 var defaultValues = new List<string> { "(空流程)" };
-                ((DataGridViewComboBoxColumn)dataPost.Columns["A_solution"]).DataSource = defaultKeys;
-                ((DataGridViewComboBoxColumn)dataPost.Columns["A_flow"]).DataSource = defaultValues;
-                ((DataGridViewComboBoxColumn)dataPost.Columns["B_solution"]).DataSource = defaultKeys;
-                ((DataGridViewComboBoxColumn)dataPost.Columns["B_flow"]).DataSource = defaultValues;
+                colASolution.DataSource = defaultKeys;
+                colAFlow.DataSource = defaultValues;
+                colBSolution.DataSource = defaultKeys;
+                colBFlow.DataSource = defaultValues;
             }
             finally
             {
-                //默认文件获取
+                // 加载已保存配置
                 InitMethod();
-                UpdateRowIndices();
             }
         }
 
@@ -159,140 +178,182 @@ namespace DeepSightAI.SettingPages
 
         }
         /// <summary>
-        /// 绑定数据
+        /// 绑定数据 - 将平铺的SolutionAndFlow按流程组合分组显示
         /// </summary>
         private void InitMethod()
         {
             try
             {
-                if (Machine.solconfig != null)
+                _pipelineConfigs.Clear();
+
+                // 读取ProductMode配置
+                ProductModeConfig.Read(out ProductModeConfig modeConfig);
+                // 去重：如果有重复Name，取第一个
+                var modeDict = modeConfig?.Products?
+                    .Where(p => !string.IsNullOrEmpty(p.Name))
+                    .GroupBy(p => p.Name)
+                    .ToDictionary(g => g.Key, g => g.First().CopyCutMode)
+                    ?? new Dictionary<string, string>();
+
+                if (Machine.solconfig != null && Machine.solconfig.solus != null)
                 {
-                    // 获取 ComboBox 列的数据源以供后续验证
-                    var aSolutionItems = ((DataGridViewComboBoxColumn)dataPost.Columns["A_solution"]).DataSource as List<string> ?? new List<string>();
-                    var bSolutionItems = ((DataGridViewComboBoxColumn)dataPost.Columns["B_solution"]).DataSource as List<string> ?? new List<string>();
-                    // 注意：Flow 的数据源是动态的，这里先获取全局列表
-                    var allFlowItems = ((DataGridViewComboBoxColumn)dataPost.Columns["A_flow"]).DataSource as List<string> ?? new List<string>();
+                    // 按(Asolution, Aflow, Bsolution, Bflow, IsSwitch)分组
+                    var groups = Machine.solconfig.solus
+                        .GroupBy(s => new { s.Asolution, s.Aflow, s.Bsolution, s.Bflow, s.IsSwitch })
+                        .ToList();
 
-                    for (int i = 0; i < Machine.solconfig.solus.Count; i++)
+                    int configIndex = 1;
+                    foreach (var group in groups)
                     {
-                        dataPost.Rows.Add();
-                        var row = dataPost.Rows[i];
-                        var savedSolu = Machine.solconfig.solus[i];
-
-                        row.Cells["Index"].Value = i + 1;
-                        row.Cells[1].Value = savedSolu.ProductSerial;
-
-                        // --- START: 修改部分 ---
-
-                        // 验证并设置 A_solution
-                        if (aSolutionItems.Contains(savedSolu.Asolution))
+                        var config = new PipelineConfig
                         {
-                            row.Cells["A_solution"].Value = savedSolu.Asolution;
-                        }
-                        else if (aSolutionItems.Count > 0)
-                        {
-                            row.Cells["A_solution"].Value = aSolutionItems[0]; // 使用第一个可用的方案作为默认值
-                        }
-
-                        // 验证并设置 A_flow
-                        if (dic_solutionAndFlow.TryGetValue(row.Cells["A_solution"].Value.ToString(), out var aFlowList) && aFlowList.Contains(savedSolu.Aflow))
-                        {
-                            ((DataGridViewComboBoxCell)row.Cells["A_flow"]).DataSource = aFlowList;
-                            row.Cells["A_flow"].Value = savedSolu.Aflow;
-                        }
-                        else if (aFlowList != null && aFlowList.Count > 0)
-                        {
-                            ((DataGridViewComboBoxCell)row.Cells["A_flow"]).DataSource = aFlowList;
-                            row.Cells["A_flow"].Value = aFlowList[0]; // 使用方案下的第一个流程
-                        }
-
-                        // 验证并设置 B_solution
-                        if (bSolutionItems.Contains(savedSolu.Bsolution))
-                        {
-                            row.Cells["B_solution"].Value = savedSolu.Bsolution;
-                        }
-                        else if (bSolutionItems.Count > 0)
-                        {
-                            row.Cells["B_solution"].Value = bSolutionItems[0]; // 使用第一个可用的方案作为默认值
-                        }
-
-                        // 验证并设置 B_flow
-                        if (dic_solutionAndFlow.TryGetValue(row.Cells["B_solution"].Value.ToString(), out var bFlowList) && bFlowList.Contains(savedSolu.Bflow))
-                        {
-                            ((DataGridViewComboBoxCell)row.Cells["B_flow"]).DataSource = bFlowList;
-                            row.Cells["B_flow"].Value = savedSolu.Bflow;
-                        }
-                        else if (bFlowList != null && bFlowList.Count > 0)
-                        {
-                            ((DataGridViewComboBoxCell)row.Cells["B_flow"]).DataSource = bFlowList;
-                            row.Cells["B_flow"].Value = bFlowList[0]; // 使用方案下的第一个流程
-                        }
-
-                        // --- END: 修改部分 ---
-
-                        row.Cells[6].Value = savedSolu.IsSwitch;
-                        if (dataPost.Columns.Contains("Mode"))
-                        {
-                            // 默认值
-                            row.Cells["Mode"].Value = PicOptMode.by_machine.ToString();
-                        }
+                            ConfigName = $"配置{configIndex++}",
+                            ASolution = group.Key.Asolution ?? "",
+                            AFlow = group.Key.Aflow ?? "",
+                            BSolution = group.Key.Bsolution ?? "",
+                            BFlow = group.Key.Bflow ?? "",
+                            IsSwitch = group.Key.IsSwitch,
+                            Products = group.Select(s => new ProductEntry
+                            {
+                                ProductSerial = s.ProductSerial ?? "",
+                                Mode = modeDict.TryGetValue(s.ProductSerial ?? "", out var m) ? m : PicOptMode.by_machine.ToString()
+                            }).ToList()
+                        };
+                        _pipelineConfigs.Add(config);
                     }
                 }
-                // 从配置文件加载Mode
-                LoadProductModes();
-                UpdateRowIndices();
+
+                // 如果没有任何配置，添加一个默认配置
+                if (_pipelineConfigs.Count == 0)
+                {
+                    var defaultSolution = dic_solutionAndFlow.Keys.FirstOrDefault() ?? "DefaultSolution";
+                    var defaultFlow = dic_solutionAndFlow.TryGetValue(defaultSolution, out var flows) && flows.Count > 0
+                        ? flows[0] : "(空流程)";
+
+                    _pipelineConfigs.Add(new PipelineConfig
+                    {
+                        ConfigName = "配置1",
+                        ASolution = defaultSolution,
+                        AFlow = defaultFlow,
+                        BSolution = defaultSolution,
+                        BFlow = defaultFlow,
+                        IsSwitch = false,
+                        Products = new List<ProductEntry>()
+                    });
+                }
+
+                // 填充左侧算法配置表格
+                _isUpdating = true;
+                foreach (var config in _pipelineConfigs)
+                {
+                    int rowIdx = dgvPipeline.Rows.Add();
+                    var row = dgvPipeline.Rows[rowIdx];
+                    row.Cells["colConfigName"].Value = config.ConfigName;
+                    row.Cells["colASolution"].Value = config.ASolution;
+                    row.Cells["colAFlow"].Value = config.AFlow;
+                    row.Cells["colBSolution"].Value = config.BSolution;
+                    row.Cells["colBFlow"].Value = config.BFlow;
+                    row.Cells["colIsSwitch"].Value = config.IsSwitch;
+                    row.Cells["colProductCount"].Value = config.Products.Count;
+                }
+                _isUpdating = false;
+
+                // 自动选中第一行
+                if (dgvPipeline.Rows.Count > 0)
+                {
+                    dgvPipeline.ClearSelection();
+                    dgvPipeline.Rows[0].Selected = true;
+                    dgvPipeline.CurrentCell = dgvPipeline.Rows[0].Cells[0];
+                    RefreshProductsGrid(0);
+                }
             }
             catch (Exception ex)
             {
-                LogTextHelper.Error("异常" + ex.ToString());
+                LogTextHelper.Error("InitMethod异常: " + ex.ToString());
             }
         }
 
-        private void LoadProductModes()
+        /// <summary>
+        /// 刷新右侧料号表格
+        /// </summary>
+        private void RefreshProductsGrid(int pipelineIndex)
         {
-            if (ProductModeConfig.Read(out ProductModeConfig config))
+            dgvProducts.Rows.Clear();
+            if (pipelineIndex < 0 || pipelineIndex >= _pipelineConfigs.Count) return;
+
+            var products = _pipelineConfigs[pipelineIndex].Products;
+            for (int i = 0; i < products.Count; i++)
             {
-                foreach (DataGridViewRow row in dataPost.Rows)
-                {
-                    if (row.IsNewRow || row.Cells[1].Value == null) continue;
+                int rowIdx = dgvProducts.Rows.Add();
+                dgvProducts.Rows[rowIdx].Cells["colIndex"].Value = i + 1;
+                dgvProducts.Rows[rowIdx].Cells["colProductSerial"].Value = products[i].ProductSerial;
+                dgvProducts.Rows[rowIdx].Cells["colMode"].Value = products[i].Mode;
+            }
+        }
 
-                    string materialCode = row.Cells[1].Value.ToString();
-                    var productItem = ProductModeConfig.GetProduct(materialCode, config);
+        #region 事件处理
 
-                    if (productItem != null && !string.IsNullOrEmpty(productItem.CopyCutMode))
+        /// <summary>
+        /// 左侧算法配置选中变化 - 刷新右侧料号列表
+        /// </summary>
+        private void dgvPipeline_SelectionChanged(object sender, EventArgs e)
+        {
+            if (_isUpdating) return;
+            if (dgvPipeline.SelectedRows.Count > 0)
+            {
+                int selectedIndex = dgvPipeline.SelectedRows[0].Index;
+                RefreshProductsGrid(selectedIndex);
+            }
+        }
+
+        /// <summary>
+        /// 左侧算法配置单元格值变化
+        /// </summary>
+        private void dgvPipeline_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            if (_isUpdating || e.RowIndex < 0 || e.RowIndex >= _pipelineConfigs.Count) return;
+
+            var config = _pipelineConfigs[e.RowIndex];
+            var colName = dgvPipeline.Columns[e.ColumnIndex].Name;
+            var cellValue = dgvPipeline.Rows[e.RowIndex].Cells[e.ColumnIndex].Value;
+
+            switch (colName)
+            {
+                case "colConfigName":
+                    config.ConfigName = cellValue?.ToString() ?? "";
+                    break;
+                case "colASolution":
+                    config.ASolution = cellValue?.ToString() ?? "";
+                    // 当Solution改变时，更新对应的Flow下拉选项
+                    if (dic_solutionAndFlow.TryGetValue(config.ASolution, out var aFlows))
                     {
-                        // 检查值是否在ComboBox的项中
-                        var comboBoxCell = row.Cells["Mode"] as DataGridViewComboBoxCell;
-                        if (comboBoxCell != null)
-                        {
-                            if (comboBoxCell.Items.Contains(productItem.CopyCutMode))
-                            {
-                                row.Cells["Mode"].Value = productItem.CopyCutMode;
-                            }
-                            else
-                            {
-                                // 如果需要，可以记录一个警告，说明该值无效
-                            }
-                        }
+                        ((DataGridViewComboBoxCell)dgvPipeline.Rows[e.RowIndex].Cells["colAFlow"]).DataSource = aFlows;
+                        if (aFlows.Count > 0) config.AFlow = aFlows[0];
                     }
-                }
+                    break;
+                case "colAFlow":
+                    config.AFlow = cellValue?.ToString() ?? "";
+                    break;
+                case "colBSolution":
+                    config.BSolution = cellValue?.ToString() ?? "";
+                    if (dic_solutionAndFlow.TryGetValue(config.BSolution, out var bFlows))
+                    {
+                        ((DataGridViewComboBoxCell)dgvPipeline.Rows[e.RowIndex].Cells["colBFlow"]).DataSource = bFlows;
+                        if (bFlows.Count > 0) config.BFlow = bFlows[0];
+                    }
+                    break;
+                case "colBFlow":
+                    config.BFlow = cellValue?.ToString() ?? "";
+                    break;
+                case "colIsSwitch":
+                    config.IsSwitch = cellValue is bool b && b;
+                    break;
             }
         }
 
         private void btn_GetAgain_Click(object sender, EventArgs e)
         {
             GetSolutionFlow(true);
-        }
-        private void dataPost_CellClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
-            //判断是否是第二列
-            if (e.ColumnIndex == 3 && dataPost.Columns[e.ColumnIndex] is DataGridViewCheckBoxColumn)
-            {
-                var cell = dataPost.Rows[e.RowIndex].Cells[e.ColumnIndex];
-                cell.Value = !(cell.Value is bool isChecked && isChecked);
-                dataPost.CommitEdit(DataGridViewDataErrorContexts.Commit);
-            }
         }
 
         private void btn_setSolution_Click(object sender, EventArgs e)
@@ -301,175 +362,255 @@ namespace DeepSightAI.SettingPages
             MessageBox.Show("方案及流程设置成功", "设置成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
+        #endregion
+
+        #region 保存功能
+
+        /// <summary>
+        /// 保存配置 - 将分组数据展平为原始格式
+        /// </summary>
         public bool SaveParam()
         {
             bool result = true;
             try
             {
-                // 保存 SolutionConfig
-                SolutionConfig solConfig = new SolutionConfig()
+                // 先同步右侧表格数据到当前选中的配置
+                SyncProductsToCurrentConfig();
+
+                // 展平为 SolutionConfig 格式
+                SolutionConfig solConfig = new SolutionConfig
                 {
                     solus = new List<SolutionAndFlow>(),
+                    PartNumberImagesLoc = Machine.solconfig?.PartNumberImagesLoc
                 };
-                for (int i = 0; i < dataPost.Rows.Count; i++)
+
+                ProductModeConfig newProductConfig = new ProductModeConfig { Products = new List<ProductModeItem>() };
+
+                foreach (var config in _pipelineConfigs)
                 {
-                    if (dataPost.Rows[i].IsNewRow) continue;
-                    SolutionAndFlow item = new SolutionAndFlow();
-                    if (dataPost.Rows[i].Cells[1].Value != null)
+                    foreach (var product in config.Products)
                     {
-                        item.ProductSerial = dataPost.Rows[i].Cells[1].Value.ToString();
-                        item.Asolution = dataPost.Rows[i].Cells[2].Value.ToString();
-                        item.Aflow = dataPost.Rows[i].Cells[3].Value.ToString();
-                        item.Bsolution = dataPost.Rows[i].Cells[4].Value.ToString();
-                        item.Bflow = dataPost.Rows[i].Cells[5].Value.ToString();
-                        item.IsSwitch = Convert.ToBoolean(dataPost.Rows[i].Cells[6].Value);
-                    }
-                    solConfig.solus.Add(item);
-                }
-                Machine.solconfig = solConfig;
-                result=Machine.sol_class.Save(solConfig);
-
-
-                // 保存 ProductModeConfig
-                try
-                {
-                    ProductModeConfig newProductConfig = new ProductModeConfig { Products = new List<ProductModeItem>() };
-                    for (int i = 0; i < dataPost.Rows.Count; i++)
-                    {
-                        if (dataPost.Rows[i].IsNewRow || dataPost.Rows[i].Cells[1].Value == null) continue;
-
-                        var productSerial = dataPost.Rows[i].Cells[1].Value.ToString();
-                        var modeValue = dataPost.Columns.Contains("Mode") ? dataPost.Rows[i].Cells["Mode"].Value?.ToString() : PicOptMode.by_machine.ToString();
+                        solConfig.solus.Add(new SolutionAndFlow
+                        {
+                            ProductSerial = product.ProductSerial,
+                            Asolution = config.ASolution,
+                            Aflow = config.AFlow,
+                            Bsolution = config.BSolution,
+                            Bflow = config.BFlow,
+                            IsSwitch = config.IsSwitch
+                        });
 
                         newProductConfig.Products.Add(new ProductModeItem
                         {
-                            Name = productSerial,
-                            CopyCutMode = modeValue
+                            Name = product.ProductSerial,
+                            CopyCutMode = product.Mode
                         });
                     }
-
-                    if (ProductModeConfig.Save(newProductConfig))
-                    {
-                        // 可以选择性地显示成功消息，但为避免过多弹窗，此处省略
-                    }
-                    else
-                    {
-                        result = false;
-                        MessageBox.Show("料号模式配置保存失败", "保存失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    }
                 }
-                catch (Exception ex)
+
+                Machine.solconfig = solConfig;
+                result = Machine.sol_class.Save(solConfig);
+
+                if (!ProductModeConfig.Save(newProductConfig))
                 {
                     result = false;
-                    LogTextHelper.Error("保存料号模式配置异常: " + ex.ToString());
-                    MessageBox.Show("保存料号模式配置时发生错误。", "异常", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("料号模式配置保存失败", "保存失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
-                dataPost.Refresh();
-               
             }
             catch (Exception ex)
             {
                 result = false;
-                LogTextHelper.Error("异常" + ex.ToString());
+                LogTextHelper.Error("SaveParam异常: " + ex.ToString());
+                MessageBox.Show("保存配置时发生错误。", "异常", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             return result;
         }
-        private void btn_Add_Click(object sender, EventArgs e)
+
+        /// <summary>
+        /// 同步右侧表格数据到当前选中的配置
+        /// </summary>
+        private void SyncProductsToCurrentConfig()
+        {
+            if (dgvPipeline.SelectedRows.Count == 0) return;
+            int selectedIndex = dgvPipeline.SelectedRows[0].Index;
+            if (selectedIndex < 0 || selectedIndex >= _pipelineConfigs.Count) return;
+
+            var config = _pipelineConfigs[selectedIndex];
+            config.Products.Clear();
+
+            foreach (DataGridViewRow row in dgvProducts.Rows)
+            {
+                if (row.IsNewRow) continue;
+                var serial = row.Cells["colProductSerial"].Value?.ToString();
+                if (string.IsNullOrWhiteSpace(serial)) continue;
+
+                config.Products.Add(new ProductEntry
+                {
+                    ProductSerial = serial,
+                    Mode = row.Cells["colMode"].Value?.ToString() ?? PicOptMode.by_machine.ToString()
+                });
+            }
+
+            UpdatePipelineProductCount();
+        }
+
+        #endregion
+
+        #region 添加/删除配置
+
+        private void btnAddConfig_Click(object sender, EventArgs e)
         {
             if (dic_solutionAndFlow.Count == 0)
             {
-                MessageBox.Show("当前无可用方案/流程数据，无法添加。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("当前无可用方案/流程数据，无法添加配置。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            var existingCodes = new HashSet<string>(
-                dataPost.Rows
-                        .Cast<DataGridViewRow>()
-                        .Where(r => !r.IsNewRow && r.Cells[1].Value != null)
-                        .Select(r => r.Cells[1].Value.ToString()),
-                StringComparer.OrdinalIgnoreCase);
+            // 同步当前选中配置的料号数据
+            SyncProductsToCurrentConfig();
 
-            string newMaterialCode = "NewItem1";
-            int counter = 2;
-            while (existingCodes.Contains(newMaterialCode))
-            {
-                newMaterialCode = $"NewItem{counter++}";
-            }
+            var defaultSolution = dic_solutionAndFlow.Keys.FirstOrDefault() ?? "DefaultSolution";
+            var defaultFlow = dic_solutionAndFlow.TryGetValue(defaultSolution, out var flows) && flows.Count > 0
+                ? flows[0] : "(空流程)";
 
-            int index = this.dataPost.Rows.Add();
-            dataPost.Rows[index].Cells["Index"].Value = index + 1;
-            dataPost.Rows[index].Cells[1].Value = newMaterialCode;
-            
-            // 优先使用名为 "default" 的方案，找不到再用第一个
-            KeyValuePair<string, List<string>> defaultSolution;
-            if (dic_solutionAndFlow.TryGetValue("default", out var defaultFlows))
+            var newConfig = new PipelineConfig
             {
-                defaultSolution = new KeyValuePair<string, List<string>>("default", defaultFlows);
-            }
-            else
-            {
-                defaultSolution = dic_solutionAndFlow.First();
-            }
-            
-            dataPost.Rows[index].Cells[2].Value = defaultSolution.Key;
-            dataPost.Rows[index].Cells[3].Value = defaultSolution.Value.FirstOrDefault() ?? "(空流程)";
-            dataPost.Rows[index].Cells[4].Value = defaultSolution.Key;
-            dataPost.Rows[index].Cells[5].Value = defaultSolution.Value.FirstOrDefault() ?? "(空流程)";
-            dataPost.Rows[index].Cells[6].Value = false;
-            if (dataPost.Columns.Contains("Mode"))
-            {
-                dataPost.Rows[index].Cells["Mode"].Value = PicOptMode.by_machine.ToString();
-            }
-            dataPost.Refresh();
+                ConfigName = $"配置{_pipelineConfigs.Count + 1}",
+                ASolution = defaultSolution,
+                AFlow = defaultFlow,
+                BSolution = defaultSolution,
+                BFlow = defaultFlow,
+                IsSwitch = false,
+                Products = new List<ProductEntry>()
+            };
+            _pipelineConfigs.Add(newConfig);
+
+            // 添加到表格
+            _isUpdating = true;
+            int rowIdx = dgvPipeline.Rows.Add();
+            var row = dgvPipeline.Rows[rowIdx];
+            row.Cells["colConfigName"].Value = newConfig.ConfigName;
+            row.Cells["colASolution"].Value = newConfig.ASolution;
+            row.Cells["colAFlow"].Value = newConfig.AFlow;
+            row.Cells["colBSolution"].Value = newConfig.BSolution;
+            row.Cells["colBFlow"].Value = newConfig.BFlow;
+            row.Cells["colIsSwitch"].Value = newConfig.IsSwitch;
+            row.Cells["colProductCount"].Value = 0;
+            _isUpdating = false;
+
+            // 选中新行
+            dgvPipeline.ClearSelection();
+            dgvPipeline.Rows[rowIdx].Selected = true;
+            dgvPipeline.CurrentCell = dgvPipeline.Rows[rowIdx].Cells[0];
+            RefreshProductsGrid(rowIdx);
         }
 
-        private void btn_Delete_Click(object sender, EventArgs e)
+        private void btnDeleteConfig_Click(object sender, EventArgs e)
         {
-            DialogResult res = MessageBox.Show(" 你 真 的 要 删 了 我 吗？\r\n", "删除提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+            if (dgvPipeline.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("请先选择要删除的配置。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            if (_pipelineConfigs.Count <= 1)
+            {
+                MessageBox.Show("至少需要保留一个配置。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            DialogResult res = MessageBox.Show("确定要删除选中的配置吗？其下所有料号将被移除。", "删除确认", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
             if (res == DialogResult.OK)
             {
-                if (dataPost.CurrentRow != null && !dataPost.CurrentRow.IsNewRow)
+                int selectedIndex = dgvPipeline.SelectedRows[0].Index;
+                _pipelineConfigs.RemoveAt(selectedIndex);
+                dgvPipeline.Rows.RemoveAt(selectedIndex);
+
+                // 选中第一行
+                if (dgvPipeline.Rows.Count > 0)
                 {
-                    dataPost.Rows.Remove(dataPost.CurrentRow);
-                    dataPost.Refresh(); //刷新显示
+                    dgvPipeline.ClearSelection();
+                    dgvPipeline.Rows[0].Selected = true;
+                    RefreshProductsGrid(0);
                 }
             }
         }
 
-        private void dataPost_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        #endregion
+
+        #region 添加/删除料号
+
+        private void btnAddProduct_Click(object sender, EventArgs e)
         {
-            if (   e.RowIndex >= 0&& e.ColumnIndex == dataPost.Columns["A_solution"].Index)
+            if (dgvPipeline.SelectedRows.Count == 0)
             {
-                string selectedValue = dataPost.Rows[e.RowIndex].Cells["A_solution"].Value?.ToString();
-                if (dic_solutionAndFlow.TryGetValue(selectedValue, out List<string> flowList))
-                {
-                    ((DataGridViewComboBoxCell)dataPost.Rows[e.RowIndex].Cells["A_flow"]).DataSource = flowList;
-                    ((DataGridViewComboBoxCell)dataPost.Rows[e.RowIndex].Cells["A_flow"]).Value = flowList[0];
-                }
-                else
-                {
-                    MessageBox.Show("所选方案不存在");
-                    return;
-                }
+                MessageBox.Show("请先选择左侧的算法配置。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
             }
-            if (e.RowIndex >= 0&&e.ColumnIndex == dataPost.Columns["B_solution"].Index)
-            {
-                string selectedValue = dataPost.Rows[e.RowIndex].Cells["B_solution"].Value?.ToString();
-                if (dic_solutionAndFlow.TryGetValue(selectedValue, out List<string> flowList))
-                {
-                    ((DataGridViewComboBoxCell)dataPost.Rows[e.RowIndex].Cells["B_flow"]).DataSource = flowList;
-                    ((DataGridViewComboBoxCell)dataPost.Rows[e.RowIndex].Cells["B_flow"]).Value = flowList[0];
-                }
-                else
-                {
-                    MessageBox.Show("所选方案不存在");
-                    return;
-                }
 
+            int selectedIndex = dgvPipeline.SelectedRows[0].Index;
+            if (selectedIndex < 0 || selectedIndex >= _pipelineConfigs.Count) return;
+
+            // 检查是否已存在同名料号（全局）
+            var existingCodes = new HashSet<string>(
+                _pipelineConfigs.SelectMany(c => c.Products).Select(p => p.ProductSerial),
+                StringComparer.OrdinalIgnoreCase);
+
+            string newCode = "NewItem1";
+            int counter = 2;
+            while (existingCodes.Contains(newCode))
+            {
+                newCode = $"NewItem{counter++}";
             }
-            // Mode 列变更暂不处理，如需事件可在此扩展
+
+            var newProduct = new ProductEntry
+            {
+                ProductSerial = newCode,
+                Mode = PicOptMode.by_machine.ToString()
+            };
+            _pipelineConfigs[selectedIndex].Products.Add(newProduct);
+
+            int rowIdx = dgvProducts.Rows.Add();
+            dgvProducts.Rows[rowIdx].Cells["colIndex"].Value = rowIdx + 1;
+            dgvProducts.Rows[rowIdx].Cells["colProductSerial"].Value = newProduct.ProductSerial;
+            dgvProducts.Rows[rowIdx].Cells["colMode"].Value = newProduct.Mode;
+
+            UpdatePipelineProductCount();
         }
-        // 新增：根据料号位置自动读取料号（目录或文件名），用于 AutoAdd
+
+        private void btnDeleteProduct_Click(object sender, EventArgs e)
+        {
+            if (dgvProducts.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("请先选择要删除的料号。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            if (dgvPipeline.SelectedRows.Count == 0) return;
+            int pipelineIndex = dgvPipeline.SelectedRows[0].Index;
+            if (pipelineIndex < 0 || pipelineIndex >= _pipelineConfigs.Count) return;
+
+            DialogResult res = MessageBox.Show("确定要删除选中的料号吗？", "删除确认", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+            if (res == DialogResult.OK)
+            {
+                int productIndex = dgvProducts.SelectedRows[0].Index;
+                if (productIndex >= 0 && productIndex < _pipelineConfigs[pipelineIndex].Products.Count)
+                {
+                    _pipelineConfigs[pipelineIndex].Products.RemoveAt(productIndex);
+                    dgvProducts.Rows.RemoveAt(productIndex);
+                    UpdateProductRowIndices();
+                    UpdatePipelineProductCount();
+                }
+            }
+        }
+
+        #endregion
+
+        #region 批量导入
+
+        /// <summary>
+        /// 根据料号位置自动读取料号目录
+        /// </summary>
         private List<string> GetMaterialCodes(string rootPath)
         {
             var list = new List<string>();
@@ -478,7 +619,6 @@ namespace DeepSightAI.SettingPages
                 if (string.IsNullOrEmpty(rootPath) || !System.IO.Directory.Exists(rootPath))
                     return list;
 
-                // 例：每个子目录即一个料号
                 foreach (var dir in System.IO.Directory.GetDirectories(rootPath))
                 {
                     list.Add(System.IO.Path.GetFileName(dir));
@@ -490,13 +630,22 @@ namespace DeepSightAI.SettingPages
             }
             return list;
         }
+
         private void btnAutoAdd_Click(object sender, EventArgs e)
         {
-            // 原逻辑改造：按料号位置批量生成，跳过已存在的料号
+            if (dgvPipeline.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("请先选择左侧的算法配置，批量导入的料号将添加到该配置下。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            int selectedIndex = dgvPipeline.SelectedRows[0].Index;
+            if (selectedIndex < 0 || selectedIndex >= _pipelineConfigs.Count) return;
+
             string loc = Machine.solconfig?.PartNumberImagesLoc;
             if (string.IsNullOrEmpty(loc))
             {
-                MessageBox.Show("料号位置未配置，请先设置并保存。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("料号位置未配置，请先在设置中配置料号图片位置。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -507,32 +656,10 @@ namespace DeepSightAI.SettingPages
                 return;
             }
 
-            // 当前表格已有的料号集合（首列 liaohao）
+            // 全局已有的料号集合
             var existingCodes = new HashSet<string>(
-                dataPost.Rows
-                        .Cast<DataGridViewRow>()
-                        .Where(r => !r.IsNewRow && r.Cells[1].Value != null)
-                        .Select(r => r.Cells[1].Value.ToString()),
+                _pipelineConfigs.SelectMany(c => c.Products).Select(p => p.ProductSerial),
                 StringComparer.OrdinalIgnoreCase);
-
-            if (dic_solutionAndFlow.Count == 0)
-            {
-                MessageBox.Show("当前无可用方案/流程数据，无法添加。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            // 优先使用名为 "default" 的方案，找不到再用第一个
-            KeyValuePair<string, List<string>> defaultSolutionPair;
-            if (dic_solutionAndFlow.TryGetValue("default", out var defaultFlows))
-            {
-                defaultSolutionPair = new KeyValuePair<string, List<string>>("default", defaultFlows);
-            }
-            else
-            {
-                defaultSolutionPair = dic_solutionAndFlow.First();
-            }
-            string solKey = defaultSolutionPair.Key;
-            string firstFlow = defaultSolutionPair.Value.FirstOrDefault() ?? "(空流程)";
 
             int added = 0;
             int skipped = 0;
@@ -547,32 +674,32 @@ namespace DeepSightAI.SettingPages
 
                 if (existingCodes.Contains(code))
                 {
-                    // 已存在，跳过
                     skipped++;
                     continue;
                 }
 
-                int index = dataPost.Rows.Add();
-                dataPost.Rows[index].Cells["Index"].Value = index + 1;
-                dataPost.Rows[index].Cells[1].Value = code;      // 料号
-                dataPost.Rows[index].Cells[2].Value = solKey;
-                dataPost.Rows[index].Cells[3].Value = firstFlow;
-                dataPost.Rows[index].Cells[4].Value = solKey;
-                dataPost.Rows[index].Cells[5].Value = firstFlow;
-                dataPost.Rows[index].Cells[6].Value = false;
-                if (dataPost.Columns.Contains("Mode"))
+                var newProduct = new ProductEntry
                 {
-                    dataPost.Rows[index].Cells["Mode"].Value = PicOptMode.by_machine.ToString();
-                }
+                    ProductSerial = code,
+                    Mode = PicOptMode.by_machine.ToString()
+                };
+                _pipelineConfigs[selectedIndex].Products.Add(newProduct);
+
+                int rowIdx = dgvProducts.Rows.Add();
+                dgvProducts.Rows[rowIdx].Cells["colIndex"].Value = rowIdx + 1;
+                dgvProducts.Rows[rowIdx].Cells["colProductSerial"].Value = newProduct.ProductSerial;
+                dgvProducts.Rows[rowIdx].Cells["colMode"].Value = newProduct.Mode;
 
                 existingCodes.Add(code);
                 added++;
             }
 
-            dataPost.Refresh();
+            UpdatePipelineProductCount();
 
             MessageBox.Show($"批量添加完成，新增: {added}，跳过重复/空值: {skipped}", "结果", MessageBoxButtons.OK,
                 added > 0 ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
         }
+
+        #endregion
     }
 }

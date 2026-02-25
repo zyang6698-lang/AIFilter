@@ -226,7 +226,7 @@ namespace DeepSightWorkLib.Services
             {
                 MachineTemplateInfo = new MachineTemplateInfo
                 {
-                    MachineName = panelInfo.StationName,
+                    MachineName = panelInfo.MachineName,
                     product = panelInfo.ProductSerial,
                     Side = panelInfo.SideIndex
                 },
@@ -255,14 +255,7 @@ namespace DeepSightWorkLib.Services
             InferImageGroup group
             )
         {
-            var watchConfig = context.AviConfig?.WatchPaths?
-                .FirstOrDefault(o => o.AviName == group.MachineTemplateInfo.MachineName);
 
-            if (watchConfig == null)
-            {
-                LogTextHelper.Error($"Panel machineID:{group.MachineTemplateInfo.MachineName} 未找到对应机台配置");
-                return;
-            }
 
             AddGroupInfo(defect.DefectVrsImages, "defect", context.Head, group);
             AddGroupInfo(defect.DefectVrsOkImages, "template", context.Head, group);

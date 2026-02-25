@@ -94,8 +94,42 @@ namespace DeepSightAI
                 {
                     infoList.Add(info);
                 }
-                //客户要求先屏蔽
-                //AddOrUpdateMachineData(info.rootInfo.StationName, info.rootInfo.ProductSerial, $"{info.rootInfo.LotId}_{info.rootInfo.LotBatch}");
+
+                // 提取 MachineName，检查是否需要添加新工站
+                string machineName = info?.RootInfo?.MachineName;
+                if (!string.IsNullOrEmpty(machineName))
+                {
+                    // 检查工站是否已存在于配置中
+                    bool stationExists = Machine.aviconfig.WatchPaths.Any(w => w.AviName == machineName);
+
+                    if (!stationExists)
+                    {
+                        // 添加新的工站配置
+                        WatchPathConfig newStation = new WatchPathConfig()
+                        {
+                            AviName = machineName,
+                            APath = "",
+                            BPath = "",
+                            Depth = 4,
+                            FileA = "",
+                            FileB = "",
+                            IsEnable = true, // 新发现的工站默认启用
+                        };
+                        Machine.aviconfig.WatchPaths.Add(newStation);
+
+                        // 保存 AVI 配置到文件
+                        Machine.avi_class.Save(Machine.aviconfig);
+
+                        // 更新 UI 显示新工站（状态为绿色-正在运行）
+                        FrHome.Instance.RefreshAviCtrConfigs();
+
+                        LogTextHelper.Info($"自动发现并添加新工站: {machineName}");
+                    }
+
+                    // 更新工站数据接收时间（状态变为绿色）
+                    FrHome.Instance.UpdateStationDataReceived(machineName);
+                }
+
                 Machine.config_class.Save(Machine.sysConfig);
             }
             catch (Exception ex)
@@ -352,16 +386,16 @@ namespace DeepSightAI
                 foreach (var info in infos)
                 {
                     int sideDefectCount = 0;
-                    foreach (var pcsInfo in info.rootInfo.PcsInfo.Values)
+                    foreach (var pcsInfo in info.RootInfo.PcsInfo.Values)
                     {
                         sideDefectCount += pcsInfo.DefectInfo?.Count ?? 0;
                     }
 
-                    if (info.rootInfo.SideIndex == "A")
+                    if (info.RootInfo.SideIndex == "A")
                     {
                         aDefectCount = sideDefectCount;
                     }
-                    else if (info.rootInfo.SideIndex == "B")
+                    else if (info.RootInfo.SideIndex == "B")
                     {
                         bDefectCount = sideDefectCount;
                     }

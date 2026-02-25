@@ -83,20 +83,14 @@ namespace DeepSightWorkLib.Services
             var results = new List<string>();
             try
             {
-                if (info == null || info.rootInfo == null || string.IsNullOrWhiteSpace(info.IP))
+                if (info == null || info.RootInfo == null || string.IsNullOrWhiteSpace(info.IP))
                 {
                     LogTextHelper.Warn("GetAllMinioImageKeys: 参数为空或 IP 缺失！");
                     return results;
                 }
 
-                var panel = info.rootInfo;
+                var panel = info.RootInfo;
 
-                string head = ExtractHeadFromLocalDescribeDir(panel.LocalDescribeDir);
-                if (string.IsNullOrWhiteSpace(head))
-                {
-                    LogTextHelper.Warn($"GetAllMinioImageKeys: 无法从 LocalDescribeDir 提取 head，LocalDescribeDir={panel.LocalDescribeDir}");
-                    return results;
-                }
 
                 if (panel.PcsInfo == null || panel.PcsInfo.Count == 0)
                 {
@@ -118,7 +112,7 @@ namespace DeepSightWorkLib.Services
                         if (defect == null)
                             continue;
 
-                        AddImages(defect.DefectVrsImages, info.IP, head, results);
+                        AddImages(defect.DefectVrsImages, info.IP, info.Head, results);
                     }
                 }
             }
@@ -139,27 +133,6 @@ namespace DeepSightWorkLib.Services
                     var objectKey = $"{prefix}/{normalizedRel}";
                     output.Add($"{endpoint}:{objectKey}");
                 }
-            }
-        }
-
-        /// <summary>
-        /// 从 LocalDescribeDir 中提取路径头部
-        /// </summary>
-        private string ExtractHeadFromLocalDescribeDir(string localDescribeDir)
-        {
-            if (string.IsNullOrWhiteSpace(localDescribeDir)) return string.Empty;
-
-            try
-            {
-                var normalized = localDescribeDir.Replace('\\', '/');
-                var idx = normalized.IndexOf("deepiresults", StringComparison.OrdinalIgnoreCase);
-                if (idx < 0) return string.Empty;
-                var after = normalized.Substring(idx + "deepiresults".Length).Trim('/');
-                return after;
-            }
-            catch
-            {
-                return string.Empty;
             }
         }
     }

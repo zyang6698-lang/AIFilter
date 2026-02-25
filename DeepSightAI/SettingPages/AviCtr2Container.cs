@@ -302,5 +302,70 @@ namespace DeepSightAI.SettingPages
             }
             await Task.CompletedTask;
         }
+
+        /// <summary>
+        /// 检查所有工站是否超时，超时则将状态设为灰色
+        /// </summary>
+        public void CheckAllStationsTimeout()
+        {
+            if (this.IsHandleCreated)
+            {
+                this.BeginInvoke(new Action(() =>
+                {
+                    foreach (var ctr in aviCtr2Controls.Where(c => c.ctrConfig.IsEnable))
+                    {
+                        ctr.CheckTimeoutAndUpdateStatus();
+                    }
+                }));
+            }
+        }
+
+        /// <summary>
+        /// 根据 MachineName 更新工站的数据接收时间
+        /// </summary>
+        /// <param name="machineName">机器名称</param>
+        public void UpdateStationDataReceived(string machineName)
+        {
+            if (string.IsNullOrEmpty(machineName)) return;
+
+            if (this.IsHandleCreated)
+            {
+                this.BeginInvoke(new Action(() =>
+                {
+                    // 根据 MachineName 查找对应的工站控件
+                    var ctr = aviCtr2Controls.FirstOrDefault(c =>
+                        c.ctrConfig.AviName == machineName ||
+                        c.MachineName == machineName);
+
+                    if (ctr != null)
+                    {
+                        ctr.MachineName = machineName;
+                        ctr.UpdateDataReceived();
+                    }
+                }));
+            }
+        }
+
+        /// <summary>
+        /// 根据 MachineName 查找工站是否已存在
+        /// </summary>
+        /// <param name="machineName">机器名称</param>
+        /// <returns>如果存在返回 true</returns>
+        public bool ContainsStation(string machineName)
+        {
+            if (string.IsNullOrEmpty(machineName)) return false;
+
+            return aviCtr2Controls.Any(c =>
+                c.ctrConfig.AviName == machineName ||
+                c.MachineName == machineName);
+        }
+
+        /// <summary>
+        /// 获取内部控件列表（用于外部访问）
+        /// </summary>
+        public IReadOnlyList<AviCtr2> GetAviControls()
+        {
+            return aviCtr2Controls.AsReadOnly();
+        }
     }
 }

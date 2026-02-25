@@ -535,15 +535,6 @@ namespace DeepSightWorkLib
 
         #endregion
 
-        #region AVI 数据读取与处理
-
-        /// <summary>
-        /// 解析Minio路径
-        /// </summary>
-        public void ParseMinioPath(string fullPath, out string path, out string result) => AviReaderService.ParseMinioPath(fullPath, out path, out result);
-
-        #endregion
-
         #region Minio 操作与数据转换
 
         /// <summary>
@@ -579,7 +570,8 @@ namespace DeepSightWorkLib
                 RootPanelInfoWithIP rootobj = new RootPanelInfoWithIP()
                 {
                     IP = ip,
-                    rootInfo = obj,
+                    Head=head,
+                    RootInfo = obj,
                 };
 
                 // 解耦：先获取图片Key列表，入图片加载队列，非阻塞
@@ -687,7 +679,7 @@ namespace DeepSightWorkLib
                 AviCreationTime = aviCreationTime,
                 LotNumber = panelInfo.LotId,
                 SerialNumber = panelInfo.SerialNumber,
-                MachineId = panelInfo.StationName,
+                MachineId = panelInfo.MachineName,
                 Side = panelInfo.SideIndex,
                 PathIndex = panelInfo.PathIndex
             };
