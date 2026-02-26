@@ -15,7 +15,7 @@ namespace DeepSightAI
 {
     public class Machine
     {
-        public static MasterWorkClass master = null;
+        public static BusinessClass master = null;
         internal static string LoginUserName = string.Empty;//登录的用户名
         internal static string LoginPwd = string.Empty;//登录的用户密码
 
@@ -97,16 +97,23 @@ namespace DeepSightAI
                     process.Dispose();
                     return;
                 }
-                master = new MasterWorkClass();
-                master.workClass.SolConfig = solconfig;
-                master.workClass.AviConfig = aviconfig;
-                master.workClass.SysConfig = sysConfig;
+                master = new BusinessClass();
+                master.SolConfig = solconfig;
+                master.AviConfig = aviconfig;
+                master.SysConfig = sysConfig;
                 master.InitWork();
 
                 UpdateStep(50, "读取配置文件中...", true);
-              
+
                 Application.DoEvents();
-                Thread.Sleep(400);
+                //Thread.Sleep(400);
+
+                // 获取 FrWelcome 所在的屏幕，让 FrmMain 显示在同一屏幕上
+                var targetScreen = Screen.FromControl(FrWelcome.Instance);
+                FrmMain.Instance.StartPosition = FormStartPosition.Manual;
+                FrmMain.Instance.Location = targetScreen.WorkingArea.Location;
+               // FrmMain.Instance.MaximizedBounds = targetScreen.WorkingArea;
+
                 // 程序开启后是否自动最大化
                 FrmMain.Instance.WindowState = FormWindowState.Maximized;
                 FrmMain.Instance.Show();

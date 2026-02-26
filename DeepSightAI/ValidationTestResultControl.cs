@@ -226,7 +226,7 @@ namespace DeepSightAI
             if (_currentTask == null) return;
 
             // 获取最新的任务状态
-            var service = Machine.master?.workClass?.ValidationTestService;
+            var service = Machine.master?.ValidationTestService;
             if (service == null) return;
 
             var latestTask = service.GetTaskStatus(_currentTask.TaskId);
@@ -254,7 +254,7 @@ namespace DeepSightAI
         {
             if (_currentTask == null) return;
 
-            var service = Machine.master?.workClass?.ValidationTestService;
+            var service = Machine.master?.ValidationTestService;
             if (service == null) return;
 
             var latestTask = service.GetTaskStatus(_currentTask.TaskId);

@@ -209,7 +209,7 @@ namespace DeepSightAI
                     {
                         DisplaysList.Add(DispWin2[j]);
                     }
-                    Machine.master.workClass.SetHWindow(DisplaysList);
+                    Machine.master.SetHWindow(DisplaysList);
                 }
                 catch (Exception ex)
                 {
@@ -561,9 +561,6 @@ namespace DeepSightAI
                     int index = 0;
                     for (int i = 0; i < info.Count; i++)
                     {
-                       // string path = string.Empty;
-                     //   string result = string.Empty;
-                        //Machine.master.workClass.ParseMinioPath(info[i].Head, out path, out result);
 
                         for (int j = 0; j < info[i].RootInfo.PcsInfo.Count; j++)
                         {
@@ -691,7 +688,7 @@ namespace DeepSightAI
                             }
 
                             int index2 = (currentPage - 1) * table_Small.RowCount + item.Index;
-                            Machine.master.workClass.ShowImage(item.Path, (item.Index + 1) * 2 - 2, labelText);
+                            Machine.master.ShowImage(item.Path, (item.Index + 1) * 2 - 2, labelText);
                         });
                     }));
                     await Task.Factory.StartNew((Action)(() =>
@@ -711,7 +708,7 @@ namespace DeepSightAI
                             }
 
                             int index2 = (currentPage - 1) * table_Small.RowCount + item.Index;
-                            Machine.master.workClass.ShowImage(item.Path, (item.Index + 1) * 2 - 1, labelText);
+                            Machine.master.ShowImage(item.Path, (item.Index + 1) * 2 - 1, labelText);
                         });
                     }));
                 }
@@ -721,15 +718,14 @@ namespace DeepSightAI
                     {
                         Parallel.ForEach(defect_indexPaths, parallelOptions, item =>
                         {
-                            //Machine.master.workClass.showImage(item.Path, item.Index*2-1);
-                            Machine.master.workClass.ShowImage(item.Path, (item.Index + 1) * 2 - 2, "未处理");
+                            Machine.master.ShowImage(item.Path, (item.Index + 1) * 2 - 2, "未处理");
                         });
                     }));
                     await Task.Factory.StartNew((Action)(() =>
                     {
                         Parallel.ForEach(gerberOrtemp_indexPaths, parallelOptions, item =>
                         {
-                            Machine.master.workClass.ShowImage(item.Path, (item.Index + 1) * 2 - 1, "未处理");
+                            Machine.master.ShowImage(item.Path, (item.Index + 1) * 2 - 1, "未处理");
                         });
                     }));
                 }
@@ -743,14 +739,14 @@ namespace DeepSightAI
                     {
                         Parallel.For(defect_pagedData.Count, table_Small.RowCount, (Action<int>)(item =>
                         {
-                            Machine.master.workClass.ShowImage("", (item + 1) * 2 - 2);
+                            Machine.master.ShowImage("", (item + 1) * 2 - 2);
                         }));
                     }));
                     await Task.Factory.StartNew((Action)(() =>
                     {
                         Parallel.For(gerberOrtemp_pagedData.Count, table_Small.RowCount, (Action<int>)(item =>
                         {
-                            Machine.master.workClass.ShowImage("", (item + 1) * 2 - 1);
+                            Machine.master.ShowImage("", (item + 1) * 2 - 1);
                         }));
                     }));
                 }

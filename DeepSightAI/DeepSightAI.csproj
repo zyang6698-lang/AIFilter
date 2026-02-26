@@ -358,7 +358,6 @@
     <Compile Include="MachinePanel.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="MasterWorkClass.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SettingPages\AviCtr2.cs">

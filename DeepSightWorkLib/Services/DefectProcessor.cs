@@ -160,8 +160,6 @@ namespace DeepSightWorkLib.Services
         {
             // 使用新的状态发送方式
             TaskStatusSender.SendWritingResults(info.SN, info.Side);
-            // 老逻辑仍使用旧方式
-            // SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面正在回写结果");
             
             // 使用 VBModel 中携带的源数据库信息，回写到对应的DB
             var writeBackDbName = !string.IsNullOrEmpty(info.SourceWriteBackDbName)

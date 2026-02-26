@@ -251,7 +251,7 @@ namespace DeepSightAI
                 if (!string.IsNullOrWhiteSpace(txt_Lot.Text))
                 {
                     // 优先使用 Lot 号查询
-                    QueryResult = await Machine.master.workClass.GetPanelsDataByMachineAndLot(null, txt_Lot.Text);
+                    QueryResult = await Machine.master.GetPanelsDataByMachineAndLot(null, txt_Lot.Text);
                 }
                 else if (timePicker.Checked)
                 {
@@ -270,12 +270,12 @@ namespace DeepSightAI
                     // 如果已经选择了料号，则直接按日期和料号查询
                     if (!string.IsNullOrEmpty(PartNumber))
                     {
-                        QueryResult = await Machine.master.workClass.GetPanelsData(startDate, endDate, PartNumber);
+                        QueryResult = await Machine.master.GetPanelsData(startDate, endDate, PartNumber);
                     }
                     // 如果未选择料号，则返回当天料号列表供用户选择
                     else
                     {
-                        QueryResult = await Machine.master.workClass.GetPanelsData(startDate, endDate);
+                        QueryResult = await Machine.master.GetPanelsData(startDate, endDate);
                         PartNumberItems.Clear();
                         PartNumberItems.Add("全部");
                         // 从查询结果中提取唯一的料号

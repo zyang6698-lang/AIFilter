@@ -238,14 +238,14 @@ namespace DeepSightAI
                     FrBaseConfig.Instance.GetBaseParams();
                     if (Machine.config_class.Save(Machine.sysConfig))
                     {
-                        Machine.master.workClass.SysConfig = Machine.sysConfig;
+                        Machine.master.SysConfig = Machine.sysConfig;
                         MessageBox.Show("保存配置文件成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
                 if (tvw_setting.SelectedNode.Text == "机台配置")
                 {
                     // 检查软件是否处于运行状态
-                    if (Machine.master != null && Machine.master.workClass != null && Machine.master.workClass.IsStart)
+                    if (Machine.master != null && Machine.master.IsStart)
                     {
                         MessageBox.Show("软件正在运行中，请先停止运行后再保存机台配置！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;
@@ -255,7 +255,7 @@ namespace DeepSightAI
                     if (Machine.avi_class.Save(Machine.aviconfig))
                     {
                         RestartApplication(appPath, appExe, Machine.sysConfig.AgentShutdownTimeout);
-                        Machine.master.workClass.AviConfig = Machine.aviconfig;
+                        Machine.master.AviConfig = Machine.aviconfig;
                         // 更新FrHome中的AviCtr状态
                         FrHome.Instance.RefreshAviCtrConfigs();
                         MessageBox.Show("保存Agent配置文件成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -266,7 +266,7 @@ namespace DeepSightAI
                 {
                     if (FrAIConfig.Instance.SaveParam())
                     {
-                        Machine.master.workClass.SolConfig = Machine.solconfig;
+                        Machine.master.SolConfig = Machine.solconfig;
                         MessageBox.Show("方案及流程配置保存成功", "保存成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
 

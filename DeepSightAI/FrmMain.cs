@@ -44,12 +44,9 @@ namespace DeepSightAI
 
             // 注意：不再禁用跨线程检查，改用 InvokeOnUI 方法安全地访问 UI
             // Control.CheckForIllegalCrossThreadCalls = false;
-            MaximizedBounds = SystemInformation.WorkingArea;//Screen.PrimaryScreen.WorkingArea;
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.AllPaintingInWmPaint, true); // 禁止擦除背景.
             SetStyle(ControlStyles.DoubleBuffer, true); // 双缓冲
-            //MaximizedBounds = Screen.PrimaryScreen.Bounds;
-            WindowState = FormWindowState.Maximized;
             btnMax.BackgroundImage = Resources.min;
             this.Load += FrmMain_Load;
             this.FormClosing += FrMain_FormClosing;
@@ -149,7 +146,7 @@ namespace DeepSightAI
             timer.Elapsed += Timer_Elapsed;
             timer.Interval = 1000;
             timer.Start();
-            Machine.master.workClass.IsShowBox = this.btn_showBox.Checked;
+            Machine.master.IsShowBox = this.btn_showBox.Checked;
             string filePath = Assembly.GetExecutingAssembly().Location;
             DateTime lastWriteTime = File.GetLastWriteTime(filePath);
             this.lbl_title.Text = "ATS_AI ~ " + lastWriteTime.ToString("MMdd");
@@ -443,11 +440,11 @@ namespace DeepSightAI
                         CleanupTaskData(snToRemove);
                     
                 }
-                Machine.master.workClass.IsAllow = false;
+                Machine.master.IsAllow = false;
             }
             else
             {
-                Machine.master.workClass.IsAllow = true;
+                Machine.master.IsAllow = true;
             }
         }
 
@@ -557,9 +554,9 @@ namespace DeepSightAI
         {
             try
             {
-                if (!Machine.master.workClass.IsStart)
+                if (!Machine.master.IsStart)
                 {
-                    Machine.master.workClass.IsStart = true;
+                    Machine.master.IsStart = true;
                     btnStart.Image = Resources.pause2;
                     FrSetting.Instance.RestartApplication(FrSetting.Instance.appPath, FrSetting.Instance.appExe, Machine.sysConfig.AgentShutdownTimeout, true);
 
@@ -567,7 +564,7 @@ namespace DeepSightAI
                 }
                 else
                 {
-                    Machine.master.workClass.IsStart = false;
+                    Machine.master.IsStart = false;
                     btnStart.Image = Resources.start2;
                     FrSetting.Instance.KillProcessInDirectory(FrSetting.Instance.appPath, FrSetting.Instance.appExe, Machine.sysConfig.AgentShutdownTimeout);
 
@@ -971,12 +968,12 @@ namespace DeepSightAI
             if (!btn_showBox.Checked)
             {
                 btn_showBox.Checked = false;
-                Machine.master.workClass.IsShowBox = false;
+                Machine.master.IsShowBox = false;
             }
             else
             {
                 btn_showBox.Checked = true;
-                Machine.master.workClass.IsShowBox = true;
+                Machine.master.IsShowBox = true;
             }
            
         }
@@ -1000,7 +997,7 @@ namespace DeepSightAI
         }
         private async void btnClear_Click(object sender, EventArgs e)
         {
-            Machine.master.workClass.IsStart = false;
+            Machine.master.IsStart = false;
             // 生成索引集合（0-99）
             var indices = Enumerable.Range(0, FrHome.Instance.DispWin2.Length).ToList();
 
@@ -1049,7 +1046,7 @@ namespace DeepSightAI
         {
             this.Invoke(new MethodInvoker(() =>
             {
-                Machine.master.workClass.DefectService.AiDefect.Vision_Show_View(1);
+                Machine.master.DefectService.AiDefect.Vision_Show_View(1);
             }));
         }
         private void toolStripButton2_Click(object sender, EventArgs e)

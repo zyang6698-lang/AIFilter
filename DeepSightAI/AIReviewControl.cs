@@ -394,7 +394,7 @@ namespace DeepSightAI
             if (e?.HeatPoint == null)
                 return;
 
-            var service = Machine.master?.workClass?.ValidationTestService;
+            var service = Machine.master?.ValidationTestService;
             if (service == null)
             {
                 MessageBox.Show("模型验证测试服务未初始化。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -1092,7 +1092,7 @@ namespace DeepSightAI
         /// </summary>
         private async Task RunValidationTestAsync(string lotNumber, List<DefectReviewItem> items)
         {
-            var service = Machine.master?.workClass?.ValidationTestService;
+            var service = Machine.master?.ValidationTestService;
             if (service == null)
             {
                 MessageBox.Show("模型验证测试服务未初始化。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -1203,7 +1203,7 @@ namespace DeepSightAI
         /// </summary>
         private async Task RunSecondaryInferenceAsync(string lotNumber, List<DefectReviewItem> items)
         {
-            var service = Machine.master?.workClass?.ValidationTestService;
+            var service = Machine.master?.ValidationTestService;
             if (service == null)
             {
                 MessageBox.Show("模型验证测试服务未初始化。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -1498,7 +1498,7 @@ namespace DeepSightAI
                         };
 
                         // 调用 SavePanelSide 保存到数据库（支持覆盖）
-                        Machine.master.workClass.SavePanelSide(record);
+                        Machine.master.SavePanelSide(record);
 
                         LogTextHelper.Info($"保存人工判定结果成功: SN={item.SerialNumber}, Side={item.Side}, " +
                             $"ManualStatus={item.ManualStatus}, FinalState={finalState}");

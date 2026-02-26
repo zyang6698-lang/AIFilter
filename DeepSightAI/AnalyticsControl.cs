@@ -101,7 +101,7 @@ namespace DeepSightAI
                         foreach (var record in AllEmployeeReports)
                         {
                             dataQueues.Enqueue(record);
-                            await Task.Run(() => Machine.master.workClass.SaveEmployeeReport(record));
+                            await Task.Run(() => Machine.master.SaveEmployeeReport(record));
                             savedRecords++;
                             int percent = 50 + (int)(savedRecords * 45.0 / totalRecords);
                             UpdateProgress(percent, $"保存员工数据 ({savedRecords}/{totalRecords})...");
@@ -137,7 +137,7 @@ namespace DeepSightAI
 
         private void btnTestDB_Click(object sender, EventArgs e)
         {
-            Machine.master.workClass.GenerateVRSTestData();
+            Machine.master.GenerateVRSTestData();
         }
 
         private async void btnTest_Click(object sender, EventArgs e)
@@ -165,7 +165,7 @@ namespace DeepSightAI
 
             try
             {
-                var dbHelper = Machine.master.workClass.GetDatabaseService();
+                var dbHelper = Machine.master.GetDatabaseService();
                 if (dbHelper == null)
                 {
                     MessageBox.Show("无法获取 DatabaseHelper 实例", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -333,7 +333,7 @@ namespace DeepSightAI
                     try
                     {
                         // 调用清空数据库方法
-                        bool success = await Machine.master.workClass.ClearAllDatabaseData();
+                        bool success = await Machine.master.ClearAllDatabaseData();
 
                         if (success)
                         {

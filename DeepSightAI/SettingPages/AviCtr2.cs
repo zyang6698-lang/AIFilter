@@ -403,10 +403,24 @@ namespace DeepSightAI.SettingPages
             {
                 toolTip.SetToolTip(this, info.ToString());
             }
-            // 根据 IsEnable 状态更新指示器
+            // 根据 IsEnable 状态和数据接收情况更新指示器
             if (ctrConfig != null)
             {
-                SetStatus(ctrConfig.IsEnable ? ControlStatus.Normal : ControlStatus.Disabled);
+                if (!ctrConfig.IsEnable)
+                {
+                    // 未启用 → 灰色
+                    SetStatus(ControlStatus.Disabled);
+                }
+                else if (_lastDataTime == DateTime.MinValue)
+                {
+                    // 已启用但从未收到数据 → 黄色
+                    SetStatus(ControlStatus.Warning);
+                }
+                else
+                {
+                    // 已启用且有数据，由 CheckTimeoutAndUpdateStatus 决定绿色/黄色
+                    CheckTimeoutAndUpdateStatus();
+                }
             }
         }
 
@@ -461,10 +475,10 @@ namespace DeepSightAI.SettingPages
                 return true;
             }
 
-            // 如果从未接收过数据，则保持灰色（等待首次数据）
+            // 如果从未接收过数据，则设为黄色（启用但无数据）
             if (_lastDataTime == DateTime.MinValue)
             {
-                SetStatus(ControlStatus.Disabled);
+                SetStatus(ControlStatus.Warning);
                 return true;
             }
 

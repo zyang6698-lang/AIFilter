@@ -78,49 +78,28 @@ namespace DeepSightAI.SettingPages
             }
         }
 
-        private void txt_station_count_ValueChanged(object sender, EventArgs e)
+        private void btn_add_station_Click(object sender, EventArgs e)
         {
             try
             {
-                if (txt_station_count.Value > int.Parse(lblstationcount.Text))//说明增加了
+                WatchPathConfig newStation = new WatchPathConfig()
                 {
-                    //增加的数量
-                    int num = (int)txt_station_count.Value - int.Parse(lblstationcount.Text);
+                    AviName = $"AVI{Machine.aviconfig.WatchPaths.Count + 1}",
+                    APath = "",
+                    BPath = "",
+                    Depth = 4,
+                    FileA = "",
+                    FileB = "",
+                    IsEnable = false,
+                };
 
-                    for (int i = 0; i < num; i++)
-                    {
-
-                        if (txt_station_count.Value > Machine.aviconfig.WatchPaths.Count())
-                        {
-                            WatchPathConfig watchPath = new WatchPathConfig()
-                            {
-                                AviName = $"AVI{Machine.aviconfig.WatchPaths.Count() + 1}",
-                                APath = "",
-                                BPath = "",
-                                Depth = 4,
-                                FileA = "",
-                                FileB = "",
-                                IsEnable = false,
-                            };
-                            Machine.aviconfig.WatchPaths.Add(watchPath);
-                            AddParam(Machine.aviconfig.WatchPaths.Count() - 1);
-                        }
-                        //**********************************
-                    }
-
-                    lblstationcount.Text = txt_station_count.Value.ToString();
-                }
-                else if (txt_station_count.Value < int.Parse(lblstationcount.Text))//说明增加了
+                using (FrStationCofig frStation = new FrStationCofig(newStation))
                 {
-                    //减少的数量
-                    int num = int.Parse(lblstationcount.Text) - (int)txt_station_count.Value;
-                    for (int i = 0; i < num; i++)
+                    if (frStation.ShowDialog() == DialogResult.OK)
                     {
-                        int index = aviCtr2Container1.Controls.Count;
-
-                        aviCtr2Container1.Controls.RemoveAt(index - 1);
+                        Machine.aviconfig.WatchPaths.Add(frStation.stationConfig);
+                        aviCtr2Container1.CreateMachinePanels(Machine.aviconfig.WatchPaths);
                     }
-                    lblstationcount.Text = txt_station_count.Value.ToString();
                 }
             }
             catch (Exception ex)
@@ -138,8 +117,6 @@ namespace DeepSightAI.SettingPages
         {
             try
             {
-                FrHWConfig.Instance.txt_station_count.Value = Machine.aviconfig.WatchPaths.Count;
-
                 aviCtr2Container1.CreateMachinePanels(Machine.aviconfig.WatchPaths);
             }
             catch (Exception ex)
@@ -148,21 +125,6 @@ namespace DeepSightAI.SettingPages
             }
         }
 
-        private bool AddParam(int i)
-        {
-            try
-            {
-                // 使用 AviCtr2Container 的 CreateMachinePanels 方法来正确添加控件
-                // 该方法会将控件添加到内部的 flowLayoutPanel1 和 aviCtr2Controls 列表中
-                aviCtr2Container1.CreateMachinePanels(Machine.aviconfig.WatchPaths);
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error("Error", ex);
-                return false;
-            }
-            return true;
-        }
         public void GetStationParam()
         {
             try
@@ -171,13 +133,10 @@ namespace DeepSightAI.SettingPages
 
                 var watchPaths = aviCtr2Container1.GetAllConfigs();
 
-                for (int i = 0; i < txt_station_count.Value; i++)
+                foreach (var stationParam in watchPaths)
                 {
-                    //工站信息
-                    WatchPathConfig stationParam = watchPaths[i];
                     Machine.aviconfig.WatchPaths.Add(stationParam);
                 }
-
             }
             catch (Exception ex)
             {
