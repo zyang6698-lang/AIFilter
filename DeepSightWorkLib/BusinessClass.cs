@@ -121,10 +121,10 @@ namespace DeepSightWorkLib
                 bool previousValue = _isStart;
                 _isStart = value;
 
-                // 当从 false 变为 true 时，更新推理请求开始时间
+                // 当从 false 变为 true 时，重置所有数据库的 fetchTime 为当前时间
                 if (!previousValue && value)
                 {
-                    _aviReaderService.fetchTime = DateTime.Now;
+                    _aviReaderService.ResetAllFetchTimes();
                 }
                 // 停止后自动将暂存数据库信息写入
                 if (previousValue&& !value)
@@ -236,9 +236,8 @@ namespace DeepSightWorkLib
             // 初始化拆分后的服务（使用 QueueManager 中的队列）
             _aviReaderService = new AviReaderService(httpInstance, _queueManager.ProcessingSnSet, ReadJsonByMinio);
             _imageLoaderService = new ImageLoaderService(minioInstance);
-            _defectProcessor = new DefectProcessor(defectInstance, ImageDisplay, _imageLoaderService,
-                _queueManager.AviQueue, _queueManager.AIResultQueue, _queueManager.PostProcessQueue);
-            _postProcessService = new PostProcessService(_panelDataConverter, SysConfig, SavePanelSideToDatabase);
+            _defectProcessor = new DefectProcessor(defectInstance, _queueManager.AIResultQueue, _queueManager.PostProcessQueue);
+            _postProcessService = new PostProcessService( SysConfig, SavePanelSideToDatabase);
         }
 
         /// <summary>
@@ -249,8 +248,7 @@ namespace DeepSightWorkLib
             this.IsStart = false;
 
             var httpInstance = HttpService as HttpClass ?? new HttpClass();
-            var ldbUrl = $"{SysConfig.ServerIP}:{SysConfig.ServerPort}";
-            _resultWriterService = new ResultWriterService(httpInstance, _queueManager.ProcessingSnSet, ldbUrl);
+            _resultWriterService = new ResultWriterService(httpInstance, _queueManager.ProcessingSnSet);
 
             // 初始化模型验证测试服务
             var dbHelper = _databaseHelper as DatabaseHelper ?? new DatabaseHelper();
@@ -316,7 +314,7 @@ namespace DeepSightWorkLib
         #region Worker 方法（由 WorkerThreadManager 调度）
 
         /// <summary>
-        /// 读取 AVI 数据工作单元
+        /// 读取 AVI 数据工作单元 - 从所有配置的 LevelDB 数据库读取
         /// </summary>
         private bool WorkerReadAVI()
         {
@@ -324,12 +322,8 @@ namespace DeepSightWorkLib
 
             try
             {
-                var ldbUrl = $"{SysConfig.ServerIP}:{SysConfig.ServerPort}";
-                if (_aviReaderService.ReadAVI(ldbUrl, out string result))
-                {
-                    _aviReaderService.DoAviJsonTyped(result);
-                    return true;
-                }
+                // 使用新的多数据库读取方法
+                return _aviReaderService.ReadAllAVI();
             }
             catch (Exception ex)
             {
@@ -540,7 +534,9 @@ namespace DeepSightWorkLib
         /// <summary>
         /// 通过Minio读取Json文件
         /// </summary>
-        public void ReadJsonByMinio(string ip, string port, string key, string head, string sn, string side, string path)
+        /// <param name="writeBackDbName">回写目标数据库名称</param>
+        /// <param name="dbUrl">源数据库服务器 URL</param>
+        public void ReadJsonByMinio(string ip, string port, string key, string head, string sn, string side, string path, string writeBackDbName, string dbUrl)
         {
             try
             {
@@ -589,7 +585,9 @@ namespace DeepSightWorkLib
                     minioPath = head,
                     panelInfo = obj,
                     isByPass = convertResult.IsByPass,
-                    ImageKeys = imageKeys
+                    ImageKeys = imageKeys,
+                    SourceDbUrl = dbUrl,
+                    SourceWriteBackDbName = writeBackDbName
                 };
 
                 var loadModel = new ImageLoadModel
@@ -639,12 +637,6 @@ namespace DeepSightWorkLib
         /// 获取数据库服务实例（用于 CSV 数据导入等场景）
         /// </summary>
         public IDatabaseService GetDatabaseService() => _databaseHelper;
-
-        /// <summary>
-        /// 获取 DatabaseHelper 实例（兼容旧代码）
-        /// </summary>
-        [Obsolete("请使用 GetDatabaseService() 方法")]
-        public DatabaseHelper GetDatabaseHelper() => _databaseHelper as DatabaseHelper;
 
         /// <summary>
         /// 保存 PanelSide 数据到数据库（从 RootPanelInfo 构建记录）

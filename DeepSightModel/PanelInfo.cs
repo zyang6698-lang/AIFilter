@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -31,7 +32,7 @@ namespace DeepSightModel
         [JsonProperty("line_name")]
         public string LineName { get; set; }
 
-        [JsonProperty("local_describe_dir")]
+        [JsonProperty("local_describe_dir"),Description("由于数据可能被移动过，会导致json内的路径和实际路径对不上的问题，以实际路径为准，这个尽量不使用")]
         public string LocalDescribeDir { get; set; }
 
         [JsonProperty("local_describe_path")]

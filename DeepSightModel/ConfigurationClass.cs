@@ -25,14 +25,6 @@ namespace DeepSightModel
         /// </summary>
         public int LogDay { get; set; }
         /// <summary>
-        /// 数据库IP
-        /// </summary>
-        public string ServerIP { get; set; }
-        /// <summary>
-        /// 数据库端口
-        /// </summary>
-        public string ServerPort { get; set; }
-        /// <summary>
         /// minioIP
         /// </summary>
         public string endpoint_address { get; set; }
@@ -90,8 +82,6 @@ namespace DeepSightModel
                 ConfigurationClass config = new ConfigurationClass
                 {
                     ProjectName = DefaultValues.ProjectName,
-                    ServerIP = DefaultValues.ServerIP,
-                    ServerPort = DefaultValues.ServerPort,
                     LogDay = DefaultValues.LogDay,
                     endpoint_address = DefaultValues.MinioIP,
                     MinioPort = DefaultValues.MinioPort,

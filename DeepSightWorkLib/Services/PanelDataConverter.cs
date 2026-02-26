@@ -18,14 +18,6 @@ namespace DeepSightWorkLib.Services
     {
 
         /// <summary>
-        /// JSON 序列化设置（静态复用，避免重复创建）
-        /// </summary>
-        private static readonly JsonSerializerSettings JsonSettings = new JsonSerializerSettings
-        {
-            NullValueHandling = NullValueHandling.Ignore
-        };
-
-        /// <summary>
         /// Minio 配置引用
         /// </summary>
         private static MinioSettings MinioSettingsConfig => MinioSettings.Instance;

@@ -9,13 +9,14 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Threading;
 
 namespace DeepSightWorkLib.Services
 {
     /// <summary>
     /// 负责从 LevelDB 获取 AVI 消息并解析为强类型 AviDataItem 的服务（聚合/解析层）
-    /// 目前仅实现解析与读取逻辑，后续会把更多职责从 BusinessClass 按需迁移到此处。
+    /// 支持多个 LevelDB 数据库，每个数据库维护独立的 fetchTime。
     /// </summary>
     public class AviReaderService
     {
@@ -23,11 +24,31 @@ namespace DeepSightWorkLib.Services
         private const string FixedTimeFormat = "yyyyMMddHHmmssfff";
         private readonly ConcurrentDictionary<string, DateTime> _processingSnSet;
         // delegate to call ReadJsonByMinio implemented elsewhere (BusinessClass)
-        private readonly Action<string, string, string, string, string, string, string> _readJsonByMinio;
-        public DateTime fetchTime = DateTime.MinValue;
+        // 参数：minioIp, minioPort, key, head, sn, side, path, writeBackDbName, dbUrl
+        private readonly Action<string, string, string, string, string, string, string, string, string> _readJsonByMinio;
 
-        // Updated constructor to accept delegate for ReadJsonByMinio
-        public AviReaderService(HttpClass httpDb, ConcurrentDictionary<string, DateTime> processingSnSet, Action<string, string, string, string, string, string, string> readJsonByMinio)
+        /// <summary>
+        /// 每个数据库的 fetchTime（key 为 DbName，value 为上次获取的时间）
+        /// </summary>
+        private readonly ConcurrentDictionary<string, DateTime> _fetchTimeByDb = new ConcurrentDictionary<string, DateTime>();
+
+        /// <summary>
+        /// 当前正在处理的数据库名称（用于 ProcessAviDataItem 更新对应的 fetchTime）
+        /// </summary>
+        private string _currentDbName;
+
+        /// <summary>
+        /// 当前正在处理的数据库 URL（用于回写时定位目标服务器）
+        /// </summary>
+        private string _currentDbUrl;
+
+        /// <summary>
+        /// 当前正在处理的数据库回写 DbName
+        /// </summary>
+        private string _currentWriteBackDbName;
+
+        // Updated constructor to accept delegate for ReadJsonByMinio (with source DB info)
+        public AviReaderService(HttpClass httpDb, ConcurrentDictionary<string, DateTime> processingSnSet, Action<string, string, string, string, string, string, string, string, string> readJsonByMinio)
         {
             _httpDb = httpDb ?? throw new ArgumentNullException(nameof(httpDb));
             _processingSnSet = processingSnSet ?? throw new ArgumentNullException(nameof(processingSnSet));
@@ -35,21 +56,95 @@ namespace DeepSightWorkLib.Services
         }
 
         /// <summary>
-        /// 从 LevelDB 读取 AVI JSON（封装 BusinessClass.ReadAVI 的逻辑），使用外部提供的 fetchTime
+        /// 获取指定数据库的 fetchTime
         /// </summary>
-        public bool ReadAVI(string url,  out string result)
+        public DateTime GetFetchTime(string dbName)
         {
+            return _fetchTimeByDb.GetOrAdd(dbName, DateTime.MinValue);
+        }
+
+        /// <summary>
+        /// 设置指定数据库的 fetchTime
+        /// </summary>
+        public void SetFetchTime(string dbName, DateTime time)
+        {
+            _fetchTimeByDb[dbName] = time;
+        }
+
+        /// <summary>
+        /// 重置所有数据库的 fetchTime 为当前时间
+        /// </summary>
+        public void ResetAllFetchTimes()
+        {
+            var now = DateTime.Now;
+            var configs = LevelDbConfigManager.Instance.Databases
+                .Where(db => db.IsEnabled)
+                .ToList();
+
+            foreach (var config in configs)
+            {
+                _fetchTimeByDb[config.DbName] = now;
+            }
+
+            LogTextHelper.Info($"已重置 {configs.Count} 个数据库的 fetchTime 为: {now}");
+        }
+
+        /// <summary>
+        /// 从所有配置的 LevelDB 数据库读取 AVI 数据
+        /// </summary>
+        /// <returns>是否至少有一个数据库读取成功</returns>
+        public bool ReadAllAVI()
+        {
+            var configs = LevelDbConfigManager.Instance.Databases
+                .Where(db => db.IsEnabled)
+                .ToList();
+
+            if (configs.Count == 0)
+            {
+                LogTextHelper.Warn("没有配置启用的 LevelDB 数据库");
+                return false;
+            }
+
+            bool anySuccess = false;
+            foreach (var config in configs)
+            {
+                try
+                {
+                    if (ReadAVI(config, out string result))
+                    {
+                        _currentDbName = config.DbName;
+                        _currentDbUrl = config.Url;
+                        _currentWriteBackDbName = config.WriteBackDbName;
+                        DoAviJsonTyped(result);
+                        anySuccess = true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error($"读取数据库 {config.DbName} 失败: {ex}");
+                }
+            }
+
+            return anySuccess;
+        }
+
+        /// <summary>
+        /// 从指定配置的 LevelDB 读取 AVI JSON
+        /// </summary>
+        public bool ReadAVI(LevelDbConfig config, out string result)
+        {
+            var dbFetchTime = GetFetchTime(config.DbName);
             RootDbInfo getInfo = new RootDbInfo
             {
                 uniqueKey = Guid.NewGuid().ToString(),
-                db_name = "ai_merged_results",
+                db_name = config.DbName,
                 operation = "get",
                 is_select_range = "true",
                 op_mode = "all",
-                range_start = fetchTime.ToString(FixedTimeFormat),
+                range_start = dbFetchTime.ToString(FixedTimeFormat),
                 range_end = DateTime.Now.Date.AddDays(1).AddTicks(-1).ToString(FixedTimeFormat),
             };
-            return _httpDb.HttpPostMethod(url, getInfo, 0, out result);
+            return _httpDb.HttpPostMethod(config.Url, getInfo, 0, out result);
         }
 
         /// <summary>
@@ -159,7 +254,9 @@ namespace DeepSightWorkLib.Services
             style: DateTimeStyles.None,
             result: out DateTime dt))
             {
-                fetchTime = dt.AddMilliseconds(1);
+                // 更新当前数据库的 fetchTime
+                var dbName = _currentDbName ?? "ai_merged_results";
+                SetFetchTime(dbName, dt.AddMilliseconds(1));
             }
             // 第二层：反序列化 value 字符串
             var valueData = JsonConvert.DeserializeObject<AviValueData>(dataItem.Value, settings);
@@ -222,9 +319,11 @@ namespace DeepSightWorkLib.Services
                 {
                     ParseMinioPath(resultPath, out string path, out string result);
                     LogTextHelper.Info($"SN:{serialNumber} Side:{side} 解析Minio路径完成");
-                    // call injected ReadJsonByMinio delegate
-                    _readJsonByMinio(minioIp, minioPort, dataItem.Key, result, serialNumber, side, path);
-                    LogTextHelper.Info($"SN:{serialNumber} Side:{side} 通过Minio读取Json完成");
+                    // call injected ReadJsonByMinio delegate (含源DB回写信息)
+                    var writeBackDbName = _currentWriteBackDbName ?? "filter_time_to_airesults";
+                    var dbUrl = _currentDbUrl ?? "";
+                    _readJsonByMinio(minioIp, minioPort, dataItem.Key, result, serialNumber, side, path, writeBackDbName, dbUrl);
+                    LogTextHelper.Info($"SN:{serialNumber} Side:{side} 通过Minio读取Json完成, 回写DB:{writeBackDbName}, URL:{dbUrl}");
                 }
                 catch (Exception ex)
                 {

@@ -165,7 +165,7 @@ namespace DeepSightAI
 
             try
             {
-                var dbHelper = Machine.master.workClass.GetDatabaseHelper();
+                var dbHelper = Machine.master.workClass.GetDatabaseService();
                 if (dbHelper == null)
                 {
                     MessageBox.Show("无法获取 DatabaseHelper 实例", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);

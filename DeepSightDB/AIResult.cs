@@ -24,6 +24,12 @@ namespace DeepSightDB
 
         [JsonProperty("value")]
         public string Value { get; set; }
+
+        /// <summary>
+        /// 回写目标 LevelDB 服务器 URL（不参与JSON序列化，仅用于路由回写请求）
+        /// </summary>
+        [JsonIgnore]
+        public string TargetUrl { get; set; }
     }
 
     public class WriteBackData

@@ -23,8 +23,6 @@ namespace DeepSightModel.Configuration
             return new ConfigurationClass
             {
                 ProjectName = DefaultValues.ProjectName,
-                ServerIP = DefaultValues.ServerIP,
-                ServerPort = DefaultValues.ServerPort,
                 LogDay = DefaultValues.LogDay,
                 endpoint_address = DefaultValues.MinioIP,
                 MinioPort = DefaultValues.MinioPort,

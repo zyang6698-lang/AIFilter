@@ -12,21 +12,22 @@ namespace DeepSightWorkLib.Services
     {
         private readonly HttpClass _httpDb;
         private readonly ConcurrentDictionary<string, DateTime> _processingSnSet;
-        private readonly string _url;
 
-        public ResultWriterService(HttpClass httpDb, ConcurrentDictionary<string, DateTime> processingSnSet, string url)
+        public ResultWriterService(HttpClass httpDb, ConcurrentDictionary<string, DateTime> processingSnSet)
         {
             _httpDb = httpDb ?? throw new ArgumentNullException(nameof(httpDb));
             _processingSnSet = processingSnSet ?? throw new ArgumentNullException(nameof(processingSnSet));
-            _url = url;
         }
 
         public bool ReturnAVI(Tuple<string, string, string, RootAIResult> info)
         {
             try
             {
+                // 优先使用 RootAIResult 中携带的目标 URL，退回到默认 _url
+                var targetUrl = !string.IsNullOrEmpty(info.Item4?.TargetUrl) ? info.Item4.TargetUrl :"";
                 TaskStatusSender.SendWritingResults(info.Item2, info.Item3);
-                if (_httpDb.HttpPostMethod(_url, info.Item4, 1, out string result))
+                LogTextHelper.Info($"SN:{info.Item2} Side:{info.Item3} 回写到 URL:{targetUrl}, DB:{info.Item4?.DbName}");
+                if (_httpDb.HttpPostMethod(targetUrl, info.Item4, 1, out string result))
                 {
                     TaskStatusSender.SendCompleted(info.Item2, info.Item3);
 

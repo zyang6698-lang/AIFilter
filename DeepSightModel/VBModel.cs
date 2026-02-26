@@ -24,6 +24,18 @@ namespace DeepSightModel
         //用于判断ai是否部署该料号，若未部署则为true
         public bool isByPass { get; set; } = false;
 
+        #region 源数据库追踪（多DB回写支持）
+        /// <summary>
+        /// 数据来源的 LevelDB 服务器 URL（IP:Port），用于回写时定位目标服务器
+        /// </summary>
+        public string SourceDbUrl { get; set; }
+
+        /// <summary>
+        /// 回写目标数据库名称（对应 LevelDbConfig.WriteBackDbName）
+        /// </summary>
+        public string SourceWriteBackDbName { get; set; }
+        #endregion
+
         #region 推理测试相关属性
         /// <summary>
         /// 是否为测试任务（用于区分正常推理和测试推理）

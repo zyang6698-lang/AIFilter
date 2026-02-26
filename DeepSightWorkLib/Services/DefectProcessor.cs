@@ -17,21 +17,14 @@ namespace DeepSightWorkLib.Services
     public class DefectProcessor
     {
         private readonly DefectClass _defect;
-        private readonly ImageLoaderService _imageLoader;
-        private readonly ConcurrentQueue<VBModel> _aviQueue;
         private readonly ConcurrentQueue<Tuple<string, string, string, RootAIResult>> _aiResultQueue;
         private readonly ConcurrentQueue<InferenceResultModel> _inferencePostProcessQueue;
 
         public DefectProcessor(DefectClass defect,
-            ImageDisplayService display,
-            ImageLoaderService imageLoader,
-            ConcurrentQueue<VBModel> aviQueue,
             ConcurrentQueue<Tuple<string, string, string, RootAIResult>> aiResultQueue,
             ConcurrentQueue<InferenceResultModel> inferencePostProcessQueue)
         {
             _defect = defect ?? throw new ArgumentNullException(nameof(defect));
-            _imageLoader = imageLoader;
-            _aviQueue = aviQueue;
             _aiResultQueue = aiResultQueue;
             _inferencePostProcessQueue = inferencePostProcessQueue;
         }
@@ -170,13 +163,21 @@ namespace DeepSightWorkLib.Services
             // 老逻辑仍使用旧方式
             // SystemEvent.SendTaskMsg(info.SN, $"{info.Side}面正在回写结果");
             
+            // 使用 VBModel 中携带的源数据库信息，回写到对应的DB
+            var writeBackDbName = !string.IsNullOrEmpty(info.SourceWriteBackDbName)
+                ? info.SourceWriteBackDbName
+                : "filter_time_to_airesults";
+            var targetUrl = info.SourceDbUrl; // 可能为 null，ResultWriterService 会使用默认 URL
+
             RootAIResult data = new RootAIResult
             {
-                DbName = "filter_time_to_airesults",
+                DbName = writeBackDbName,
                 Operation = "put",
                 OpMode = info.Side == "A" ? "all_ow" : "ap",
                 Key = info.Key,
+                TargetUrl = targetUrl,
             };
+            LogTextHelper.Info($"SN:{info.SN} Side:{info.Side} 回写目标DB:{writeBackDbName}, URL:{targetUrl}");
 
             List<ResultInfo> results = new List<ResultInfo>();
             if (msg == null || msg.Count == 0)

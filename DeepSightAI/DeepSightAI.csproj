@@ -397,6 +397,12 @@
     <Compile Include="SettingPages\FrStationCofig.Designer.cs">
       <DependentUpon>FrStationCofig.cs</DependentUpon>
     </Compile>
+    <Compile Include="SettingPages\FrLevelDbConfig.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingPages\FrLevelDbConfig.Designer.cs">
+      <DependentUpon>FrLevelDbConfig.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingPages\FrUserManagement.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -479,6 +485,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingPages\FrStationCofig.resx">
       <DependentUpon>FrStationCofig.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingPages\FrLevelDbConfig.resx">
+      <DependentUpon>FrLevelDbConfig.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingPages\FrUserManagement.resx">
       <DependentUpon>FrUserManagement.cs</DependentUpon>

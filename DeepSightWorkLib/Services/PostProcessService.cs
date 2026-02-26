@@ -11,23 +11,21 @@ using System.Linq;
 namespace DeepSightWorkLib.Services
 {
     /// <summary>
-    /// 负责推理结果的后处理逻辑（如更新中台数据、保存板面数据到数据库）
+    /// 负责推理结果的后处理逻辑（保存板面数据到数据库）
     /// 通过外部注入的 delegate 将 PanelSide 保存到 BusinessClass 的数据库操作逻辑，避免直接依赖 BusinessClass。
     /// </summary>
     public class PostProcessService
     {
-        private readonly IPanelDataConverter _panelDataConverter;
         private readonly ConfigurationClass _sysConfig;
         private readonly Action<RootPanelInfo, List<DetectInfo>, int, int> _savePanelSideAction;
 
         // 模型验证测试服务（可选注入）
         private ModelValidationTestService _validationTestService;
 
-        public PostProcessService(IPanelDataConverter panelDataConverter,
+        public PostProcessService(
             ConfigurationClass sysConfig,
             Action<RootPanelInfo, List<DetectInfo>, int, int> savePanelSideAction)
         {
-            _panelDataConverter = panelDataConverter ?? throw new ArgumentNullException(nameof(panelDataConverter));
             _sysConfig = sysConfig ?? throw new ArgumentNullException(nameof(sysConfig));
             _savePanelSideAction = savePanelSideAction ?? throw new ArgumentNullException(nameof(savePanelSideAction));
         }
@@ -92,13 +90,9 @@ namespace DeepSightWorkLib.Services
                     for (int i = 0; i < obj.Data.InferWholeData.InferResults.Count; i++)
                     {
                         DetectInfo heatInfo = new DetectInfo();
-                        int index = panelInfo.LocalDescribeDir.IndexOf("deepiresults", StringComparison.OrdinalIgnoreCase);
-                        if (index != -1)
+                        if (vBModel.ImageKeys[i]!=null)
                         {
-                            string basePath = panelInfo.LocalDescribeDir.Substring(0, index + "deepiresults".Length);
-                            string relativePath = obj.Data.InferWholeData.InferResults[i].GroupInfos[0].ImagePath.Replace('/', '\\');
-                            string mergedPath = Path.Combine(basePath, relativePath);
-                            heatInfo.ImagePath = mergedPath;
+                            heatInfo.ImagePath = vBModel.ImageKeys[i];
                         }
                         var imgRoi = obj.Data.InferWholeData.InferResults[i].ImgRoi;
                         if (imgRoi != null && imgRoi.Count >= 4)
@@ -108,7 +102,6 @@ namespace DeepSightWorkLib.Services
                             heatInfo.OriginWidth = imgRoi[2];
                             heatInfo.OriginHeight = imgRoi[3];
                         }
-
 
                         if (obj.Data.InferWholeData.InferResults[i].Infer_Result == "OK")
                         {
@@ -176,52 +169,6 @@ namespace DeepSightWorkLib.Services
             {
                 LogTextHelper.Error($"处理异常: SN={vBModel.SN}, 错误={ex}");
             }
-        }
-
-        private static bool TryGetOriginRoi(VBModel model, int resultIndex, out int x, out int y, out int w, out int h)
-        {
-            x = 0;
-            y = 0;
-            w = 0;
-            h = 0;
-
-            if (model?.panelInfo?.PcsInfo == null || model.PcsIndex == null || model.DefectIndex == null)
-                return false;
-
-            if (resultIndex < 0 || resultIndex >= model.PcsIndex.Count || resultIndex >= model.DefectIndex.Count)
-                return false;
-
-            var pcsKey = model.PcsIndex[resultIndex].ToString();
-            if (!model.panelInfo.PcsInfo.TryGetValue(pcsKey, out var pcsInfo) || pcsInfo?.DefectInfo == null)
-                return false;
-
-            var defectIndex = model.DefectIndex[resultIndex];
-            if (defectIndex < 0 || defectIndex >= pcsInfo.DefectInfo.Count)
-                return false;
-
-            // 优先使用 DefectOriginRoi，如果为空则降级使用 DefectRoi
-            var origin = pcsInfo.DefectInfo[defectIndex].DefectOriginRoi;
-            var fallbackRoi = pcsInfo.DefectInfo[defectIndex].DefectRoi;
-            
-            // 优先使用 DefectOriginRoi
-            if (origin != null && origin.Width > 0 && origin.Height > 0)
-            {
-                x = origin.X;
-                y = origin.Y;
-                w = origin.Width;
-                h = origin.Height;
-                return true;
-            }
-            
-            // 降级使用 DefectRoi（与 PanelDataConverter 中的 ImgROI 一致）
-            if (fallbackRoi == null || fallbackRoi.Width <= 0 || fallbackRoi.Height <= 0)
-                return false;
-
-            x = fallbackRoi.X;
-            y = fallbackRoi.Y;
-            w = fallbackRoi.Width;
-            h = fallbackRoi.Height;
-            return true;
         }
 
         /// <summary>

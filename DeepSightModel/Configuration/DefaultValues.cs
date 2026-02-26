@@ -37,7 +37,7 @@ namespace DeepSightModel.Configuration
         /// <summary>
         /// 默认服务器端口
         /// </summary>
-        public const string ServerPort = "2000";
+        public const string ServerPort = "9877";
 
         #endregion
 

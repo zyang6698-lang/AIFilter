@@ -18,18 +18,22 @@ namespace DeepSightAI
             treeNode1 = new System.Windows.Forms.TreeNode("常规配置");
             treeNode2 = new System.Windows.Forms.TreeNode("算法方案配置");
             treeNode3 = new System.Windows.Forms.TreeNode("机台配置");
+            treeNode4 = new System.Windows.Forms.TreeNode("数据库配置");
 
             treeNode1.Name = "节点0";
             treeNode1.Text = "常规配置";
-            treeNode2.Name = "节点0";
+            treeNode2.Name = "节点1";
             treeNode2.Text = "算法方案配置";
-            treeNode3.Name = "节点0";
+            treeNode3.Name = "节点2";
             treeNode3.Text = "机台配置";
+            treeNode4.Name = "节点3";
+            treeNode4.Text = "数据库配置";
 
             this.tvw_setting.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
             treeNode1,
             treeNode2,
             treeNode3,
+            treeNode4,
             });
 
             Load += FrSetting_Load;
@@ -75,6 +79,7 @@ namespace DeepSightAI
         System.Windows.Forms.TreeNode treeNode1;
         System.Windows.Forms.TreeNode treeNode2;
         System.Windows.Forms.TreeNode treeNode3;
+        System.Windows.Forms.TreeNode treeNode4;
         public void Language(int language)
         {
             if (language == 1)
@@ -84,6 +89,7 @@ namespace DeepSightAI
                 this.treeNode1.Text = "常规配置";
                 this.treeNode2.Text = "算法方案配置";
                 this.treeNode3.Text = "机台配置";
+                this.treeNode4.Text = "数据库配置";
             }
             else
             {
@@ -91,6 +97,7 @@ namespace DeepSightAI
                 this.treeNode1.Text = "conventional";
                 this.treeNode2.Text = "AVI";
                 this.treeNode3.Text = "AI";
+                this.treeNode4.Text = "Database";
             }
         }
 
@@ -126,6 +133,13 @@ namespace DeepSightAI
                 FrUserManagement.Instance.Parent = panel7;
                 FrUserManagement.Instance.Dock = DockStyle.Fill;
                 FrUserManagement.Instance.Show();
+
+                //// 数据库配置
+                panel4.Controls.Clear();
+                FrLevelDbConfig.Instance.TopLevel = false;
+                FrLevelDbConfig.Instance.Parent = panel4;
+                FrLevelDbConfig.Instance.Dock = DockStyle.Fill;
+                FrLevelDbConfig.Instance.Show();
 
             }
             catch (Exception ex)
@@ -188,6 +202,20 @@ namespace DeepSightAI
                         panel8.Visible = false;
 
                         break;
+
+                    case "数据库配置":
+                        panel4.Dock = DockStyle.Fill;
+
+                        panel1.Visible = false;
+                        panel2.Visible = false;
+                        panel3.Visible = false;
+                        panel4.Visible = true;
+                        panel5.Visible = false;
+                        panel6.Visible = false;
+                        panel7.Visible = false;
+                        panel8.Visible = false;
+
+                        break;
                 }
             }
             catch (Exception ex)
@@ -242,6 +270,17 @@ namespace DeepSightAI
                         MessageBox.Show("方案及流程配置保存成功", "保存成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
 
+                }
+                if (tvw_setting.SelectedNode.Text == "数据库配置")
+                {
+                    if (FrLevelDbConfig.Instance.SaveConfig())
+                    {
+                        MessageBox.Show("数据库配置保存成功", "保存成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show("数据库配置保存失败", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
             }
             catch (Exception)
