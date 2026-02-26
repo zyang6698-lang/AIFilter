@@ -28,16 +28,21 @@ namespace DeepSightAI.SettingPages
         /// </summary>
         private void InitializeComponent()
         {
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.panel1 = new System.Windows.Forms.Panel();
             this.dgvDatabases = new System.Windows.Forms.DataGridView();
             this.colDbName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colIP = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colPort = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colWriteBackDbName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colConnectionStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colTestConnection = new System.Windows.Forms.DataGridViewButtonColumn();
             this.colIsEnabled = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.panelButtons = new System.Windows.Forms.Panel();
             this.btnAdd = new System.Windows.Forms.Button();
             this.btnDelete = new System.Windows.Forms.Button();
+            this.btnTestAll = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvDatabases)).BeginInit();
             this.panelButtons.SuspendLayout();
@@ -60,6 +65,7 @@ namespace DeepSightAI.SettingPages
             // 
             this.panelButtons.Controls.Add(this.btnAdd);
             this.panelButtons.Controls.Add(this.btnDelete);
+            this.panelButtons.Controls.Add(this.btnTestAll);
             this.panelButtons.Dock = System.Windows.Forms.DockStyle.Top;
             this.panelButtons.Location = new System.Drawing.Point(10, 10);
             this.panelButtons.Name = "panelButtons";
@@ -95,22 +101,48 @@ namespace DeepSightAI.SettingPages
             this.btnDelete.Text = "删除选中";
             this.btnDelete.UseVisualStyleBackColor = false;
             this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
-            // 
+            //
+            // btnTestAll
+            //
+            this.btnTestAll.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(100)))), ((int)(((byte)(120)))));
+            this.btnTestAll.FlatAppearance.BorderSize = 0;
+            this.btnTestAll.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnTestAll.Font = new System.Drawing.Font("微软雅黑", 9F);
+            this.btnTestAll.ForeColor = System.Drawing.Color.White;
+            this.btnTestAll.Location = new System.Drawing.Point(225, 8);
+            this.btnTestAll.Name = "btnTestAll";
+            this.btnTestAll.Size = new System.Drawing.Size(100, 30);
+            this.btnTestAll.TabIndex = 2;
+            this.btnTestAll.Text = "全部测试";
+            this.btnTestAll.UseVisualStyleBackColor = false;
+            this.btnTestAll.Click += new System.EventHandler(this.btnTestAll_Click);
+            //
             // dgvDatabases
-            // 
+            //
             this.dgvDatabases.AllowUserToAddRows = false;
             this.dgvDatabases.AllowUserToDeleteRows = false;
             this.dgvDatabases.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.dgvDatabases.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dgvDatabases.ColumnHeadersDefaultCellStyle = GetHeaderStyle();
+            dataGridViewCellStyle1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(38)))), ((int)(((byte)(48)))));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold);
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            this.dgvDatabases.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.dgvDatabases.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvDatabases.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colDbName,
             this.colIP,
             this.colPort,
             this.colWriteBackDbName,
+            this.colConnectionStatus,
+            this.colTestConnection,
             this.colIsEnabled});
-            this.dgvDatabases.DefaultCellStyle = GetCellStyle();
+            dataGridViewCellStyle2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.Color.White;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("微软雅黑", 9F);
+            this.dgvDatabases.DefaultCellStyle = dataGridViewCellStyle2;
             this.dgvDatabases.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvDatabases.EnableHeadersVisualStyles = false;
             this.dgvDatabases.GridColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(80)))), ((int)(((byte)(95)))));
@@ -145,13 +177,28 @@ namespace DeepSightAI.SettingPages
             //
             this.colWriteBackDbName.HeaderText = "回写DB名称";
             this.colWriteBackDbName.Name = "colWriteBackDbName";
-            this.colWriteBackDbName.Width = 200;
+            this.colWriteBackDbName.Width = 150;
+            //
+            // colConnectionStatus
+            //
+            this.colConnectionStatus.HeaderText = "连接状态";
+            this.colConnectionStatus.Name = "colConnectionStatus";
+            this.colConnectionStatus.ReadOnly = true;
+            this.colConnectionStatus.Width = 90;
+            //
+            // colTestConnection
+            //
+            this.colTestConnection.HeaderText = "测试";
+            this.colTestConnection.Name = "colTestConnection";
+            this.colTestConnection.Text = "测试连接";
+            this.colTestConnection.UseColumnTextForButtonValue = true;
+            this.colTestConnection.Width = 80;
             //
             // colIsEnabled
             //
             this.colIsEnabled.HeaderText = "启用";
             this.colIsEnabled.Name = "colIsEnabled";
-            this.colIsEnabled.Width = 80;
+            this.colIsEnabled.Width = 60;
             // 
             // FrLevelDbConfig
             // 
@@ -165,6 +212,9 @@ namespace DeepSightAI.SettingPages
             this.Size = new System.Drawing.Size(800, 500);
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.Load += new System.EventHandler(this.FrLevelDbConfig_Load);
+            this.dgvDatabases.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvDatabases_CellContentClick);
+            this.dgvDatabases.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvDatabases_CellValueChanged);
+            this.dgvDatabases.CurrentCellDirtyStateChanged += new System.EventHandler(this.dgvDatabases_CurrentCellDirtyStateChanged);
             this.panel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvDatabases)).EndInit();
             this.panelButtons.ResumeLayout(false);
@@ -179,10 +229,13 @@ namespace DeepSightAI.SettingPages
         private System.Windows.Forms.DataGridViewTextBoxColumn colIP;
         private System.Windows.Forms.DataGridViewTextBoxColumn colPort;
         private System.Windows.Forms.DataGridViewTextBoxColumn colWriteBackDbName;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colConnectionStatus;
+        private System.Windows.Forms.DataGridViewButtonColumn colTestConnection;
         private System.Windows.Forms.DataGridViewCheckBoxColumn colIsEnabled;
         private System.Windows.Forms.Panel panelButtons;
         private System.Windows.Forms.Button btnAdd;
         private System.Windows.Forms.Button btnDelete;
+        private System.Windows.Forms.Button btnTestAll;
     }
 }
 
