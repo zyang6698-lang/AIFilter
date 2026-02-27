@@ -560,6 +560,7 @@ namespace DeepSightWorkLib
                     Head = head,
                     SolutionConfig = SolConfig,
                     AviConfig = AviConfig,
+                    OnSolutionConfigChanged = SaveSolutionConfig,
                 };
                 var convertResult = _panelDataConverter.Convert(obj, context);
 
@@ -610,6 +611,19 @@ namespace DeepSightWorkLib
         #region 算法调用与结果处理
 
         public bool DefectMethod(VBModel vBModel, out List<string> resList) => _defectProcessor.DefectMethod(vBModel, SysConfig.MaxDefectCount, out resList);
+
+        #endregion
+
+        #region 配置保存
+
+        /// <summary>
+        /// 保存方案配置到文件（用于料号自动新增后持久化）
+        /// </summary>
+        private void SaveSolutionConfig(SolutionConfig config)
+        {
+            var solClass = new DeepSight_Solution();
+            solClass.Save(config);
+        }
 
         #endregion
 

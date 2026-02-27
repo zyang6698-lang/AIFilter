@@ -1,4 +1,5 @@
 using DeepSightModel;
+using System;
 using System.Collections.Generic;
 
 namespace DeepSightWorkLib.Interfaces
@@ -32,6 +33,11 @@ namespace DeepSightWorkLib.Interfaces
         /// AVI 配置
         /// </summary>
         public AVIConfig AviConfig { get; set; }
+
+        /// <summary>
+        /// 方案配置变更时的保存回调（用于自动新增料号后持久化）
+        /// </summary>
+        public Action<SolutionConfig> OnSolutionConfigChanged { get; set; }
     }
 
     /// <summary>

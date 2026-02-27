@@ -22,6 +22,11 @@ namespace DeepSightWorkLib.Services
         /// </summary>
         private static MinioSettings MinioSettingsConfig => MinioSettings.Instance;
 
+        /// <summary>
+        /// 用于防止多线程同时新增同一料号的锁对象
+        /// </summary>
+        private static readonly object _solutionLock = new object();
+
         /// <inheritdoc/>
         public PanelConvertResult Convert(RootPanelInfo panelInfo, PanelConvertContext context)
         {
@@ -29,17 +34,17 @@ namespace DeepSightWorkLib.Services
             if (context == null) throw new ArgumentNullException(nameof(context));
 
             var result = new PanelConvertResult();
-            
+
             try
             {
                 LogTextHelper.Info($"{panelInfo.SerialNumber} {panelInfo.SideIndex} ProductSerial: {panelInfo.ProductSerial}");
 
                 //  解析方案配置
-                var solutionInfo = ResolveSolution(panelInfo, context.SolutionConfig, out bool isByPass);
+                var solutionInfo = ResolveSolution(panelInfo, context, out bool isByPass);
                 result.IsByPass = isByPass;
 
                 //  构建 VBInfo
-                result.VBInfo = BuildVBInfo(panelInfo, context, solutionInfo, 
+                result.VBInfo = BuildVBInfo(panelInfo, context, solutionInfo,
                     result.DefectIndexList, result.PcsIndexList);
 
                 return result;
@@ -55,48 +60,81 @@ namespace DeepSightWorkLib.Services
         #region 私有方法
 
         /// <summary>
-        /// 解析方案配置
+        /// 解析方案配置（料号未配置时自动基于 DEFAULT 新增并保存）
         /// </summary>
         private (string Solution, string Flow, bool IsSwitch) ResolveSolution(
-            RootPanelInfo panelInfo, SolutionConfig solConfig, out bool isByPass)
+            RootPanelInfo panelInfo, PanelConvertContext context, out bool isByPass)
         {
             isByPass = false;
-            string solution = "";
-            string flow = "";
-            bool isSwitch = false;
+            var solConfig = context.SolutionConfig;
 
             var solutionFlow = solConfig?.solus?.FirstOrDefault(o => o.ProductSerial == panelInfo.ProductSerial);
-            
-            if (solutionFlow != null)
+
+            if (solutionFlow == null)
             {
-                (solution, flow) = panelInfo.SideIndex == "A" 
-                    ? (solutionFlow.Asolution, solutionFlow.Aflow)
-                    : (solutionFlow.Bsolution, solutionFlow.Bflow);
-                isSwitch = solutionFlow.IsSwitch;
-            }
-            else
-            {
-                isByPass = true;
-                LogTextHelper.Warn($"料号 {panelInfo.ProductSerial} 未配置，使用默认方案，标记为ByPass");
-                
-                var defaultFlow = solConfig?.solus?.FirstOrDefault(o => 
-                    o.ProductSerial?.ToUpper() == "DEFAULT");
-                    
-                if (defaultFlow != null)
-                {
-                    (solution, flow) = panelInfo.SideIndex == "A"
-                        ? (defaultFlow.Asolution, defaultFlow.Aflow)
-                        : (defaultFlow.Bsolution, defaultFlow.Bflow);
-                    isSwitch = defaultFlow.IsSwitch;
-                }
-                else
-                {
-                    throw new Exception("找不到 default 的算法流程配置");
-                }
+                // 料号未配置，基于 DEFAULT 自动新增
+                isByPass = true;    
+                solutionFlow = AutoAddProductSerial(panelInfo.ProductSerial, context);
             }
 
+            string solution, flow;
+            (solution, flow) = panelInfo.SideIndex == "A"
+                ? (solutionFlow.Asolution, solutionFlow.Aflow)
+                : (solutionFlow.Bsolution, solutionFlow.Bflow);
+
             LogTextHelper.Info($"当前产品:{panelInfo.SerialNumber},{panelInfo.SideIndex}面,所属料号:{panelInfo.ProductSerial},方案:{solution},flow:{flow}");
-            return (solution, flow, isSwitch);
+            return (solution, flow, solutionFlow.IsSwitch);
+        }
+
+        /// <summary>
+        /// 自动基于 DEFAULT 配置新增料号，添加到内存配置并持久化保存
+        /// </summary>
+        private SolutionAndFlow AutoAddProductSerial(string productSerial, PanelConvertContext context)
+        {
+            var solConfig = context.SolutionConfig;
+
+            lock (_solutionLock)
+            {
+                // 双重检查：可能其他线程已经添加
+                var existing = solConfig?.solus?.FirstOrDefault(o => o.ProductSerial == productSerial);
+                if (existing != null) return existing;
+
+                var defaultFlow = solConfig?.solus?.FirstOrDefault(o =>
+                    o.ProductSerial?.ToUpper() == "DEFAULT");
+
+                if (defaultFlow == null)
+                {
+                    throw new Exception("找不到 DEFAULT 的算法流程配置，无法自动新增料号");
+                }
+
+                var newFlow = new SolutionAndFlow
+                {
+                    ProductSerial = productSerial,
+                    Asolution = defaultFlow.Asolution,
+                    Aflow = defaultFlow.Aflow,
+                    Bsolution = defaultFlow.Bsolution,
+                    Bflow = defaultFlow.Bflow,
+                    IsSwitch = defaultFlow.IsSwitch,
+                };
+
+                if (solConfig.solus == null) solConfig.solus = new List<SolutionAndFlow>();
+                solConfig.solus.Add(newFlow);
+
+                LogTextHelper.Info($"料号 {productSerial} 未配置，已基于 DEFAULT 自动新增并采用默认算法流程");
+
+                // 持久化保存
+                try
+                {
+                    context.OnSolutionConfigChanged?.Invoke(solConfig);
+                    LogTextHelper.Info($"料号 {productSerial} 配置已保存");
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error($"保存料号 {productSerial} 配置失败: {ex.Message}");
+                }
+
+                return newFlow;
+            }
         }
 
         /// <summary>
