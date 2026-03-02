@@ -102,6 +102,7 @@
     <Compile Include="TaskStatusInfo.cs" />
     <Compile Include="ValidationTestModel.cs" />
     <Compile Include="VBInfo.cs" />
+    <Compile Include="SnDebugInfo.cs" />
     <Compile Include="VBModel.cs" />
     <Compile Include="VBOutInfo.cs" />
   </ItemGroup>

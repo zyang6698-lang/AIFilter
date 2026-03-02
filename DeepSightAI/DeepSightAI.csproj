@@ -354,6 +354,9 @@
     <Compile Include="QueryControl.Designer.cs">
       <DependentUpon>QueryControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="FrSnDebugInfo.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Machine.cs" />
     <Compile Include="MachinePanel.cs">
       <SubType>Component</SubType>

@@ -141,6 +141,9 @@
   <data name="colASolution.MinimumWidth" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
+  <data name="colASolution.Width" type="System.Int32, mscorlib">
+    <value>125</value>
+  </data>
   <data name="colAFlow.HeaderText" xml:space="preserve">
     <value>A流程</value>
   </data>
@@ -156,6 +159,9 @@
   <data name="colBSolution.MinimumWidth" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
+  <data name="colBSolution.Width" type="System.Int32, mscorlib">
+    <value>125</value>
+  </data>
   <data name="colBFlow.HeaderText" xml:space="preserve">
     <value>B流程</value>
   </data>
@@ -166,13 +172,13 @@
     <value>80</value>
   </data>
   <data name="colIsSwitch.HeaderText" xml:space="preserve">
-    <value>翻转</value>
+    <value>激活分支控制</value>
   </data>
   <data name="colIsSwitch.MinimumWidth" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
   <data name="colIsSwitch.Width" type="System.Int32, mscorlib">
-    <value>45</value>
+    <value>120</value>
   </data>
   <data name="colProductCount.HeaderText" xml:space="preserve">
     <value>料号数</value>
@@ -193,7 +199,7 @@
     <value>51</value>
   </data>
   <data name="dgvPipeline.Size" type="System.Drawing.Size, System.Drawing">
-    <value>512, 626</value>
+    <value>625, 626</value>
   </data>
   <data name="dgvPipeline.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -210,39 +216,6 @@
   <data name="&gt;&gt;dgvPipeline.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="btn_setSolution.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btn_setSolution.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
-    <value>Flat</value>
-  </data>
-  <data name="btn_setSolution.Font" type="System.Drawing.Font, System.Drawing">
-    <value>微软雅黑, 9pt, style=Bold</value>
-  </data>
-  <data name="btn_setSolution.Location" type="System.Drawing.Point, System.Drawing">
-    <value>408, 8</value>
-  </data>
-  <data name="btn_setSolution.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 32</value>
-  </data>
-  <data name="btn_setSolution.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="btn_setSolution.Text" xml:space="preserve">
-    <value>保存配置</value>
-  </data>
-  <data name="&gt;&gt;btn_setSolution.Name" xml:space="preserve">
-    <value>btn_setSolution</value>
-  </data>
-  <data name="&gt;&gt;btn_setSolution.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btn_setSolution.Parent" xml:space="preserve">
-    <value>panelLeftHeader</value>
-  </data>
-  <data name="&gt;&gt;btn_setSolution.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="btn_GetAgain.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
@@ -253,7 +226,7 @@
     <value>微软雅黑, 9pt</value>
   </data>
   <data name="btn_GetAgain.Location" type="System.Drawing.Point, System.Drawing">
-    <value>310, 8</value>
+    <value>423, 8</value>
   </data>
   <data name="btn_GetAgain.Size" type="System.Drawing.Size, System.Drawing">
     <value>90, 32</value>
@@ -274,7 +247,7 @@
     <value>panelLeftHeader</value>
   </data>
   <data name="&gt;&gt;btn_GetAgain.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>0</value>
   </data>
   <data name="btnDeleteConfig.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -286,7 +259,7 @@
     <value>微软雅黑, 9pt</value>
   </data>
   <data name="btnDeleteConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>222, 8</value>
+    <value>335, 8</value>
   </data>
   <data name="btnDeleteConfig.Size" type="System.Drawing.Size, System.Drawing">
     <value>80, 32</value>
@@ -307,7 +280,7 @@
     <value>panelLeftHeader</value>
   </data>
   <data name="&gt;&gt;btnDeleteConfig.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>1</value>
   </data>
   <data name="btnAddConfig.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -319,7 +292,7 @@
     <value>微软雅黑, 9pt</value>
   </data>
   <data name="btnAddConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>134, 8</value>
+    <value>247, 8</value>
   </data>
   <data name="btnAddConfig.Size" type="System.Drawing.Size, System.Drawing">
     <value>80, 32</value>
@@ -340,7 +313,7 @@
     <value>panelLeftHeader</value>
   </data>
   <data name="&gt;&gt;btnAddConfig.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>2</value>
   </data>
   <data name="lblLeftTitle.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -370,7 +343,7 @@
     <value>panelLeftHeader</value>
   </data>
   <data name="&gt;&gt;lblLeftTitle.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>3</value>
   </data>
   <data name="panelLeftHeader.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Top</value>
@@ -379,7 +352,7 @@
     <value>4, 4</value>
   </data>
   <data name="panelLeftHeader.Size" type="System.Drawing.Size, System.Drawing">
-    <value>512, 50</value>
+    <value>625, 50</value>
   </data>
   <data name="panelLeftHeader.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -435,6 +408,9 @@
   <data name="colMode.MinimumWidth" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
+  <data name="colMode.Width" type="System.Int32, mscorlib">
+    <value>125</value>
+  </data>
   <data name="dgvProducts.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
@@ -445,7 +421,7 @@
     <value>51</value>
   </data>
   <data name="dgvProducts.Size" type="System.Drawing.Size, System.Drawing">
-    <value>650, 626</value>
+    <value>796, 626</value>
   </data>
   <data name="dgvProducts.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -472,7 +448,7 @@
     <value>微软雅黑, 9pt</value>
   </data>
   <data name="btnAutoAdd.Location" type="System.Drawing.Point, System.Drawing">
-    <value>426, 8</value>
+    <value>499, 8</value>
   </data>
   <data name="btnAutoAdd.Size" type="System.Drawing.Size, System.Drawing">
     <value>80, 32</value>
@@ -505,7 +481,7 @@
     <value>微软雅黑, 9pt</value>
   </data>
   <data name="btnDeleteProduct.Location" type="System.Drawing.Point, System.Drawing">
-    <value>338, 8</value>
+    <value>411, 8</value>
   </data>
   <data name="btnDeleteProduct.Size" type="System.Drawing.Size, System.Drawing">
     <value>80, 32</value>
@@ -538,7 +514,7 @@
     <value>微软雅黑, 9pt</value>
   </data>
   <data name="btnAddProduct.Location" type="System.Drawing.Point, System.Drawing">
-    <value>250, 8</value>
+    <value>323, 8</value>
   </data>
   <data name="btnAddProduct.Size" type="System.Drawing.Size, System.Drawing">
     <value>80, 32</value>
@@ -598,7 +574,7 @@
     <value>4, 4</value>
   </data>
   <data name="panelRightHeader.Size" type="System.Drawing.Size, System.Drawing">
-    <value>650, 50</value>
+    <value>796, 50</value>
   </data>
   <data name="panelRightHeader.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -631,10 +607,10 @@
     <value>1</value>
   </data>
   <data name="splitContainer1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>1184, 684</value>
+    <value>1443, 684</value>
   </data>
   <data name="splitContainer1.SplitterDistance" type="System.Int32, mscorlib">
-    <value>520</value>
+    <value>633</value>
   </data>
   <data name="splitContainer1.SplitterWidth" type="System.Int32, mscorlib">
     <value>6</value>
@@ -664,7 +640,7 @@
     <value>8, 8, 8, 8</value>
   </data>
   <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>1200, 700</value>
+    <value>1459, 700</value>
   </data>
   <data name="panel1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -688,7 +664,7 @@
     <value>9, 20</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>1200, 700</value>
+    <value>1459, 700</value>
   </data>
   <data name="$this.Font" type="System.Drawing.Font, System.Drawing">
     <value>微软雅黑, 9pt</value>
@@ -698,6 +674,24 @@
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value> </value>
+  </data>
+  <data name="&gt;&gt;colIndex.Name" xml:space="preserve">
+    <value>colIndex</value>
+  </data>
+  <data name="&gt;&gt;colIndex.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;colProductSerial.Name" xml:space="preserve">
+    <value>colProductSerial</value>
+  </data>
+  <data name="&gt;&gt;colProductSerial.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;colMode.Name" xml:space="preserve">
+    <value>colMode</value>
+  </data>
+  <data name="&gt;&gt;colMode.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewComboBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;colConfigName.Name" xml:space="preserve">
     <value>colConfigName</value>
@@ -740,24 +734,6 @@
   </data>
   <data name="&gt;&gt;colProductCount.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;colIndex.Name" xml:space="preserve">
-    <value>colIndex</value>
-  </data>
-  <data name="&gt;&gt;colIndex.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;colProductSerial.Name" xml:space="preserve">
-    <value>colProductSerial</value>
-  </data>
-  <data name="&gt;&gt;colProductSerial.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;colMode.Name" xml:space="preserve">
-    <value>colMode</value>
-  </data>
-  <data name="&gt;&gt;colMode.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewComboBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>FrAIConfig</value>

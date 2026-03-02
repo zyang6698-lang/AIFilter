@@ -86,6 +86,14 @@ namespace DeepSightWorkLib.Services
 
                 LogTextHelper.Info($"{vBModel.SN} {vBModel.Side} 算法返回原始结果: {msg}");
 
+                // 存储推理返回JSON到调试缓存
+                try
+                {
+                    var debugInfo = SnDebugInfoCache.GetOrCreate(vBModel.SN, vBModel.Side);
+                    debugInfo.InferenceReturnJson = msg;
+                }
+                catch { }
+
                 if (string.IsNullOrEmpty(msg))
                 {
                     LogTextHelper.Error($"算法返回结果为空 for Side {vBModel.Side}");

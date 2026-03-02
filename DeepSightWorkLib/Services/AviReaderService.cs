@@ -269,6 +269,9 @@ namespace DeepSightWorkLib.Services
 
             LogTextHelper.Info($"获取到{serialNumber}的数据");
 
+            // 缓存原始LevelDB JSON数据用于调试显示
+            string rawLevelDbJson = dataItem.Value;
+
             // 遍历 results_info
             foreach (var resultInfo in valueData.ResultsInfo)
             {
@@ -322,6 +325,12 @@ namespace DeepSightWorkLib.Services
                     // call injected ReadJsonByMinio delegate (含源DB回写信息)
                     var writeBackDbName = _currentWriteBackDbName ?? "filter_time_to_airesults";
                     var dbUrl = _currentDbUrl ?? "";
+                    // 存储原始LevelDB JSON到调试缓存
+                    var debugInfo = SnDebugInfoCache.GetOrCreate(serialNumber, side);
+                    debugInfo.RawLevelDbJson = rawLevelDbJson;
+                    debugInfo.SourceDbName = _currentDbName;
+                    debugInfo.SourceDbUrl = _currentDbUrl;
+
                     _readJsonByMinio(minioIp, minioPort, dataItem.Key, result, serialNumber, side, path, writeBackDbName, dbUrl);
                     LogTextHelper.Info($"SN:{serialNumber} Side:{side} 通过Minio读取Json完成, 回写DB:{writeBackDbName}, URL:{dbUrl}");
                 }

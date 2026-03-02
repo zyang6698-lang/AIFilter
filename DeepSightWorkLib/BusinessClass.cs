@@ -302,9 +302,9 @@ namespace DeepSightWorkLib
         /// <summary>
         /// 显示图片（委托给 ImageDisplayService）
         /// </summary>
-        public void ShowImage(string path, int index, string result = "")
+        public void ShowImage(string path, int index, string result = "", Roi defectRoi = null)
         {
-            ImageDisplay.ShowImage(path, index, result);
+            ImageDisplay.ShowImage(path, index, result, defectRoi);
         }
 
         #endregion
@@ -590,6 +590,24 @@ namespace DeepSightWorkLib
                     SourceDbUrl = dbUrl,
                     SourceWriteBackDbName = writeBackDbName
                 };
+
+                // 存储调试信息到缓存
+                try
+                {
+                    var debugInfo = SnDebugInfoCache.GetOrCreate(sn, side);
+                    debugInfo.PanelInfoJson = json;
+                    debugInfo.VbInferenceJson = JsonConvert.SerializeObject(convertResult.VBInfo, Formatting.Indented);
+                    debugInfo.DefectCount = convertResult.DefectIndexList?.Count ?? 0;
+                    debugInfo.PcsCount = convertResult.PcsIndexList?.Count ?? 0;
+                    debugInfo.ImageCount = imageKeys?.Count ?? 0;
+                    debugInfo.IsByPass = convertResult.IsByPass;
+                    debugInfo.MinioPath = head;
+                    SnDebugInfoCache.Cleanup();
+                }
+                catch (Exception debugEx)
+                {
+                    LogTextHelper.Warn($"存储SN调试信息异常: {debugEx.Message}");
+                }
 
                 var loadModel = new ImageLoadModel
                 {

@@ -46,6 +46,8 @@
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.btnClearLog = new System.Windows.Forms.ToolStripMenuItem();
             this.btnShowLog = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenuStripData = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.btnShowDebugInfo = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.avi_panel = new System.Windows.Forms.Panel();
             this.aviCtr2Container = new DeepSightAI.SettingPages.AviCtr2Container();
@@ -207,8 +209,24 @@
             this.dataGridViewData.ShowRowErrors = false;
             this.dataGridViewData.Size = new System.Drawing.Size(494, 550);
             this.dataGridViewData.TabIndex = 2;
+            this.dataGridViewData.ContextMenuStrip = this.contextMenuStripData;
             this.dataGridViewData.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewData_CellClick);
-            // 
+            //
+            // contextMenuStripData
+            //
+            this.contextMenuStripData.ImageScalingSize = new System.Drawing.Size(20, 20);
+            this.contextMenuStripData.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.btnShowDebugInfo});
+            this.contextMenuStripData.Name = "contextMenuStripData";
+            this.contextMenuStripData.Size = new System.Drawing.Size(150, 26);
+            //
+            // btnShowDebugInfo
+            //
+            this.btnShowDebugInfo.Name = "btnShowDebugInfo";
+            this.btnShowDebugInfo.Size = new System.Drawing.Size(149, 22);
+            this.btnShowDebugInfo.Text = "显示详情";
+            this.btnShowDebugInfo.Click += new System.EventHandler(this.btnShowDebugInfo_Click);
+            //
             // Code
             // 
             this.Code.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
@@ -632,5 +650,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn AI;
         private System.Windows.Forms.DataGridViewTextBoxColumn Time;
         private System.Windows.Forms.DataGridViewTextBoxColumn Status;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStripData;
+        private System.Windows.Forms.ToolStripMenuItem btnShowDebugInfo;
     }
 }

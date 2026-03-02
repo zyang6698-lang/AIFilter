@@ -33,16 +33,8 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
-            this.panel1 = new System.Windows.Forms.Panel();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.dgvPipeline = new System.Windows.Forms.DataGridView();
-            this.colConfigName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colASolution = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.colAFlow = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.colBSolution = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.colBFlow = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.colIsSwitch = new System.Windows.Forms.DataGridViewCheckBoxColumn();
-            this.colProductCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.panelLeftHeader = new System.Windows.Forms.Panel();
             this.btn_GetAgain = new System.Windows.Forms.Button();
             this.btnDeleteConfig = new System.Windows.Forms.Button();
@@ -57,7 +49,14 @@
             this.btnDeleteProduct = new System.Windows.Forms.Button();
             this.btnAddProduct = new System.Windows.Forms.Button();
             this.lblRightTitle = new System.Windows.Forms.Label();
-            this.panel1.SuspendLayout();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.colConfigName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colASolution = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.colAFlow = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.colBSolution = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.colBFlow = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.colIsSwitch = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            this.colProductCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -66,15 +65,8 @@
             this.panelLeftHeader.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvProducts)).BeginInit();
             this.panelRightHeader.SuspendLayout();
+            this.panel1.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // panel1
-            // 
-            this.panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(76)))), ((int)(((byte)(80)))));
-            this.panel1.Controls.Add(this.splitContainer1);
-            resources.ApplyResources(this.panel1, "panel1");
-            this.panel1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.panel1.Name = "panel1";
             // 
             // splitContainer1
             // 
@@ -136,46 +128,6 @@
             this.dgvPipeline.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgvPipeline.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvPipeline_CellValueChanged);
             this.dgvPipeline.SelectionChanged += new System.EventHandler(this.dgvPipeline_SelectionChanged);
-            // 
-            // colConfigName
-            // 
-            resources.ApplyResources(this.colConfigName, "colConfigName");
-            this.colConfigName.Name = "colConfigName";
-            // 
-            // colASolution
-            // 
-            this.colASolution.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
-            resources.ApplyResources(this.colASolution, "colASolution");
-            this.colASolution.Name = "colASolution";
-            // 
-            // colAFlow
-            // 
-            this.colAFlow.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
-            resources.ApplyResources(this.colAFlow, "colAFlow");
-            this.colAFlow.Name = "colAFlow";
-            // 
-            // colBSolution
-            // 
-            this.colBSolution.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
-            resources.ApplyResources(this.colBSolution, "colBSolution");
-            this.colBSolution.Name = "colBSolution";
-            // 
-            // colBFlow
-            // 
-            this.colBFlow.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
-            resources.ApplyResources(this.colBFlow, "colBFlow");
-            this.colBFlow.Name = "colBFlow";
-            // 
-            // colIsSwitch
-            // 
-            resources.ApplyResources(this.colIsSwitch, "colIsSwitch");
-            this.colIsSwitch.Name = "colIsSwitch";
-            // 
-            // colProductCount
-            // 
-            resources.ApplyResources(this.colProductCount, "colProductCount");
-            this.colProductCount.Name = "colProductCount";
-            this.colProductCount.ReadOnly = true;
             // 
             // panelLeftHeader
             // 
@@ -324,6 +276,54 @@
             this.lblRightTitle.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.lblRightTitle.Name = "lblRightTitle";
             // 
+            // panel1
+            // 
+            this.panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(76)))), ((int)(((byte)(80)))));
+            this.panel1.Controls.Add(this.splitContainer1);
+            resources.ApplyResources(this.panel1, "panel1");
+            this.panel1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.panel1.Name = "panel1";
+            // 
+            // colConfigName
+            // 
+            resources.ApplyResources(this.colConfigName, "colConfigName");
+            this.colConfigName.Name = "colConfigName";
+            // 
+            // colASolution
+            // 
+            this.colASolution.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
+            resources.ApplyResources(this.colASolution, "colASolution");
+            this.colASolution.Name = "colASolution";
+            // 
+            // colAFlow
+            // 
+            this.colAFlow.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
+            resources.ApplyResources(this.colAFlow, "colAFlow");
+            this.colAFlow.Name = "colAFlow";
+            // 
+            // colBSolution
+            // 
+            this.colBSolution.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
+            resources.ApplyResources(this.colBSolution, "colBSolution");
+            this.colBSolution.Name = "colBSolution";
+            // 
+            // colBFlow
+            // 
+            this.colBFlow.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
+            resources.ApplyResources(this.colBFlow, "colBFlow");
+            this.colBFlow.Name = "colBFlow";
+            // 
+            // colIsSwitch
+            // 
+            resources.ApplyResources(this.colIsSwitch, "colIsSwitch");
+            this.colIsSwitch.Name = "colIsSwitch";
+            // 
+            // colProductCount
+            // 
+            resources.ApplyResources(this.colProductCount, "colProductCount");
+            this.colProductCount.Name = "colProductCount";
+            this.colProductCount.ReadOnly = true;
+            // 
             // FrAIConfig
             // 
             resources.ApplyResources(this, "$this");
@@ -333,7 +333,6 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Name = "FrAIConfig";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
-            this.panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
@@ -344,6 +343,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.dgvProducts)).EndInit();
             this.panelRightHeader.ResumeLayout(false);
             this.panelRightHeader.PerformLayout();
+            this.panel1.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -361,13 +361,6 @@
         private System.Windows.Forms.Button btnDeleteConfig;
         internal System.Windows.Forms.Button btn_GetAgain;
         private System.Windows.Forms.DataGridView dgvPipeline;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colConfigName;
-        private System.Windows.Forms.DataGridViewComboBoxColumn colASolution;
-        private System.Windows.Forms.DataGridViewComboBoxColumn colAFlow;
-        private System.Windows.Forms.DataGridViewComboBoxColumn colBSolution;
-        private System.Windows.Forms.DataGridViewComboBoxColumn colBFlow;
-        private System.Windows.Forms.DataGridViewCheckBoxColumn colIsSwitch;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colProductCount;
 
         // 右侧 - 料号区
         private System.Windows.Forms.Panel panelRightHeader;
@@ -379,5 +372,12 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn colIndex;
         private System.Windows.Forms.DataGridViewTextBoxColumn colProductSerial;
         private System.Windows.Forms.DataGridViewComboBoxColumn colMode;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colConfigName;
+        private System.Windows.Forms.DataGridViewComboBoxColumn colASolution;
+        private System.Windows.Forms.DataGridViewComboBoxColumn colAFlow;
+        private System.Windows.Forms.DataGridViewComboBoxColumn colBSolution;
+        private System.Windows.Forms.DataGridViewComboBoxColumn colBFlow;
+        private System.Windows.Forms.DataGridViewCheckBoxColumn colIsSwitch;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colProductCount;
     }
 }

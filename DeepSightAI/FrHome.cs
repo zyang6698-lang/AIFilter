@@ -32,6 +32,8 @@ namespace DeepSightAI
         private List<DisPlayInfo> disInfosList = new List<DisPlayInfo>();
         //缺陷图
         private List<string> imagePaths = new List<string>();
+        //缺陷框信息
+        private List<Roi> defectRois = new List<Roi>();
         //gerber图
         private List<string> imagePaths_Gerber = new List<string>();
         //template图
@@ -551,6 +553,7 @@ namespace DeepSightAI
                 imagePaths?.Clear();
                 imagePaths_Gerber?.Clear();
                 imagePaths_Template?.Clear();
+                defectRois?.Clear();
                 disInfosList?.Clear();
                 if (dic_Infos.TryGetValue(SN, out info))
                 {
@@ -587,6 +590,7 @@ namespace DeepSightAI
                                     if (pcsInfo.DefectInfo[k].DefectVrsImages != null)
                                     {
                                         imagePaths.Add($"{info[i].Head}/{pcsInfo.DefectInfo[k].DefectVrsImages[0].ToString()}:{info[i].IP}");
+                                        defectRois.Add(pcsInfo.DefectInfo[k].DefectRoi);
                                     }
                                     if (pcsInfo.DefectInfo[k].DefectVrsGerberImages != null)
                                     {
@@ -647,6 +651,31 @@ namespace DeepSightAI
                 throw;
             }
         }
+        /// <summary>
+        /// 右键菜单 - 显示详情
+        /// </summary>
+        private void btnShowDebugInfo_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (dataGridViewData.CurrentRow == null) return;
+
+                string sn = dataGridViewData.CurrentRow.Cells[0].Value?.ToString();
+                if (string.IsNullOrEmpty(sn)) return;
+
+                // 获取该SN的所有调试信息
+                var debugInfos = SnDebugInfoCache.GetBySn(sn);
+
+                // 弹出调试信息窗口
+                var form = new FrSnDebugInfo(sn, debugInfos);
+                form.ShowDialog(this);
+            }
+            catch (Exception ex)
+            {
+                DeepSightTool.LogTextHelper.Error($"显示SN详情异常: {ex}");
+            }
+        }
+
         private async void ShowImage()
         {
             try
@@ -660,6 +689,7 @@ namespace DeepSightAI
                 List<string> gerberOrtemp_paths = Machine.ShowFlag == "B" ? imagePaths_Gerber : imagePaths_Template;
                 var defect_pagedData = defect_paths.Skip((currentPage - 1) * table_Small.RowCount).Take(table_Small.RowCount).ToList(); //imagePaths.Skip((currentPage - 1) * 30).Take(30).ToList();
                 var gerberOrtemp_pagedData = gerberOrtemp_paths.Skip((currentPage - 1) * table_Small.RowCount).Take(table_Small.RowCount).ToList(); //imagePaths.Skip((currentPage - 1) * 30).Take(30).ToList();
+                var defect_pagedRois = defectRois.Skip((currentPage - 1) * table_Small.RowCount).Take(table_Small.RowCount).ToList();
                 var defect_indexPaths = defect_pagedData.Select((path, index1) => new { Path = path, Index = index1 }).ToList();
                 var gerberOrtemp_indexPaths = gerberOrtemp_pagedData.Select((path, index1) => new { Path = path, Index = index1 }).ToList();
 
@@ -688,7 +718,8 @@ namespace DeepSightAI
                             }
 
                             int index2 = (currentPage - 1) * table_Small.RowCount + item.Index;
-                            Machine.master.ShowImage(item.Path, (item.Index + 1) * 2 - 2, labelText);
+                            Roi roi = (item.Index >= 0 && item.Index < defect_pagedRois.Count) ? defect_pagedRois[item.Index] : null;
+                            Machine.master.ShowImage(item.Path, (item.Index + 1) * 2 - 2, labelText, roi);
                         });
                     }));
                     await Task.Factory.StartNew((Action)(() =>
@@ -718,7 +749,8 @@ namespace DeepSightAI
                     {
                         Parallel.ForEach(defect_indexPaths, parallelOptions, item =>
                         {
-                            Machine.master.ShowImage(item.Path, (item.Index + 1) * 2 - 2, "未处理");
+                            Roi roi = (item.Index >= 0 && item.Index < defect_pagedRois.Count) ? defect_pagedRois[item.Index] : null;
+                            Machine.master.ShowImage(item.Path, (item.Index + 1) * 2 - 2, "未处理", roi);
                         });
                     }));
                     await Task.Factory.StartNew((Action)(() =>

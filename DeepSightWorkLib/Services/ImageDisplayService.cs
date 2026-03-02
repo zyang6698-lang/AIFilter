@@ -132,8 +132,8 @@ namespace DeepSightWorkLib.Services
         /// <param name="path">图片路径（格式：endpoint:objectKey）</param>
         /// <param name="index">显示窗口索引</param>
         /// <param name="result">AI结果代码</param>
-        /// <param name="box">检测框信息</param>
-        public void ShowImage(string path, int index, string result = "")
+        /// <param name="defectRoi">缺陷框信息，传入后会在图片上绘制缺陷框</param>
+        public void ShowImage(string path, int index, string result = "", Roi defectRoi = null)
         {
             Task.Run(() =>
             {
@@ -156,6 +156,12 @@ namespace DeepSightWorkLib.Services
                         }
                         mt = Cv2.ImDecode(stream.ToArray(), ImreadModes.Color);
 
+                        // 绘制缺陷框
+                        if (defectRoi != null && defectRoi.Width > 0 && defectRoi.Height > 0)
+                        {
+                            DrawDefectBoxOnMat(mt, defectRoi);
+                        }
+
                         DisplaysList[index].Image = mt;
                         mt = null; // 所有权已转移
                         string displayText = ConvertResultCodeToText(result);
@@ -171,6 +177,25 @@ namespace DeepSightWorkLib.Services
                     mt?.Dispose();
                 }
             });
+        }
+
+        /// <summary>
+        /// 在Mat图片上绘制缺陷框和缺陷代码
+        /// </summary>
+        /// <param name="mat">图片Mat</param>
+        /// <param name="roi">缺陷框信息</param>
+        private void DrawDefectBoxOnMat(Mat mat, Roi roi)
+        {
+            try
+            {
+                // 绘制红色缺陷框
+                var rect = new OpenCvSharp.Rect(roi.X, roi.Y, roi.Width, roi.Height);
+                Cv2.Rectangle(mat, rect, new Scalar(0, 0, 255), 2);
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error("绘制缺陷框异常: " + ex.ToString());
+            }
         }
 
 

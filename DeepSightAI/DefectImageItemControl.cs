@@ -1,6 +1,8 @@
 using DeepSightDB;
 using DeepSightDisplay;
 using DeepSightTool;
+using OpenCvSharp;
+using OpenCvSharp.Extensions;
 using System;
 using System.Drawing;
 using System.IO;
@@ -117,21 +119,50 @@ namespace DeepSightAI
         }
 
         /// <summary>
-        /// 加载原图并绘制缺陷框
+        /// 从Minio路径加载图片（格式：IP:objectKey）
+        /// </summary>
+        private Bitmap LoadImageFromMinio(string minioPath)
+        {
+            if (string.IsNullOrEmpty(minioPath)) return null;
+
+            var parts = minioPath.Split(':');
+            if (parts.Length < 2) return null;
+
+            // 格式：IP:objectKey
+            string ip = parts[0];
+            string objectKey = parts[1];
+
+            using (var stream = Machine.master.MinioService.GetImageStreamSync("deepiresults", objectKey, ip))
+            {
+                if (stream == null || stream.Length == 0) return null;
+
+                using (Mat mt = Cv2.ImDecode(stream.ToArray(), ImreadModes.Color))
+                {
+                    if (mt == null || mt.Empty()) return null;
+                    return mt.ToBitmap();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 加载原图并绘制缺陷框（通过Minio加载）
         /// </summary>
         private void LoadOriginalImage()
         {
             pictureBox_OriginalImage.Image?.Dispose();
             pictureBox_OriginalImage.Image = null;
 
-            if (string.IsNullOrEmpty(_heatPoint.ImagePath) || !File.Exists(_heatPoint.ImagePath))
+            if (string.IsNullOrEmpty(_heatPoint.ImagePath))
                 return;
 
             try
             {
-                using (var img = Image.FromFile(_heatPoint.ImagePath))
+                using (var bmp = LoadImageFromMinio(_heatPoint.ImagePath))
                 {
-                    pictureBox_OriginalImage.Image = ImageHelper.DrawDefectBoxOnImage(img, _heatPoint);
+                    if (bmp != null)
+                    {
+                        pictureBox_OriginalImage.Image = ImageHelper.DrawDefectBoxOnImage(bmp, _heatPoint);
+                    }
                 }
             }
             catch (Exception ex)
@@ -141,41 +172,49 @@ namespace DeepSightAI
         }
 
         /// <summary>
-        /// 加载模板图
+        /// 从缺陷图Minio路径派生模板图路径（在扩展名前加[E]）
+        /// </summary>
+        private string BuildTemplateMinioPath(string defectMinioPath)
+        {
+            if (string.IsNullOrEmpty(defectMinioPath)) return null;
+
+            // 格式: IP:objectKey，先分离IP和objectKey
+            int colonIndex = defectMinioPath.IndexOf(':');
+            if (colonIndex < 0) return null;
+
+            string ip = defectMinioPath.Substring(0, colonIndex);
+            string objectKey = defectMinioPath.Substring(colonIndex + 1);
+
+            // 在扩展名前添加[E]
+            int lastDotIndex = objectKey.LastIndexOf('.');
+            if (lastDotIndex > 0)
+                objectKey = objectKey.Substring(0, lastDotIndex) + "[E]" + objectKey.Substring(lastDotIndex);
+            else
+                objectKey = objectKey + "[E]";
+
+            return $"{ip}:{objectKey}";
+        }
+
+        /// <summary>
+        /// 加载模板图（通过Minio加载，路径从缺陷图路径派生）
         /// </summary>
         private void LoadTemplateImage()
         {
             pictureBox_TemplateImage.Image?.Dispose();
             pictureBox_TemplateImage.Image = null;
 
-            if (string.IsNullOrEmpty(_heatPoint.ImagePath) || !File.Exists(_heatPoint.ImagePath))
+            if (string.IsNullOrEmpty(_heatPoint.ImagePath))
                 return;
 
             try
             {
-                string dir = Path.GetDirectoryName(_heatPoint.ImagePath);
-                string filename = Path.GetFileNameWithoutExtension(_heatPoint.ImagePath);
-                string ext = Path.GetExtension(_heatPoint.ImagePath);
+                string templatePath = BuildTemplateMinioPath(_heatPoint.ImagePath);
+                if (string.IsNullOrEmpty(templatePath)) return;
 
-                // 在同目录中查找包含原图名、包含"template"并且扩展名相同的文件
-                var candidates = Directory.EnumerateFiles(dir)
-                    .Where(p => string.Equals(Path.GetExtension(p), ext, StringComparison.OrdinalIgnoreCase))
-                    .Where(p =>
-                    {
-                        var name = Path.GetFileNameWithoutExtension(p);
-                        return name.IndexOf(filename, StringComparison.OrdinalIgnoreCase) >= 0
-                               && name.IndexOf("template", StringComparison.OrdinalIgnoreCase) >= 0;
-                    })
-                    .ToList();
-
-                string templatePath = candidates.FirstOrDefault();
-
-                if (!string.IsNullOrEmpty(templatePath) && File.Exists(templatePath))
+                var bmp = LoadImageFromMinio(templatePath);
+                if (bmp != null)
                 {
-                    using (var img = Image.FromFile(templatePath))
-                    {
-                        pictureBox_TemplateImage.Image = new Bitmap(img);
-                    }
+                    pictureBox_TemplateImage.Image = bmp;
                 }
             }
             catch (Exception ex)
