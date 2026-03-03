@@ -21,6 +21,7 @@ namespace DeepSightAI
             if (disposing)
             {
                 _toolTip?.Dispose();
+                _rawOriginalImage?.Dispose();
                 pictureBox_OriginalImage?.Image?.Dispose();
                 pictureBox_TemplateImage?.Image?.Dispose();
                 components?.Dispose();

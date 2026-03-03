@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Linq;
 using DeepSightDB;
+using DeepSightTool;
+using Newtonsoft.Json;
 
 namespace DeepSightAI
 {
@@ -43,11 +47,25 @@ namespace DeepSightAI
         /// </summary>
         public event EventHandler<SingleImageTestEventArgs> SingleImageTestRequested;
 
+        /// <summary>
+        /// 当请求导出时触发
+        /// </summary>
+        public event EventHandler ExportRequested;
+
         public DefectDetailControl()
         {
             InitializeComponent();
             InitializeFilterControls();
             InitializePaginationControls();
+            InitializeExportButton();
+        }
+
+        private void InitializeExportButton()
+        {
+            this.btn_Export.Click += (s, e) =>
+            {
+                ExportRequested?.Invoke(this, EventArgs.Empty);
+            };
         }
 
         private void InitializeFilterControls()
@@ -505,7 +523,210 @@ namespace DeepSightAI
             return (_aiFilter, _vvsFilter);
         }
 
+        private void btn_Export_Click(object sender, EventArgs e)
+        {
 
+        }
+
+        /// <summary>
+        /// 导出缺陷图片到指定目录（直接从已加载的控件中获取内存图片保存）
+        /// </summary>
+        /// <param name="exportPath">导出目标目录</param>
+        /// <param name="exportOriginal">是否导出原图</param>
+        /// <param name="exportTemplate">是否导出模板图</param>
+        public void ExportImages(string exportPath, bool exportOriginal, bool exportTemplate)
+        {
+            if (_filteredHeatPoints == null || _filteredHeatPoints.Count == 0)
+                return;
+
+            // 生成随机起始id，后续每张图递增
+            long currentId = new Random().Next(10000000, 99999999);
+
+            // 直接遍历所有缺陷点，从Minio加载图片，不创建UI控件（避免跨线程异常）
+            foreach (var hp in _filteredHeatPoints)
+            {
+                if (hp == null || string.IsNullOrEmpty(hp.ImagePath))
+                    continue;
+
+                string baseName = BuildExportFileName(hp.ImagePath);
+
+                try
+                {
+                    string nameWithoutExt = Path.GetFileNameWithoutExtension(baseName);
+
+                    // 从Minio加载原图
+                    Bitmap originalImage = null;
+                    if (exportOriginal)
+                    {
+                        originalImage = LoadImageFromMinioPath(hp.ImagePath);
+                        if (originalImage != null)
+                        {
+                            string fileName = nameWithoutExt + "_0.png";
+                            originalImage.Save(Path.Combine(exportPath, fileName), ImageFormat.Png);
+                        }
+                    }
+
+                    // 从Minio加载模板图
+                    Bitmap templateImage = null;
+                    if (exportTemplate)
+                    {
+                        string templatePath = BuildTemplateMinioPath(hp.ImagePath);
+                        if (!string.IsNullOrEmpty(templatePath))
+                        {
+                            templateImage = LoadImageFromMinioPath(templatePath);
+                            if (templateImage != null)
+                            {
+                                string fileName = nameWithoutExt + "_1.png";
+                                templateImage.Save(Path.Combine(exportPath, fileName), ImageFormat.Png);
+                            }
+                        }
+                    }
+
+                    // 如果需要dpst但没加载原图，补充加载一次用于获取尺寸
+                    if (originalImage == null && !exportOriginal)
+                    {
+                        originalImage = LoadImageFromMinioPath(hp.ImagePath);
+                    }
+
+                    // 导出.dpst文件（与原图同名）
+                    ExportDpstFile(exportPath, baseName, currentId, originalImage,
+                        exportTemplate ? templateImage : null);
+                    currentId++;
+
+                    // 释放临时图片
+                    originalImage?.Dispose();
+                    templateImage?.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error($"导出图片失败: {hp.ImagePath}, {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 从Minio路径加载图片（格式：IP:objectKey），可在非UI线程调用
+        /// </summary>
+        private Bitmap LoadImageFromMinioPath(string minioPath)
+        {
+            if (string.IsNullOrEmpty(minioPath)) return null;
+
+            var parts = minioPath.Split(':');
+            if (parts.Length < 2) return null;
+
+            string ip = parts[0];
+            string objectKey = parts[1];
+
+            using (var stream = Machine.master.MinioService.GetImageStreamSync("deepiresults", objectKey, ip))
+            {
+                if (stream == null || stream.Length == 0) return null;
+
+                using (var mt = OpenCvSharp.Cv2.ImDecode(stream.ToArray(), OpenCvSharp.ImreadModes.Color))
+                {
+                    if (mt == null || mt.Empty()) return null;
+                    return OpenCvSharp.Extensions.BitmapConverter.ToBitmap(mt);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 从缺陷图Minio路径派生模板图路径（在扩展名前加[E]）
+        /// </summary>
+        private string BuildTemplateMinioPath(string defectMinioPath)
+        {
+            if (string.IsNullOrEmpty(defectMinioPath)) return null;
+
+            int colonIndex = defectMinioPath.IndexOf(':');
+            if (colonIndex < 0) return null;
+
+            string ip = defectMinioPath.Substring(0, colonIndex);
+            string objectKey = defectMinioPath.Substring(colonIndex + 1);
+
+            int lastDotIndex = objectKey.LastIndexOf('.');
+            if (lastDotIndex > 0)
+                objectKey = objectKey.Substring(0, lastDotIndex) + "[E]" + objectKey.Substring(lastDotIndex);
+            else
+                objectKey = objectKey + "[E]";
+
+            return $"{ip}:{objectKey}";
+        }
+
+        /// <summary>
+        /// 从Minio路径构建导出文件名
+        /// </summary>
+        private string BuildExportFileName(string minioPath)
+        {
+            int colonIndex = minioPath.IndexOf(':');
+            string objectKey = colonIndex >= 0 ? minioPath.Substring(colonIndex + 1) : minioPath;
+            string fileName = objectKey.Replace('/', '_').Replace('\\', '_');
+
+            string ext = Path.GetExtension(fileName);
+            if (string.IsNullOrEmpty(ext) || !ext.Equals(".png", StringComparison.OrdinalIgnoreCase))
+            {
+                fileName = Path.ChangeExtension(fileName, ".png");
+            }
+
+            return fileName;
+        }
+
+        /// <summary>
+        /// 导出.dpst文件（与原图同名，扩展名为.dpst）
+        /// </summary>
+        private void ExportDpstFile(string exportPath, string baseName, long id,
+            Image originalImage, Image templateImage)
+        {
+            try
+            {
+                string nameWithoutExt = Path.GetFileNameWithoutExtension(baseName);
+                string dpstFileName = nameWithoutExt + ".dpst";
+                string originalFileName = nameWithoutExt + "_0.png";
+
+                int imgWidth = originalImage?.Width ?? 0;
+                int imgHeight = originalImage?.Height ?? 0;
+
+                var channels = new List<int> { GetImageChannels(originalImage) };
+                var localList = new List<string> { originalFileName };
+                var sourceList = new List<string> { originalFileName };
+
+                // 如果有模板图，追加到列表
+                if (templateImage != null)
+                {
+                    string templateFileName = nameWithoutExt + "_1.png";
+                    channels.Add(GetImageChannels(templateImage));
+                    localList.Add(templateFileName);
+                    sourceList.Add(templateFileName);
+                }
+
+                var dpst = new DpstInfo
+                {
+                    Channel = channels,
+                    Id = id.ToString(),
+                    Height = imgHeight.ToString(),
+                    Width = imgWidth.ToString(),
+                    Local = localList,
+                    Source = sourceList
+                };
+
+                string json = JsonConvert.SerializeObject(dpst, Formatting.Indented);
+                File.WriteAllText(Path.Combine(exportPath, dpstFileName), json);
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"导出dpst文件失败: {baseName}, {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 获取图片通道数（彩色3，黑白1）
+        /// </summary>
+        private int GetImageChannels(Image image)
+        {
+            if (image == null) return 3;
+            var pixelFormat = image.PixelFormat;
+            if (pixelFormat == System.Drawing.Imaging.PixelFormat.Format8bppIndexed)
+                return 1;
+            return 3;
+        }
     }
 
     /// <summary>

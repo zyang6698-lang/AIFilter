@@ -19,14 +19,9 @@ namespace DeepSightAI
 {
     public partial class FrHome : Form
     {
-
-
         // 使用线程安全的 ConcurrentDictionary 替代普通 Dictionary，避免并发访问问题
         public ConcurrentDictionary<string, List<RootPanelInfoWithIP>> dic_Infos = new ConcurrentDictionary<string, List<RootPanelInfoWithIP>>();
         public ConcurrentDictionary<string, List<string>> dic_Results = new ConcurrentDictionary<string, List<string>>();
-        public ConcurrentDictionary<string, List<string>> dic_Details = new ConcurrentDictionary<string, List<string>>();
-        public ConcurrentDictionary<string, List<string>> dic_Paths = new ConcurrentDictionary<string, List<string>>();
-
 
         private List<RootPanelInfoWithIP> info = null;
         private List<DisPlayInfo> disInfosList = new List<DisPlayInfo>();
@@ -590,7 +585,27 @@ namespace DeepSightAI
                                     if (pcsInfo.DefectInfo[k].DefectVrsImages != null)
                                     {
                                         imagePaths.Add($"{info[i].Head}/{pcsInfo.DefectInfo[k].DefectVrsImages[0].ToString()}:{info[i].IP}");
-                                        defectRois.Add(pcsInfo.DefectInfo[k].DefectRoi);
+                                        // 参考PostProcessService.cs的heatInfo赋值，使用SubDefectsInfo中的SubDefectRoi
+                                        
+
+                                        var subDefects = pcsInfo.DefectInfo[k].SubDefectsInfo;
+
+                                        if (subDefects != null && subDefects.Count > 0
+                                            && subDefects[0].SubDefectRoi != null && subDefects[0].SubDefectRoi.Count > 0)
+                                        {
+                                            var subRoi = subDefects[0].SubDefectRoi[0];
+                                            defectRois.Add(new Roi
+                                            {
+                                                X = subRoi.X,
+                                                Y = subRoi.Y,
+                                                Width = subRoi.Width,
+                                                Height = subRoi.Height
+                                            });
+                                        }
+                                        else
+                                        {
+                                            defectRois.Add(pcsInfo.DefectInfo[k].DefectRoi);
+                                        }
                                     }
                                     if (pcsInfo.DefectInfo[k].DefectVrsGerberImages != null)
                                     {
@@ -684,7 +699,6 @@ namespace DeepSightAI
                 FrHome.Instance.InitTableStyle(FrHome.Instance.table_Small, table_Small.RowCount, disInfosList);
                 FrHome.Instance.InitWork();
                 //根据页索引获取图像源
-                // List<string> paths = Machine.ShowFlag == "A" ? imagePaths : Machine.ShowFlag == "B" ? imagePaths_Gerber : imagePaths_Template; 
                 List<string> defect_paths = imagePaths;
                 List<string> gerberOrtemp_paths = Machine.ShowFlag == "B" ? imagePaths_Gerber : imagePaths_Template;
                 var defect_pagedData = defect_paths.Skip((currentPage - 1) * table_Small.RowCount).Take(table_Small.RowCount).ToList(); //imagePaths.Skip((currentPage - 1) * 30).Take(30).ToList();

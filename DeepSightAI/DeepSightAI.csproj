@@ -282,6 +282,9 @@
     <Compile Include="ArrayConfigDialog.Designer.cs">
       <DependentUpon>ArrayConfigDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="ExportOptionsDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="DefectDetailControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

@@ -247,6 +247,9 @@ namespace DeepSightWorkLib
         {
             this.IsStart = false;
 
+            // 初始化Minio客户端连接
+            MinioService.BuildClient(SysConfig.endpoint_address, SysConfig.MinioPort);
+
             var httpInstance = HttpService as HttpClass ?? new HttpClass();
             _resultWriterService = new ResultWriterService(httpInstance, _queueManager.ProcessingSnSet);
 
@@ -541,7 +544,6 @@ namespace DeepSightWorkLib
             try
             {
                 SystemEvent.SendTaskMsg(sn, $"{side}面正在读取Minio数据");
-                MinioService.BuildClient(ip, port);
                 string json = MinioService.ReadJsonSync("deepiresults", path, ip);
                 var obj = JsonConvert.DeserializeObject<RootPanelInfo>(json);
 

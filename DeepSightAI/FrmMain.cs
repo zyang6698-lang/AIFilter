@@ -454,9 +454,7 @@ namespace DeepSightAI
         private void CleanupTaskData(string sn)
         {
             FrHome.Instance.dic_Infos.TryRemove(sn,out _);
-            FrHome.Instance.dic_Paths.TryRemove(sn, out _);
             FrHome.Instance.dic_Results.TryRemove(sn, out _);
-            FrHome.Instance.dic_Details.TryRemove(sn, out _);
             // 清理SN调试信息缓存
             SnDebugInfoCache.Remove(sn, "A");
             SnDebugInfoCache.Remove(sn, "B");

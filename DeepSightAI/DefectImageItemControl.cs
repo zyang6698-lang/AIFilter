@@ -18,6 +18,7 @@ namespace DeepSightAI
     {
         private DetectInfo _heatPoint;
         private bool _isSelected;
+        private Image _rawOriginalImage;
 
         /// <summary>
         /// 当请求运行单图测试时触发
@@ -157,12 +158,12 @@ namespace DeepSightAI
 
             try
             {
-                using (var bmp = LoadImageFromMinio(_heatPoint.ImagePath))
+                var bmp = LoadImageFromMinio(_heatPoint.ImagePath);
+                if (bmp != null)
                 {
-                    if (bmp != null)
-                    {
-                        pictureBox_OriginalImage.Image = ImageHelper.DrawDefectBoxOnImage(bmp, _heatPoint);
-                    }
+                    _rawOriginalImage?.Dispose();
+                    _rawOriginalImage = bmp;
+                    pictureBox_OriginalImage.Image = ImageHelper.DrawDefectBoxOnImage(bmp, _heatPoint);
                 }
             }
             catch (Exception ex)
@@ -287,6 +288,16 @@ namespace DeepSightAI
                 default: return status.ToString();
             }
         }
+
+        /// <summary>
+        /// 获取已加载的原图（不带缺陷框）
+        /// </summary>
+        public Image OriginalImage => _rawOriginalImage;
+
+        /// <summary>
+        /// 获取已加载的模板图
+        /// </summary>
+        public Image TemplateImage => pictureBox_TemplateImage.Image;
 
         /// <summary>
         /// 调整图片区域高度以适应容器

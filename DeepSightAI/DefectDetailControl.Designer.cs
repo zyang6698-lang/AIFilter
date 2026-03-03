@@ -36,6 +36,7 @@
             this.lblPageInfo = new System.Windows.Forms.Label();
             this.btnNextPage = new System.Windows.Forms.Button();
             this.panel_Filter = new System.Windows.Forms.Panel();
+            this.btn_Export = new System.Windows.Forms.Button();
             this.label_FilterVVS = new System.Windows.Forms.Label();
             this.label_FilterAI = new System.Windows.Forms.Label();
             this.comboBox_FilterVVS = new System.Windows.Forms.ComboBox();
@@ -112,9 +113,9 @@
             this.lblPageInfo.AutoSize = true;
             this.lblPageInfo.Font = new System.Drawing.Font("微软雅黑", 9F);
             this.lblPageInfo.ForeColor = System.Drawing.Color.White;
-            this.lblPageInfo.Location = new System.Drawing.Point(75, 9);
+            this.lblPageInfo.Location = new System.Drawing.Point(75, 8);
             this.lblPageInfo.Name = "lblPageInfo";
-            this.lblPageInfo.Size = new System.Drawing.Size(60, 17);
+            this.lblPageInfo.Size = new System.Drawing.Size(73, 20);
             this.lblPageInfo.TabIndex = 1;
             this.lblPageInfo.Text = "Page 1/1";
             // 
@@ -125,7 +126,7 @@
             this.btnNextPage.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnNextPage.Font = new System.Drawing.Font("微软雅黑", 9F);
             this.btnNextPage.ForeColor = System.Drawing.Color.White;
-            this.btnNextPage.Location = new System.Drawing.Point(141, 3);
+            this.btnNextPage.Location = new System.Drawing.Point(154, 3);
             this.btnNextPage.Name = "btnNextPage";
             this.btnNextPage.Size = new System.Drawing.Size(69, 30);
             this.btnNextPage.TabIndex = 2;
@@ -135,6 +136,7 @@
             // panel_Filter
             // 
             this.panel_Filter.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
+            this.panel_Filter.Controls.Add(this.btn_Export);
             this.panel_Filter.Controls.Add(this.flowLayoutPanel_Pagination);
             this.panel_Filter.Controls.Add(this.label_FilterVVS);
             this.panel_Filter.Controls.Add(this.label_FilterAI);
@@ -146,6 +148,21 @@
             this.panel_Filter.Size = new System.Drawing.Size(1085, 48);
             this.panel_Filter.TabIndex = 4;
             // 
+            // btn_Export
+            // 
+            this.btn_Export.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
+            this.btn_Export.FlatAppearance.BorderSize = 0;
+            this.btn_Export.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btn_Export.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold);
+            this.btn_Export.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.btn_Export.Location = new System.Drawing.Point(500, 10);
+            this.btn_Export.Name = "btn_Export";
+            this.btn_Export.Size = new System.Drawing.Size(80, 30);
+            this.btn_Export.TabIndex = 5;
+            this.btn_Export.Text = "导出";
+            this.btn_Export.UseVisualStyleBackColor = false;
+            this.btn_Export.Click += new System.EventHandler(this.btn_Export_Click);
+            // 
             // label_FilterVVS
             // 
             this.label_FilterVVS.AutoSize = true;
@@ -153,7 +170,7 @@
             this.label_FilterVVS.ForeColor = System.Drawing.Color.White;
             this.label_FilterVVS.Location = new System.Drawing.Point(250, 16);
             this.label_FilterVVS.Name = "label_FilterVVS";
-            this.label_FilterVVS.Size = new System.Drawing.Size(66, 17);
+            this.label_FilterVVS.Size = new System.Drawing.Size(83, 20);
             this.label_FilterVVS.TabIndex = 3;
             this.label_FilterVVS.Text = "VVS Filter:";
             // 
@@ -164,7 +181,7 @@
             this.label_FilterAI.ForeColor = System.Drawing.Color.White;
             this.label_FilterAI.Location = new System.Drawing.Point(20, 16);
             this.label_FilterAI.Name = "label_FilterAI";
-            this.label_FilterAI.Size = new System.Drawing.Size(55, 17);
+            this.label_FilterAI.Size = new System.Drawing.Size(69, 20);
             this.label_FilterAI.TabIndex = 2;
             this.label_FilterAI.Text = "AI Filter:";
             // 
@@ -174,7 +191,7 @@
             this.comboBox_FilterVVS.FormattingEnabled = true;
             this.comboBox_FilterVVS.Location = new System.Drawing.Point(339, 14);
             this.comboBox_FilterVVS.Name = "comboBox_FilterVVS";
-            this.comboBox_FilterVVS.Size = new System.Drawing.Size(121, 25);
+            this.comboBox_FilterVVS.Size = new System.Drawing.Size(121, 28);
             this.comboBox_FilterVVS.TabIndex = 1;
             // 
             // comboBox_FilterAI
@@ -183,12 +200,12 @@
             this.comboBox_FilterAI.FormattingEnabled = true;
             this.comboBox_FilterAI.Location = new System.Drawing.Point(95, 14);
             this.comboBox_FilterAI.Name = "comboBox_FilterAI";
-            this.comboBox_FilterAI.Size = new System.Drawing.Size(121, 25);
+            this.comboBox_FilterAI.Size = new System.Drawing.Size(121, 28);
             this.comboBox_FilterAI.TabIndex = 0;
             // 
             // DefectDetailControl
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.flowLayoutPanel_DefectImages);
             this.Controls.Add(this.panel_Filter);
@@ -219,5 +236,6 @@
         private System.Windows.Forms.ComboBox comboBox_FilterAI;
         private System.Windows.Forms.Label label_FilterVVS;
         private System.Windows.Forms.Label label_FilterAI;
+        private System.Windows.Forms.Button btn_Export;
     }
 }

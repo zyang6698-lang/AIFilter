@@ -34,11 +34,6 @@
             this.splitContainer_Main = new System.Windows.Forms.SplitContainer();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.QueryControl = new DeepSightAI.QueryControl();
-            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
-            this.btn_Save = new System.Windows.Forms.Button();
-            this.btn_LoadImages = new System.Windows.Forms.Button();
-            this.btn_Export = new System.Windows.Forms.Button();
-            this.panel_ReviewDetail = new System.Windows.Forms.Panel();
             this.label_ReviewDetail = new System.Windows.Forms.Label();
             this.tabControl_Main = new System.Windows.Forms.TabControl();
             this.tabPage_Grid = new System.Windows.Forms.TabPage();
@@ -77,11 +72,6 @@
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
-            this.splitContainer2.Panel1.SuspendLayout();
-            this.splitContainer2.Panel2.SuspendLayout();
-            this.splitContainer2.SuspendLayout();
-            this.panel_ReviewDetail.SuspendLayout();
             this.tabControl_Main.SuspendLayout();
             this.tabPage_Grid.SuspendLayout();
             this.panel_Grid.SuspendLayout();
@@ -138,7 +128,7 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
+            this.splitContainer1.Panel2.Controls.Add(this.label_ReviewDetail);
             this.splitContainer1.Size = new System.Drawing.Size(363, 1088);
             this.splitContainer1.SplitterDistance = 355;
             this.splitContainer1.SplitterWidth = 5;
@@ -159,83 +149,6 @@
             this.QueryControl.Size = new System.Drawing.Size(363, 355);
             this.QueryControl.TabIndex = 0;
             // 
-            // splitContainer2
-            // 
-            this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer2.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer2.Margin = new System.Windows.Forms.Padding(4);
-            this.splitContainer2.Name = "splitContainer2";
-            this.splitContainer2.Orientation = System.Windows.Forms.Orientation.Horizontal;
-            // 
-            // splitContainer2.Panel1
-            // 
-            this.splitContainer2.Panel1.Controls.Add(this.btn_Save);
-            this.splitContainer2.Panel1.Controls.Add(this.btn_LoadImages);
-            this.splitContainer2.Panel1.Controls.Add(this.btn_Export);
-            // 
-            // splitContainer2.Panel2
-            // 
-            this.splitContainer2.Panel2.Controls.Add(this.panel_ReviewDetail);
-            this.splitContainer2.Size = new System.Drawing.Size(363, 728);
-            this.splitContainer2.SplitterDistance = 51;
-            this.splitContainer2.SplitterWidth = 5;
-            this.splitContainer2.TabIndex = 0;
-            // 
-            // btn_Save
-            // 
-            this.btn_Save.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
-            this.btn_Save.FlatAppearance.BorderSize = 0;
-            this.btn_Save.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.btn_Save.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.btn_Save.Location = new System.Drawing.Point(5, 5);
-            this.btn_Save.Margin = new System.Windows.Forms.Padding(5);
-            this.btn_Save.Name = "btn_Save";
-            this.btn_Save.Size = new System.Drawing.Size(107, 38);
-            this.btn_Save.TabIndex = 0;
-            this.btn_Save.Text = "保存";
-            this.btn_Save.UseVisualStyleBackColor = false;
-            this.btn_Save.Click += new System.EventHandler(this.Btn_Save_Click);
-            // 
-            // btn_LoadImages
-            // 
-            this.btn_LoadImages.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
-            this.btn_LoadImages.FlatAppearance.BorderSize = 0;
-            this.btn_LoadImages.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.btn_LoadImages.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.btn_LoadImages.Location = new System.Drawing.Point(120, 5);
-            this.btn_LoadImages.Margin = new System.Windows.Forms.Padding(4);
-            this.btn_LoadImages.Name = "btn_LoadImages";
-            this.btn_LoadImages.Size = new System.Drawing.Size(107, 38);
-            this.btn_LoadImages.TabIndex = 2;
-            this.btn_LoadImages.Text = "读图";
-            this.btn_LoadImages.UseVisualStyleBackColor = false;
-            this.btn_LoadImages.Click += new System.EventHandler(this.Btn_LoadImages_Click);
-            // 
-            // btn_Export
-            // 
-            this.btn_Export.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
-            this.btn_Export.FlatAppearance.BorderSize = 0;
-            this.btn_Export.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.btn_Export.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.btn_Export.Location = new System.Drawing.Point(236, 5);
-            this.btn_Export.Margin = new System.Windows.Forms.Padding(5);
-            this.btn_Export.Name = "btn_Export";
-            this.btn_Export.Size = new System.Drawing.Size(107, 38);
-            this.btn_Export.TabIndex = 1;
-            this.btn_Export.Text = "导出";
-            this.btn_Export.UseVisualStyleBackColor = false;
-            this.btn_Export.Click += new System.EventHandler(this.Btn_Export_Click);
-            // 
-            // panel_ReviewDetail
-            // 
-            this.panel_ReviewDetail.Controls.Add(this.label_ReviewDetail);
-            this.panel_ReviewDetail.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel_ReviewDetail.Location = new System.Drawing.Point(0, 0);
-            this.panel_ReviewDetail.Margin = new System.Windows.Forms.Padding(4);
-            this.panel_ReviewDetail.Name = "panel_ReviewDetail";
-            this.panel_ReviewDetail.Size = new System.Drawing.Size(363, 672);
-            this.panel_ReviewDetail.TabIndex = 0;
-            // 
             // label_ReviewDetail
             // 
             this.label_ReviewDetail.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -245,7 +158,7 @@
             this.label_ReviewDetail.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label_ReviewDetail.Name = "label_ReviewDetail";
             this.label_ReviewDetail.Padding = new System.Windows.Forms.Padding(11, 10, 11, 0);
-            this.label_ReviewDetail.Size = new System.Drawing.Size(363, 672);
+            this.label_ReviewDetail.Size = new System.Drawing.Size(363, 728);
             this.label_ReviewDetail.TabIndex = 0;
             this.label_ReviewDetail.Text = "复判详情区";
             // 
@@ -586,11 +499,6 @@
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
-            this.splitContainer2.Panel1.ResumeLayout(false);
-            this.splitContainer2.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
-            this.splitContainer2.ResumeLayout(false);
-            this.panel_ReviewDetail.ResumeLayout(false);
             this.tabControl_Main.ResumeLayout(false);
             this.tabPage_Grid.ResumeLayout(false);
             this.panel_Grid.ResumeLayout(false);
@@ -610,9 +518,6 @@
         private System.Windows.Forms.Panel panel_Main;
         private System.Windows.Forms.Panel panel_Grid;
         private System.Windows.Forms.DataGridView dataGridView_Defects;
-        private System.Windows.Forms.Button btn_LoadImages;
-        private System.Windows.Forms.Button btn_Export;
-        private System.Windows.Forms.Button btn_Save;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_SN;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_Lot;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_MachineId;
@@ -630,7 +535,6 @@
         private System.Windows.Forms.TabPage tabPage_Details;
         private System.Windows.Forms.SplitContainer splitContainer_Main;
         private System.Windows.Forms.SplitContainer splitContainer1;
-        private System.Windows.Forms.SplitContainer splitContainer2;
         private System.Windows.Forms.Panel panel_LotList;
         private System.Windows.Forms.Label label_LotTitle;
         private System.Windows.Forms.TreeView treeView_Lots;
@@ -638,7 +542,6 @@
         private System.Windows.Forms.Panel panel_SnSearch;
         private System.Windows.Forms.TextBox txt_SnFilter;
         private System.Windows.Forms.Button btn_SnSearch;
-        private System.Windows.Forms.Panel panel_ReviewDetail;
         private System.Windows.Forms.Label label_ReviewDetail;
         private System.Windows.Forms.TabPage tabPage_ValidationTest;
         private ValidationTestResultControl validationTestResultControl1;

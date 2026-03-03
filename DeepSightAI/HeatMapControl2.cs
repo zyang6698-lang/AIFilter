@@ -1166,15 +1166,28 @@ namespace DeepSightAI
                 foreach (var p in itemsToLoad)
                 {
                     byte[] imageBytes = null;
-                    if (!string.IsNullOrEmpty(p.PointInfo.ImagePath) && File.Exists(p.PointInfo.ImagePath))
+                    if (!string.IsNullOrEmpty(p.PointInfo.ImagePath))
                     {
                         try
                         {
-                            imageBytes = File.ReadAllBytes(p.PointInfo.ImagePath);
+                            // 通过Minio读取图片，参考LoadMinioImage方法
+                            var parts = p.PointInfo.ImagePath.Split(':');
+                            if (parts.Length >= 2)
+                            {
+                                string ip = parts[0];
+                                string objectKey = parts[1];
+                                using (var stream = Machine.master.MinioService.GetImageStreamSync("deepiresults", objectKey, ip))
+                                {
+                                    if (stream != null && stream.Length > 0)
+                                    {
+                                        imageBytes = stream.ToArray();
+                                    }
+                                }
+                            }
                         }
                         catch (Exception ex)
                         {
-                            LogTextHelper.Error($"加载图片失败 {p.PointInfo.ImagePath}: {ex.Message}");
+                            LogTextHelper.Error($"从Minio加载图片失败 {p.PointInfo.ImagePath}: {ex.Message}");
                         }
                     }
                     data.Add(Tuple.Create((object)p, imageBytes));

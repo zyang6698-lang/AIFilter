@@ -39,6 +39,11 @@ namespace DeepSightAI
         // 按Lot分组的统计数据（包含所有面板，用于计算统计指标）
         private Dictionary<string, LotStatistics> _lotStatistics = new Dictionary<string, LotStatistics>();
 
+        // 自动保存相关字段
+        private int _pendingSaveCount = 0;
+        private const int AutoSaveBatchSize = 100;
+        private bool _isFlushing = false;
+
         #endregion
 
         #region Constructor
@@ -84,6 +89,12 @@ namespace DeepSightAI
             // 订阅右键菜单事件
             toolStripMenuItem_RunTest.Click += ToolStripMenuItem_RunTest_Click;
             toolStripMenuItem_SecondaryInference.Click += ToolStripMenuItem_SecondaryInference_Click;
+
+            // 订阅页面切换事件 - 页面跳转时自动保存
+            tabControl_Main.SelectedIndexChanged += TabControl_Main_SelectedIndexChanged;
+
+            // 订阅导出事件 - DefectDetailControl中的导出按钮
+            defectDetailControl1.ExportRequested += DefectDetailControl_ExportRequested;
 
             // 初始化绑定列表（使用支持排序的SortableBindingList）
             _bindingList = new SortableBindingList<DefectReviewItem>(_defectItems);
@@ -374,15 +385,73 @@ namespace DeepSightAI
         }
 
         /// <summary>
-        /// 当VVS状态改变时触发，用于更新左下角复判详情
+        /// 当VVS状态改变时触发，用于更新左下角复判详情并执行自动保存动作
         /// </summary>
-        private void DefectDetailControl_VvsStatusChanged(object sender, EventArgs e)
+        private async void DefectDetailControl_VvsStatusChanged(object sender, EventArgs e)
         {
             // 如果当前有展示的详情，重新统计VVS状态
             if (_currentReviewLot != null)
             {
                 UpdateVvsStatusSummary();
                 RefreshReviewDetailDisplay();
+            }
+
+            // 每次VVS状态修改后，标记对应的DefectReviewItem为已修改，并累加保存计数
+            MarkCurrentVvsItemModified();
+            _pendingSaveCount++;
+
+            // 积攒满100次时批量保存到数据库
+            if (_pendingSaveCount >= AutoSaveBatchSize)
+            {
+                await FlushPendingSaves();
+            }
+        }
+
+        /// <summary>
+        /// 标记当前正在操作的缺陷点所属的DefectReviewItem为已修改
+        /// </summary>
+        private void MarkCurrentVvsItemModified()
+        {
+            // 通过DefectDetailControl获取当前显示的source items，标记所有为已修改
+            // 因为VVS状态改变可能影响任何一个item
+            if (_allDefectItems == null) return;
+
+            foreach (var item in _allDefectItems)
+            {
+                if (item.HeatPoints != null && item.HeatPoints.Any(hp => hp.VVSStatus != 0))
+                {
+                    // 如果有任何一个缺陷点被设置过VVS状态，标记为已修改
+                    item.IsModified = true;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 批量保存待保存的修改到数据库（静默保存，不弹窗提示）
+        /// </summary>
+        private async Task FlushPendingSaves()
+        {
+            if (_isFlushing) return;
+            _isFlushing = true;
+
+            try
+            {
+                var modifiedItems = _allDefectItems.Where(x => x.IsModified).ToList();
+                if (modifiedItems.Count > 0)
+                {
+                    await SaveManualReviewResults(modifiedItems);
+                    modifiedItems.ForEach(x => x.IsModified = false);
+                    LogTextHelper.Info($"自动保存完成: 共保存 {modifiedItems.Count} 条记录");
+                }
+                _pendingSaveCount = 0;
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"自动保存失败: {ex.Message}");
+            }
+            finally
+            {
+                _isFlushing = false;
             }
         }
 
@@ -494,6 +563,25 @@ namespace DeepSightAI
             }
         }
 
+        /// <summary>
+        /// 页面切换时自动保存待保存的修改
+        /// </summary>
+        private async void TabControl_Main_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_pendingSaveCount > 0)
+            {
+                await FlushPendingSaves();
+            }
+        }
+
+        /// <summary>
+        /// DefectDetailControl中导出按钮的事件处理
+        /// </summary>
+        private void DefectDetailControl_ExportRequested(object sender, EventArgs e)
+        {
+            Btn_Export_Click(sender, e);
+        }
+
         private async void Btn_Save_Click(object sender, EventArgs e)
         {
             try
@@ -545,6 +633,17 @@ namespace DeepSightAI
                     {
                         MessageBox.Show("请先选择一条记录。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;
+                    }
+
+                    // 先弹出导出选项对话框，让用户选择导出原图和/或模板图
+                    bool exportOriginal;
+                    bool exportTemplate;
+                    using (var optionsDialog = new ExportOptionsDialog())
+                    {
+                        if (optionsDialog.ShowDialog() != DialogResult.OK)
+                            return;
+                        exportOriginal = optionsDialog.ExportOriginalImage;
+                        exportTemplate = optionsDialog.ExportTemplateImage;
                     }
 
                     using (var dialog = new FolderBrowserDialog())
@@ -615,31 +714,8 @@ namespace DeepSightAI
 
                             await Task.Run(() =>
                             {
-                                // 导出图片
-                                foreach (var heatPoint in filteredHeatPoints)
-                                {
-                                    if (!string.IsNullOrEmpty(heatPoint.ImagePath) && File.Exists(heatPoint.ImagePath))
-                                    {
-                                        try
-                                        {
-                                            // 导出原图
-                                            var destFileName = Path.GetFileName(heatPoint.ImagePath);
-                                            File.Copy(heatPoint.ImagePath, Path.Combine(exportPath, destFileName), true);
-
-                                            // 导出模板图
-                                            string templatePath = FindTemplatePath(heatPoint.ImagePath);
-                                            if (!string.IsNullOrEmpty(templatePath) && File.Exists(templatePath))
-                                            {
-                                                var templateDestFileName = Path.GetFileName(templatePath);
-                                                File.Copy(templatePath, Path.Combine(exportPath, templateDestFileName), true);
-                                            }
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            LogTextHelper.Error($"复制图片失败: {heatPoint.ImagePath}, {ex.Message}");
-                                        }
-                                    }
-                                }
+                                // 从Minio加载图片并保存到本地
+                                defectDetailControl1.ExportImages(exportPath, exportOriginal, exportTemplate);
 
                                 // 导出表格信息到CSV
                                 var csvPath = Path.Combine(exportPath, $"{currentItem.SerialNumber}_{currentItem.Side}_info.csv");
@@ -701,35 +777,6 @@ namespace DeepSightAI
             finally
             {
                 this.Enabled = true;
-            }
-        }
-
-        private void Btn_LoadImages_Click(object sender, EventArgs e)
-        {
-            using (var folderBrowserDialog = new FolderBrowserDialog())
-            {
-                if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
-                {
-                    var imagePaths = Directory.GetFiles(folderBrowserDialog.SelectedPath, "*.*", SearchOption.AllDirectories)
-                        .Where(s => s.EndsWith(".jpg") || s.EndsWith(".png") || s.EndsWith(".bmp"))
-                        .ToList();
-
-                    if (imagePaths.Count > 0)
-                    {
-                        _defectItems.Clear();
-                        var defectItem = new DefectReviewItem
-                        {
-                            SerialNumber = "LOCAL_FILES",
-                            Side = "A",
-                            HeatPoints = imagePaths.Select(p => new DetectInfo { ImagePath = p }).ToList()
-                        };
-                        _defectItems.Add(defectItem);
-                        _bindingList.ResetBindings();
-                        dataGridView_Defects.Rows[0].Selected = true;
-                        defectDetailControl1.DisplayDefectDetails(defectItem);
-                        tabControl_Main.SelectedTab = tabPage_Details;
-                    }
-                }
             }
         }
 
