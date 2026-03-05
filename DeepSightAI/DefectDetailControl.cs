@@ -21,6 +21,7 @@ namespace DeepSightAI
         private int _totalPages;
         private string _aiFilter = "All";
         private string _vvsFilter = "All";
+        private string _defectNameFilter = "All";
 
         // 存储原始的DefectReviewItem列表，用于按SN分组检查VVS状态
         private List<DefectReviewItem> _sourceItems;
@@ -87,6 +88,46 @@ namespace DeepSightAI
                 _vvsFilter = this.comboBox_FilterVVS.SelectedItem.ToString();
                 ApplyFiltersAndReload();
             };
+
+            // Defect Name Filter - 事件绑定在PopulateDefectNameFilter中管理
+        }
+
+        /// <summary>
+        /// 根据当前所有缺陷点的DefectName，填充缺陷名称下拉框（带数量）
+        /// </summary>
+        private void PopulateDefectNameFilter()
+        {
+            comboBox_FilterDefectName.SelectedIndexChanged -= ComboBox_FilterDefectName_SelectedIndexChanged;
+            comboBox_FilterDefectName.Items.Clear();
+
+            int totalCount = _allHeatPoints?.Count ?? 0;
+            comboBox_FilterDefectName.Items.Add($"All ({totalCount})");
+
+            if (_allHeatPoints != null && _allHeatPoints.Count > 0)
+            {
+                // 按缺陷名称分组统计数量，空名称归入"其他"
+                var groups = _allHeatPoints
+                    .GroupBy(p => string.IsNullOrEmpty(p.DefectName) ? "其他" : p.DefectName)
+                    .OrderByDescending(g => g.Count());
+
+                foreach (var g in groups)
+                {
+                    comboBox_FilterDefectName.Items.Add($"{g.Key} ({g.Count()})");
+                }
+            }
+
+            comboBox_FilterDefectName.SelectedIndex = 0;
+            comboBox_FilterDefectName.SelectedIndexChanged += ComboBox_FilterDefectName_SelectedIndexChanged;
+        }
+
+        private void ComboBox_FilterDefectName_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _defectNameFilter = this.comboBox_FilterDefectName.SelectedItem?.ToString() ?? "All";
+            // 提取纯名称部分（去掉括号中的数量）
+            int parenIndex = _defectNameFilter.IndexOf(" (");
+            if (parenIndex > 0)
+                _defectNameFilter = _defectNameFilter.Substring(0, parenIndex);
+            ApplyFiltersAndReload();
         }
 
         private void ApplyFiltersAndReload()
@@ -112,6 +153,18 @@ namespace DeepSightAI
                     // VVSStatus: 1 OK / 2 NG
                     int targetVvsStatus = _vvsFilter == "VVS_OK" ? 1 : 2;
                     _filteredHeatPoints = _filteredHeatPoints.Where(p => p.VVSStatus == targetVvsStatus).ToList();
+                }
+            }
+
+            if (_defectNameFilter != "All")
+            {
+                if (_defectNameFilter == "其他")
+                {
+                    _filteredHeatPoints = _filteredHeatPoints.Where(p => string.IsNullOrEmpty(p.DefectName)).ToList();
+                }
+                else
+                {
+                    _filteredHeatPoints = _filteredHeatPoints.Where(p => p.DefectName == _defectNameFilter).ToList();
                 }
             }
 
@@ -349,8 +402,10 @@ namespace DeepSightAI
             // Reset filters
             _aiFilter = "All";
             _vvsFilter = "All";
+            _defectNameFilter = "All";
             comboBox_FilterAI.SelectedIndex = 0;
             comboBox_FilterVVS.SelectedIndex = 0;
+            PopulateDefectNameFilter();
 
             LoadDefectsPage(_currentPage);
         }

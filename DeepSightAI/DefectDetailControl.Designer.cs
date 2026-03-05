@@ -37,6 +37,8 @@
             this.btnNextPage = new System.Windows.Forms.Button();
             this.panel_Filter = new System.Windows.Forms.Panel();
             this.btn_Export = new System.Windows.Forms.Button();
+            this.label_FilterDefectName = new System.Windows.Forms.Label();
+            this.comboBox_FilterDefectName = new System.Windows.Forms.ComboBox();
             this.label_FilterVVS = new System.Windows.Forms.Label();
             this.label_FilterAI = new System.Windows.Forms.Label();
             this.comboBox_FilterVVS = new System.Windows.Forms.ComboBox();
@@ -132,12 +134,14 @@
             this.btnNextPage.TabIndex = 2;
             this.btnNextPage.Text = "Next >";
             this.btnNextPage.UseVisualStyleBackColor = true;
-            // 
+            //
             // panel_Filter
-            // 
+            //
             this.panel_Filter.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
             this.panel_Filter.Controls.Add(this.btn_Export);
             this.panel_Filter.Controls.Add(this.flowLayoutPanel_Pagination);
+            this.panel_Filter.Controls.Add(this.label_FilterDefectName);
+            this.panel_Filter.Controls.Add(this.comboBox_FilterDefectName);
             this.panel_Filter.Controls.Add(this.label_FilterVVS);
             this.panel_Filter.Controls.Add(this.label_FilterAI);
             this.panel_Filter.Controls.Add(this.comboBox_FilterVVS);
@@ -147,15 +151,35 @@
             this.panel_Filter.Name = "panel_Filter";
             this.panel_Filter.Size = new System.Drawing.Size(1085, 48);
             this.panel_Filter.TabIndex = 4;
-            // 
+            //
+            // label_FilterDefectName
+            //
+            this.label_FilterDefectName.AutoSize = true;
+            this.label_FilterDefectName.Font = new System.Drawing.Font("微软雅黑", 9F);
+            this.label_FilterDefectName.ForeColor = System.Drawing.Color.White;
+            this.label_FilterDefectName.Location = new System.Drawing.Point(470, 16);
+            this.label_FilterDefectName.Name = "label_FilterDefectName";
+            this.label_FilterDefectName.Size = new System.Drawing.Size(69, 20);
+            this.label_FilterDefectName.TabIndex = 6;
+            this.label_FilterDefectName.Text = "缺陷名称:";
+            //
+            // comboBox_FilterDefectName
+            //
+            this.comboBox_FilterDefectName.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBox_FilterDefectName.FormattingEnabled = true;
+            this.comboBox_FilterDefectName.Location = new System.Drawing.Point(549, 14);
+            this.comboBox_FilterDefectName.Name = "comboBox_FilterDefectName";
+            this.comboBox_FilterDefectName.Size = new System.Drawing.Size(150, 28);
+            this.comboBox_FilterDefectName.TabIndex = 7;
+            //
             // btn_Export
-            // 
+            //
             this.btn_Export.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
             this.btn_Export.FlatAppearance.BorderSize = 0;
             this.btn_Export.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btn_Export.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold);
             this.btn_Export.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.btn_Export.Location = new System.Drawing.Point(500, 10);
+            this.btn_Export.Location = new System.Drawing.Point(720, 10);
             this.btn_Export.Name = "btn_Export";
             this.btn_Export.Size = new System.Drawing.Size(80, 30);
             this.btn_Export.TabIndex = 5;
@@ -237,5 +261,7 @@
         private System.Windows.Forms.Label label_FilterVVS;
         private System.Windows.Forms.Label label_FilterAI;
         private System.Windows.Forms.Button btn_Export;
+        private System.Windows.Forms.Label label_FilterDefectName;
+        private System.Windows.Forms.ComboBox comboBox_FilterDefectName;
     }
 }

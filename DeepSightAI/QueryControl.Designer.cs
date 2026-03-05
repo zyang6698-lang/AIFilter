@@ -44,6 +44,8 @@ namespace DeepSightAI
             this.rbn_All = new System.Windows.Forms.RadioButton();
             this.label_MachineID = new System.Windows.Forms.Label();
             this.cmb_MachineID = new System.Windows.Forms.ComboBox();
+            this.label_DefectName = new System.Windows.Forms.Label();
+            this.cmb_DefectName = new System.Windows.Forms.ComboBox();
             this.btn_queryHeatPoint = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
@@ -207,12 +209,32 @@ namespace DeepSightAI
             this.cmb_MachineID.Name = "cmb_MachineID";
             this.cmb_MachineID.Size = new System.Drawing.Size(241, 23);
             this.cmb_MachineID.TabIndex = 15;
-            // 
+            //
+            // label_DefectName
+            //
+            this.label_DefectName.AutoSize = true;
+            this.label_DefectName.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.label_DefectName.Location = new System.Drawing.Point(11, 306);
+            this.label_DefectName.Name = "label_DefectName";
+            this.label_DefectName.Size = new System.Drawing.Size(67, 15);
+            this.label_DefectName.TabIndex = 16;
+            this.label_DefectName.Text = "缺陷名：";
+            //
+            // cmb_DefectName
+            //
+            this.cmb_DefectName.FormattingEnabled = true;
+            this.cmb_DefectName.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmb_DefectName.Location = new System.Drawing.Point(89, 302);
+            this.cmb_DefectName.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.cmb_DefectName.Name = "cmb_DefectName";
+            this.cmb_DefectName.Size = new System.Drawing.Size(241, 23);
+            this.cmb_DefectName.TabIndex = 17;
+            //
             // btn_queryHeatPoint
-            // 
+            //
             this.btn_queryHeatPoint.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
             this.btn_queryHeatPoint.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.btn_queryHeatPoint.Location = new System.Drawing.Point(189, 306);
+            this.btn_queryHeatPoint.Location = new System.Drawing.Point(189, 342);
             this.btn_queryHeatPoint.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btn_queryHeatPoint.Name = "btn_queryHeatPoint";
             this.btn_queryHeatPoint.Size = new System.Drawing.Size(141, 32);
@@ -226,6 +248,8 @@ namespace DeepSightAI
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.Controls.Add(this.cmb_DefectName);
+            this.Controls.Add(this.label_DefectName);
             this.Controls.Add(this.cmb_MachineID);
             this.Controls.Add(this.label_MachineID);
             this.Controls.Add(this.timePickerEnd);
@@ -245,7 +269,7 @@ namespace DeepSightAI
             this.Controls.Add(this.label79);
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "QueryControl";
-            this.Size = new System.Drawing.Size(349, 356);
+            this.Size = new System.Drawing.Size(349, 392);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -269,6 +293,8 @@ namespace DeepSightAI
         private System.Windows.Forms.RadioButton rbn_All;
         private System.Windows.Forms.Label label_MachineID;
         private System.Windows.Forms.ComboBox cmb_MachineID;
+        private System.Windows.Forms.Label label_DefectName;
+        private System.Windows.Forms.ComboBox cmb_DefectName;
         private System.Windows.Forms.Button btn_queryHeatPoint;
     }
 }

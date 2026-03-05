@@ -19,6 +19,7 @@ namespace DeepSightWorkLib.Services
         private readonly DatabaseHelper _databaseHelper;
         private readonly QueueManager _queueManager;
         private readonly VBModelBuilder _vbModelBuilder;
+        private readonly ImageLoaderService _imageLoaderService;
 
         // 统一任务管理
         private readonly ConcurrentDictionary<string, InferenceTask> _activeTasks = new ConcurrentDictionary<string, InferenceTask>();
@@ -37,6 +38,7 @@ namespace DeepSightWorkLib.Services
             string minioPort)
         {
             _databaseHelper = databaseHelper ?? throw new ArgumentNullException(nameof(databaseHelper));
+            _imageLoaderService = imageLoaderService ?? throw new ArgumentNullException(nameof(imageLoaderService));
             _queueManager = queueManager ?? throw new ArgumentNullException(nameof(queueManager));
             _vbModelBuilder = new VBModelBuilder(solutionConfig, minioIP, minioPort);
         }
@@ -493,8 +495,8 @@ namespace DeepSightWorkLib.Services
                 var vbModel = _vbModelBuilder.Build(context);
                 vbModel.OriginalAIResults = new Dictionary<int, int> { { 0, detectInfo.AIStatus } };
 
-                // 加载图片
-                var mat = Cv2.ImRead(detectInfo.ImagePath);
+                // 通过Minio加载图片
+                var mat = _imageLoaderService.LoadMinioImage(detectInfo.ImagePath);
                 if (mat == null || mat.Empty())
                 {
                     return new SingleImageTestResult

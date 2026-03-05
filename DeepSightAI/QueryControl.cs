@@ -87,6 +87,19 @@ namespace DeepSightAI
         /// </summary>
         public ComboBox PartNumberComboBox => cmb_PartNumber;
 
+        /// <summary>
+        /// 获取或设置缺陷名称筛选（"全部"返回空字符串表示全选）
+        /// </summary>
+        public string SelectedDefectName
+        {
+            get => cmb_DefectName.Text == "全部" ? "" : cmb_DefectName.Text;
+            set => cmb_DefectName.Text = value;
+        }
+
+        /// <summary>
+        /// 获取缺陷名称下拉框
+        /// </summary>
+        public ComboBox DefectNameComboBox => cmb_DefectName;
 
         /// <summary>
         /// ����ѡ����棨A�����棬B�����棬空字符串为全选）
@@ -137,8 +150,9 @@ namespace DeepSightAI
                 query = query.Where(t => t.MachineId == MachineID);
             }
 
-            // 然后根据选择的面筛选每个记录的Sides列表
+            // 然后根据选择的面和缺陷名称筛选每个记录的Sides列表
             var selectedSide = this.SelectedSide;
+            var selectedDefect = this.SelectedDefectName;
             return query.Select(record => new PanelDataRecord
             {
                 Id = record.Id,
@@ -149,11 +163,17 @@ namespace DeepSightAI
                 ProductSerial = record.ProductSerial,
                 PathIndex = record.PathIndex,
                 AviCreationTime = record.AviCreationTime,
-                // 根据UI选择的面来筛选Sides（空字符串表示全选，不筛选）
-                Sides = string.IsNullOrEmpty(selectedSide)
-                    ? record.Sides.ToList()
-                    : record.Sides.Where(s => s.Side == selectedSide).ToList()
-            }).ToList();
+                Sides = record.Sides
+                    // 根据UI选择的面来筛选Sides（空字符串表示全选，不筛选）
+                    .Where(s => string.IsNullOrEmpty(selectedSide) || s.Side == selectedSide)
+                    // 根据缺陷名称筛选：只保留包含该缺陷的面（空字符串表示全选，不筛选）
+                    .Where(s => string.IsNullOrEmpty(selectedDefect)
+                        || (s.DetectPoints != null && s.DetectPoints.Any(dp => dp.DefectName == selectedDefect)))
+                    .ToList()
+            })
+            // 过滤掉没有任何匹配面的记录
+            .Where(record => record.Sides.Count > 0)
+            .ToList();
         }
 
         #endregion
@@ -170,9 +190,10 @@ namespace DeepSightAI
             timePickerEnd.Value = DateTime.Today;
             timePicker.Checked = true;
 
-            // 绑定料号和机台号下拉框的选择变化事件
+            // 绑定料号、机台号、缺陷名称下拉框的选择变化事件
             cmb_PartNumber.SelectedIndexChanged += Cmb_PartNumber_SelectedIndexChanged;
             cmb_MachineID.SelectedIndexChanged += Cmb_MachineID_SelectedIndexChanged;
+            cmb_DefectName.SelectedIndexChanged += Cmb_DefectName_SelectedIndexChanged;
 
             // 绑定正反面选择变化事件
             rbn_Front.CheckedChanged += Rbn_Side_CheckedChanged;
@@ -209,6 +230,17 @@ namespace DeepSightAI
         private void Cmb_MachineID_SelectedIndexChanged(object sender, EventArgs e)
         {
             // 当选中非"全部"选项时，触发筛选变化事件
+            if (QueryResult != null && QueryResult.Count > 0)
+            {
+                FilterChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        /// <summary>
+        /// 缺陷名称下拉框选择变化事件处理
+        /// </summary>
+        private void Cmb_DefectName_SelectedIndexChanged(object sender, EventArgs e)
+        {
             if (QueryResult != null && QueryResult.Count > 0)
             {
                 FilterChanged?.Invoke(this, EventArgs.Empty);
@@ -297,8 +329,9 @@ namespace DeepSightAI
                     QueryResult = new List<PanelDataRecord>();
                 }
 
-                // 填充机台号列表
+                // 填充机台号和缺陷名称列表
                 UpdateMachineIDList();
+                UpdateDefectNameList();
             }
             catch (Exception ex)
             {
@@ -336,6 +369,37 @@ namespace DeepSightAI
         }
 
         /// <summary>
+        /// 更新缺陷名称下拉列表
+        /// </summary>
+        private void UpdateDefectNameList()
+        {
+            cmb_DefectName.Items.Clear();
+            cmb_DefectName.Items.Add("全部");
+
+            if (QueryResult != null && QueryResult.Count > 0)
+            {
+                // 从查询结果中提取所有唯一的缺陷名称
+                var defectNames = QueryResult
+                    .Where(r => r.Sides != null)
+                    .SelectMany(r => r.Sides)
+                    .Where(s => s.DetectPoints != null)
+                    .SelectMany(s => s.DetectPoints)
+                    .Where(dp => !string.IsNullOrEmpty(dp.DefectName))
+                    .Select(dp => dp.DefectName)
+                    .Distinct()
+                    .OrderBy(n => n);
+
+                foreach (var defectName in defectNames)
+                {
+                    cmb_DefectName.Items.Add(defectName);
+                }
+            }
+
+            // 默认选择"全部"
+            cmb_DefectName.SelectedIndex = 0;
+        }
+
+        /// <summary>
         /// 清空输入内容
         /// </summary>
         public void ClearInputs()
@@ -345,6 +409,8 @@ namespace DeepSightAI
             cmb_MachineID.Text = string.Empty;
             cmb_PartNumber.Items.Clear();
             cmb_PartNumber.Text = string.Empty;
+            cmb_DefectName.Items.Clear();
+            cmb_DefectName.Text = string.Empty;
             timePicker.Checked = false;
             timePickerEnd.Value = DateTime.Now;
             timePicker.Value = DateTime.Now;
