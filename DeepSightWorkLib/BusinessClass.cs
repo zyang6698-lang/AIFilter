@@ -710,6 +710,20 @@ namespace DeepSightWorkLib
                 PathIndex = panelInfo.PathIndex
             };
             BoardStatCache.Update(record);
+
+            // 将推理后的ROI信息发送到UI
+            if (detectPoints != null && detectPoints.Count > 0)
+            {
+                var rois = detectPoints.Select(dp => new Roi
+                {
+                    X = dp.RoiX,
+                    Y = dp.RoiY,
+                    Width = dp.Width,
+                    Height = dp.Height
+                }).ToList();
+                SystemEvent.SendRoiInfo(panelInfo.SerialNumber, rois);
+            }
+
             List<PanelSideRecord> batchToFlush = null;
             lock (_panelRecordLock)
             {

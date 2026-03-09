@@ -22,6 +22,8 @@ namespace DeepSightAI
         // 使用线程安全的 ConcurrentDictionary 替代普通 Dictionary，避免并发访问问题
         public ConcurrentDictionary<string, List<RootPanelInfoWithIP>> dic_Infos = new ConcurrentDictionary<string, List<RootPanelInfoWithIP>>();
         public ConcurrentDictionary<string, List<string>> dic_Results = new ConcurrentDictionary<string, List<string>>();
+        // 推理后的缺陷ROI信息（来源于PostProcessService推理结果）
+        public ConcurrentDictionary<string, List<Roi>> dic_DetectRois = new ConcurrentDictionary<string, List<Roi>>();
 
         private List<RootPanelInfoWithIP> info = null;
         private List<DisPlayInfo> disInfosList = new List<DisPlayInfo>();
@@ -554,6 +556,12 @@ namespace DeepSightAI
                     //B面  info[1]
                     //读取 缺陷小图
                     int index = 0;
+
+                    // 获取推理后的ROI数据（来自PostProcessService推理结果）
+                    List<Roi> inferRois = null;
+                    dic_DetectRois.TryGetValue(SN, out inferRois);
+                    int roiIndex = 0;
+
                     for (int i = 0; i < info.Count; i++)
                     {
 
@@ -582,27 +590,17 @@ namespace DeepSightAI
                                     if (pcsInfo.DefectInfo[k].DefectVrsImages != null)
                                     {
                                         imagePaths.Add($"{info[i].Head}/{pcsInfo.DefectInfo[k].DefectVrsImages[0].ToString()}:{info[i].IP}");
-                                        // 参考PostProcessService.cs的heatInfo赋值，使用SubDefectsInfo中的SubDefectRoi
-                                        
-
-                                        var subDefects = pcsInfo.DefectInfo[k].SubDefectsInfo;
-
-                                        if (subDefects != null && subDefects.Count > 0
-                                            && subDefects[0].SubDefectRoi != null && subDefects[0].SubDefectRoi.Count > 0)
+                                        // 使用推理后的ROI数据（来自PostProcessService的InferDetails.Location）
+                                        if (inferRois != null && roiIndex < inferRois.Count
+                                            && (inferRois[roiIndex].Width > 0 || inferRois[roiIndex].Height > 0))
                                         {
-                                            var subRoi = subDefects[0].SubDefectRoi[0];
-                                            defectRois.Add(new Roi
-                                            {
-                                                X = subRoi.X,
-                                                Y = subRoi.Y,
-                                                Width = subRoi.Width,
-                                                Height = subRoi.Height
-                                            });
+                                            defectRois.Add(inferRois[roiIndex]);
                                         }
                                         else
                                         {
                                             defectRois.Add(pcsInfo.DefectInfo[k].DefectRoi);
                                         }
+                                        roiIndex++;
                                     }
                                     if (pcsInfo.DefectInfo[k].DefectVrsGerberImages != null)
                                     {

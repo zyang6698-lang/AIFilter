@@ -52,5 +52,11 @@ namespace DeepSightEvent
     /// <param name="sn">产品码</param>
     /// <param name="info">产品缺陷信息</param>
     public delegate void SendDefectResultInfo(string sn, List<string> msg);
+    /// <summary>
+    /// 发送推理后的缺陷ROI信息
+    /// </summary>
+    /// <param name="sn">产品码</param>
+    /// <param name="rois">推理后的缺陷ROI列表</param>
+    public delegate void SendDefectRoiInfo(string sn, List<Roi> rois);
 
 }

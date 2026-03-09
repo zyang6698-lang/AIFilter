@@ -133,5 +133,16 @@ namespace DeepSightEvent
                 EventSendDefectResultInfoToUI(Sn, msg);
             }
         }
+
+        public static event SendDefectRoiInfo EventSendDefectRoiInfoToUI;
+        /// <summary>
+        /// 发送推理后的缺陷ROI信息到UI
+        /// </summary>
+        /// <param name="sn">产品码</param>
+        /// <param name="rois">推理后的缺陷ROI列表</param>
+        public static void SendRoiInfo(string sn, List<Roi> rois)
+        {
+            EventSendDefectRoiInfoToUI?.Invoke(sn, rois);
+        }
     }
 }

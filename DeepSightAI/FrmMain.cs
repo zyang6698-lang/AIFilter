@@ -58,6 +58,7 @@ namespace DeepSightAI
             SystemEvent.EventSendDefectNumToUI += new SendDefectNum(SystemEvent_EventSendDefectNumToUI);
             SystemEvent.EventSendDefectPanelInfoToUI += new SendDefectPanelInfo(SystemEvent_EventSendDefectPanelInfoToUI);
             SystemEvent.EventSendDefectResultInfoToUI += new SendDefectResultInfo(SystemEvent_EventSendDefectResultInfoToUI);
+            SystemEvent.EventSendDefectRoiInfoToUI += new SendDefectRoiInfo(SystemEvent_EventSendDefectRoiInfoToUI);
         }
 
 
@@ -78,6 +79,22 @@ namespace DeepSightAI
             {
                 LogTextHelper.Error("结果回调异常" + ex.ToString());
                 SystemEvent.SendAlarmMsg("结果回调异常" + ex.ToString());
+            }
+        }
+
+        private void SystemEvent_EventSendDefectRoiInfoToUI(string sn, List<Roi> rois)
+        {
+            try
+            {
+                var roiList = FrHome.Instance.dic_DetectRois.GetOrAdd(sn, _ => new List<Roi>());
+                lock (roiList)
+                {
+                    roiList.AddRange(rois);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error("ROI回调异常" + ex.ToString());
             }
         }
 
