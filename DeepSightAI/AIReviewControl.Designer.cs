@@ -34,6 +34,7 @@
             this.splitContainer_Main = new System.Windows.Forms.SplitContainer();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.QueryControl = new DeepSightAI.QueryControl();
+            this.panel_ReviewDetail = new System.Windows.Forms.Panel();
             this.label_ReviewDetail = new System.Windows.Forms.Label();
             this.tabControl_Main = new System.Windows.Forms.TabControl();
             this.tabPage_Grid = new System.Windows.Forms.TabPage();
@@ -128,7 +129,7 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.splitContainer1.Panel2.Controls.Add(this.label_ReviewDetail);
+            this.splitContainer1.Panel2.Controls.Add(this.panel_ReviewDetail);
             this.splitContainer1.Size = new System.Drawing.Size(363, 1088);
             this.splitContainer1.SplitterDistance = 355;
             this.splitContainer1.SplitterWidth = 5;
@@ -145,20 +146,33 @@
             this.QueryControl.Margin = new System.Windows.Forms.Padding(5, 2, 5, 2);
             this.QueryControl.Name = "QueryControl";
             this.QueryControl.PartNumber = "";
+            this.QueryControl.SelectedDefectName = "";
             this.QueryControl.SelectedSide = "A";
             this.QueryControl.Size = new System.Drawing.Size(363, 355);
             this.QueryControl.TabIndex = 0;
-            // 
+            //
+            // panel_ReviewDetail
+            //
+            this.panel_ReviewDetail.AutoScroll = true;
+            this.panel_ReviewDetail.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.panel_ReviewDetail.Controls.Add(this.label_ReviewDetail);
+            this.panel_ReviewDetail.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel_ReviewDetail.Location = new System.Drawing.Point(0, 0);
+            this.panel_ReviewDetail.Name = "panel_ReviewDetail";
+            this.panel_ReviewDetail.Size = new System.Drawing.Size(363, 728);
+            this.panel_ReviewDetail.TabIndex = 0;
+            //
             // label_ReviewDetail
-            // 
-            this.label_ReviewDetail.Dock = System.Windows.Forms.DockStyle.Fill;
+            //
+            this.label_ReviewDetail.AutoSize = true;
             this.label_ReviewDetail.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold);
             this.label_ReviewDetail.ForeColor = System.Drawing.Color.White;
             this.label_ReviewDetail.Location = new System.Drawing.Point(0, 0);
             this.label_ReviewDetail.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label_ReviewDetail.MaximumSize = new System.Drawing.Size(350, 0);
             this.label_ReviewDetail.Name = "label_ReviewDetail";
-            this.label_ReviewDetail.Padding = new System.Windows.Forms.Padding(11, 10, 11, 0);
-            this.label_ReviewDetail.Size = new System.Drawing.Size(363, 728);
+            this.label_ReviewDetail.Padding = new System.Windows.Forms.Padding(11, 10, 11, 10);
+            this.label_ReviewDetail.Size = new System.Drawing.Size(350, 30);
             this.label_ReviewDetail.TabIndex = 0;
             this.label_ReviewDetail.Text = "复判详情区";
             // 
@@ -542,6 +556,7 @@
         private System.Windows.Forms.Panel panel_SnSearch;
         private System.Windows.Forms.TextBox txt_SnFilter;
         private System.Windows.Forms.Button btn_SnSearch;
+        private System.Windows.Forms.Panel panel_ReviewDetail;
         private System.Windows.Forms.Label label_ReviewDetail;
         private System.Windows.Forms.TabPage tabPage_ValidationTest;
         private ValidationTestResultControl validationTestResultControl1;

@@ -225,7 +225,6 @@ namespace DeepSightAI
         /// <summary>
         /// 用于防止定时器重入的标志和同步锁
         /// </summary>
-        private volatile bool _isUpdateRunning = false;
         private object _updateLock = new object();
 
         private void Uph_timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
@@ -239,7 +238,6 @@ namespace DeepSightAI
 
             try
             {
-                _isUpdateRunning = true;
 
                 // 使用Task.Run在后台线程执行异步操作，避免阻塞定时器线程
                 Task.Run(async () => await Uph_timer_UpdateAsync());
@@ -250,7 +248,6 @@ namespace DeepSightAI
             }
             finally
             {
-                _isUpdateRunning = false;
                 Monitor.Exit(_updateLock);
             }
         }

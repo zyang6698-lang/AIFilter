@@ -27,6 +27,11 @@ namespace DeepSightAI
         /// </summary>
         public event EventHandler FilterChanged;
 
+        /// <summary>
+        /// 是否抑制 FilterChanged 事件（在 QueryDataAsync 更新下拉框时使用）
+        /// </summary>
+        private bool _suppressFilterChanged = false;
+
         #endregion
 
         #region Properties
@@ -166,9 +171,24 @@ namespace DeepSightAI
                 Sides = record.Sides
                     // 根据UI选择的面来筛选Sides（空字符串表示全选，不筛选）
                     .Where(s => string.IsNullOrEmpty(selectedSide) || s.Side == selectedSide)
-                    // 根据缺陷名称筛选：只保留包含该缺陷的面（空字符串表示全选，不筛选）
+                    // 根据缺陷名称筛选：下沉到DetectPoints级别，只保留匹配的缺陷点
+                    .Select(s => string.IsNullOrEmpty(selectedDefect) ? s : new SideData
+                    {
+                        Side = s.Side,
+                        AviState = s.AviState,
+                        AiState = s.AiState,
+                        VvsState = s.VvsState,
+                        VrsState = s.VrsState,
+                        FinalState = s.FinalState,
+                        TestState = s.TestState,
+                        LastTestTime = s.LastTestTime,
+                        DetectPoints = s.DetectPoints != null
+                            ? s.DetectPoints.Where(dp => dp.DefectName == selectedDefect).ToList()
+                            : new List<DetectInfo>()
+                    })
+                    // 过滤掉没有匹配缺陷点的面
                     .Where(s => string.IsNullOrEmpty(selectedDefect)
-                        || (s.DetectPoints != null && s.DetectPoints.Any(dp => dp.DefectName == selectedDefect)))
+                        || (s.DetectPoints != null && s.DetectPoints.Count > 0))
                     .ToList()
             })
             // 过滤掉没有任何匹配面的记录
@@ -218,7 +238,7 @@ namespace DeepSightAI
         private void Cmb_PartNumber_SelectedIndexChanged(object sender, EventArgs e)
         {
             // 当选中非"全部"选项时，触发筛选变化事件
-            if (QueryResult != null && QueryResult.Count > 0)
+            if (!_suppressFilterChanged && QueryResult != null && QueryResult.Count > 0)
             {
                 FilterChanged?.Invoke(this, EventArgs.Empty);
             }
@@ -230,7 +250,7 @@ namespace DeepSightAI
         private void Cmb_MachineID_SelectedIndexChanged(object sender, EventArgs e)
         {
             // 当选中非"全部"选项时，触发筛选变化事件
-            if (QueryResult != null && QueryResult.Count > 0)
+            if (!_suppressFilterChanged && QueryResult != null && QueryResult.Count > 0)
             {
                 FilterChanged?.Invoke(this, EventArgs.Empty);
             }
@@ -241,7 +261,7 @@ namespace DeepSightAI
         /// </summary>
         private void Cmb_DefectName_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (QueryResult != null && QueryResult.Count > 0)
+            if (!_suppressFilterChanged && QueryResult != null && QueryResult.Count > 0)
             {
                 FilterChanged?.Invoke(this, EventArgs.Empty);
             }
@@ -255,7 +275,7 @@ namespace DeepSightAI
             // 只在RadioButton被选中时触发，避免重复触发
             if (sender is RadioButton rbn && rbn.Checked)
             {
-                if (QueryResult != null && QueryResult.Count > 0)
+                if (!_suppressFilterChanged && QueryResult != null && QueryResult.Count > 0)
                 {
                     FilterChanged?.Invoke(this, EventArgs.Empty);
                 }
@@ -308,19 +328,26 @@ namespace DeepSightAI
                     else
                     {
                         QueryResult = await Machine.master.GetPanelsData(startDate, endDate);
-                        PartNumberItems.Clear();
-                        PartNumberItems.Add("全部");
-                        // 从查询结果中提取唯一的料号
-                        var partNumbers = QueryResult.Select(pn => pn.ProductSerial).Distinct();
-                        foreach (var pn in partNumbers)
+                        _suppressFilterChanged = true;
+                        try
                         {
-                            PartNumberItems.Add(pn);
+                            PartNumberItems.Clear();
+                            PartNumberItems.Add("全部");
+                            // 从查询结果中提取唯一的料号
+                            var partNumbers = QueryResult.Select(pn => pn.ProductSerial).Distinct();
+                            foreach (var pn in partNumbers)
+                            {
+                                PartNumberItems.Add(pn);
+                            }
+                            if (PartNumberItems.Count > 0)
+                            {
+                                // 默认选择"全部"
+                                PartNumberComboBox.SelectedIndex = 0;
+                            }
                         }
-                        if (PartNumberItems.Count > 0)
+                        finally
                         {
-                            // 默认选择"全部"
-                            PartNumberComboBox.SelectedIndex = 0;
-                            MessageBox.Show($"已加载 {PartNumberItems.Count - 1} 个料号，请选择料号后再次查询！");
+                            _suppressFilterChanged = false;
                         }
                     }
                 }
@@ -329,9 +356,17 @@ namespace DeepSightAI
                     QueryResult = new List<PanelDataRecord>();
                 }
 
-                // 填充机台号和缺陷名称列表
-                UpdateMachineIDList();
-                UpdateDefectNameList();
+                // 填充机台号和缺陷名称列表（抑制 FilterChanged 事件，避免重复刷新）
+                _suppressFilterChanged = true;
+                try
+                {
+                    UpdateMachineIDList();
+                    UpdateDefectNameList();
+                }
+                finally
+                {
+                    _suppressFilterChanged = false;
+                }
             }
             catch (Exception ex)
             {

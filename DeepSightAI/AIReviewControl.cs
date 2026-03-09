@@ -30,12 +30,19 @@ namespace DeepSightAI
         private int _vvsOkCount = 0;
         private int _vvsNgCount = 0;
         private int _vvsNotSetCount = 0;
-        // 统计指标字段（用于显示）
-        private int _totalPanelCount = 0;       // 总面板数
-        private int _aviOkPanelCount = 0;       // AVI OK面板数
-        private int _aiOkPanelCount = 0;        // AI OK面板数
-        private int _totalPointCount = 0;       // 总报点数
-        private int _aiOkPointCount = 0;        // AI OK报点数
+
+        // 报点级别 VVS 交叉统计（动态计算）
+        private int _aiOkVvsOkPointCount = 0;   // AI-OK & 人工OK 报点数
+        private int _aiOkVvsNgPointCount = 0;   // AI-OK & 人工NG 报点数
+        private int _aiNgVvsOkPointCount = 0;   // AI-NG & 人工OK 报点数
+        private int _aiNgVvsNgPointCount = 0;   // AI-NG & 人工NG 报点数
+
+        // PCS级别 VVS 交叉统计（动态计算）
+        private int _aiOkVvsOkPcsCount = 0;     // AI-OK & 人工OK PCS数
+        private int _aiOkVvsNgPcsCount = 0;     // AI-OK & 人工NG PCS数
+        private int _aiNgVvsOkPcsCount = 0;     // AI-NG & 人工OK PCS数
+        private int _aiNgVvsNgPcsCount = 0;     // AI-NG & 人工NG PCS数
+
         // 按Lot分组的统计数据（包含所有面板，用于计算统计指标）
         private Dictionary<string, LotStatistics> _lotStatistics = new Dictionary<string, LotStatistics>();
 
@@ -157,20 +164,46 @@ namespace DeepSightAI
                     }
                     var stat = _lotStatistics[lotNumber];
 
+                    // 记录基本信息（取第一条）
+                    if (string.IsNullOrEmpty(stat.MachineId))
+                    {
+                        stat.MachineId = panel.MachineId;
+                        stat.ProductSerial = panel.ProductSerial;
+                    }
+
+                    // Panel(Array)级别统计
+                    stat.TotalPanelCount++;
+                    bool panelAllAviOk = true;
+                    bool panelAllAiPass = true;
+
                     foreach (var side in panel.Sides)
                     {
                         if (side == null) continue;
 
-                        // 统计所有面板数据（用于计算统计指标）
-                        stat.TotalPanelCount++;
-                        if (side.AviState == 1) stat.AviOkPanelCount++;
-                        if (side.AiState == 1) stat.AiOkPanelCount++;
+                        // PCS级别统计
+                        stat.TotalPcsCount++;
+                        if (side.AviState == 1)
+                        {
+                            stat.AviOkPcsCount++;
+                        }
+                        else
+                        {
+                            panelAllAviOk = false;
+                            if (side.AiState == 1)
+                                stat.AiOkPcsCount++;
+                            else
+                            {
+                                stat.AiNgPcsCount++;
+                                panelAllAiPass = false;
+                            }
+                        }
 
-                        // 统计报点数据
+                        // 报点级别统计
                         if (side.DetectPoints != null)
                         {
                             stat.TotalPointCount += side.DetectPoints.Count;
                             stat.AiOkPointCount += side.DetectPoints.Count(p => p.AIStatus == 1);
+                            stat.AiNgPointCount += side.DetectPoints.Count(p => p.AIStatus == 2);
                         }
 
                         // 只有 AVI NG 的数据才加入复判列表
@@ -179,6 +212,9 @@ namespace DeepSightAI
                             _allDefectItems.Add(CreateDefectReviewItem(panel, side));
                         }
                     }
+
+                    if (panelAllAviOk) stat.AviOkPanelCount++;
+                    if (panelAllAiPass) stat.AiPassPanelCount++;
                 }
 
                 // 按Lot分组
@@ -194,8 +230,8 @@ namespace DeepSightAI
                 _bindingList = new SortableBindingList<DefectReviewItem>(_defectItems);
                 dataGridView_Defects.DataSource = _bindingList;
 
-                MessageBox.Show($"查询完成，共找到 {_allDefectItems.Count} 条记录，分布在 {_lotGroups.Count} 个Lot中。\n请在左侧选择Lot查看详情。",
-                    "查询结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                //MessageBox.Show($"查询完成，共找到 {_allDefectItems.Count} 条记录，分布在 {_lotGroups.Count} 个Lot中。\n请在左侧选择Lot查看详情。",
+                //    "查询结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
@@ -237,20 +273,46 @@ namespace DeepSightAI
                     }
                     var stat = _lotStatistics[lotNumber];
 
+                    // 记录基本信息（取第一条）
+                    if (string.IsNullOrEmpty(stat.MachineId))
+                    {
+                        stat.MachineId = panel.MachineId;
+                        stat.ProductSerial = panel.ProductSerial;
+                    }
+
+                    // Panel(Array)级别统计
+                    stat.TotalPanelCount++;
+                    bool panelAllAviOk = true;
+                    bool panelAllAiPass = true;
+
                     foreach (var side in panel.Sides)
                     {
                         if (side == null) continue;
 
-                        // 统计所有面板数据（用于计算统计指标）
-                        stat.TotalPanelCount++;
-                        if (side.AviState == 1) stat.AviOkPanelCount++;
-                        if (side.AiState == 1) stat.AiOkPanelCount++;
+                        // PCS级别统计
+                        stat.TotalPcsCount++;
+                        if (side.AviState == 1)
+                        {
+                            stat.AviOkPcsCount++;
+                        }
+                        else
+                        {
+                            panelAllAviOk = false;
+                            if (side.AiState == 1)
+                                stat.AiOkPcsCount++;
+                            else
+                            {
+                                stat.AiNgPcsCount++;
+                                panelAllAiPass = false;
+                            }
+                        }
 
-                        // 统计报点数据
+                        // 报点级别统计
                         if (side.DetectPoints != null)
                         {
                             stat.TotalPointCount += side.DetectPoints.Count;
                             stat.AiOkPointCount += side.DetectPoints.Count(p => p.AIStatus == 1);
+                            stat.AiNgPointCount += side.DetectPoints.Count(p => p.AIStatus == 2);
                         }
 
                         // 只有 AVI NG 的数据才加入复判列表
@@ -259,6 +321,9 @@ namespace DeepSightAI
                             _allDefectItems.Add(CreateDefectReviewItem(panel, side));
                         }
                     }
+
+                    if (panelAllAviOk) stat.AviOkPanelCount++;
+                    if (panelAllAiPass) stat.AiPassPanelCount++;
                 }
 
                 // 按Lot分组
@@ -792,7 +857,7 @@ namespace DeepSightAI
             {
                 LoadLotData(e.Node.Name);
                 // 清除复判详情，因为只是选择表格数据
-                _currentReviewLot = null;
+                _currentReviewLot = e.Node.Name;
                 RefreshReviewDetailDisplay();
             }
             // 如果是子分类节点（第二层，如按Side分组），加载该分类的数据
@@ -802,7 +867,7 @@ namespace DeepSightAI
                 string category = e.Node.Name; // 如 "A面", "B面" 等
                 LoadLotDataByCategory(lotNumber, category);
                 // 清除复判详情
-                _currentReviewLot = null;
+                _currentReviewLot = lotNumber;
                 RefreshReviewDetailDisplay();
             }
         }
@@ -1314,41 +1379,6 @@ namespace DeepSightAI
 
         #region Data Operations
 
-        /// <summary>
-        /// 查找模板图片路径
-        /// </summary>
-        /// <param name="imagePath">原图路径</param>
-        /// <returns>模板图片路径，未找到返回null</returns>
-        private string FindTemplatePath(string imagePath)
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(imagePath) || !File.Exists(imagePath))
-                    return null;
-
-                string dir = Path.GetDirectoryName(imagePath);
-                string filename = Path.GetFileNameWithoutExtension(imagePath);
-                string ext = Path.GetExtension(imagePath);
-
-                // 在同目录中查找包含原图名、包含"template"并且扩展名相同的文件
-                var candidates = Directory.EnumerateFiles(dir)
-                    .Where(p => string.Equals(Path.GetExtension(p), ext, StringComparison.OrdinalIgnoreCase))
-                    .Where(p =>
-                    {
-                        var name = Path.GetFileNameWithoutExtension(p);
-                        return name.IndexOf(filename, StringComparison.OrdinalIgnoreCase) >= 0
-                               && name.IndexOf("template", StringComparison.OrdinalIgnoreCase) >= 0;
-                    })
-                    .ToList();
-
-                return candidates.FirstOrDefault();
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error($"查找模板图片失败: {imagePath}, {ex.Message}");
-                return null;
-            }
-        }
 
         private DefectReviewItem CreateDefectReviewItem(PanelDataRecord panel, SideData sideData)
         {
@@ -1357,7 +1387,7 @@ namespace DeepSightAI
                 .Where(dp => !string.IsNullOrEmpty(dp.DefectName))
                 .Select(dp => dp.DefectName)
                 .Distinct()
-                .ToList() ?? new List<string>();
+                .ToList();
             string defectNameStr = defectNames.Count > 0 ? string.Join(", ", defectNames) : "";
 
             return new DefectReviewItem
@@ -1396,53 +1426,58 @@ namespace DeepSightAI
 
 
         /// <summary>
-        /// 统计当前VVS状态和其他统计指标
+        /// 统计当前VVS状态和其他统计指标（包含报点级别和PCS级别的交叉统计）
         /// </summary>
         private void UpdateVvsStatusSummary()
         {
+            // 重置所有计数器
             _vvsOkCount = 0;
             _vvsNgCount = 0;
             _vvsNotSetCount = 0;
+            _aiOkVvsOkPointCount = 0;
+            _aiOkVvsNgPointCount = 0;
+            _aiNgVvsOkPointCount = 0;
+            _aiNgVvsNgPointCount = 0;
+            _aiOkVvsOkPcsCount = 0;
+            _aiOkVvsNgPcsCount = 0;
+            _aiNgVvsOkPcsCount = 0;
+            _aiNgVvsNgPcsCount = 0;
 
-            // 从预计算的统计数据获取面板和报点统计（包含所有数据，不仅仅是 AVI NG）
-            int totalPanelCount = 0;
-            int aviOkPanelCount = 0;
-            int aiOkPanelCount = 0;
-            int totalPointCount = 0;
-            int aiOkPointCount = 0;
-
-            if (!string.IsNullOrEmpty(_currentReviewLot) && _lotStatistics.TryGetValue(_currentReviewLot, out var stat))
-            {
-                totalPanelCount = stat.TotalPanelCount;
-                aviOkPanelCount = stat.AviOkPanelCount;
-                aiOkPanelCount = stat.AiOkPanelCount;
-                totalPointCount = stat.TotalPointCount;
-                aiOkPointCount = stat.AiOkPointCount;
-            }
+            if (string.IsNullOrEmpty(_currentReviewLot)) return;
 
             // VVS 状态统计需要从当前数据实时计算（因为用户可能会修改 VVS 状态）
             foreach (var item in _allDefectItems)
             {
-                if (item.LotNumber == _currentReviewLot)
+                if (item.LotNumber != _currentReviewLot) continue;
+                if (item.HeatPoints == null) continue;
+
+                bool isAiOkPcs = item.AiStatus == "OK";
+
+                // 报点级别交叉统计
+                foreach (var hp in item.HeatPoints)
                 {
-                    if (item.HeatPoints != null)
-                    {
-                        foreach (var hp in item.HeatPoints)
-                        {
-                            if (hp.VVSStatus == 0) _vvsNotSetCount++;
-                            else if (hp.VVSStatus == 1) _vvsOkCount++;
-                            else if (hp.VVSStatus == 2) _vvsNgCount++;
-                        }
-                    }
+                    if (hp.VVSStatus == 0) _vvsNotSetCount++;
+                    else if (hp.VVSStatus == 1) _vvsOkCount++;
+                    else if (hp.VVSStatus == 2) _vvsNgCount++;
+
+                    bool isAiOkPoint = hp.AIStatus == 1;
+                    if (isAiOkPoint && hp.VVSStatus == 1) _aiOkVvsOkPointCount++;
+                    else if (isAiOkPoint && hp.VVSStatus == 2) _aiOkVvsNgPointCount++;
+                    else if (!isAiOkPoint && hp.VVSStatus == 1) _aiNgVvsOkPointCount++;
+                    else if (!isAiOkPoint && hp.VVSStatus == 2) _aiNgVvsNgPointCount++;
+                }
+
+                // PCS级别交叉统计（需要有VVS结果的PCS才计入）
+                bool hasVvsResult = item.HeatPoints.Any(hp => hp.VVSStatus != 0);
+                if (hasVvsResult)
+                {
+                    bool pcsVvsOk = item.HeatPoints.All(hp => hp.VVSStatus == 0 || hp.VVSStatus == 1);
+                    if (isAiOkPcs && pcsVvsOk) _aiOkVvsOkPcsCount++;
+                    else if (isAiOkPcs && !pcsVvsOk) _aiOkVvsNgPcsCount++;
+                    else if (!isAiOkPcs && pcsVvsOk) _aiNgVvsOkPcsCount++;
+                    else if (!isAiOkPcs && !pcsVvsOk) _aiNgVvsNgPcsCount++;
                 }
             }
-
-            // 更新显示用的局部变量供 RefreshReviewDetailDisplay 使用
-            _totalPanelCount = totalPanelCount;
-            _aviOkPanelCount = aviOkPanelCount;
-            _aiOkPanelCount = aiOkPanelCount;
-            _totalPointCount = totalPointCount;
-            _aiOkPointCount = aiOkPointCount;
         }
 
         /// <summary>
@@ -1450,34 +1485,72 @@ namespace DeepSightAI
         /// </summary>
         private void RefreshReviewDetailDisplay()
         {
-            string detail;
-
-            if (!string.IsNullOrEmpty(_currentReviewLot))
+            if (string.IsNullOrEmpty(_currentReviewLot))
             {
-                // 计算统计指标
-                string pointFilterRate = FormatPercent(_aiOkPointCount, _totalPointCount);
-                string aviPassRate = FormatPercent(_aviOkPanelCount, _totalPanelCount);
-                string aiPassRate = FormatPercent(_aiOkPanelCount, _totalPanelCount);
-
-                detail = $"【复判详情】\n\n";
-                detail += $"Lot号: {_currentReviewLot}\n";
-                detail += $"检测时间: {_currentReviewTime:yyyy-MM-dd HH:mm:ss}\n\n";
-                detail += $"【统计指标】\n";
-                detail += $"报点过滤率: {pointFilterRate}\n";
-                detail += $"AVI一次通过率: {aviPassRate}\n";
-                detail += $"AI通过率: {aiPassRate}\n\n";
-                detail += $"【VVS状态统计】\n";
-                detail += $"OK: {_vvsOkCount}\n";
-                detail += $"NG: {_vvsNgCount}\n";
-                detail += $"未设置: {_vvsNotSetCount}\n";
-                detail += $"总数: {_vvsOkCount + _vvsNgCount + _vvsNotSetCount}";
-            }
-            else
-            {
-                detail = "请从左侧选择缺陷记录\n以查看复判详情";
+                label_ReviewDetail.Text = "请从左侧选择缺陷记录\n以查看复判详情";
+                return;
             }
 
-            label_ReviewDetail.Text = detail;
+            var stat = _lotStatistics.TryGetValue(_currentReviewLot, out var s) ? s : new LotStatistics();
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("【详情】");
+            sb.AppendLine();
+
+            // 1. 机台号  2. 料号  3. 工单
+            sb.AppendLine($"机台号: {stat.MachineId ?? "-"}");
+            sb.AppendLine($"料号: {stat.ProductSerial ?? "-"}");
+            sb.AppendLine($"工单: {_currentReviewLot}");
+            sb.AppendLine();
+
+            // 4. 报点统计
+            int totalPoints = stat.TotalPointCount;
+            int aiOkPoints = stat.AiOkPointCount;
+            int aiNgPoints = stat.AiNgPointCount;
+
+            sb.AppendLine($"总报点数: {totalPoints}");
+            sb.AppendLine($"  AI-OK报点数: {aiOkPoints}");
+            sb.AppendLine($"    AI-OK&人工OK: {_aiOkVvsOkPointCount}");
+            sb.AppendLine($"    AI-OK&人工NG: {_aiOkVvsNgPointCount}");
+            sb.AppendLine($"  AI-NG报点数: {aiNgPoints}");
+            sb.AppendLine($"    AI-NG&人工OK: {_aiNgVvsOkPointCount}");
+            sb.AppendLine($"    AI-NG&人工NG: {_aiNgVvsNgPointCount}");
+            sb.AppendLine($"  AI过滤率: {FormatPercent(aiOkPoints, totalPoints)}");
+            sb.AppendLine($"  AI漏失率: {FormatPercent(_aiOkVvsNgPointCount, totalPoints)}");
+            sb.AppendLine($"  AI准确率: {FormatPercent(_aiOkVvsOkPointCount + _aiNgVvsNgPointCount, totalPoints)}");
+            sb.AppendLine();
+
+            // 5. PCS统计
+            int totalPcs = stat.TotalPcsCount;
+            int aviOkPcs = stat.AviOkPcsCount;
+            int aiOkPcs = stat.AiOkPcsCount;
+            int aiNgPcs = stat.AiNgPcsCount;
+
+            sb.AppendLine($"总PCS数: {totalPcs}");
+            sb.AppendLine($"  AI-OK PCS数: {aiOkPcs}");
+            sb.AppendLine($"    AI-OK&人工OK: {_aiOkVvsOkPcsCount}");
+            sb.AppendLine($"    AI-OK&人工NG: {_aiOkVvsNgPcsCount}");
+            sb.AppendLine($"  AI-NG PCS数: {aiNgPcs}");
+            sb.AppendLine($"    AI-NG&人工OK: {_aiNgVvsOkPcsCount}");
+            sb.AppendLine($"    AI-NG&人工NG: {_aiNgVvsNgPcsCount}");
+            sb.AppendLine($"  AI PCS过滤率: {FormatPercent(aiOkPcs, totalPcs)}");
+            sb.AppendLine($"  AI PCS通过率: {FormatPercent(aviOkPcs + aiOkPcs, totalPcs)}");
+            sb.AppendLine($"  AI PCS漏失率: {FormatPercent(_aiOkVvsNgPcsCount, totalPcs)}");
+            sb.AppendLine($"  AI PCS准确率: {FormatPercent(_aiOkVvsOkPcsCount + _aiNgVvsNgPcsCount, totalPcs)}");
+            sb.AppendLine();
+
+            // 6. & 7. Panel通过率
+            sb.AppendLine($"Panel一次通过率: {FormatPercent(stat.AviOkPanelCount, stat.TotalPanelCount)}");
+            sb.AppendLine($"Panel AI通过率: {FormatPercent(stat.AiPassPanelCount, stat.TotalPanelCount)}");
+            sb.AppendLine();
+
+            // 8-11. VVS状态统计
+            sb.AppendLine($"VVS已判定总数: {_vvsOkCount + _vvsNgCount}");
+            sb.AppendLine($"VVS未判定数量: {_vvsNotSetCount}");
+            sb.AppendLine($"VVS判定OK数: {_vvsOkCount}");
+            sb.Append($"VVS判定NG数: {_vvsNgCount}");
+
+            label_ReviewDetail.Text = sb.ToString();
         }
 
         /// <summary>
@@ -1600,11 +1673,25 @@ namespace DeepSightAI
     /// </summary>
     public class LotStatistics
     {
-        public int TotalPanelCount { get; set; }       // 总面板数
-        public int AviOkPanelCount { get; set; }       // AVI OK面板数
-        public int AiOkPanelCount { get; set; }        // AI OK面板数
+        // 基本信息
+        public string MachineId { get; set; }          // 机台号
+        public string ProductSerial { get; set; }      // 料号
+
+        // Panel(Array) 级别
+        public int TotalPanelCount { get; set; }       // 总Panel数（去重后的panel）
+        public int AviOkPanelCount { get; set; }       // AVI-OK Panel数（所有面均AVI OK）
+        public int AiPassPanelCount { get; set; }      // AI后通过的Panel数（所有面均AVI-OK或AI-OK）
+
+        // PCS 级别（每个SN+Side为一个PCS）
+        public int TotalPcsCount { get; set; }         // 总PCS数
+        public int AviOkPcsCount { get; set; }         // AVI-OK PCS数
+        public int AiOkPcsCount { get; set; }          // AI-OK PCS数（AVI-NG中AI判OK）
+        public int AiNgPcsCount { get; set; }          // AI-NG PCS数（AVI-NG中AI判NG）
+
+        // 报点级别
         public int TotalPointCount { get; set; }       // 总报点数
-        public int AiOkPointCount { get; set; }        // AI OK报点数
+        public int AiOkPointCount { get; set; }        // AI-OK报点数
+        public int AiNgPointCount { get; set; }        // AI-NG报点数
     }
 
     #endregion
