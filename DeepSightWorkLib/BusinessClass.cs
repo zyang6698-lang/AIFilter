@@ -711,7 +711,6 @@ namespace DeepSightWorkLib
                 SerialNumber = panelInfo.SerialNumber,
                 MachineId = panelInfo.MachineName,
                 Side = panelInfo.SideIndex,
-                PathIndex = panelInfo.PathIndex
             };
             BoardStatCache.Update(record);
 
@@ -768,6 +767,12 @@ namespace DeepSightWorkLib
 
         public Task<List<PanelDataRecord>> GetPanelsDataByMachineAndLot(string machineId, string lotNumber) =>
             _databaseHelper.GetPanelsDataByMachineAndLot(machineId, lotNumber);
+
+        public Task<List<string>> GetRecentLotNumbers(int page, int pageSize) =>
+            _databaseHelper.GetRecentLotNumbers(page, pageSize);
+
+        public Task<int> GetTotalLotCount() =>
+            _databaseHelper.GetTotalLotCount();
         #endregion
 
         #region 统计信息

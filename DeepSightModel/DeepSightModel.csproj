@@ -86,6 +86,8 @@
     <Compile Include="Configuration\AISolutionConfigManager.cs" />
     <Compile Include="ConfigurationClass.cs" />
     <Compile Include="LevelDbConfig.cs" />
+    <Compile Include="Configuration\MachineRegistry.cs" />
+    <Compile Include="Configuration\MachineRegistryManager.cs" />
     <Compile Include="Configuration\MinioSettings.cs" />
     <Compile Include="DisPlayInfo.cs" />
     <Compile Include="ImageDataInfo.cs" />

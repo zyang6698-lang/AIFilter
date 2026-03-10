@@ -92,8 +92,8 @@ namespace DeepSightDB
         {
             // 预编译 Panel UPSERT 命令
             _upsertPanelCmd = new NpgsqlCommand(
-                @"INSERT INTO Panels (MachineId, SerialNumber, LotNumber, DetectionDate, ProductSerial, PathIndex, AviCreationTime)
-                  VALUES (@MachineId, @SN, @Lot, @Date, @ProductSerial, @PathIndex, @AviCreationTime)
+                @"INSERT INTO Panels (MachineId, SerialNumber, LotNumber, DetectionDate, ProductSerial, AviCreationTime)
+                  VALUES (@MachineId, @SN, @Lot, @Date, @ProductSerial, @AviCreationTime)
                   ON CONFLICT (SerialNumber) DO UPDATE SET DetectionDate = EXCLUDED.DetectionDate
                   RETURNING Id",
                 connection);
@@ -102,7 +102,6 @@ namespace DeepSightDB
             _upsertPanelCmd.Parameters.Add(new NpgsqlParameter("@Lot", NpgsqlTypes.NpgsqlDbType.Text));
             _upsertPanelCmd.Parameters.Add(new NpgsqlParameter("@Date", NpgsqlTypes.NpgsqlDbType.Timestamp));
             _upsertPanelCmd.Parameters.Add(new NpgsqlParameter("@ProductSerial", NpgsqlTypes.NpgsqlDbType.Text) { IsNullable = true });
-            _upsertPanelCmd.Parameters.Add(new NpgsqlParameter("@PathIndex", NpgsqlTypes.NpgsqlDbType.Text) { IsNullable = true });
             _upsertPanelCmd.Parameters.Add(new NpgsqlParameter("@AviCreationTime", NpgsqlTypes.NpgsqlDbType.Timestamp) { IsNullable = true });
             _upsertPanelCmd.Prepare();
 
@@ -191,8 +190,7 @@ namespace DeepSightDB
                 LotNumber = reader.GetString(3),
                 ProductSerial = reader.IsDBNull(4) ? null : reader.GetString(4),
                 DetectionDate = reader.GetDateTime(5),
-                PathIndex = reader.IsDBNull(6) ? null : reader.GetString(6),
-                AviCreationTime = reader.IsDBNull(7) ? (DateTime?)null : reader.GetDateTime(7),
+                AviCreationTime = reader.IsDBNull(6) ? (DateTime?)null : reader.GetDateTime(6),
                 Sides = new List<SideData>()
             };
         }
@@ -203,21 +201,26 @@ namespace DeepSightDB
         /// </summary>
         private SideData ReadSideData(NpgsqlDataReader reader)
         {
+            // 列索引说明（基于 SELECT 语句中的顺序）：
+            // 0-6: Panel 字段 (Id, MachineId, SerialNumber, LotNumber, ProductSerial, DetectionDate, AviCreationTime)
+            // 7: ps.Side, 8: ps.HeatPoints, 9: ps.AviState, 10: ps.AiState,
+            // 11: ps.VvsState, 12: ps.VrsState, 13: ps.FinalState
+            // 14: ps.TestState (可选), 15: ps.LastTestTime (可选)
             var sideData = new SideData
             {
-                Side = reader.GetString(8),
-                AviState = reader.IsDBNull(10) ? 0 : reader.GetInt32(10),
-                AiState = reader.IsDBNull(11) ? 0 : reader.GetInt32(11),
-                VvsState = reader.IsDBNull(12) ? 0 : reader.GetInt32(12),
-                VrsState = reader.IsDBNull(13) ? 0 : reader.GetInt32(13),
-                FinalState = reader.IsDBNull(14) ? 0 : reader.GetInt32(14)
+                Side = reader.GetString(7),
+                AviState = reader.IsDBNull(9) ? 0 : reader.GetInt32(9),
+                AiState = reader.IsDBNull(10) ? 0 : reader.GetInt32(10),
+                VvsState = reader.IsDBNull(11) ? 0 : reader.GetInt32(11),
+                VrsState = reader.IsDBNull(12) ? 0 : reader.GetInt32(12),
+                FinalState = reader.IsDBNull(13) ? 0 : reader.GetInt32(13)
             };
 
             // 兼容老版本：检查列数是否足够（TestState 和 LastTestTime 是后加的列）
-            if (reader.FieldCount > 15)
+            if (reader.FieldCount > 14)
             {
-                sideData.TestState = reader.IsDBNull(15) ? 0 : reader.GetInt32(15);
-                sideData.LastTestTime = reader.IsDBNull(16) ? (DateTime?)null : reader.GetDateTime(16);
+                sideData.TestState = reader.IsDBNull(14) ? 0 : reader.GetInt32(14);
+                sideData.LastTestTime = reader.IsDBNull(15) ? (DateTime?)null : reader.GetDateTime(15);
             }
             else
             {
@@ -225,9 +228,9 @@ namespace DeepSightDB
                 sideData.LastTestTime = null;
             }
 
-            if (!reader.IsDBNull(9))
+            if (!reader.IsDBNull(8))
             {
-                sideData.DetectPoints = JsonConvert.DeserializeObject<List<DetectInfo>>(reader.GetString(9));
+                sideData.DetectPoints = JsonConvert.DeserializeObject<List<DetectInfo>>(reader.GetString(8));
             }
             else
             {
@@ -261,8 +264,8 @@ namespace DeepSightDB
                             panelRecords[panelId] = panelRecord;
                         }
 
-                        // 如果有 Side 数据，添加到 Sides 列表
-                        if (!reader.IsDBNull(8))
+                        // 如果有 Side 数据，添加到 Sides 列表（索引 7 = ps.Side）
+                        if (!reader.IsDBNull(7))
                         {
                             panelRecord.Sides.Add(ReadSideData(reader));
                         }
@@ -424,7 +427,6 @@ namespace DeepSightDB
                     LotNumber TEXT NOT NULL,
                     ProductSerial TEXT,
                     DetectionDate TIMESTAMP NOT NULL,
-                    PathIndex TEXT,
                     AviCreationTime TIMESTAMP
                 );";
 
@@ -590,7 +592,6 @@ namespace DeepSightDB
                     _upsertPanelCmd.Parameters["@Lot"].Value = record.LotNumber ?? string.Empty;
                     _upsertPanelCmd.Parameters["@Date"].Value = record.DetectionDate;
                     _upsertPanelCmd.Parameters["@ProductSerial"].Value = (object)record.ProductSerial ?? DBNull.Value;
-                    _upsertPanelCmd.Parameters["@PathIndex"].Value = (object)record.PathIndex ?? DBNull.Value;
                     _upsertPanelCmd.Parameters["@AviCreationTime"].Value = (object)record.AviCreationTime ?? DBNull.Value;
                     long panelId = Convert.ToInt64(_upsertPanelCmd.ExecuteScalar());
 
@@ -680,7 +681,6 @@ namespace DeepSightDB
                             _upsertPanelCmd.Parameters["@Lot"].Value = record.LotNumber ?? string.Empty;
                             _upsertPanelCmd.Parameters["@Date"].Value = record.DetectionDate;
                             _upsertPanelCmd.Parameters["@ProductSerial"].Value = (object)record.ProductSerial ?? DBNull.Value;
-                            _upsertPanelCmd.Parameters["@PathIndex"].Value = (object)record.PathIndex ?? DBNull.Value;
                             _upsertPanelCmd.Parameters["@AviCreationTime"].Value = (object)record.AviCreationTime ?? DBNull.Value;
                             long panelId = Convert.ToInt64(_upsertPanelCmd.ExecuteScalar());
 
@@ -842,7 +842,7 @@ namespace DeepSightDB
                     // 动态构建 SQL 查询（兼容老版本数据库）
                     var panelSidesFields = GetPanelSidesSelectFields(connection);
                     var sqlBuilder = new System.Text.StringBuilder($@"
-                        SELECT p.Id, p.MachineId, p.SerialNumber, p.LotNumber, p.ProductSerial, p.DetectionDate, p.PathIndex, p.AviCreationTime,
+                        SELECT p.Id, p.MachineId, p.SerialNumber, p.LotNumber, p.ProductSerial, p.DetectionDate, p.AviCreationTime,
                                {panelSidesFields}
                         FROM Panels p
                         LEFT JOIN PanelSides ps ON p.Id = ps.PanelId
@@ -891,7 +891,7 @@ namespace DeepSightDB
                     // 动态构建 SQL 查询（兼容老版本数据库）
                     var panelSidesFields = GetPanelSidesSelectFields(connection);
                     var sqlBuilder = new System.Text.StringBuilder($@"
-                        SELECT p.Id, p.MachineId, p.SerialNumber, p.LotNumber, p.ProductSerial, p.DetectionDate, p.PathIndex, p.AviCreationTime,
+                        SELECT p.Id, p.MachineId, p.SerialNumber, p.LotNumber, p.ProductSerial, p.DetectionDate, p.AviCreationTime,
                                {panelSidesFields}
                         FROM Panels p
                         LEFT JOIN PanelSides ps ON p.Id = ps.PanelId
@@ -1040,7 +1040,7 @@ namespace DeepSightDB
         /// 从导出的CSV数据导入到数据库
         /// 解析 Panels 和 PanelSides 数据，并通过 SavePanelSide 存储
         /// </summary>
-        /// <param name="panelsCsvLines">Panels 表的 CSV 行数据（格式: Id,MachineId,SerialNumber,LotNumber,ProductSerial,DetectionDate,PathIndex,AviCreationTime）</param>
+        /// <param name="panelsCsvLines">Panels 表的 CSV 行数据（格式: Id,MachineId,SerialNumber,LotNumber,ProductSerial,DetectionDate,AviCreationTime）</param>
         /// <param name="panelSidesCsvLines">PanelSides 表的 CSV 行数据（格式: Id,PanelId,Side,HeatPoints,AviState,AiState,VvsState,VrsState,FinalState）</param>
         /// <param name="progressCallback">进度回调 (percent, message)</param>
         public Task<(int success, int failed)> ImportFromCsvData(string[] panelsCsvLines, string[] panelSidesCsvLines, Action<int, string> progressCallback = null)
@@ -1066,7 +1066,7 @@ namespace DeepSightDB
                     progressCallback?.Invoke(20, "解析 Panels 数据...");
 
                     // 第一步：解析 Panels 数据（通常数据量小，不需要并行）
-                    var panelsDict = new Dictionary<int, (string MachineId, string SerialNumber, string LotNumber, string ProductSerial, DateTime DetectionDate, string PathIndex, DateTime? AviCreationTime)>();
+                    var panelsDict = new Dictionary<int, (string MachineId, string SerialNumber, string LotNumber, string ProductSerial, DateTime DetectionDate, DateTime? AviCreationTime)>();
 
                     foreach (var line in panelsCsvLines)
                     {
@@ -1075,7 +1075,7 @@ namespace DeepSightDB
                         try
                         {
                             var parts = line.Split(',');
-                            if (parts.Length < 8) continue;
+                            if (parts.Length < 7) continue;
 
                             int pId = int.Parse(parts[0]);
                             panelsDict[pId] = (
@@ -1084,8 +1084,7 @@ namespace DeepSightDB
                                 parts[3],
                                 parts[4],
                                 DateTime.Parse(parts[5]),
-                                parts[6],
-                                string.IsNullOrWhiteSpace(parts[7]) ? (DateTime?)null : DateTime.Parse(parts[7])
+                                string.IsNullOrWhiteSpace(parts[6]) ? (DateTime?)null : DateTime.Parse(parts[6])
                             );
                         }
                         catch { }
@@ -1157,7 +1156,6 @@ namespace DeepSightDB
                                 LotNumber = panelInfo.LotNumber,
                                 ProductSerial = panelInfo.ProductSerial,
                                 DetectionDate = panelInfo.DetectionDate,
-                                PathIndex = panelInfo.PathIndex,
                                 AviCreationTime = panelInfo.AviCreationTime,
                                 Side = side,
                                 Data = new SideData
@@ -1222,7 +1220,6 @@ namespace DeepSightDB
                                 _upsertPanelCmd.Parameters["@Lot"].Value = record.LotNumber ?? string.Empty;
                                 _upsertPanelCmd.Parameters["@Date"].Value = record.DetectionDate;
                                 _upsertPanelCmd.Parameters["@ProductSerial"].Value = (object)record.ProductSerial ?? DBNull.Value;
-                                _upsertPanelCmd.Parameters["@PathIndex"].Value = (object)record.PathIndex ?? DBNull.Value;
                                 _upsertPanelCmd.Parameters["@AviCreationTime"].Value = (object)record.AviCreationTime ?? DBNull.Value;
                                 long panelId = Convert.ToInt64(_upsertPanelCmd.ExecuteScalar());
 
@@ -1369,6 +1366,73 @@ namespace DeepSightDB
                 catch (Exception ex)
                 {
                     LogTextHelper.Error($"获取机台ID列表失败: {ex.Message}");
+                    tcs.SetException(ex);
+                }
+            });
+            return tcs.Task;
+        }
+
+        /// <summary>
+        /// 分页获取最近的Lot列表（按最新检测时间倒序）
+        /// </summary>
+        public Task<List<string>> GetRecentLotNumbers(int page, int pageSize)
+        {
+            var tcs = new TaskCompletionSource<List<string>>();
+            _dbQueue.Add(connection =>
+            {
+                try
+                {
+                    var lots = new List<string>();
+                    int offset = (page - 1) * pageSize;
+                    var sql = @"SELECT LotNumber, MAX(DetectionDate) as LatestDate
+                                FROM Panels
+                                WHERE LotNumber IS NOT NULL AND LotNumber <> ''
+                                GROUP BY LotNumber
+                                ORDER BY LatestDate DESC
+                                LIMIT @PageSize OFFSET @Offset";
+                    using (var cmd = new NpgsqlCommand(sql, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@PageSize", pageSize);
+                        cmd.Parameters.AddWithValue("@Offset", offset);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                lots.Add(reader.GetString(0));
+                            }
+                        }
+                    }
+                    tcs.SetResult(lots);
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error($"获取最近Lot列表失败: {ex.Message}");
+                    tcs.SetException(ex);
+                }
+            });
+            return tcs.Task;
+        }
+
+        /// <summary>
+        /// 获取数据库中不重复的Lot总数
+        /// </summary>
+        public Task<int> GetTotalLotCount()
+        {
+            var tcs = new TaskCompletionSource<int>();
+            _dbQueue.Add(connection =>
+            {
+                try
+                {
+                    var sql = "SELECT COUNT(DISTINCT LotNumber) FROM Panels WHERE LotNumber IS NOT NULL AND LotNumber <> ''";
+                    using (var cmd = new NpgsqlCommand(sql, connection))
+                    {
+                        var result = cmd.ExecuteScalar();
+                        tcs.SetResult(Convert.ToInt32(result));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error($"获取Lot总数失败: {ex.Message}");
                     tcs.SetException(ex);
                 }
             });

@@ -214,7 +214,7 @@ namespace DeepSightAI.SettingPages
         /// <summary>
         /// 更新所有 AviCtr2 控件的信息
         /// </summary>
-        public void UpdateAllAviCtrsInfo(Func<string, (string LotNumber, string SerialNumber, string ProductSerial, string PathIndex, double Utilization)> getLatestPanelInfo)
+        public void UpdateAllAviCtrsInfo(Func<string, (string LotNumber, string SerialNumber, string ProductSerial, double Utilization)> getLatestPanelInfo)
         {
             if (this.IsHandleCreated)
             {
@@ -227,7 +227,6 @@ namespace DeepSightAI.SettingPages
                             var info = getLatestPanelInfo(ctr.ctrConfig.AviName);
                             ctr.LotId = info.LotNumber;
                             ctr.ProductSerial = info.SerialNumber;
-                            ctr.PathIndex = info.PathIndex;
                             ctr.Utilization = info.Utilization;
                         }
                     }
@@ -261,12 +260,11 @@ namespace DeepSightAI.SettingPages
                 {
                     foreach (var ctr in aviCtr2Controls.Where(c => c.ctrConfig.IsEnable))
                     {
-                        var (lot, sn, productSerial, pathIndex) = BoardStatCache.GetLatestLotSn(ctr.ctrConfig.AviName);
-                        if (!string.IsNullOrEmpty(lot) || !string.IsNullOrEmpty(sn) || !string.IsNullOrEmpty(productSerial) || !string.IsNullOrEmpty(pathIndex))
+                        var (lot, sn, productSerial) = BoardStatCache.GetLatestLotSn(ctr.ctrConfig.AviName);
+                        if (!string.IsNullOrEmpty(lot) || !string.IsNullOrEmpty(sn) || !string.IsNullOrEmpty(productSerial))
                         {
                             ctr.LotId = lot;
                             ctr.ProductSerial = productSerial;
-                            ctr.PathIndex = pathIndex;
                         }
                     }
                 }));
@@ -290,12 +288,11 @@ namespace DeepSightAI.SettingPages
                         ctr.AviPassRate = stat.AviPanelCount == 0 ? 0 : (double)stat.AviPanelOKCount / stat.AviPanelCount;
                         ctr.Utilization = stat.Utilization;
 
-                        var (lot, sn, productSerial, pathIndex) = BoardStatCache.GetLatestLotSn(machineId);
-                        if (!string.IsNullOrEmpty(lot) || !string.IsNullOrEmpty(sn) || !string.IsNullOrEmpty(productSerial) || !string.IsNullOrEmpty(pathIndex))
+                        var (lot, sn, productSerial) = BoardStatCache.GetLatestLotSn(machineId);
+                        if (!string.IsNullOrEmpty(lot) || !string.IsNullOrEmpty(sn) || !string.IsNullOrEmpty(productSerial))
                         {
                             ctr.LotId = lot;
                             ctr.ProductSerial = productSerial;
-                            ctr.PathIndex = pathIndex;
                         }
                     }
                 }));

@@ -57,9 +57,11 @@ namespace DeepSightAI
             this.panel_home = new System.Windows.Forms.Panel();
             this.btnHome = new System.Windows.Forms.PictureBox();
             this.table_menu = new System.Windows.Forms.TableLayoutPanel();
-            this.panel8 = new System.Windows.Forms.Panel();
+            this.panel_search = new System.Windows.Forms.Panel();
+            this.btnSearch = new System.Windows.Forms.PictureBox();
             this.panel9 = new System.Windows.Forms.Panel();
             this.btnModel = new System.Windows.Forms.Button();
+            this.panel8 = new System.Windows.Forms.Panel();
             this.btnTest = new System.Windows.Forms.ToolStripDropDownButton();
             this.btn_showBox = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripDropDownButton1 = new System.Windows.Forms.ToolStripDropDownButton();
@@ -92,6 +94,8 @@ namespace DeepSightAI
             this.panel_home.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.btnHome)).BeginInit();
             this.table_menu.SuspendLayout();
+            this.panel_search.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.btnSearch)).BeginInit();
             this.panel9.SuspendLayout();
             this.toolStrip.SuspendLayout();
             this.panel_r.SuspendLayout();
@@ -256,7 +260,7 @@ namespace DeepSightAI
             // 
             this.panel_login.Controls.Add(this.btnLogin);
             this.panel_login.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel_login.Location = new System.Drawing.Point(268, 2);
+            this.panel_login.Location = new System.Drawing.Point(321, 2);
             this.panel_login.Margin = new System.Windows.Forms.Padding(0);
             this.panel_login.Name = "panel_login";
             this.panel_login.Size = new System.Drawing.Size(53, 61);
@@ -405,7 +409,8 @@ namespace DeepSightAI
             // 
             // table_menu
             // 
-            this.table_menu.ColumnCount = 8;
+            this.table_menu.ColumnCount = 9;
+            this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 53F));
             this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 53F));
             this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 53F));
             this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 53F));
@@ -414,15 +419,15 @@ namespace DeepSightAI
             this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 53F));
             this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 267F));
             this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.table_menu.Controls.Add(this.panel_home, 0, 0);
             this.table_menu.Controls.Add(this.panel_tool, 1, 0);
             this.table_menu.Controls.Add(this.panel_alarm, 2, 0);
             this.table_menu.Controls.Add(this.panel_chart, 3, 0);
             this.table_menu.Controls.Add(this.panel_start, 4, 0);
-            this.table_menu.Controls.Add(this.panel_login, 5, 0);
-            this.table_menu.Controls.Add(this.panel8, 7, 0);
-            this.table_menu.Controls.Add(this.panel9, 6, 0);
+            this.table_menu.Controls.Add(this.panel_search, 5, 0);
+            this.table_menu.Controls.Add(this.panel_login, 6, 0);
+            this.table_menu.Controls.Add(this.panel9, 7, 0);
+            this.table_menu.Controls.Add(this.panel8, 8, 0);
             this.table_menu.Dock = System.Windows.Forms.DockStyle.Top;
             this.table_menu.Location = new System.Drawing.Point(0, 75);
             this.table_menu.Margin = new System.Windows.Forms.Padding(0);
@@ -430,23 +435,40 @@ namespace DeepSightAI
             this.table_menu.Padding = new System.Windows.Forms.Padding(3, 2, 0, 2);
             this.table_menu.RowCount = 1;
             this.table_menu.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.table_menu.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 61F));
             this.table_menu.Size = new System.Drawing.Size(1417, 65);
             this.table_menu.TabIndex = 12;
             // 
-            // panel8
+            // panel_search
+            //
+            this.panel_search.Controls.Add(this.btnSearch);
+            this.panel_search.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel_search.Location = new System.Drawing.Point(268, 2);
+            this.panel_search.Margin = new System.Windows.Forms.Padding(0);
+            this.panel_search.Name = "panel_search";
+            this.panel_search.Size = new System.Drawing.Size(53, 61);
+            this.panel_search.TabIndex = 20;
             // 
-            this.panel8.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel8.Location = new System.Drawing.Point(591, 4);
-            this.panel8.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.panel8.Name = "panel8";
-            this.panel8.Size = new System.Drawing.Size(823, 57);
-            this.panel8.TabIndex = 24;
+            // btnSearch
+            // 
+            this.btnSearch.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnSearch.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.btnSearch.Image = global::DeepSightAI.Properties.Resources.search1;
+            this.btnSearch.Location = new System.Drawing.Point(0, 0);
+            this.btnSearch.Margin = new System.Windows.Forms.Padding(7);
+            this.btnSearch.Name = "btnSearch";
+            this.btnSearch.Size = new System.Drawing.Size(53, 61);
+            this.btnSearch.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.btnSearch.TabIndex = 8;
+            this.btnSearch.TabStop = false;
+            this.btnSearch.Tag = "\"2\"";
+            this.btnSearch.Click += new System.EventHandler(this.btnSearch_Click);
             // 
             // panel9
             // 
             this.panel9.Controls.Add(this.btnModel);
             this.panel9.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel9.Location = new System.Drawing.Point(325, 5);
+            this.panel9.Location = new System.Drawing.Point(378, 5);
             this.panel9.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.panel9.Name = "panel9";
             this.panel9.Size = new System.Drawing.Size(259, 55);
@@ -471,6 +493,15 @@ namespace DeepSightAI
             this.btnModel.Text = "生产模式";
             this.btnModel.UseVisualStyleBackColor = false;
             this.btnModel.Click += new System.EventHandler(this.btnModel_Click);
+            // 
+            // panel8
+            // 
+            this.panel8.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel8.Location = new System.Drawing.Point(644, 4);
+            this.panel8.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.panel8.Name = "panel8";
+            this.panel8.Size = new System.Drawing.Size(770, 57);
+            this.panel8.TabIndex = 24;
             // 
             // btnTest
             // 
@@ -719,6 +750,8 @@ namespace DeepSightAI
             this.panel_home.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.btnHome)).EndInit();
             this.table_menu.ResumeLayout(false);
+            this.panel_search.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.btnSearch)).EndInit();
             this.panel9.ResumeLayout(false);
             this.toolStrip.ResumeLayout(false);
             this.toolStrip.PerformLayout();
@@ -774,6 +807,8 @@ namespace DeepSightAI
         private System.Windows.Forms.Button btnMin;
         private System.Windows.Forms.Button btnMax;
         private System.Windows.Forms.Panel panelTile;
+        private System.Windows.Forms.Panel panel_search;
+        private System.Windows.Forms.PictureBox btnSearch;
         private System.Windows.Forms.Panel panel8;
         public System.Windows.Forms.ToolStripStatusLabel solutionAndflow;
     }

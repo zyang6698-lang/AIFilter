@@ -1401,7 +1401,6 @@ namespace DeepSightAI
                 ManualStatus = sideData.VvsState == 0 ? "未判定" : sideData.VvsState == 1 ? "OK" : "NG",
                 DefectCount = sideData.DetectPoints?.Count ?? 0,
                 DefectName = defectNameStr,
-                PathIndex = panel.PathIndex,
                 DetectionDate = panel.DetectionDate,
                 HeatPoints = sideData.DetectPoints,
                 IsModified = false
@@ -1602,7 +1601,6 @@ namespace DeepSightAI
                             MachineId = item.MachineId,
                             ProductSerial = item.ProductSerial,
                             Side = item.Side,
-                            PathIndex = item.PathIndex,
                             DetectionDate = item.DetectionDate,
                             Data = new SideData
                             {
@@ -1659,7 +1657,6 @@ namespace DeepSightAI
         /// 缺陷点数变化，格式：原始数量 -> VVS复判后NG数量
         /// </summary>
         public string DefectChange { get; set; }
-        public string PathIndex { get; set; }
         public DateTime DetectionDate { get; set; }
         [Browsable(false)]
         public List<DetectInfo> HeatPoints { get; set; }

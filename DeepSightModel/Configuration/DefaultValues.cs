@@ -116,6 +116,16 @@ namespace DeepSightModel.Configuration
         /// </summary>
         public const string LDBEndpoint = "127.0.0.1:9877";
 
+        /// <summary>
+        /// 默认机台名称
+        /// </summary>
+        public const string DefaultMachineName = "AVI";
+
+        /// <summary>
+        /// 默认数据源类型
+        /// </summary>
+        public const DataSourceType DefaultDataSourceType = DataSourceType.LevelDb;
+
         #endregion
 
         #region 数据库配置

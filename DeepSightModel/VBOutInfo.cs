@@ -68,7 +68,29 @@ namespace DeepSightModel
         [JsonProperty("location")]
         public List<Location> Location { get; set; }
 
-        //0613返回参数添加新节点  此节点字段不固定 ，改为动态字段解析
+        [JsonProperty("drawinfo")]
+        public List<string> DrawInfoRaw { get; set; }
+
+        /// <summary>
+        /// 反序列化后的DrawInfo列表，外部可直接使用
+        /// </summary>
+        [JsonIgnore]
+        public List<DrawInfo> DrawInfoList
+        {
+            get
+            {
+                if (DrawInfoRaw == null) return null;
+                var list = new List<DrawInfo>();
+                foreach (var json in DrawInfoRaw)
+                {
+                    if (!string.IsNullOrEmpty(json))
+                    {
+                        list.Add(JsonConvert.DeserializeObject<DrawInfo>(json));
+                    }
+                }
+                return list;
+            }
+        }
 
         [JsonProperty("node_details")]
         // public NodeDetails NodeDetails { get; set; }
@@ -105,6 +127,63 @@ namespace DeepSightModel
 
         //[JsonProperty("output_argument")]
         //public NodeArguments OutputArgument { get; set; }
+    }
+
+    public class DrawInfo
+    {
+        [JsonProperty("conditions")]
+        public List<DrawCondition> Conditions { get; set; }
+
+        [JsonProperty("defect_rois")]
+        public List<List<int>> DefectRois { get; set; }
+
+        [JsonProperty("drawings")]
+        public List<Drawing> Drawings { get; set; }
+
+        [JsonProperty("inspect_label")]
+        public string InspectLabel { get; set; }
+
+        [JsonProperty("inspect_name")]
+        public string InspectName { get; set; }
+
+        [JsonProperty("name")]
+        public string Name { get; set; }
+
+        [JsonProperty("roi")]
+        public List<int> Roi { get; set; }
+    }
+
+    public class DrawCondition
+    {
+        [JsonProperty("name")]
+        public string Name { get; set; }
+
+        [JsonProperty("threshold")]
+        public Threshold Threshold { get; set; }
+
+        [JsonProperty("unit")]
+        public string Unit { get; set; }
+
+        [JsonProperty("value")]
+        public double? Value { get; set; }
+    }
+
+    public class Threshold
+    {
+        [JsonProperty("max")]
+        public double? Max { get; set; }
+
+        [JsonProperty("min")]
+        public double? Min { get; set; }
+    }
+
+    public class Drawing
+    {
+        [JsonProperty("points")]
+        public List<List<int>> Points { get; set; }
+
+        [JsonProperty("type")]
+        public string Type { get; set; }
     }
 
     public class NodeArguments

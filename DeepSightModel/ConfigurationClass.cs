@@ -270,8 +270,17 @@ namespace DeepSightModel
     }
     public class DeepSight_AVI_class
     {
-        public DeepSight_AVI_class()
+        public DeepSight_AVI_class() : this(skipInit: false)
         {
+        }
+
+        /// <summary>
+        /// 构造函数，skipInit=true 时不自动创建目录和默认配置
+        /// </summary>
+        protected DeepSight_AVI_class(bool skipInit)
+        {
+            if (skipInit) return;
+
             if (!Directory.Exists(System.AppDomain.CurrentDomain.BaseDirectory + "ATS_Agent_EXE\\config"))
             {
                 Directory.CreateDirectory(System.AppDomain.CurrentDomain.BaseDirectory + "config");
@@ -374,5 +383,16 @@ namespace DeepSightModel
             return result;
         }
 
+    }
+
+    /// <summary>
+    /// 安全版本的 AVI 配置读写类，构造时不强制创建目录和默认配置。
+    /// 适用于不确定是否存在 ATS_Agent_EXE 目录的场景（系统B）。
+    /// </summary>
+    public class DeepSight_AVI_class_Safe : DeepSight_AVI_class
+    {
+        public DeepSight_AVI_class_Safe() : base(skipInit: true)
+        {
+        }
     }
 }

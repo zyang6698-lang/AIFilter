@@ -1,6 +1,7 @@
 ﻿using DeepSightAI.Properties;
 using DeepSightEvent;
 using DeepSightModel;
+using DeepSightModel.Configuration;
 using DeepSightTool;
 using System;
 using System.Collections.Generic;
@@ -113,28 +114,44 @@ namespace DeepSightAI
                 string machineName = info?.RootInfo?.MachineName;
                 if (!string.IsNullOrEmpty(machineName))
                 {
-                    // 检查工站是否已存在于配置中
-                    bool stationExists = Machine.aviconfig.WatchPaths.Any(w => w.AviName == machineName);
+                    // 检查工站是否已存在于机台注册表中
+                    bool registryExists = Machine.machineRegistry?.Machines?.Any(m => m.MachineName == machineName) ?? false;
 
-                    if (!stationExists)
+                    if (!registryExists)
                     {
-                        // 添加新的工站配置
-                        WatchPathConfig newStation = new WatchPathConfig()
+                        // 1. 添加到机台注册表（主配置源）
+                        var newEntry = new MachineEntry
                         {
-                            AviName = machineName,
-                            APath = "",
-                            BPath = "",
-                            Depth = 4,
-                            FileA = "",
-                            FileB = "",
-                            IsEnable = true, // 新发现的工站默认启用
+                            MachineName = machineName,
+                            IsEnable = true,
+                            DataSourceType = DataSourceType.LevelDb  // 自动发现的工站默认 LevelDb
                         };
-                        Machine.aviconfig.WatchPaths.Add(newStation);
+                        Machine.machineRegistryManager.AddOrUpdate(newEntry);
+                        // 刷新内存中的注册表
+                        Machine.machineRegistryManager.Read(out Machine.machineRegistry);
 
-                        // 保存 AVI 配置到文件
-                        Machine.avi_class.Save(Machine.aviconfig);
+                        // 2. 同步添加到 aviconfig（保持向后兼容）
+                        if (Machine.aviconfig?.WatchPaths != null)
+                        {
+                            bool aviExists = Machine.aviconfig.WatchPaths.Any(w => w.AviName == machineName);
+                            if (!aviExists)
+                            {
+                                WatchPathConfig newStation = new WatchPathConfig()
+                                {
+                                    AviName = machineName,
+                                    APath = "",
+                                    BPath = "",
+                                    Depth = 4,
+                                    FileA = "",
+                                    FileB = "",
+                                    IsEnable = true,
+                                };
+                                Machine.aviconfig.WatchPaths.Add(newStation);
+                                Machine.avi_class.Save(Machine.aviconfig);
+                            }
+                        }
 
-                        // 更新 UI 显示新工站（状态为绿色-正在运行）
+                        // 更新 UI 显示新工站
                         FrHome.Instance.RefreshAviCtrConfigs();
 
                         LogTextHelper.Info($"自动发现并添加新工站: {machineName}");
@@ -512,6 +529,13 @@ namespace DeepSightAI
                 FrChart.Instance.Dock = DockStyle.Fill;
                 FrChart.Instance.Show();
 
+                ////搜索
+                FrmMain.Instance.panel3.Controls.Clear();
+                FrSearch.Instance.TopLevel = false;
+                FrSearch.Instance.Parent = FrmMain.Instance.panel3;
+                FrSearch.Instance.Dock = DockStyle.Fill;
+                FrSearch.Instance.Show();
+
             }
             catch (Exception ex)
             {
@@ -599,7 +623,7 @@ namespace DeepSightAI
         }
         private void btnPause_Click(object sender, EventArgs e)
         {
-            return;
+            SwitchFrom(FormMode.SearchForm);
         }
         private void btnClose_Click(object sender, EventArgs e)
         {
@@ -750,7 +774,25 @@ namespace DeepSightAI
                         FrmMain.Instance.panel7.Visible = false;
                     }
                     break;
+                case FormMode.SearchForm:
 
+                    if (curFormMode != FormMode.SearchForm)
+                    {
+                        curFormMode = FormMode.SearchForm;
+
+                        btnSearch.Image = Resources.search2;
+
+                        FrmMain.Instance.panel3.Dock = DockStyle.Fill;
+
+                        FrmMain.Instance.panel1.Visible = false;
+                        FrmMain.Instance.panel2.Visible = false;
+                        FrmMain.Instance.panel3.Visible = true;
+                        FrmMain.Instance.panel4.Visible = false;
+                        FrmMain.Instance.panel5.Visible = false;
+                        FrmMain.Instance.panel6.Visible = false;
+                        FrmMain.Instance.panel7.Visible = false;
+                    }
+                    break;
             }
         }
         private void SwitchButton()
@@ -794,9 +836,9 @@ namespace DeepSightAI
                     //    btnFn.Image = Resources.Fn1;
                     //    break;
 
-                    //case FormMode.SearchForm:
-                    //    btnSearch.Image = Resources.search1;
-                    //    break;
+                    case FormMode.SearchForm:
+                        btnSearch.Image = Resources.search1;
+                        break;
 
                     default:
                         break;
@@ -1077,9 +1119,9 @@ namespace DeepSightAI
 
         }
 
-        private void lbl_Count_Click(object sender, EventArgs e)
+        private void btnSearch_Click(object sender, EventArgs e)
         {
-
+            SwitchFrom(FormMode.SearchForm);
         }
     }
     public enum FormMode

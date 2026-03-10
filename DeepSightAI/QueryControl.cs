@@ -166,7 +166,6 @@ namespace DeepSightAI
                 SerialNumber = record.SerialNumber,
                 LotNumber = record.LotNumber,
                 ProductSerial = record.ProductSerial,
-                PathIndex = record.PathIndex,
                 AviCreationTime = record.AviCreationTime,
                 Sides = record.Sides
                     // 根据UI选择的面来筛选Sides（空字符串表示全选，不筛选）

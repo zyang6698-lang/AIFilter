@@ -2,6 +2,7 @@
 using DeepSightDB;
 using DeepSightDisplay;
 using DeepSightModel;
+using DeepSightModel.Configuration;
 using DeepSightTool;
 using Newtonsoft.Json.Linq;
 using System;
@@ -97,7 +98,53 @@ namespace DeepSightAI
 
         private void InitializeUI()
         {
-            aviCtr2Container.CreateMachinePanels(Machine.aviconfig.WatchPaths);
+            aviCtr2Container.CreateMachinePanels(GetMergedWatchPaths());
+        }
+
+        /// <summary>
+        /// 以 MachineRegistry 为主，合并 AVIConfig 中的详细配置，
+        /// 生成统一的 WatchPathConfig 列表供 UI 展示。
+        /// 对于非 Agent 机台，自动生成轻量占位 WatchPathConfig。
+        /// </summary>
+        private List<WatchPathConfig> GetMergedWatchPaths()
+        {
+            var result = new List<WatchPathConfig>();
+
+            if (Machine.machineRegistry?.Machines == null || Machine.machineRegistry.Machines.Count == 0)
+            {
+                // 回退：注册表为空时使用旧配置
+                return Machine.aviconfig?.WatchPaths ?? new List<WatchPathConfig>();
+            }
+
+            var aviMap = Machine.aviconfig?.WatchPaths?
+                .ToDictionary(w => w.AviName, w => w, System.StringComparer.OrdinalIgnoreCase)
+                ?? new Dictionary<string, WatchPathConfig>(System.StringComparer.OrdinalIgnoreCase);
+
+            foreach (var entry in Machine.machineRegistry.Machines)
+            {
+                if (aviMap.TryGetValue(entry.MachineName, out var existing))
+                {
+                    // 使用 Agent 详细配置，但以注册表的 IsEnable 为准
+                    existing.IsEnable = entry.IsEnable;
+                    result.Add(existing);
+                }
+                else
+                {
+                    // 非 Agent 机台或尚未配置 Agent 的机台，生成占位配置
+                    result.Add(new WatchPathConfig
+                    {
+                        AviName = entry.MachineName,
+                        IsEnable = entry.IsEnable,
+                        APath = "",
+                        BPath = "",
+                        Depth = 4,
+                        FileA = "",
+                        FileB = ""
+                    });
+                }
+            }
+
+            return result;
         }
 
         #endregion
@@ -811,13 +858,14 @@ namespace DeepSightAI
         {
             if (this.IsHandleCreated)
             {
+                var merged = GetMergedWatchPaths();
                 if (this.InvokeRequired)
                 {
-                    this.BeginInvoke(new Action(() => aviCtr2Container.CreateMachinePanels(Machine.aviconfig.WatchPaths)));
+                    this.BeginInvoke(new Action(() => aviCtr2Container.CreateMachinePanels(merged)));
                 }
                 else
                 {
-                    aviCtr2Container.CreateMachinePanels(Machine.aviconfig.WatchPaths);
+                    aviCtr2Container.CreateMachinePanels(merged);
                 }
             }
         }

@@ -68,7 +68,6 @@ namespace DeepSightDB
         public string ProductSerial { get; set; }
         public string Side { get; set; } // "A"  "B"
         public SideData Data { get; set; } = new SideData();
-        public string PathIndex { get; set; }
         public DateTime? AviCreationTime { get; set; }
     }
 
@@ -85,7 +84,6 @@ namespace DeepSightDB
         public string LotNumber { get; set; }
         // 料号
         public string ProductSerial { get; set; }
-        public string PathIndex { get; set; }
         public DateTime? AviCreationTime { get; set; }
         public List<SideData> Sides { get; set; }
         //尽量少用，数据库负担会比较大

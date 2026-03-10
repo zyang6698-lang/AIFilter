@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using DeepSightWorkLib;
 using DeepSightModel;
+using DeepSightModel.Configuration;
 using System.Drawing;
 using System.Diagnostics;
 
@@ -33,8 +34,19 @@ namespace DeepSightAI
 
         //Agent配置
         internal static AVIConfig aviconfig;
-        internal static DeepSight_AVI_class avi_class = new DeepSight_AVI_class();
+        internal static DeepSight_AVI_class avi_class;
         internal static bool isSwitch = false;
+
+        //机台注册表（通用，两套系统共用）
+        internal static MachineRegistryConfig machineRegistry;
+        internal static MachineRegistryManager machineRegistryManager = new MachineRegistryManager();
+
+        /// <summary>
+        /// 是否存在 Agent 类型的机台（决定是否需要启动 ats_agent.exe）
+        /// </summary>
+        internal static bool HasAgentMachines =>
+            machineRegistry?.Machines?.Any(m => m.DataSourceType == DataSourceType.Agent && m.IsEnable) ?? false;
+
         internal static string solution = "";
         internal static string flow = "";
         internal static string productSerial = "";
@@ -84,19 +96,33 @@ namespace DeepSightAI
                     process.Dispose();
                     return;
                 }
-                if (!avi_class.Read(out aviconfig))
+                // 尝试读取 Agent 配置（可能不存在）
+                bool hasAgentConfig = false;
+                avi_class = new DeepSight_AVI_class_Safe();
+                if (avi_class.Read(out aviconfig))
                 {
-                    FrWelcome.Instance.lbl_step.Text = "                  启动出错";
-                    FrWelcome.Instance.lbl_step.ForeColor = Color.Red;
-                    FrWelcome.Instance.Height = 356;
-
-                    MessageBox.Show("\r\n启动出错,读取Agent配置文件异常,请检查Agent.exe路径下是否包含config文件！", "异常", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-                    Process process = Process.GetCurrentProcess();
-                    process.Kill();
-                    process.Dispose();
-                    return;
+                    hasAgentConfig = true;
                 }
+                else
+                {
+                    // Agent 配置不存在时，使用空配置（系统B不需要 Agent）
+                    aviconfig = new AVIConfig();
+                    LogTextHelper.Info("未找到 Agent 配置文件，将以无 Agent 模式运行");
+                }
+
+                // 初始化机台注册表（首次启动时从 AVIConfig 迁移）
+                if (hasAgentConfig && aviconfig.WatchPaths != null && aviconfig.WatchPaths.Count > 0)
+                {
+                    machineRegistryManager.TryMigrateFromAviConfig(aviconfig.WatchPaths);
+                }
+
+                if (!machineRegistryManager.Read(out machineRegistry))
+                {
+                    // 注册表文件不存在且迁移也没生成，创建默认
+                    machineRegistry = new MachineRegistryConfig();
+                    machineRegistryManager.Save(machineRegistry);
+                }
+
                 master = new BusinessClass();
                 master.SolConfig = solconfig;
                 master.AviConfig = aviconfig;

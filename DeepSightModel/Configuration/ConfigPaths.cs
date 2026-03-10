@@ -46,6 +46,11 @@ namespace DeepSightModel.Configuration
         public const string PostgreSqlConfigFileName = "postgresql.config.json";
 
         /// <summary>
+        /// 机台注册表配置文件名
+        /// </summary>
+        public const string MachineRegistryConfigFileName = "machines.config.json";
+
+        /// <summary>
         /// 旧版常规配置文件名 (XML)
         /// </summary>
         public const string LegacyGeneralConfigFileName = "general.config.xml";
@@ -73,6 +78,11 @@ namespace DeepSightModel.Configuration
         /// PostgreSQL 配置完整路径
         /// </summary>
         public static string PostgreSqlConfigPath => Path.Combine(ConfigDirectory, PostgreSqlConfigFileName);
+
+        /// <summary>
+        /// 机台注册表配置完整路径
+        /// </summary>
+        public static string MachineRegistryConfigPath => Path.Combine(ConfigDirectory, MachineRegistryConfigFileName);
 
         /// <summary>
         /// 旧版常规配置完整路径 (XML)

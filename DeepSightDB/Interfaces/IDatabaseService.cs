@@ -79,6 +79,19 @@ namespace DeepSightDB.Interfaces
         /// 清空所有数据
         /// </summary>
         Task<bool> ClearAllData();
+
+        /// <summary>
+        /// 分页获取最近的Lot列表（按最新检测时间倒序）
+        /// </summary>
+        /// <param name="page">页码（从1开始）</param>
+        /// <param name="pageSize">每页Lot数量</param>
+        /// <returns>Lot号列表</returns>
+        Task<List<string>> GetRecentLotNumbers(int page, int pageSize);
+
+        /// <summary>
+        /// 获取数据库中不重复的Lot总数
+        /// </summary>
+        Task<int> GetTotalLotCount();
     }
 }
 

@@ -170,7 +170,6 @@ namespace DeepSightDB
             public string LotNumber { get; set; }
             public string SerialNumber { get; set; }
             public string ProductSerial { get; set; }
-            public string PathIndex { get; set; }
         }
         private static readonly Dictionary<string, MachineLotSn> MachineLatestLotSn = new Dictionary<string, MachineLotSn>(StringComparer.OrdinalIgnoreCase);
 
@@ -494,7 +493,7 @@ namespace DeepSightDB
                 {
                     SerialToMachine[record.SerialNumber] = record.MachineId;
                 }
-                UpdateMachineLotSn(record.MachineId, record.LotNumber, record.SerialNumber,record.ProductSerial, record.PathIndex);
+                UpdateMachineLotSn(record.MachineId, record.LotNumber, record.SerialNumber, record.ProductSerial);
                 bool wasEmpty = entry.IsEmpty;
                 var delta = entry.Update(record.Side, SideSnapshot.FromRecord(record));
                 ApplyDelta(delta);
@@ -564,7 +563,7 @@ namespace DeepSightDB
         }
 
         // 更新某机台最新的 Lot/SN 等（在业务逻辑获取时更新）
-        public static void UpdateMachineLotSn(string machineId, string lotNumber, string serialNumber, string productSerial, string pathIndex)
+        public static void UpdateMachineLotSn(string machineId, string lotNumber, string serialNumber, string productSerial)
         {
             if (string.IsNullOrWhiteSpace(machineId)) return;
             lock (SyncRoot)
@@ -578,22 +577,21 @@ namespace DeepSightDB
                 if (!string.IsNullOrWhiteSpace(lotNumber)) s.LotNumber = lotNumber;
                 if (!string.IsNullOrWhiteSpace(serialNumber)) s.SerialNumber = serialNumber;
                 if (!string.IsNullOrWhiteSpace(productSerial)) s.ProductSerial = productSerial;
-                if (!string.IsNullOrWhiteSpace(pathIndex)) s.PathIndex = pathIndex;
             }
         }
 
         // 获取某机台最新 Lot/SN 信息
-        public static (string LotNumber, string SerialNumber, string ProductSerial, string PathIndex) GetLatestLotSn(string machineId)
+        public static (string LotNumber, string SerialNumber, string ProductSerial) GetLatestLotSn(string machineId)
         {
             lock (SyncRoot)
             {
                 EnsureStateForToday();
-                if (string.IsNullOrWhiteSpace(machineId)) return (null, null, null, null);
+                if (string.IsNullOrWhiteSpace(machineId)) return (null, null, null);
                 if (MachineLatestLotSn.TryGetValue(machineId, out MachineLotSn s) && s != null)
                 {
-                    return (s.LotNumber, s.SerialNumber, s.ProductSerial, s.PathIndex);
+                    return (s.LotNumber, s.SerialNumber, s.ProductSerial);
                 }
-                return (null, null, null, null);
+                return (null, null, null);
             }
         }
     }

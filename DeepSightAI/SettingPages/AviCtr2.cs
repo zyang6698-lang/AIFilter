@@ -133,19 +133,7 @@ namespace DeepSightAI.SettingPages
             }
         }
 
-        private string _pathIndex;
-        public string PathIndex
-        {
-            get => _pathIndex;
-            set
-            {
-                if (_pathIndex != value)
-                {
-                    _pathIndex = value;
-                    UpdateDisplay();
-                }
-            }
-        }
+
 
         private string _lotId;
         public string LotId
@@ -386,7 +374,6 @@ namespace DeepSightAI.SettingPages
         public void UpdateDisplay()
         {
             var info = new StringBuilder();
-            info.AppendLine($"PathIndex: {PathIndex}");
             info.AppendLine($"AI OK图片数: {AiOkImages}");
             info.AppendLine($"图片总数: {AiFilterCount}");
             double ratio = AiFilterCount > 0 ? (double)AiOkImages / AiFilterCount : 0;
