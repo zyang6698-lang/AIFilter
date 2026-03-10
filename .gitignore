@@ -38,3 +38,7 @@
 *.zip
 /DeepSightHeatMap/obj/Release/DeepSightHeatMap.csproj.AssemblyReference.cache
 /TemplateImages/NYA2636
+/DeepSightDisplay/.vs
+/DeepSightEvent/.vs
+/DeepSightModel/.vs/DeepSightModel.csproj.dtbcache.json
+/DeepSightAI/.vs/DeepSightAI.csproj.dtbcache.json
