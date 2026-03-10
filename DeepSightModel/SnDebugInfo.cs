@@ -77,6 +77,26 @@ namespace DeepSightModel
         /// 创建时间
         /// </summary>
         public DateTime CreateTime { get; set; } = DateTime.Now;
+
+        /// <summary>
+        /// 是否发生错误
+        /// </summary>
+        public bool HasError { get; set; }
+
+        /// <summary>
+        /// 出错步骤（如：图片加载、AI检测、结果回写、后处理）
+        /// </summary>
+        public string ErrorStep { get; set; }
+
+        /// <summary>
+        /// 错误原因
+        /// </summary>
+        public string ErrorMessage { get; set; }
+
+        /// <summary>
+        /// 错误发生时间
+        /// </summary>
+        public DateTime? ErrorTime { get; set; }
     }
 
     /// <summary>

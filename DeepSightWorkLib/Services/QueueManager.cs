@@ -114,6 +114,90 @@ namespace DeepSightWorkLib.Services
         #region 清理操作
 
         /// <summary>
+        /// 从所有队列中移除指定SN的数据
+        /// </summary>
+        /// <param name="sn">要移除的SN</param>
+        /// <returns>实际移除的项目数量</returns>
+        public int RemoveSnFromAllQueues(string sn)
+        {
+            if (string.IsNullOrEmpty(sn)) return 0;
+
+            int removedCount = 0;
+
+            // 从 AviQueue 中过滤移除
+            removedCount += DrainAndFilter(AviQueue, item =>
+            {
+                if (item?.SN == sn) { DisposeMats(item.Mats); return true; }
+                return false;
+            });
+
+            // 从 ImageLoadQueue 中过滤移除
+            removedCount += DrainAndFilter(ImageLoadQueue, item =>
+            {
+                if (item?.Model?.SN == sn) { DisposeMats(item.Model.Mats); return true; }
+                return false;
+            });
+
+            // 从 AIResultQueue 中过滤移除
+            removedCount += DrainAndFilter(AIResultQueue, item =>
+            {
+                return item?.Item2 == sn;
+            });
+
+            // 从 PostProcessQueue 中过滤移除
+            removedCount += DrainAndFilter(PostProcessQueue, item =>
+            {
+                return item?.VBModel?.SN == sn;
+            });
+
+            // 从 ProcessingSnSet 中移除
+            var keysToRemove = new List<string>();
+            foreach (var kvp in ProcessingSnSet)
+            {
+                if (kvp.Key.StartsWith(sn + "_"))
+                {
+                    keysToRemove.Add(kvp.Key);
+                }
+            }
+            foreach (var key in keysToRemove)
+            {
+                if (ProcessingSnSet.TryRemove(key, out _))
+                    removedCount++;
+            }
+
+            if (removedCount > 0)
+            {
+                LogTextHelper.Info($"已从所有队列中移除SN={sn}的数据，共移除{removedCount}项");
+            }
+
+            return removedCount;
+        }
+
+        /// <summary>
+        /// 从ConcurrentQueue中过滤移除匹配项（drain-and-requeue模式）
+        /// </summary>
+        private int DrainAndFilter<T>(ConcurrentQueue<T> queue, Func<T, bool> shouldRemove)
+        {
+            int removedCount = 0;
+            int count = queue.Count;
+            for (int i = 0; i < count; i++)
+            {
+                if (queue.TryDequeue(out T item))
+                {
+                    if (shouldRemove(item))
+                    {
+                        removedCount++;
+                    }
+                    else
+                    {
+                        queue.Enqueue(item);
+                    }
+                }
+            }
+            return removedCount;
+        }
+
+        /// <summary>
         /// 清空所有队列（停止作业时调用）
         /// </summary>
         /// <returns>被清理的 SN 集合</returns>

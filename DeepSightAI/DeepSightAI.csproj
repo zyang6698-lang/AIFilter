@@ -339,6 +339,9 @@
     <Compile Include="FrSetting.Designer.cs">
       <DependentUpon>FrSetting.cs</DependentUpon>
     </Compile>
+    <Compile Include="FrSnDebugInfo.Designer.cs">
+      <DependentUpon>FrSnDebugInfo.cs</DependentUpon>
+    </Compile>
     <Compile Include="FrWelcome.cs">
       <SubType>Form</SubType>
     </Compile>

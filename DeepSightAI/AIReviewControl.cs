@@ -290,7 +290,6 @@ namespace DeepSightAI
                         if (side == null) continue;
 
                         // PCS级别统计
-                        stat.TotalPcsCount++;
                         if (side.AviState == 1)
                         {
                             stat.AviOkPcsCount++;

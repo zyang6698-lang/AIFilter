@@ -19,31 +19,8 @@ namespace DeepSightAI
 {
     public partial class FrHome : Form
     {
-        // 使用线程安全的 ConcurrentDictionary 替代普通 Dictionary，避免并发访问问题
-        public ConcurrentDictionary<string, List<RootPanelInfoWithIP>> dic_Infos = new ConcurrentDictionary<string, List<RootPanelInfoWithIP>>();
-        public ConcurrentDictionary<string, List<string>> dic_Results = new ConcurrentDictionary<string, List<string>>();
-        // 推理后的缺陷ROI信息（来源于PostProcessService推理结果）
-        public ConcurrentDictionary<string, List<Roi>> dic_DetectRois = new ConcurrentDictionary<string, List<Roi>>();
+        #region 单例模式
 
-        private List<RootPanelInfoWithIP> info = null;
-        private List<DisPlayInfo> disInfosList = new List<DisPlayInfo>();
-        //缺陷图
-        private List<string> imagePaths = new List<string>();
-        //缺陷框信息
-        private List<Roi> defectRois = new List<Roi>();
-        //gerber图
-        private List<string> imagePaths_Gerber = new List<string>();
-        //template图
-        private List<string> imagePaths_Template = new List<string>();
-        public int Index = 0;//缺陷小图索引
-        private int totalPages = 0; // 总页数
-        private int currentPage = 1;// 当前页码
-        //记录点击的SN
-        public string str_SN = "";
-
-        /// <summary>
-        /// 窗体对象实例（单例模式）
-        /// </summary>
         private static FrHome _instance;
 
         public static FrHome Instance
@@ -51,13 +28,50 @@ namespace DeepSightAI
             get
             {
                 if (_instance == null)
-                {
                     _instance = new FrHome();
-                }
-
                 return _instance;
             }
         }
+
+        #endregion
+
+        #region 字段
+
+        // 公共数据（线程安全）
+        public ConcurrentDictionary<string, List<RootPanelInfoWithIP>> dic_Infos = new ConcurrentDictionary<string, List<RootPanelInfoWithIP>>();
+        public ConcurrentDictionary<string, List<string>> dic_Results = new ConcurrentDictionary<string, List<string>>();
+        /// <summary>推理后的缺陷ROI信息（来源于PostProcessService推理结果）</summary>
+        public ConcurrentDictionary<string, List<Roi>> dic_DetectRois = new ConcurrentDictionary<string, List<Roi>>();
+
+        // 面板信息
+        private List<RootPanelInfoWithIP> info = null;
+        private List<DisPlayInfo> disInfosList = new List<DisPlayInfo>();
+
+        // 图片路径与缺陷信息
+        private List<string> imagePaths = new List<string>();          // 缺陷图
+        private List<string> imagePaths_Gerber = new List<string>();   // Gerber图
+        private List<string> imagePaths_Template = new List<string>(); // Template图
+        private List<Roi> defectRois = new List<Roi>();                // 缺陷框信息
+
+        // 分页
+        public int Index = 0;            // 缺陷小图索引
+        private int totalPages = 0;      // 总页数
+        private int currentPage = 1;     // 当前页码
+        public string str_SN = "";       // 记录点击的SN
+
+        // 显示控件
+        public CvDisplay[] DispWin2 = null;
+
+        // 定时器
+        public System.Timers.Timer uph_timer = new System.Timers.Timer();
+        private readonly object _updateLock = new object();
+
+        // 日志去重
+        private string logstr = string.Empty;
+
+        #endregion
+
+        #region 构造与初始化
 
         public FrHome()
         {
@@ -81,13 +95,15 @@ namespace DeepSightAI
             LogTextHelper.OnCallBackLogProc += Log_single_OnCallBackLogProc;
         }
 
-
         private void InitializeUI()
         {
             aviCtr2Container.CreateMachinePanels(Machine.aviconfig.WatchPaths);
         }
 
-        private string logstr = string.Empty;//主要用于判断回调多次 
+        #endregion
+
+        #region 日志输出
+
         private void Log_single_OnCallBackLogProc(string msg, Color color)
         {
             try
@@ -163,6 +179,9 @@ namespace DeepSightAI
             }
         }
 
+        #endregion
+
+        #region 菜单与工具事件
 
         private void ToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -201,19 +220,12 @@ namespace DeepSightAI
         {
             try
             {
-                List<CvDisplay> DisplaysList = new List<CvDisplay>();
-                try
+                var displaysList = new List<CvDisplay>();
+                for (int j = 0; j < DispWin2.Length; ++j)
                 {
-                    for (int j = 0; j < DispWin2.Length; ++j)
-                    {
-                        DisplaysList.Add(DispWin2[j]);
-                    }
-                    Machine.master.SetHWindow(DisplaysList);
+                    displaysList.Add(DispWin2[j]);
                 }
-                catch (Exception ex)
-                {
-                    LogTextHelper.Error("异常", ex);
-                }
+                Machine.master.SetHWindow(displaysList);
             }
             catch (Exception ex)
             {
@@ -221,13 +233,9 @@ namespace DeepSightAI
             }
         }
 
+        #endregion
 
-        public System.Timers.Timer uph_timer = new System.Timers.Timer();
-
-        /// <summary>
-        /// 用于防止定时器重入的标志和同步锁
-        /// </summary>
-        private object _updateLock = new object();
+        #region 定时器与看板更新
 
         private void Uph_timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
@@ -348,16 +356,17 @@ namespace DeepSightAI
             await aviCtr2Container.UpdateMachineBoardFromCache();
         }
 
-        public CvDisplay[] DispWin2 = null;
+        #endregion
+
+        #region 控件布局初始化
+
         /// <summary>
-        /// 窗体初始化
+        /// 窗体初始化 - 创建显示控件布局
         /// </summary>
         internal void InitMethod()
         {
             try
             {
-
-                //DispWin2 = new CvDisplay[20];
                 DispWin2 = new CvDisplay[10];
                 //布局
                 table_Small.Controls.Clear();
@@ -443,18 +452,11 @@ namespace DeepSightAI
         }
         private void FrHome_OnCallBackRoiIndexAndInfo(int index, DisPlayInfo info)
         {
-            try
-            {
-
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error("异常" + ex.ToString());
-            }
-
+            // 预留回调
         }
+
         /// <summary>
-        /// 递归节点
+        /// 递归加载JSON到TreeView
         /// </summary>
         /// <param name="token"></param>
         /// <param name="parentNodes"></param>
@@ -514,6 +516,11 @@ namespace DeepSightAI
             }
 
         }
+
+        #endregion
+
+        #region 数据网格与分页
+
         public void dataGridViewData_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             //此标志打开，手动点击才生效，否则，不允许手动点击，只允许自动生产的刷新
@@ -686,111 +693,77 @@ namespace DeepSightAI
             }
         }
 
+        #endregion
+
+        #region 图片显示
+
         private async void ShowImage()
         {
             try
             {
-                Index = (currentPage - 1) * table_Small.RowCount;
-                FrHome.Instance.InitTableStyle(FrHome.Instance.table_Small, table_Small.RowCount, disInfosList);
-                FrHome.Instance.InitWork();
-                //根据页索引获取图像源
-                List<string> defect_paths = imagePaths;
-                List<string> gerberOrtemp_paths = Machine.ShowFlag == "B" ? imagePaths_Gerber : imagePaths_Template;
-                var defect_pagedData = defect_paths.Skip((currentPage - 1) * table_Small.RowCount).Take(table_Small.RowCount).ToList(); //imagePaths.Skip((currentPage - 1) * 30).Take(30).ToList();
-                var gerberOrtemp_pagedData = gerberOrtemp_paths.Skip((currentPage - 1) * table_Small.RowCount).Take(table_Small.RowCount).ToList(); //imagePaths.Skip((currentPage - 1) * 30).Take(30).ToList();
-                var defect_pagedRois = defectRois.Skip((currentPage - 1) * table_Small.RowCount).Take(table_Small.RowCount).ToList();
-                var defect_indexPaths = defect_pagedData.Select((path, index1) => new { Path = path, Index = index1 }).ToList();
-                var gerberOrtemp_indexPaths = gerberOrtemp_pagedData.Select((path, index1) => new { Path = path, Index = index1 }).ToList();
+                int pageSize = table_Small.RowCount;
+                int skipCount = (currentPage - 1) * pageSize;
+                Index = skipCount;
 
-                //配置并行操作
+                InitTableStyle(table_Small, pageSize, disInfosList);
+                InitWork();
+
+                // 获取当前页数据
+                var gerberOrtemp_paths = Machine.ShowFlag == "B" ? imagePaths_Gerber : imagePaths_Template;
+                var defect_pagedData = imagePaths.Skip(skipCount).Take(pageSize).ToList();
+                var gerberOrtemp_pagedData = gerberOrtemp_paths.Skip(skipCount).Take(pageSize).ToList();
+                var defect_pagedRois = defectRois.Skip(skipCount).Take(pageSize).ToList();
+                var defect_indexPaths = defect_pagedData.Select((path, idx) => new { Path = path, Index = idx }).ToList();
+                var gerberOrtemp_indexPaths = gerberOrtemp_pagedData.Select((path, idx) => new { Path = path, Index = idx }).ToList();
+
                 var parallelOptions = new ParallelOptions
                 {
                     MaxDegreeOfParallelism = Environment.ProcessorCount - 1,
                     CancellationToken = CancellationToken.None
                 };
-                if (dic_Results.TryGetValue(str_SN, out List<string> res_lbl))
+
+                dic_Results.TryGetValue(str_SN, out List<string> res_lbl);
+
+                // 显示缺陷图
+                await Task.Factory.StartNew(() =>
                 {
-                    await Task.Factory.StartNew((Action)(() =>
+                    Parallel.ForEach(defect_indexPaths, parallelOptions, item =>
                     {
-                        Parallel.ForEach(defect_indexPaths, parallelOptions, item =>
-                        {
-                            // 在访问前添加检查
-                            int index1 = (currentPage - 1) * table_Small.RowCount + item.Index;
-                            string labelText = "未处理";
-                            if (res_lbl != null && index1 >= 0 && index1 < res_lbl.Count) // 如果是数组
-                            {
-                                labelText = res_lbl[index1] ?? "未处理";
-                            }
-                            else if (res_lbl is IList<string> list && index1 >= 0 && index1 < list.Count)
-                            {
-                                labelText = list[index1] ?? "未处理";
-                            }
+                        string labelText = GetLabelText(res_lbl, skipCount + item.Index);
+                        Roi roi = (item.Index >= 0 && item.Index < defect_pagedRois.Count) ? defect_pagedRois[item.Index] : null;
+                        Machine.master.ShowImage(item.Path, (item.Index + 1) * 2 - 2, labelText, roi);
+                    });
+                });
 
-                            int index2 = (currentPage - 1) * table_Small.RowCount + item.Index;
-                            Roi roi = (item.Index >= 0 && item.Index < defect_pagedRois.Count) ? defect_pagedRois[item.Index] : null;
-                            Machine.master.ShowImage(item.Path, (item.Index + 1) * 2 - 2, labelText, roi);
-                        });
-                    }));
-                    await Task.Factory.StartNew((Action)(() =>
-                    {
-                        Parallel.ForEach(gerberOrtemp_indexPaths, parallelOptions, item =>
-                        {
-                            // 在访问前添加检查
-                            int index1 = (currentPage - 1) * table_Small.RowCount + item.Index;
-                            string labelText = "未处理";
-                            if (res_lbl != null && index1 >= 0 && index1 < res_lbl.Count) // 如果是数组
-                            {
-                                labelText = res_lbl[index1] ?? "未处理";
-                            }
-                            else if (res_lbl is IList<string> list && index1 >= 0 && index1 < list.Count)
-                            {
-                                labelText = list[index1] ?? "未处理";
-                            }
-
-                            int index2 = (currentPage - 1) * table_Small.RowCount + item.Index;
-                            Machine.master.ShowImage(item.Path, (item.Index + 1) * 2 - 1, labelText);
-                        });
-                    }));
-                }
-                else
+                // 显示Gerber/Template图
+                await Task.Factory.StartNew(() =>
                 {
-                    await Task.Factory.StartNew((Action)(() =>
+                    Parallel.ForEach(gerberOrtemp_indexPaths, parallelOptions, item =>
                     {
-                        Parallel.ForEach(defect_indexPaths, parallelOptions, item =>
-                        {
-                            Roi roi = (item.Index >= 0 && item.Index < defect_pagedRois.Count) ? defect_pagedRois[item.Index] : null;
-                            Machine.master.ShowImage(item.Path, (item.Index + 1) * 2 - 2, "未处理", roi);
-                        });
-                    }));
-                    await Task.Factory.StartNew((Action)(() =>
-                    {
-                        Parallel.ForEach(gerberOrtemp_indexPaths, parallelOptions, item =>
-                        {
-                            Machine.master.ShowImage(item.Path, (item.Index + 1) * 2 - 1, "未处理");
-                        });
-                    }));
-                }
+                        string labelText = GetLabelText(res_lbl, skipCount + item.Index);
+                        Machine.master.ShowImage(item.Path, (item.Index + 1) * 2 - 1, labelText);
+                    });
+                });
 
-
-
-
+                // 最后一页时清空多余的显示位
                 if (currentPage == totalPages)
                 {
-                    await Task.Factory.StartNew((Action)(() =>
+                    await Task.Factory.StartNew(() =>
                     {
-                        Parallel.For(defect_pagedData.Count, table_Small.RowCount, (Action<int>)(item =>
+                        Parallel.For(defect_pagedData.Count, pageSize, item =>
                         {
                             Machine.master.ShowImage("", (item + 1) * 2 - 2);
-                        }));
-                    }));
-                    await Task.Factory.StartNew((Action)(() =>
+                        });
+                    });
+                    await Task.Factory.StartNew(() =>
                     {
-                        Parallel.For(gerberOrtemp_pagedData.Count, table_Small.RowCount, (Action<int>)(item =>
+                        Parallel.For(gerberOrtemp_pagedData.Count, pageSize, item =>
                         {
                             Machine.master.ShowImage("", (item + 1) * 2 - 1);
-                        }));
-                    }));
+                        });
+                    });
                 }
+
                 UpdatePagingControls();
             }
             catch (Exception ex)
@@ -798,19 +771,35 @@ namespace DeepSightAI
                 LogTextHelper.Error("异常" + ex.ToString());
             }
         }
+
+        /// <summary>
+        /// 获取缺陷标签文本
+        /// </summary>
+        private string GetLabelText(List<string> resultLabels, int index)
+        {
+            if (resultLabels != null && index >= 0 && index < resultLabels.Count)
+                return resultLabels[index] ?? "未处理";
+            return "未处理";
+        }
+
         private void UpdatePagingControls()
         {
             try
             {
                 lblPageInfo.Text = $"第 {currentPage} 页 / 共 {totalPages} 页";
-                btnPrevious.Enabled = (currentPage > 1);
-                btnNext.Enabled = (currentPage < totalPages);
+                btnPrevious.Enabled = currentPage > 1;
+                btnNext.Enabled = currentPage < totalPages;
             }
             catch (Exception ex)
             {
                 LogTextHelper.Info("更新上下页异常" + ex.ToString());
             }
         }
+
+        #endregion
+
+        #region 配置与状态管理
+
         private void UpdateLotSn()
         {
             aviCtr2Container.UpdateAllAviCtrLotSnFromCache();
@@ -850,6 +839,7 @@ namespace DeepSightAI
             aviCtr2Container.CheckAllStationsTimeout();
         }
 
+        #endregion
     }
 }
 

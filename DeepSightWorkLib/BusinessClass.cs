@@ -361,6 +361,7 @@ namespace DeepSightWorkLib
                 catch (Exception ex)
                 {
                     LogTextHelper.Error($"图片加载异常，SN:{loadModel.Model?.SN}：{ex}");
+                    HandleProductError(loadModel.Model?.SN, loadModel.Model?.Side, "图片加载", ex.Message);
                 }
             }
             return false;
@@ -410,7 +411,7 @@ namespace DeepSightWorkLib
                 catch (Exception ex)
                 {
                     LogTextHelper.Error($"AI检测异常：{ex}");
-                    SystemEvent.SendTaskMsg(info?.SN, $"{info?.Side}面已完成");
+                    HandleProductError(info?.SN, info?.Side, "AI检测", ex.Message);
                 }
                 finally
                 {
@@ -441,6 +442,7 @@ namespace DeepSightWorkLib
                 catch (Exception ex)
                 {
                     LogTextHelper.Error($"结果回写异常：{ex}");
+                    HandleProductError(info?.Item2, null, "结果回写", ex.Message);
                 }
             }
             return false;
@@ -465,6 +467,7 @@ namespace DeepSightWorkLib
                 catch (Exception ex)
                 {
                     LogTextHelper.Error($"后处理异常: SN={resultModel.VBModel?.SN}, 错误={ex}");
+                    HandleProductError(resultModel.VBModel?.SN, resultModel.VBModel?.Side, "后处理", ex.Message);
                 }
             }
             return false;
@@ -623,6 +626,7 @@ namespace DeepSightWorkLib
             catch (Exception ex)
             {
                 LogTextHelper.Error("异常" + ex.ToString());
+                HandleProductError(sn, side, "通过Minio读取Json文件", ex.Message);
             }
         }
 
@@ -828,6 +832,47 @@ namespace DeepSightWorkLib
             catch (Exception ex)
             {
                 LogTextHelper.Error($"Dispose 异常: {ex}");
+            }
+        }
+
+        #endregion
+
+        #region 异常处理
+
+        /// <summary>
+        /// 统一的产品异常处理方法
+        /// 1. 从所有队列中移除该SN的数据
+        /// 2. 在SnDebugInfo中记录错误信息
+        /// 3. 向UI发送失败状态
+        /// </summary>
+        /// <param name="sn">产品序列号</param>
+        /// <param name="side">面别（A/B），可为null</param>
+        /// <param name="errorStep">出错步骤（如：图片加载、AI检测、结果回写、后处理）</param>
+        /// <param name="errorMessage">错误原因描述</param>
+        private void HandleProductError(string sn, string side, string errorStep, string errorMessage)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(sn)) return;
+
+                // 1. 从所有队列中移除该SN的数据
+                int removedCount = _queueManager.RemoveSnFromAllQueues(sn);
+                LogTextHelper.Error($"产品异常处理: SN={sn}, 步骤={errorStep}, 原因={errorMessage}, 队列移除={removedCount}项");
+
+                // 2. 在SnDebugInfo中记录错误信息
+                string effectiveSide = string.IsNullOrEmpty(side) ? "A" : side;
+                var debugInfo = SnDebugInfoCache.GetOrCreate(sn, effectiveSide);
+                debugInfo.HasError = true;
+                debugInfo.ErrorStep = errorStep;
+                debugInfo.ErrorMessage = errorMessage;
+                debugInfo.ErrorTime = DateTime.Now;
+
+                // 3. 向UI发送失败状态（显示红色报错状态）
+                TaskStatusSender.SendFailed(sn, effectiveSide, $"[{errorStep}] {errorMessage}");
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"HandleProductError 自身异常: SN={sn}, {ex}");
             }
         }
 

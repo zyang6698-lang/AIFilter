@@ -8,182 +8,35 @@ namespace DeepSightAI
     /// <summary>
     /// SN调试信息显示窗口 - 双击任务队列时弹出
     /// </summary>
-    public class FrSnDebugInfo : Form
+    public partial class FrSnDebugInfo : Form
     {
-        private TabControl tabControl;
-        private RichTextBox txtLevelDbJson;
-        private RichTextBox txtPanelInfoJson;
-        private RichTextBox txtVbInferenceJson;
-        private RichTextBox txtInferenceReturnJson;
-        private RichTextBox txtOtherInfo;
-
-        // 搜索相关控件
-        private Panel searchPanel;
-        private TextBox txtSearch;
         private int _lastSearchIndex = 0;
 
         public FrSnDebugInfo(string sn, SnDebugInfo[] debugInfos)
         {
-            InitializeComponents();
+            InitializeComponent();
             Text = $"SN调试信息 - {sn}";
             LoadData(sn, debugInfos);
         }
 
-        private void InitializeComponents()
+        private void TabControl_SelectedIndexChanged(object sender, EventArgs e)
         {
-            this.Size = new Size(1200, 900);
-            this.StartPosition = FormStartPosition.CenterParent;
-            this.MinimizeBox = false;
-            this.MaximizeBox = true;
-            this.BackColor = Color.FromArgb(29, 48, 60);
-            this.ForeColor = Color.White;
-            this.FormBorderStyle = FormBorderStyle.Sizable;
-            this.Font = new Font("微软雅黑", 11F);
-            this.KeyPreview = true;
-            this.KeyDown += FrSnDebugInfo_KeyDown;
-
-            tabControl = new TabControl
-            {
-                Dock = DockStyle.Fill,
-                Font = new Font("微软雅黑", 12F)
-            };
-            tabControl.SelectedIndexChanged += (s, ev) => _lastSearchIndex = 0;
-
-            // Tab1: LevelDB JSON
-            var tabLevelDb = new TabPage("LevelDB推理请求");
-            txtLevelDbJson = CreateRichTextBox();
-            tabLevelDb.Controls.Add(txtLevelDbJson);
-
-            // Tab2: PanelInfo JSON
-            var tabPanelInfo = new TabPage("PanelInfo JSON");
-            txtPanelInfoJson = CreateRichTextBox();
-            tabPanelInfo.Controls.Add(txtPanelInfoJson);
-
-            // Tab3: VB Inference JSON
-            var tabVbJson = new TabPage("VB推理JSON");
-            txtVbInferenceJson = CreateRichTextBox();
-            tabVbJson.Controls.Add(txtVbInferenceJson);
-
-            // Tab4: Inference Return JSON
-            var tabInferReturn = new TabPage("推理返回JSON");
-            txtInferenceReturnJson = CreateRichTextBox();
-            tabInferReturn.Controls.Add(txtInferenceReturnJson);
-
-            // Tab5: Other Info
-            var tabOther = new TabPage("其他信息");
-            txtOtherInfo = CreateRichTextBox();
-            tabOther.Controls.Add(txtOtherInfo);
-
-            tabControl.TabPages.AddRange(new TabPage[] { tabLevelDb, tabPanelInfo, tabVbJson, tabInferReturn, tabOther });
-            this.Controls.Add(tabControl);
-
-            // 添加底部复制按钮
-            var btnPanel = new Panel
-            {
-                Dock = DockStyle.Bottom,
-                Height = 45,
-                BackColor = Color.FromArgb(29, 48, 60)
-            };
-
-            var btnCopy = new Button
-            {
-                Text = "复制当前页内容",
-                Size = new Size(180, 35),
-                Location = new Point(10, 5),
-                FlatStyle = FlatStyle.Flat,
-                BackColor = Color.FromArgb(50, 80, 100),
-                ForeColor = Color.White,
-                Font = new Font("微软雅黑", 11F)
-            };
-            btnCopy.Click += BtnCopy_Click;
-
-            var btnClose = new Button
-            {
-                Text = "关闭",
-                Size = new Size(100, 35),
-                Location = new Point(200, 5),
-                FlatStyle = FlatStyle.Flat,
-                BackColor = Color.FromArgb(50, 80, 100),
-                ForeColor = Color.White,
-                Font = new Font("微软雅黑", 11F)
-            };
-            btnClose.Click += (s, e) => this.Close();
-
-            btnPanel.Controls.Add(btnCopy);
-            btnPanel.Controls.Add(btnClose);
-            this.Controls.Add(btnPanel);
-
-            // 搜索面板（默认隐藏，Ctrl+F显示）
-            searchPanel = new Panel
-            {
-                Dock = DockStyle.Top,
-                Height = 40,
-                BackColor = Color.FromArgb(40, 60, 75),
-                Visible = false
-            };
-
-            var lblSearch = new Label
-            {
-                Text = "搜索:",
-                Location = new Point(10, 10),
-                AutoSize = true,
-                ForeColor = Color.White,
-                Font = new Font("微软雅黑", 11F)
-            };
-
-            txtSearch = new TextBox
-            {
-                Location = new Point(70, 7),
-                Size = new Size(350, 28),
-                Font = new Font("微软雅黑", 11F),
-                BackColor = Color.FromArgb(20, 35, 45),
-                ForeColor = Color.White
-            };
-            txtSearch.KeyDown += TxtSearch_KeyDown;
-
-            var btnFind = new Button
-            {
-                Text = "查找下一个",
-                Location = new Point(430, 5),
-                Size = new Size(120, 30),
-                FlatStyle = FlatStyle.Flat,
-                BackColor = Color.FromArgb(50, 80, 100),
-                ForeColor = Color.White,
-                Font = new Font("微软雅黑", 10F)
-            };
-            btnFind.Click += (s, ev) => FindNext();
-
-            var btnCloseSearch = new Button
-            {
-                Text = "✕",
-                Location = new Point(560, 5),
-                Size = new Size(30, 30),
-                FlatStyle = FlatStyle.Flat,
-                BackColor = Color.FromArgb(50, 80, 100),
-                ForeColor = Color.White,
-                Font = new Font("微软雅黑", 10F)
-            };
-            btnCloseSearch.Click += (s, ev) => { searchPanel.Visible = false; };
-
-            searchPanel.Controls.Add(lblSearch);
-            searchPanel.Controls.Add(txtSearch);
-            searchPanel.Controls.Add(btnFind);
-            searchPanel.Controls.Add(btnCloseSearch);
-            this.Controls.Add(searchPanel);
+            _lastSearchIndex = 0;
         }
 
-        private RichTextBox CreateRichTextBox()
+        private void BtnClose_Click(object sender, EventArgs e)
         {
-            return new RichTextBox
-            {
-                Dock = DockStyle.Fill,
-                ReadOnly = true,
-                BackColor = Color.FromArgb(20, 35, 45),
-                ForeColor = Color.FromArgb(200, 220, 240),
-                Font = new Font("Consolas", 12F),
-                WordWrap = false,
-                ScrollBars = RichTextBoxScrollBars.Both
-            };
+            this.Close();
+        }
+
+        private void BtnFind_Click(object sender, EventArgs e)
+        {
+            FindNext();
+        }
+
+        private void BtnCloseSearch_Click(object sender, EventArgs e)
+        {
+            searchPanel.Visible = false;
         }
 
         private void LoadData(string sn, SnDebugInfo[] debugInfos)
@@ -291,6 +144,16 @@ namespace DeepSightAI
                 sbOther.AppendLine($"数据源URL:       {info.SourceDbUrl}");
                 sbOther.AppendLine($"Minio路径:       {info.MinioPath}");
                 sbOther.AppendLine($"数据获取时间:    {info.CreateTime:yyyy-MM-dd HH:mm:ss.fff}");
+
+                // 错误信息
+                if (info.HasError)
+                {
+                    sbOther.AppendLine();
+                    sbOther.AppendLine("---------- 错误信息 ----------");
+                    sbOther.AppendLine($"出错步骤:        {info.ErrorStep}");
+                    sbOther.AppendLine($"错误原因:        {info.ErrorMessage}");
+                    sbOther.AppendLine($"错误时间:        {info.ErrorTime:yyyy-MM-dd HH:mm:ss.fff}");
+                }
                 sbOther.AppendLine();
             }
 
