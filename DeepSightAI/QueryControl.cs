@@ -448,7 +448,7 @@ namespace DeepSightAI
             timePicker.Checked = false;
             timePickerEnd.Value = DateTime.Now;
             timePicker.Value = DateTime.Now;
-            rbn_Front.Checked = true;
+            rbn_All.Checked = true;
         }
 
         /// <summary>

@@ -22,6 +22,8 @@ namespace DeepSightDB
         public int OriginWidth { get; set; }
         public int OriginHeight { get; set; }
         public string ImagePath { get; set; }
+
+        public string DrawInfo { get; set; }
         // 分阶段状态：0 未运行 / 1 OK / 2 NG / 3 异常
         public int AIStatus { get; set; }
         public int VVSStatus { get; set; }
@@ -54,6 +56,8 @@ namespace DeepSightDB
         public int TestState { get; set; }
         // 最近一次测试时间
         public DateTime? LastTestTime { get; set; }
+        // DrawInfo JSON 字符串（存储绘制/阈值信息）
+        public string DrawInfo { get; set; }
     }
 
     /// <summary>

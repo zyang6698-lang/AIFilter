@@ -51,7 +51,7 @@ namespace DeepSightDisplay
 
                 // 缺陷框颜色 - 使用醒目的红色
                 Color boxColor = Color.Red;
-                using (Pen pen = new Pen(boxColor, 2))
+                using (Pen pen = new Pen(boxColor, 4))
                 {
                     // 绘制缺陷框
                     Rectangle defectRect = new Rectangle(

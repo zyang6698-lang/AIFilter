@@ -691,6 +691,21 @@ namespace DeepSightWorkLib
                 LogTextHelper.Info($"无法解析 AviCreateTime '{panelInfo.AviCreateTime}'。将使用当前时间 '{aviCreationTime}' 作为备用。");
             }
 
+            // 聚合所有 DetectInfo 的 DrawInfo 到 SideData 级别
+            string drawInfoJson = null;
+            if (detectPoints != null)
+            {
+                var drawInfoList = detectPoints
+                    .Where(d => !string.IsNullOrEmpty(d.DrawInfo))
+                    .Select(d => d.DrawInfo)
+                    .Distinct()
+                    .ToList();
+                if (drawInfoList.Count > 0)
+                {
+                    drawInfoJson = JsonConvert.SerializeObject(drawInfoList);
+                }
+            }
+
             LogTextHelper.Info($"存储 SN={panelInfo.SerialNumber}, Side={panelInfo.SideIndex}, AviState={aviState}, AiState={aiState}, DefectCount={detectPoints?.Count ?? 0} 到数据库...");
             var record = new PanelSideRecord()
             {
@@ -702,7 +717,8 @@ namespace DeepSightWorkLib
                     AiState = aiState,
                     VvsState = 0,
                     VrsState = 0,
-                    FinalState = 0
+                    FinalState = 0,
+                    DrawInfo = drawInfoJson
                 },
                 ProductSerial = panelInfo.ProductSerial,
                 DetectionDate = DateTime.Now,

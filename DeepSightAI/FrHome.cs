@@ -669,7 +669,7 @@ namespace DeepSightAI
                             }
                         }
                     }
-                    totalPages = (int)Math.Ceiling((double)index / table_Small.RowCount);
+                    totalPages = Math.Max(1, (int)Math.Ceiling((double)index / table_Small.RowCount));
                     ShowImage();
                 }
             }
@@ -752,8 +752,14 @@ namespace DeepSightAI
                 int skipCount = (currentPage - 1) * pageSize;
                 Index = skipCount;
 
-                InitTableStyle(table_Small, pageSize, disInfosList);
                 InitWork();
+
+                // 先清空所有显示位（图片和标签），避免切换SN时残留旧内容
+                for (int i = 0; i < pageSize; i++)
+                {
+                    Machine.master.ShowImage("", (i + 1) * 2 - 2);
+                    Machine.master.ShowImage("", (i + 1) * 2 - 1);
+                }
 
                 // 获取当前页数据
                 var gerberOrtemp_paths = Machine.ShowFlag == "B" ? imagePaths_Gerber : imagePaths_Template;
@@ -771,45 +777,39 @@ namespace DeepSightAI
 
                 dic_Results.TryGetValue(str_SN, out List<string> res_lbl);
 
-                // 显示缺陷图
+                // 同时加载缺陷图和Gerber/Template图，确保同时刷新
                 await Task.Factory.StartNew(() =>
                 {
-                    Parallel.ForEach(defect_indexPaths, parallelOptions, item =>
+                    // 合并缺陷图和模板图的加载任务，并行执行
+                    var allTasks = new List<Action>();
+
+                    foreach (var item in defect_indexPaths)
                     {
-                        string labelText = GetLabelText(res_lbl, skipCount + item.Index);
-                        Roi roi = (item.Index >= 0 && item.Index < defect_pagedRois.Count) ? defect_pagedRois[item.Index] : null;
-                        Machine.master.ShowImage(item.Path, (item.Index + 1) * 2 - 2, labelText, roi);
-                    });
+                        var captured = item;
+                        allTasks.Add(() =>
+                        {
+                            string labelText = GetLabelText(res_lbl, skipCount + captured.Index);
+                            Roi roi = (captured.Index >= 0 && captured.Index < defect_pagedRois.Count) ? defect_pagedRois[captured.Index] : null;
+                            Machine.master.ShowImage(captured.Path, (captured.Index + 1) * 2 - 2, labelText, roi);
+                        });
+                    }
+
+                    foreach (var item in gerberOrtemp_indexPaths)
+                    {
+                        var captured = item;
+                        allTasks.Add(() =>
+                        {
+                            string labelText = GetLabelText(res_lbl, skipCount + captured.Index);
+                            Roi roi = (captured.Index >= 0 && captured.Index < defect_pagedRois.Count) ? defect_pagedRois[captured.Index] : null;
+                            Machine.master.ShowImage(captured.Path, (captured.Index + 1) * 2 - 1, labelText, roi);
+                        });
+                    }
+
+                    Parallel.ForEach(allTasks, parallelOptions, action => action());
                 });
 
-                // 显示Gerber/Template图
-                await Task.Factory.StartNew(() =>
-                {
-                    Parallel.ForEach(gerberOrtemp_indexPaths, parallelOptions, item =>
-                    {
-                        string labelText = GetLabelText(res_lbl, skipCount + item.Index);
-                        Machine.master.ShowImage(item.Path, (item.Index + 1) * 2 - 1, labelText);
-                    });
-                });
-
-                // 最后一页时清空多余的显示位
-                if (currentPage == totalPages)
-                {
-                    await Task.Factory.StartNew(() =>
-                    {
-                        Parallel.For(defect_pagedData.Count, pageSize, item =>
-                        {
-                            Machine.master.ShowImage("", (item + 1) * 2 - 2);
-                        });
-                    });
-                    await Task.Factory.StartNew(() =>
-                    {
-                        Parallel.For(gerberOrtemp_pagedData.Count, pageSize, item =>
-                        {
-                            Machine.master.ShowImage("", (item + 1) * 2 - 1);
-                        });
-                    });
-                }
+                // 图片加载完成后再刷新标签，确保标签和图片同时出现
+                InitTableStyle(table_Small, pageSize, disInfosList);
 
                 UpdatePagingControls();
             }

@@ -73,6 +73,7 @@
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
+            this.panel_ReviewDetail.SuspendLayout();
             this.tabControl_Main.SuspendLayout();
             this.tabPage_Grid.SuspendLayout();
             this.panel_Grid.SuspendLayout();
@@ -147,12 +148,12 @@
             this.QueryControl.Name = "QueryControl";
             this.QueryControl.PartNumber = "";
             this.QueryControl.SelectedDefectName = "";
-            this.QueryControl.SelectedSide = "A";
+            this.QueryControl.SelectedSide = "";
             this.QueryControl.Size = new System.Drawing.Size(363, 355);
             this.QueryControl.TabIndex = 0;
-            //
+            // 
             // panel_ReviewDetail
-            //
+            // 
             this.panel_ReviewDetail.AutoScroll = true;
             this.panel_ReviewDetail.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.panel_ReviewDetail.Controls.Add(this.label_ReviewDetail);
@@ -161,9 +162,9 @@
             this.panel_ReviewDetail.Name = "panel_ReviewDetail";
             this.panel_ReviewDetail.Size = new System.Drawing.Size(363, 728);
             this.panel_ReviewDetail.TabIndex = 0;
-            //
+            // 
             // label_ReviewDetail
-            //
+            // 
             this.label_ReviewDetail.AutoSize = true;
             this.label_ReviewDetail.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold);
             this.label_ReviewDetail.ForeColor = System.Drawing.Color.White;
@@ -172,7 +173,7 @@
             this.label_ReviewDetail.MaximumSize = new System.Drawing.Size(350, 0);
             this.label_ReviewDetail.Name = "label_ReviewDetail";
             this.label_ReviewDetail.Padding = new System.Windows.Forms.Padding(11, 10, 11, 10);
-            this.label_ReviewDetail.Size = new System.Drawing.Size(350, 30);
+            this.label_ReviewDetail.Size = new System.Drawing.Size(106, 39);
             this.label_ReviewDetail.TabIndex = 0;
             this.label_ReviewDetail.Text = "复判详情区";
             // 
@@ -513,6 +514,8 @@
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
+            this.panel_ReviewDetail.ResumeLayout(false);
+            this.panel_ReviewDetail.PerformLayout();
             this.tabControl_Main.ResumeLayout(false);
             this.tabPage_Grid.ResumeLayout(false);
             this.panel_Grid.ResumeLayout(false);

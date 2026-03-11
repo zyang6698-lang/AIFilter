@@ -37,9 +37,8 @@ namespace DeepSightDB
         private NpgsqlCommand _upsertPanelCmd;
         private NpgsqlCommand _upsertPanelSideCmd;
 
-        // 兼容性标志：是否存在 TestState 和 LastTestTime 列（静态缓存，避免重复检查）
-        private static bool? _hasTestStateColumn = null;
-        private static readonly object _columnCheckLock = new object();
+        // PanelSides 查询字段（固定，不做兼容性检查）
+        private const string PanelSidesSelectFields = "ps.Side, ps.HeatPoints, ps.AviState, ps.AiState, ps.VvsState, ps.VrsState, ps.FinalState, ps.TestState, ps.LastTestTime, ps.DrawInfo";
 
         /// <summary>
         /// 使用默认配置的构造函数（保持向后兼容）
@@ -107,15 +106,16 @@ namespace DeepSightDB
 
             // 预编译 PanelSide UPSERT 命令
             _upsertPanelSideCmd = new NpgsqlCommand(
-                @"INSERT INTO PanelSides (PanelId, Side, HeatPoints, AviState, AiState, VvsState, VrsState, FinalState)
-                  VALUES (@PanelId, @Side, @HeatPoints, @AviState, @AiState, @VvsState, @VrsState, @FinalState)
+                @"INSERT INTO PanelSides (PanelId, Side, HeatPoints, AviState, AiState, VvsState, VrsState, FinalState, DrawInfo)
+                  VALUES (@PanelId, @Side, @HeatPoints, @AviState, @AiState, @VvsState, @VrsState, @FinalState, @DrawInfo)
                   ON CONFLICT (PanelId, Side) DO UPDATE SET
                   HeatPoints = EXCLUDED.HeatPoints,
                   AviState = EXCLUDED.AviState,
                   AiState = EXCLUDED.AiState,
                   VvsState = EXCLUDED.VvsState,
                   VrsState = EXCLUDED.VrsState,
-                  FinalState = EXCLUDED.FinalState",
+                  FinalState = EXCLUDED.FinalState,
+                  DrawInfo = EXCLUDED.DrawInfo",
                 connection);
             _upsertPanelSideCmd.Parameters.Add(new NpgsqlParameter("@PanelId", NpgsqlTypes.NpgsqlDbType.Bigint));
             _upsertPanelSideCmd.Parameters.Add(new NpgsqlParameter("@Side", NpgsqlTypes.NpgsqlDbType.Text));
@@ -125,6 +125,7 @@ namespace DeepSightDB
             _upsertPanelSideCmd.Parameters.Add(new NpgsqlParameter("@VvsState", NpgsqlTypes.NpgsqlDbType.Integer));
             _upsertPanelSideCmd.Parameters.Add(new NpgsqlParameter("@VrsState", NpgsqlTypes.NpgsqlDbType.Integer));
             _upsertPanelSideCmd.Parameters.Add(new NpgsqlParameter("@FinalState", NpgsqlTypes.NpgsqlDbType.Integer));
+            _upsertPanelSideCmd.Parameters.Add(new NpgsqlParameter("@DrawInfo", NpgsqlTypes.NpgsqlDbType.Text));
             _upsertPanelSideCmd.Prepare();
 
             LogTextHelper.Info("PostgreSQL 预编译命令初始化完成");
@@ -197,7 +198,7 @@ namespace DeepSightDB
 
         /// <summary>
         /// 从 DataReader 读取 SideData（抽取公共逻辑）
-        /// 兼容老版本数据库：如果 TestState/LastTestTime 列不存在，使用默认值
+        /// 从 DataReader 读取 SideData
         /// </summary>
         private SideData ReadSideData(NpgsqlDataReader reader)
         {
@@ -205,7 +206,7 @@ namespace DeepSightDB
             // 0-6: Panel 字段 (Id, MachineId, SerialNumber, LotNumber, ProductSerial, DetectionDate, AviCreationTime)
             // 7: ps.Side, 8: ps.HeatPoints, 9: ps.AviState, 10: ps.AiState,
             // 11: ps.VvsState, 12: ps.VrsState, 13: ps.FinalState
-            // 14: ps.TestState (可选), 15: ps.LastTestTime (可选)
+            // 14: ps.TestState, 15: ps.LastTestTime, 16: ps.DrawInfo
             var sideData = new SideData
             {
                 Side = reader.GetString(7),
@@ -213,20 +214,11 @@ namespace DeepSightDB
                 AiState = reader.IsDBNull(10) ? 0 : reader.GetInt32(10),
                 VvsState = reader.IsDBNull(11) ? 0 : reader.GetInt32(11),
                 VrsState = reader.IsDBNull(12) ? 0 : reader.GetInt32(12),
-                FinalState = reader.IsDBNull(13) ? 0 : reader.GetInt32(13)
+                FinalState = reader.IsDBNull(13) ? 0 : reader.GetInt32(13),
+                TestState = reader.IsDBNull(14) ? 0 : reader.GetInt32(14),
+                LastTestTime = reader.IsDBNull(15) ? (DateTime?)null : reader.GetDateTime(15),
+                DrawInfo = reader.IsDBNull(16) ? null : reader.GetString(16)
             };
-
-            // 兼容老版本：检查列数是否足够（TestState 和 LastTestTime 是后加的列）
-            if (reader.FieldCount > 14)
-            {
-                sideData.TestState = reader.IsDBNull(14) ? 0 : reader.GetInt32(14);
-                sideData.LastTestTime = reader.IsDBNull(15) ? (DateTime?)null : reader.GetDateTime(15);
-            }
-            else
-            {
-                sideData.TestState = 0;
-                sideData.LastTestTime = null;
-            }
 
             if (!reader.IsDBNull(8))
             {
@@ -276,55 +268,7 @@ namespace DeepSightDB
             return panelRecords.Values.ToList();
         }
 
-        /// <summary>
-        /// 检查 PanelSides 表是否存在 TestState 列（用于老版本数据库兼容）
-        /// </summary>
-        private bool CheckHasTestStateColumn(NpgsqlConnection connection)
-        {
-            if (_hasTestStateColumn.HasValue)
-                return _hasTestStateColumn.Value;
 
-            lock (_columnCheckLock)
-            {
-                if (_hasTestStateColumn.HasValue)
-                    return _hasTestStateColumn.Value;
-
-                try
-                {
-                    using (var cmd = new NpgsqlCommand(
-                        "SELECT 1 FROM information_schema.columns WHERE table_name='panelsides' AND column_name='teststate'",
-                        connection))
-                    {
-                        var result = cmd.ExecuteScalar();
-                        _hasTestStateColumn = result != null;
-                        LogTextHelper.Info($"数据库列检查：TestState 列 {(_hasTestStateColumn.Value ? "存在" : "不存在")}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    LogTextHelper.Warn($"检查 TestState 列时出错: {ex.Message}，假设列不存在");
-                    _hasTestStateColumn = false;
-                }
-
-                return _hasTestStateColumn.Value;
-            }
-        }
-
-        /// <summary>
-        /// 获取 PanelSides 的查询字段列表（根据列是否存在动态生成）
-        /// </summary>
-        private string GetPanelSidesSelectFields(NpgsqlConnection connection)
-        {
-            var baseFields = "ps.Side, ps.HeatPoints, ps.AviState, ps.AiState, ps.VvsState, ps.VrsState, ps.FinalState";
-
-            if (CheckHasTestStateColumn(connection))
-            {
-                return baseFields + ", ps.TestState, ps.LastTestTime";
-            }
-
-            // 老版本数据库：使用默认值
-            return baseFields + ", 0 AS TestState, NULL AS LastTestTime";
-        }
 
         #endregion
         /// <summary>
@@ -443,20 +387,11 @@ namespace DeepSightDB
                     FinalState INTEGER DEFAULT 0, -- 0: 待处理, 1: 最终OK, 2: 最终NG
                     TestState INTEGER DEFAULT 0, -- 0: 未测试, 1: 一致, 2: 不一致, 3: 测试中, 4: 测试异常
                     LastTestTime TIMESTAMP, -- 最近一次测试时间
+                    DrawInfo TEXT, -- 存储 DrawInfo 的 JSON 字符串（绘制/阈值信息）
                     FOREIGN KEY (PanelId) REFERENCES Panels(Id) ON DELETE CASCADE
                 );";
 
-                // 为已存在的数据库添加 TestState 和 LastTestTime 列（如果不存在）
-                string addTestStateColumn = @"
-                DO $$
-                BEGIN
-                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='panelsides' AND column_name='teststate') THEN
-                        ALTER TABLE PanelSides ADD COLUMN TestState INTEGER DEFAULT 0;
-                    END IF;
-                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='panelsides' AND column_name='lasttesttime') THEN
-                        ALTER TABLE PanelSides ADD COLUMN LastTestTime TIMESTAMP;
-                    END IF;
-                END $$;";
+
 
 
                 string createEmployeeReportsTable = @"
@@ -516,10 +451,6 @@ namespace DeepSightDB
                     command.CommandText = createPanelSidesTable;
                     command.ExecuteNonQuery();
                     command.CommandText = createEmployeeReportsTable;
-                    command.ExecuteNonQuery();
-
-                    // 迁移：为已存在的数据库添加新列
-                    command.CommandText = addTestStateColumn;
                     command.ExecuteNonQuery();
 
                     // 创建索引
@@ -605,6 +536,7 @@ namespace DeepSightDB
                     _upsertPanelSideCmd.Parameters["@VvsState"].Value = record.Data.VvsState;
                     _upsertPanelSideCmd.Parameters["@VrsState"].Value = record.Data.VrsState;
                     _upsertPanelSideCmd.Parameters["@FinalState"].Value = record.Data.FinalState;
+                    _upsertPanelSideCmd.Parameters["@DrawInfo"].Value = (object)record.Data.DrawInfo ?? DBNull.Value;
                     _upsertPanelSideCmd.ExecuteNonQuery();
 
                     transaction.Commit();
@@ -693,6 +625,7 @@ namespace DeepSightDB
                             _upsertPanelSideCmd.Parameters["@VvsState"].Value = record.Data.VvsState;
                             _upsertPanelSideCmd.Parameters["@VrsState"].Value = record.Data.VrsState;
                             _upsertPanelSideCmd.Parameters["@FinalState"].Value = record.Data.FinalState;
+                            _upsertPanelSideCmd.Parameters["@DrawInfo"].Value = (object)record.Data.DrawInfo ?? DBNull.Value;
                             _upsertPanelSideCmd.ExecuteNonQuery();
                         }
 
@@ -839,11 +772,9 @@ namespace DeepSightDB
                         return;
                     }
 
-                    // 动态构建 SQL 查询（兼容老版本数据库）
-                    var panelSidesFields = GetPanelSidesSelectFields(connection);
                     var sqlBuilder = new System.Text.StringBuilder($@"
                         SELECT p.Id, p.MachineId, p.SerialNumber, p.LotNumber, p.ProductSerial, p.DetectionDate, p.AviCreationTime,
-                               {panelSidesFields}
+                               {PanelSidesSelectFields}
                         FROM Panels p
                         LEFT JOIN PanelSides ps ON p.Id = ps.PanelId
                         WHERE p.LotNumber = @LotNumber");
@@ -888,11 +819,9 @@ namespace DeepSightDB
             {
                 try
                 {
-                    // 动态构建 SQL 查询（兼容老版本数据库）
-                    var panelSidesFields = GetPanelSidesSelectFields(connection);
                     var sqlBuilder = new System.Text.StringBuilder($@"
                         SELECT p.Id, p.MachineId, p.SerialNumber, p.LotNumber, p.ProductSerial, p.DetectionDate, p.AviCreationTime,
-                               {panelSidesFields}
+                               {PanelSidesSelectFields}
                         FROM Panels p
                         LEFT JOIN PanelSides ps ON p.Id = ps.PanelId
                         WHERE p.DetectionDate BETWEEN @Start AND @End");
@@ -938,14 +867,6 @@ namespace DeepSightDB
             {
                 try
                 {
-                    // 兼容老版本：检查列是否存在
-                    if (!CheckHasTestStateColumn(connection))
-                    {
-                        LogTextHelper.Warn($"UpdateTestState: 数据库不支持 TestState 列，跳过更新");
-                        tcs.SetResult(false);
-                        return;
-                    }
-
                     using (var cmd = new NpgsqlCommand(@"
                         UPDATE PanelSides ps
                         SET TestState = @TestState, LastTestTime = @LastTestTime
@@ -1232,6 +1153,7 @@ namespace DeepSightDB
                                 _upsertPanelSideCmd.Parameters["@VvsState"].Value = record.Data.VvsState;
                                 _upsertPanelSideCmd.Parameters["@VrsState"].Value = record.Data.VrsState;
                                 _upsertPanelSideCmd.Parameters["@FinalState"].Value = record.Data.FinalState;
+                                _upsertPanelSideCmd.Parameters["@DrawInfo"].Value = (object)record.Data.DrawInfo ?? DBNull.Value;
                                 _upsertPanelSideCmd.ExecuteNonQuery();
                             }
 

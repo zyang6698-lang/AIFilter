@@ -74,6 +74,10 @@ namespace DeepSightAI
             panel_Status.Click += (s, e) => ItemClicked?.Invoke(this, EventArgs.Empty);
             label_Status.Click += (s, e) => ItemClicked?.Invoke(this, EventArgs.Empty);
 
+            // 双击图片弹出详情窗口
+            pictureBox_OriginalImage.DoubleClick += PictureBox_DoubleClick;
+            pictureBox_TemplateImage.DoubleClick += PictureBox_DoubleClick;
+
             // 运行按钮
             button_Run.Click += Button_Run_Click;
             button_Run.PreviewKeyDown += (s, e) => e.IsInputKey = false;
@@ -85,6 +89,20 @@ namespace DeepSightAI
             if (_heatPoint != null)
             {
                 RunTestRequested?.Invoke(this, new SingleImageTestEventArgs { HeatPoint = _heatPoint });
+            }
+        }
+
+        private void PictureBox_DoubleClick(object sender, EventArgs e)
+        {
+            if (_heatPoint == null) return;
+
+            using (var form = new FrDefectImageDetail(
+                _heatPoint,
+                _rawOriginalImage,
+                pictureBox_TemplateImage.Image,
+                pictureBox_OriginalImage.Image))
+            {
+                form.ShowDialog(this.FindForm());
             }
         }
 
@@ -215,7 +233,8 @@ namespace DeepSightAI
                 var bmp = LoadImageFromMinio(templatePath);
                 if (bmp != null)
                 {
-                    pictureBox_TemplateImage.Image = bmp;
+                    pictureBox_TemplateImage.Image = ImageHelper.DrawDefectBoxOnImage(bmp, _heatPoint);
+                    bmp.Dispose();
                 }
             }
             catch (Exception ex)

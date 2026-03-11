@@ -14,10 +14,8 @@ namespace DeepSightAI
     {
         #region 字段
 
-        private const int PAGE_SIZE = 6; // 每页显示的Lot数量
-        private int _currentPage = 1;
-        private int _totalLotCount = 0;
-        private int _totalPages = 1;
+        private const int MAX_LOT_COUNT = 100; // 最多加载的Lot数量
+        private const int MAX_PANELS_PER_LOT = 100; // 每个Lot最多加载的Panel数量
         private bool _isLoading = false;
 
         // 当前页Lot汇总数据
@@ -122,14 +120,14 @@ namespace DeepSightAI
 
         private async void FrSearch_Load(object sender, EventArgs e)
         {
-            await LoadPageAsync(1);
+            await LoadDataAsync();
         }
 
         #endregion
 
-        #region 分页加载
+        #region 数据加载
 
-        private async Task LoadPageAsync(int page)
+        private async Task LoadDataAsync()
         {
             if (_isLoading) return;
             _isLoading = true;
@@ -138,16 +136,8 @@ namespace DeepSightAI
             {
                 SetLoadingState(true, "正在加载...");
 
-                // 获取Lot总数
-                _totalLotCount = await Machine.master.GetTotalLotCount();
-                _totalPages = Math.Max(1, (int)Math.Ceiling((double)_totalLotCount / PAGE_SIZE));
-
-                if (page < 1) page = 1;
-                if (page > _totalPages) page = _totalPages;
-                _currentPage = page;
-
-                // 获取当前页的Lot列表
-                var lotNumbers = await Machine.master.GetRecentLotNumbers(_currentPage, PAGE_SIZE);
+                // 获取最近的Lot列表
+                var lotNumbers = await Machine.master.GetRecentLotNumbers(1, MAX_LOT_COUNT);
 
                 // 清空缓存和表格
                 _lotDataCache.Clear();
@@ -160,12 +150,12 @@ namespace DeepSightAI
 
                 foreach (var lotNumber in lotNumbers)
                 {
-                    var panels = await Machine.master.GetPanelsDataByMachineAndLot(null, lotNumber);
+                    var allPanels = await Machine.master.GetPanelsDataByMachineAndLot(null, lotNumber);
+                    var panels = allPanels.Take(MAX_PANELS_PER_LOT).ToList();
                     _lotDataCache[lotNumber] = panels;
-                    AddLotSummaryRow(lotNumber, panels);
+                    AddLotSummaryRow(lotNumber, panels, allPanels.Count);
                 }
 
-                UpdatePagingControls();
                 SetLoadingState(false, "");
             }
             catch (Exception ex)
@@ -180,7 +170,7 @@ namespace DeepSightAI
             }
         }
 
-        private void AddLotSummaryRow(string lotNumber, List<PanelDataRecord> panels)
+        private void AddLotSummaryRow(string lotNumber, List<PanelDataRecord> panels, int totalCount = -1)
         {
             if (panels == null || panels.Count == 0)
             {
@@ -188,6 +178,7 @@ namespace DeepSightAI
                 return;
             }
 
+            int displayCount = totalCount > 0 ? totalCount : panels.Count;
             var productSerials = panels.Select(p => p.ProductSerial).Where(s => !string.IsNullOrEmpty(s)).Distinct();
             var machineIds = panels.Select(p => p.MachineId).Where(s => !string.IsNullOrEmpty(s)).Distinct();
             var minDate = panels.Min(p => p.DetectionDate);
@@ -206,7 +197,7 @@ namespace DeepSightAI
                 lotNumber,
                 string.Join(",", productSerials),
                 string.Join(",", machineIds),
-                panels.Count,
+                displayCount,
                 minDate.ToString("MM-dd HH:mm"),
                 maxDate.ToString("MM-dd HH:mm"),
                 aviOkRate,
@@ -241,9 +232,13 @@ namespace DeepSightAI
                 return;
             }
 
-            label_DetailTitle.Text = $"Lot: {lotNumber} - 共 {panels.Count} 块板";
+            var displayPanels = panels.Take(MAX_PANELS_PER_LOT).ToList();
+            string countText = panels.Count > MAX_PANELS_PER_LOT
+                ? $"共 {panels.Count} 块板 (显示前{MAX_PANELS_PER_LOT}条)"
+                : $"共 {panels.Count} 块板";
+            label_DetailTitle.Text = $"Lot: {lotNumber} - {countText}";
 
-            foreach (var panel in panels)
+            foreach (var panel in displayPanels)
             {
                 var sideA = panel.Sides?.FirstOrDefault(s => s.Side == "A");
                 var sideB = panel.Sides?.FirstOrDefault(s => s.Side == "B");
@@ -277,33 +272,10 @@ namespace DeepSightAI
 
         #endregion
 
-        #region 分页控制
-
-        private void UpdatePagingControls()
-        {
-            btn_PrevPage.Enabled = _currentPage > 1;
-            btn_NextPage.Enabled = _currentPage < _totalPages;
-            label_PageInfo.Text = $"第 {_currentPage}/{_totalPages} 页 (共{_totalLotCount}个Lot)";
-        }
-
-        private async void btn_PrevPage_Click(object sender, EventArgs e)
-        {
-            if (_currentPage > 1)
-                await LoadPageAsync(_currentPage - 1);
-        }
-
-        private async void btn_NextPage_Click(object sender, EventArgs e)
-        {
-            if (_currentPage < _totalPages)
-                await LoadPageAsync(_currentPage + 1);
-        }
-
         private async void btn_Refresh_Click(object sender, EventArgs e)
         {
-            await LoadPageAsync(1);
+            await LoadDataAsync();
         }
-
-        #endregion
 
         #region UI辅助
 
@@ -312,8 +284,6 @@ namespace DeepSightAI
             label_Loading.Text = message;
             label_Loading.Visible = loading;
             btn_Refresh.Enabled = !loading;
-            btn_PrevPage.Enabled = !loading && _currentPage > 1;
-            btn_NextPage.Enabled = !loading && _currentPage < _totalPages;
         }
 
         #endregion

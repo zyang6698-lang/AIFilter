@@ -135,7 +135,8 @@
             this.queryControl.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.queryControl.Name = "queryControl";
             this.queryControl.PartNumber = "";
-            this.queryControl.SelectedSide = "A";
+            this.queryControl.SelectedDefectName = "";
+            this.queryControl.SelectedSide = "";
             this.queryControl.Size = new System.Drawing.Size(349, 359);
             this.queryControl.TabIndex = 1;
             // 

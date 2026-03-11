@@ -190,7 +190,7 @@ namespace DeepSightWorkLib.Services
             {
                 // 绘制红色缺陷框
                 var rect = new OpenCvSharp.Rect(roi.X, roi.Y, roi.Width, roi.Height);
-                Cv2.Rectangle(mat, rect, new Scalar(0, 0, 255), 2);
+                Cv2.Rectangle(mat, rect, new Scalar(0, 0, 255), 4);
             }
             catch (Exception ex)
             {

@@ -546,7 +546,12 @@ namespace DeepSightDisplay
             Font smallFont = new Font("Arial", 8);
             if (!string.IsNullOrWhiteSpace(m_station))
             {
-                gh.DrawString(m_station, smallFont, Brushes.Green, 1, 1);
+                Brush stationBrush = Brushes.Green;
+                if (!string.IsNullOrWhiteSpace(m_text) && m_text.Contains("NG"))
+                {
+                    stationBrush = Brushes.Red;
+                }
+                gh.DrawString(m_station, smallFont, stationBrush, 1, 1);
             }
 
             if (!string.IsNullOrWhiteSpace(m_text))

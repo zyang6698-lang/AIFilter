@@ -319,6 +319,12 @@
     <Compile Include="FrSearch.Designer.cs">
       <DependentUpon>FrSearch.cs</DependentUpon>
     </Compile>
+    <Compile Include="FrDefectImageDetail.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrDefectImageDetail.Designer.cs">
+      <DependentUpon>FrDefectImageDetail.cs</DependentUpon>
+    </Compile>
     <Compile Include="FrFullImage.cs">
       <SubType>Form</SubType>
     </Compile>

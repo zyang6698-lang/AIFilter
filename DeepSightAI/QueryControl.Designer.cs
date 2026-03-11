@@ -151,45 +151,45 @@ namespace DeepSightAI
             this.label83.Size = new System.Drawing.Size(67, 15);
             this.label83.TabIndex = 8;
             this.label83.Text = "正反面：";
-            // 
-            // rbn_Front
-            // 
-            this.rbn_Front.AutoSize = true;
-            this.rbn_Front.Checked = true;
-            this.rbn_Front.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.rbn_Front.Location = new System.Drawing.Point(87, 269);
-            this.rbn_Front.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.rbn_Front.Name = "rbn_Front";
-            this.rbn_Front.Size = new System.Drawing.Size(58, 19);
-            this.rbn_Front.TabIndex = 9;
-            this.rbn_Front.TabStop = true;
-            this.rbn_Front.Text = "正面";
-            this.rbn_Front.TextAlign = System.Drawing.ContentAlignment.TopLeft;
-            this.rbn_Front.UseVisualStyleBackColor = true;
-            // 
-            // rbn_Back
-            // 
-            this.rbn_Back.AutoSize = true;
-            this.rbn_Back.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.rbn_Back.Location = new System.Drawing.Point(155, 269);
-            this.rbn_Back.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.rbn_Back.Name = "rbn_Back";
-            this.rbn_Back.Size = new System.Drawing.Size(58, 19);
-            this.rbn_Back.TabIndex = 10;
-            this.rbn_Back.Text = "反面";
-            this.rbn_Back.UseVisualStyleBackColor = true;
-            // 
+            //
             // rbn_All
-            // 
+            //
             this.rbn_All.AutoSize = true;
+            this.rbn_All.Checked = true;
             this.rbn_All.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.rbn_All.Location = new System.Drawing.Point(223, 269);
+            this.rbn_All.Location = new System.Drawing.Point(87, 269);
             this.rbn_All.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.rbn_All.Name = "rbn_All";
             this.rbn_All.Size = new System.Drawing.Size(58, 19);
-            this.rbn_All.TabIndex = 13;
+            this.rbn_All.TabIndex = 9;
+            this.rbn_All.TabStop = true;
             this.rbn_All.Text = "全选";
+            this.rbn_All.TextAlign = System.Drawing.ContentAlignment.TopLeft;
             this.rbn_All.UseVisualStyleBackColor = true;
+            //
+            // rbn_Front
+            //
+            this.rbn_Front.AutoSize = true;
+            this.rbn_Front.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.rbn_Front.Location = new System.Drawing.Point(155, 269);
+            this.rbn_Front.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.rbn_Front.Name = "rbn_Front";
+            this.rbn_Front.Size = new System.Drawing.Size(58, 19);
+            this.rbn_Front.TabIndex = 10;
+            this.rbn_Front.Text = "正面";
+            this.rbn_Front.UseVisualStyleBackColor = true;
+            //
+            // rbn_Back
+            //
+            this.rbn_Back.AutoSize = true;
+            this.rbn_Back.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.rbn_Back.Location = new System.Drawing.Point(223, 269);
+            this.rbn_Back.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.rbn_Back.Name = "rbn_Back";
+            this.rbn_Back.Size = new System.Drawing.Size(58, 19);
+            this.rbn_Back.TabIndex = 13;
+            this.rbn_Back.Text = "反面";
+            this.rbn_Back.UseVisualStyleBackColor = true;
             // 
             // label_MachineID
             // 
@@ -255,9 +255,9 @@ namespace DeepSightAI
             this.Controls.Add(this.timePickerEnd);
             this.Controls.Add(this.labelEndDate);
             this.Controls.Add(this.btn_queryHeatPoint);
-            this.Controls.Add(this.rbn_All);
             this.Controls.Add(this.rbn_Back);
             this.Controls.Add(this.rbn_Front);
+            this.Controls.Add(this.rbn_All);
             this.Controls.Add(this.label83);
             this.Controls.Add(this.txt_Lot);
             this.Controls.Add(this.label80);

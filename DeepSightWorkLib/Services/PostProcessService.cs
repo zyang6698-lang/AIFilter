@@ -125,6 +125,7 @@ namespace DeepSightWorkLib.Services
                                 heatInfo.Width = subW;
                                 heatInfo.Height = subH;
 
+                                heatInfo.DrawInfo =JsonConvert.SerializeObject( obj.Data.InferWholeData.InferResults[i].InferDetails.DrawInfoList);
                                 
                                 if (sub_defectName == "AU10" || sub_defectName == "CU10" || sub_defectName == "CU41"
                                     || sub_defectName == "HO01" || sub_defectName == "SM10")
