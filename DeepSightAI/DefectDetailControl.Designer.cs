@@ -36,7 +36,7 @@
             this.lblPageInfo = new System.Windows.Forms.Label();
             this.btnNextPage = new System.Windows.Forms.Button();
             this.panel_Filter = new System.Windows.Forms.Panel();
-            this.btn_Export = new System.Windows.Forms.Button();
+            this.btn_Export = new DeepSightAI.StyledButton();
             this.label_FilterDefectName = new System.Windows.Forms.Label();
             this.comboBox_FilterDefectName = new System.Windows.Forms.ComboBox();
             this.label_FilterVVS = new System.Windows.Forms.Label();
@@ -174,17 +174,11 @@
             //
             // btn_Export
             //
-            this.btn_Export.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
-            this.btn_Export.FlatAppearance.BorderSize = 0;
-            this.btn_Export.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btn_Export.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold);
-            this.btn_Export.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.btn_Export.Location = new System.Drawing.Point(720, 10);
             this.btn_Export.Name = "btn_Export";
             this.btn_Export.Size = new System.Drawing.Size(80, 30);
             this.btn_Export.TabIndex = 5;
             this.btn_Export.Text = "导出";
-            this.btn_Export.UseVisualStyleBackColor = false;
             this.btn_Export.Click += new System.EventHandler(this.btn_Export_Click);
             // 
             // label_FilterVVS
@@ -260,7 +254,7 @@
         private System.Windows.Forms.ComboBox comboBox_FilterAI;
         private System.Windows.Forms.Label label_FilterVVS;
         private System.Windows.Forms.Label label_FilterAI;
-        private System.Windows.Forms.Button btn_Export;
+        private DeepSightAI.StyledButton btn_Export;
         private System.Windows.Forms.Label label_FilterDefectName;
         private System.Windows.Forms.ComboBox comboBox_FilterDefectName;
     }

@@ -25,6 +25,16 @@ namespace DeepSightModel.Configuration
         /// </summary>
         public const int LogDay = 7;
 
+        /// <summary>
+        /// 默认欢迎页标题文字
+        /// </summary>
+        public const string WelcomeTitle = "Deepsight AI";
+
+        /// <summary>
+        /// 默认欢迎页标题字体大小
+        /// </summary>
+        public const float WelcomeFontSize = 36f;
+
         #endregion
 
         #region 服务器配置

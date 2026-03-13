@@ -32,7 +32,7 @@
             this.panel_Title = new System.Windows.Forms.Panel();
             this.label_Title = new System.Windows.Forms.Label();
             this.label_Loading = new System.Windows.Forms.Label();
-            this.btn_Refresh = new System.Windows.Forms.Button();
+            this.btn_Refresh = new DeepSightAI.StyledButton();
             this.splitContainer = new System.Windows.Forms.SplitContainer();
             this.dgv_Lots = new System.Windows.Forms.DataGridView();
             this.panel_Detail = new System.Windows.Forms.Panel();
@@ -102,18 +102,12 @@
             // btn_Refresh
             // 
             this.btn_Refresh.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btn_Refresh.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(73)))), ((int)(((byte)(94)))));
-            this.btn_Refresh.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(86)))), ((int)(((byte)(117)))), ((int)(((byte)(142)))));
-            this.btn_Refresh.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btn_Refresh.Font = new System.Drawing.Font("微软雅黑", 11F, System.Drawing.FontStyle.Bold);
-            this.btn_Refresh.ForeColor = System.Drawing.Color.White;
             this.btn_Refresh.Location = new System.Drawing.Point(745, 4);
             this.btn_Refresh.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btn_Refresh.Name = "btn_Refresh";
             this.btn_Refresh.Size = new System.Drawing.Size(100, 40);
             this.btn_Refresh.TabIndex = 2;
             this.btn_Refresh.Text = "刷新";
-            this.btn_Refresh.UseVisualStyleBackColor = false;
             this.btn_Refresh.Click += new System.EventHandler(this.btn_Refresh_Click);
             // 
             // splitContainer
@@ -243,7 +237,7 @@
         private System.Windows.Forms.Panel panel_Title;
         private System.Windows.Forms.Label label_Title;
         private System.Windows.Forms.Label label_Loading;
-        private System.Windows.Forms.Button btn_Refresh;
+        private DeepSightAI.StyledButton btn_Refresh;
         private System.Windows.Forms.SplitContainer splitContainer;
         private System.Windows.Forms.DataGridView dgv_Lots;
         private System.Windows.Forms.Panel panel_Detail;

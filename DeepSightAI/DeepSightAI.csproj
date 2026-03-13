@@ -434,6 +434,9 @@
       <DependentUpon>FrUserManagement.cs</DependentUpon>
     </Compile>
     <Compile Include="SortableBindingList.cs" />
+    <Compile Include="StyledButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="ValidationTestResultControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

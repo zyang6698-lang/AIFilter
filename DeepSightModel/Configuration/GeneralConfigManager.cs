@@ -27,7 +27,9 @@ namespace DeepSightModel.Configuration
                 endpoint_address = DefaultValues.MinioIP,
                 MinioPort = DefaultValues.MinioPort,
                 MaxDefectCount = DefaultValues.MaxDefectCount,
-                AgentShutdownTimeout = DefaultValues.AgentShutdownTimeout
+                AgentShutdownTimeout = DefaultValues.AgentShutdownTimeout,
+                WelcomeTitle = DefaultValues.WelcomeTitle,
+                WelcomeFontSize = DefaultValues.WelcomeFontSize
             };
         }
 

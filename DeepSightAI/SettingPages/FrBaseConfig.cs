@@ -60,6 +60,11 @@ namespace DeepSightAI.SettingPages
                 {
                     Machine.aviconfig.GetInferResultTimeout = getInferResultTimeout;
                 }
+                Machine.sysConfig.WelcomeTitle = this.txt_WelcomeTitle.Text;
+                if (float.TryParse(this.txt_WelcomeFontSize.Text, out float welcomeFontSize))
+                {
+                    Machine.sysConfig.WelcomeFontSize = welcomeFontSize;
+                }
             }
             catch (Exception ex)
             {
@@ -73,6 +78,8 @@ namespace DeepSightAI.SettingPages
             this.txt_MaxDefectCount.Text = Machine.sysConfig.MaxDefectCount.ToString();
             this.txt_AgentShutdownTimeout.Text = Machine.sysConfig.AgentShutdownTimeout.ToString();
             this.txt_GetInferResultTimeout.Text = Machine.aviconfig.GetInferResultTimeout.ToString();
+            this.txt_WelcomeTitle.Text = Machine.sysConfig.WelcomeTitle ?? "Deepsight AI";
+            this.txt_WelcomeFontSize.Text = Machine.sysConfig.WelcomeFontSize.ToString();
         }
         // 获取相对路径（.NET Framework 无 Path.GetRelativePath）
         private static string GetRelativePath(string basePath, string fullPath)

@@ -42,6 +42,16 @@ namespace DeepSightModel
         /// </summary>
         public int AgentShutdownTimeout { get; set; } = 2000;
 
+        /// <summary>
+        /// 欢迎页标题文字
+        /// </summary>
+        public string WelcomeTitle { get; set; } = "Deepsight AI";
+
+        /// <summary>
+        /// 欢迎页标题字体大小
+        /// </summary>
+        public float WelcomeFontSize { get; set; } = 36f;
+
         public ConfigurationClass()
         {
 
@@ -86,7 +96,9 @@ namespace DeepSightModel
                     endpoint_address = DefaultValues.MinioIP,
                     MinioPort = DefaultValues.MinioPort,
                     MaxDefectCount = DefaultValues.MaxDefectCount,
-                    AgentShutdownTimeout = DefaultValues.AgentShutdownTimeout
+                    AgentShutdownTimeout = DefaultValues.AgentShutdownTimeout,
+                    WelcomeTitle = DefaultValues.WelcomeTitle,
+                    WelcomeFontSize = DefaultValues.WelcomeFontSize
                 };
                 return Save(config);
             }

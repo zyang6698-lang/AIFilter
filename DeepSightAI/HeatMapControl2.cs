@@ -385,33 +385,7 @@ namespace DeepSightAI
             }
         }
 
-        private async void btn_setPanel_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (SourceImage == null)
-                {
-                    MessageBox.Show("请先加载Array图像");
-                    return;
-                }
-                int row = Convert.ToInt32(this.txt_Row.Text);
-                int column = Convert.ToInt32(this.txt_Column.Text);
-
-                using (var dialog = new ArrayConfigDialog(row, column))
-                {
-                    if (dialog.ShowDialog() == DialogResult.OK)
-                    {
-                        _arrayConfig = dialog.GridData;
-                        await UpdatePanelGrid(row, column);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error($"制作Array图像失败: {ex.Message}");
-                MessageBox.Show("制作Array图像失败，请检查日志。");
-            }
-        }
+     
 
         private async void rbn_Front_CheckedChanged(object sender, EventArgs e)
         {
@@ -622,27 +596,6 @@ namespace DeepSightAI
                 return false;
             }
 
-            if (rbn_Array.Checked)
-            {
-                if (_arrayConfig != null)
-                {
-                    string snSuffix = sn.Substring(sn.Length - 2);
-                    for (int i = 0; i < _arrayConfig.GetLength(0); i++)
-                    {
-                        for (int j = 0; j < _arrayConfig.GetLength(1); j++)
-                        {
-                            if (_arrayConfig[i, j] == snSuffix)
-                            {
-                                row = i;
-                                col = j;
-                                return true;
-                            }
-                        }
-                    }
-                }
-                // If we are in array mode but have no config, or SN not found, we can't position it.
-                return true;
-            }
             
             char rowChar = sn[sn.Length - 2];
             char colChar = sn[sn.Length - 1];
@@ -1196,6 +1149,10 @@ namespace DeepSightAI
             });
 
             // Create UI controls on the UI thread
+            // 根据右侧面板宽度计算图片尺寸，适配不同分辨率
+            int availableWidth = flowLayoutPanel_Details.ClientSize.Width - 30;
+            int imageSize = Math.Max(80, availableWidth);
+
             var panels = new List<Control>();
             foreach (var item in imageData)
             {
@@ -1204,20 +1161,21 @@ namespace DeepSightAI
 
                 var panel = new TableLayoutPanel
                 {
-                    ColumnCount = 2,
-                    RowCount = 1,
+                    ColumnCount = 1,
+                    RowCount = 2,
                     AutoSize = true,
                     AutoSizeMode = AutoSizeMode.GrowAndShrink,
                     Dock = DockStyle.Top,
                     Margin = new Padding(3),
-                    Width = flowLayoutPanel_Details.ClientSize.Width - 25
+                    Width = availableWidth
                 };
-                panel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 400F));
                 panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+                panel.RowStyles.Add(new RowStyle(SizeType.Absolute, imageSize));
+                panel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
                 var pictureBox = new PictureBox
                 {
-                    Size = new System.Drawing.Size(400, 400),
+                    Size = new System.Drawing.Size(imageSize, imageSize),
                     SizeMode = PictureBoxSizeMode.Zoom,
                     Margin = new Padding(3),
                     BackColor = Color.FromArgb(45, 45, 48),
@@ -1242,11 +1200,11 @@ namespace DeepSightAI
                     Text = $"SN: {p.SN}\n缺陷: {p.PointInfo.DefectName}\n坐标: ({p.PointInfo.RoiX}, {p.PointInfo.RoiY})",
                     AutoSize = true,
                     ForeColor = Color.White,
-                    Margin = new Padding(10, 5, 5, 5),
+                    Margin = new Padding(5, 3, 3, 3),
                     Dock = DockStyle.Fill,
-                    TextAlign = ContentAlignment.MiddleLeft
+                    TextAlign = ContentAlignment.TopLeft
                 };
-                panel.Controls.Add(label, 1, 0);
+                panel.Controls.Add(label, 0, 1);
                 panels.Add(panel);
             }
 

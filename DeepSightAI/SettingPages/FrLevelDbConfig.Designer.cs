@@ -40,9 +40,9 @@ namespace DeepSightAI.SettingPages
             this.colTestConnection = new System.Windows.Forms.DataGridViewButtonColumn();
             this.colIsEnabled = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.panelButtons = new System.Windows.Forms.Panel();
-            this.btnAdd = new System.Windows.Forms.Button();
-            this.btnDelete = new System.Windows.Forms.Button();
-            this.btnTestAll = new System.Windows.Forms.Button();
+            this.btnAdd = new DeepSightAI.StyledButton();
+            this.btnDelete = new DeepSightAI.StyledButton();
+            this.btnTestAll = new DeepSightAI.StyledButton();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvDatabases)).BeginInit();
             this.panelButtons.SuspendLayout();
@@ -74,47 +74,29 @@ namespace DeepSightAI.SettingPages
             // 
             // btnAdd
             // 
-            this.btnAdd.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
-            this.btnAdd.FlatAppearance.BorderSize = 0;
-            this.btnAdd.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnAdd.Font = new System.Drawing.Font("微软雅黑", 9F);
-            this.btnAdd.ForeColor = System.Drawing.Color.White;
             this.btnAdd.Location = new System.Drawing.Point(5, 8);
             this.btnAdd.Name = "btnAdd";
             this.btnAdd.Size = new System.Drawing.Size(100, 30);
             this.btnAdd.TabIndex = 0;
             this.btnAdd.Text = "添加数据库";
-            this.btnAdd.UseVisualStyleBackColor = false;
             this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
-            // 
+            //
             // btnDelete
-            // 
-            this.btnDelete.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
-            this.btnDelete.FlatAppearance.BorderSize = 0;
-            this.btnDelete.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnDelete.Font = new System.Drawing.Font("微软雅黑", 9F);
-            this.btnDelete.ForeColor = System.Drawing.Color.White;
+            //
             this.btnDelete.Location = new System.Drawing.Point(115, 8);
             this.btnDelete.Name = "btnDelete";
             this.btnDelete.Size = new System.Drawing.Size(100, 30);
             this.btnDelete.TabIndex = 1;
             this.btnDelete.Text = "删除选中";
-            this.btnDelete.UseVisualStyleBackColor = false;
             this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
             //
             // btnTestAll
             //
-            this.btnTestAll.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(100)))), ((int)(((byte)(120)))));
-            this.btnTestAll.FlatAppearance.BorderSize = 0;
-            this.btnTestAll.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnTestAll.Font = new System.Drawing.Font("微软雅黑", 9F);
-            this.btnTestAll.ForeColor = System.Drawing.Color.White;
             this.btnTestAll.Location = new System.Drawing.Point(225, 8);
             this.btnTestAll.Name = "btnTestAll";
             this.btnTestAll.Size = new System.Drawing.Size(100, 30);
             this.btnTestAll.TabIndex = 2;
             this.btnTestAll.Text = "全部测试";
-            this.btnTestAll.UseVisualStyleBackColor = false;
             this.btnTestAll.Click += new System.EventHandler(this.btnTestAll_Click);
             //
             // dgvDatabases
@@ -233,9 +215,9 @@ namespace DeepSightAI.SettingPages
         private System.Windows.Forms.DataGridViewButtonColumn colTestConnection;
         private System.Windows.Forms.DataGridViewCheckBoxColumn colIsEnabled;
         private System.Windows.Forms.Panel panelButtons;
-        private System.Windows.Forms.Button btnAdd;
-        private System.Windows.Forms.Button btnDelete;
-        private System.Windows.Forms.Button btnTestAll;
+        private DeepSightAI.StyledButton btnAdd;
+        private DeepSightAI.StyledButton btnDelete;
+        private DeepSightAI.StyledButton btnTestAll;
     }
 }
 

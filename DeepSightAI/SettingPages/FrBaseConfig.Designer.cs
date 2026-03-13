@@ -40,6 +40,10 @@
             this.label18 = new System.Windows.Forms.Label();
             this.txt_endpoint_address = new System.Windows.Forms.TextBox();
             this.label17 = new System.Windows.Forms.Label();
+            this.txt_WelcomeTitle = new System.Windows.Forms.TextBox();
+            this.label24 = new System.Windows.Forms.Label();
+            this.txt_WelcomeFontSize = new System.Windows.Forms.TextBox();
+            this.label25 = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -47,6 +51,10 @@
             // 
             resources.ApplyResources(this.panel1, "panel1");
             this.panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.panel1.Controls.Add(this.txt_WelcomeFontSize);
+            this.panel1.Controls.Add(this.label25);
+            this.panel1.Controls.Add(this.txt_WelcomeTitle);
+            this.panel1.Controls.Add(this.label24);
             this.panel1.Controls.Add(this.txt_GetInferResultTimeout);
             this.panel1.Controls.Add(this.label23);
             this.panel1.Controls.Add(this.txt_AgentShutdownTimeout);
@@ -114,9 +122,31 @@
             resources.ApplyResources(this.label17, "label17");
             this.label17.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.label17.Name = "label17";
-            // 
+            //
+            // txt_WelcomeTitle
+            //
+            resources.ApplyResources(this.txt_WelcomeTitle, "txt_WelcomeTitle");
+            this.txt_WelcomeTitle.Name = "txt_WelcomeTitle";
+            //
+            // label24
+            //
+            resources.ApplyResources(this.label24, "label24");
+            this.label24.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.label24.Name = "label24";
+            //
+            // txt_WelcomeFontSize
+            //
+            resources.ApplyResources(this.txt_WelcomeFontSize, "txt_WelcomeFontSize");
+            this.txt_WelcomeFontSize.Name = "txt_WelcomeFontSize";
+            //
+            // label25
+            //
+            resources.ApplyResources(this.label25, "label25");
+            this.label25.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.label25.Name = "label25";
+            //
             // FrBaseConfig
-            // 
+            //
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
@@ -144,5 +174,9 @@
         internal System.Windows.Forms.Label label22;
         internal System.Windows.Forms.TextBox txt_GetInferResultTimeout;
         internal System.Windows.Forms.Label label23;
+        internal System.Windows.Forms.TextBox txt_WelcomeTitle;
+        internal System.Windows.Forms.Label label24;
+        internal System.Windows.Forms.TextBox txt_WelcomeFontSize;
+        internal System.Windows.Forms.Label label25;
     }
 }

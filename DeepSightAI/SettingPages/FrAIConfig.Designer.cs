@@ -36,18 +36,18 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.dgvPipeline = new System.Windows.Forms.DataGridView();
             this.panelLeftHeader = new System.Windows.Forms.Panel();
-            this.btn_GetAgain = new System.Windows.Forms.Button();
-            this.btnDeleteConfig = new System.Windows.Forms.Button();
-            this.btnAddConfig = new System.Windows.Forms.Button();
+            this.btn_GetAgain = new DeepSightAI.StyledButton();
+            this.btnDeleteConfig = new DeepSightAI.StyledButton();
+            this.btnAddConfig = new DeepSightAI.StyledButton();
             this.lblLeftTitle = new System.Windows.Forms.Label();
             this.dgvProducts = new System.Windows.Forms.DataGridView();
             this.colIndex = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colProductSerial = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colMode = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.panelRightHeader = new System.Windows.Forms.Panel();
-            this.btnAutoAdd = new System.Windows.Forms.Button();
-            this.btnDeleteProduct = new System.Windows.Forms.Button();
-            this.btnAddProduct = new System.Windows.Forms.Button();
+            this.btnAutoAdd = new DeepSightAI.StyledButton();
+            this.btnDeleteProduct = new DeepSightAI.StyledButton();
+            this.btnAddProduct = new DeepSightAI.StyledButton();
             this.lblRightTitle = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
             this.colConfigName = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -142,31 +142,19 @@
             // btn_GetAgain
             // 
             resources.ApplyResources(this.btn_GetAgain, "btn_GetAgain");
-            this.btn_GetAgain.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
-            this.btn_GetAgain.FlatAppearance.BorderSize = 0;
-            this.btn_GetAgain.ForeColor = System.Drawing.Color.White;
             this.btn_GetAgain.Name = "btn_GetAgain";
-            this.btn_GetAgain.UseVisualStyleBackColor = false;
             this.btn_GetAgain.Click += new System.EventHandler(this.btn_GetAgain_Click);
-            // 
+            //
             // btnDeleteConfig
-            // 
+            //
             resources.ApplyResources(this.btnDeleteConfig, "btnDeleteConfig");
-            this.btnDeleteConfig.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
-            this.btnDeleteConfig.FlatAppearance.BorderSize = 0;
-            this.btnDeleteConfig.ForeColor = System.Drawing.Color.White;
             this.btnDeleteConfig.Name = "btnDeleteConfig";
-            this.btnDeleteConfig.UseVisualStyleBackColor = false;
             this.btnDeleteConfig.Click += new System.EventHandler(this.btnDeleteConfig_Click);
-            // 
+            //
             // btnAddConfig
-            // 
+            //
             resources.ApplyResources(this.btnAddConfig, "btnAddConfig");
-            this.btnAddConfig.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
-            this.btnAddConfig.FlatAppearance.BorderSize = 0;
-            this.btnAddConfig.ForeColor = System.Drawing.Color.White;
             this.btnAddConfig.Name = "btnAddConfig";
-            this.btnAddConfig.UseVisualStyleBackColor = false;
             this.btnAddConfig.Click += new System.EventHandler(this.btnAddConfig_Click);
             // 
             // lblLeftTitle
@@ -243,31 +231,19 @@
             // btnAutoAdd
             // 
             resources.ApplyResources(this.btnAutoAdd, "btnAutoAdd");
-            this.btnAutoAdd.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(70)))), ((int)(((byte)(50)))));
-            this.btnAutoAdd.FlatAppearance.BorderSize = 0;
-            this.btnAutoAdd.ForeColor = System.Drawing.Color.White;
             this.btnAutoAdd.Name = "btnAutoAdd";
-            this.btnAutoAdd.UseVisualStyleBackColor = false;
             this.btnAutoAdd.Click += new System.EventHandler(this.btnAutoAdd_Click);
-            // 
+            //
             // btnDeleteProduct
-            // 
+            //
             resources.ApplyResources(this.btnDeleteProduct, "btnDeleteProduct");
-            this.btnDeleteProduct.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
-            this.btnDeleteProduct.FlatAppearance.BorderSize = 0;
-            this.btnDeleteProduct.ForeColor = System.Drawing.Color.White;
             this.btnDeleteProduct.Name = "btnDeleteProduct";
-            this.btnDeleteProduct.UseVisualStyleBackColor = false;
             this.btnDeleteProduct.Click += new System.EventHandler(this.btnDeleteProduct_Click);
-            // 
+            //
             // btnAddProduct
-            // 
+            //
             resources.ApplyResources(this.btnAddProduct, "btnAddProduct");
-            this.btnAddProduct.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
-            this.btnAddProduct.FlatAppearance.BorderSize = 0;
-            this.btnAddProduct.ForeColor = System.Drawing.Color.White;
             this.btnAddProduct.Name = "btnAddProduct";
-            this.btnAddProduct.UseVisualStyleBackColor = false;
             this.btnAddProduct.Click += new System.EventHandler(this.btnAddProduct_Click);
             // 
             // lblRightTitle
@@ -357,17 +333,17 @@
         // 左侧 - 算法配置区
         private System.Windows.Forms.Panel panelLeftHeader;
         private System.Windows.Forms.Label lblLeftTitle;
-        private System.Windows.Forms.Button btnAddConfig;
-        private System.Windows.Forms.Button btnDeleteConfig;
-        internal System.Windows.Forms.Button btn_GetAgain;
+        private DeepSightAI.StyledButton btnAddConfig;
+        private DeepSightAI.StyledButton btnDeleteConfig;
+        internal DeepSightAI.StyledButton btn_GetAgain;
         private System.Windows.Forms.DataGridView dgvPipeline;
 
         // 右侧 - 料号区
         private System.Windows.Forms.Panel panelRightHeader;
         private System.Windows.Forms.Label lblRightTitle;
-        private System.Windows.Forms.Button btnAddProduct;
-        private System.Windows.Forms.Button btnDeleteProduct;
-        internal System.Windows.Forms.Button btnAutoAdd;
+        private DeepSightAI.StyledButton btnAddProduct;
+        private DeepSightAI.StyledButton btnDeleteProduct;
+        internal DeepSightAI.StyledButton btnAutoAdd;
         private System.Windows.Forms.DataGridView dgvProducts;
         private System.Windows.Forms.DataGridViewTextBoxColumn colIndex;
         private System.Windows.Forms.DataGridViewTextBoxColumn colProductSerial;

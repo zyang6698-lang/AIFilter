@@ -36,7 +36,7 @@ namespace DeepSightAI
             this.col_MissCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.col_OverKillCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.panel_Filter = new System.Windows.Forms.Panel();
-            this.btn_ExportResult = new System.Windows.Forms.Button();
+            this.btn_ExportResult = new DeepSightAI.StyledButton();
             this.comboBox_Filter = new System.Windows.Forms.ComboBox();
             this.label_Filter = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer_Main)).BeginInit();
@@ -157,15 +157,11 @@ namespace DeepSightAI
             // btn_ExportResult
             //
             this.btn_ExportResult.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btn_ExportResult.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(122)))), ((int)(((byte)(204)))));
-            this.btn_ExportResult.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btn_ExportResult.ForeColor = System.Drawing.Color.White;
             this.btn_ExportResult.Location = new System.Drawing.Point(697, 5);
             this.btn_ExportResult.Name = "btn_ExportResult";
             this.btn_ExportResult.Size = new System.Drawing.Size(90, 25);
             this.btn_ExportResult.TabIndex = 2;
             this.btn_ExportResult.Text = "导出报告";
-            this.btn_ExportResult.UseVisualStyleBackColor = false;
             //
             // dataGridView_Results
             //
@@ -304,7 +300,7 @@ namespace DeepSightAI
         private System.Windows.Forms.Panel panel_Filter;
         private System.Windows.Forms.Label label_Filter;
         private System.Windows.Forms.ComboBox comboBox_Filter;
-        private System.Windows.Forms.Button btn_ExportResult;
+        private DeepSightAI.StyledButton btn_ExportResult;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_SerialNumber;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_Side;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_DataSource;

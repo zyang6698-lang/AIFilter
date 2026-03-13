@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace DeepSightAI
@@ -66,6 +67,19 @@ namespace DeepSightAI
         {
             lbl_version.Text = "V " + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
             bar_step.Maximum = 100;
+
+            // 从配置加载欢迎页标题和字体大小
+            if (Machine.sysConfig != null)
+            {
+                if (!string.IsNullOrEmpty(Machine.sysConfig.WelcomeTitle))
+                {
+                    lbl_title.Text = Machine.sysConfig.WelcomeTitle;
+                }
+                if (Machine.sysConfig.WelcomeFontSize > 0)
+                {
+                    lbl_title.Font = new Font("微软雅黑", Machine.sysConfig.WelcomeFontSize, FontStyle.Bold);
+                }
+            }
         }
 
         private void btn_exit_Click(object sender, EventArgs e)

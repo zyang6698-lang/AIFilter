@@ -35,7 +35,7 @@ namespace DeepSightAI.SettingPages
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.btn_Select = new System.Windows.Forms.Button();
+            this.btn_Select = new DeepSightAI.StyledButton();
             this.chk_AlarmCtrl = new System.Windows.Forms.CheckBox();
             this.chk_DefectReportCtrl = new System.Windows.Forms.CheckBox();
             this.chk_ProSet = new System.Windows.Forms.CheckBox();
@@ -52,9 +52,9 @@ namespace DeepSightAI.SettingPages
             this.LoginName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.label1 = new System.Windows.Forms.Label();
             this.txt_CurrentUser = new System.Windows.Forms.TextBox();
-            this.btn_Add = new System.Windows.Forms.Button();
-            this.btn_Save = new System.Windows.Forms.Button();
-            this.btn_Delete = new System.Windows.Forms.Button();
+            this.btn_Add = new DeepSightAI.StyledButton();
+            this.btn_Save = new DeepSightAI.StyledButton();
+            this.btn_Delete = new DeepSightAI.StyledButton();
             this.groupBox2.SuspendLayout();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgv_User)).BeginInit();
@@ -81,15 +81,11 @@ namespace DeepSightAI.SettingPages
             // 
             // btn_Select
             // 
-            this.btn_Select.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.btn_Select.Font = new System.Drawing.Font("幼圆", 10.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.btn_Select.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.btn_Select.Location = new System.Drawing.Point(300, 222);
             this.btn_Select.Name = "btn_Select";
             this.btn_Select.Size = new System.Drawing.Size(138, 44);
             this.btn_Select.TabIndex = 117;
             this.btn_Select.Text = "全选";
-            this.btn_Select.UseVisualStyleBackColor = false;
             this.btn_Select.Click += new System.EventHandler(this.btn_Select_Click);
             // 
             // chk_AlarmCtrl
@@ -320,40 +316,28 @@ namespace DeepSightAI.SettingPages
             // 
             // btn_Add
             // 
-            this.btn_Add.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.btn_Add.Font = new System.Drawing.Font("幼圆", 10.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.btn_Add.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.btn_Add.Location = new System.Drawing.Point(333, 456);
             this.btn_Add.Name = "btn_Add";
             this.btn_Add.Size = new System.Drawing.Size(138, 44);
             this.btn_Add.TabIndex = 118;
             this.btn_Add.Text = "增加用户";
-            this.btn_Add.UseVisualStyleBackColor = false;
             this.btn_Add.Click += new System.EventHandler(this.btn_Add_Click);
-            // 
+            //
             // btn_Save
-            // 
-            this.btn_Save.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.btn_Save.Font = new System.Drawing.Font("幼圆", 10.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.btn_Save.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            //
             this.btn_Save.Location = new System.Drawing.Point(658, 456);
             this.btn_Save.Name = "btn_Save";
             this.btn_Save.Size = new System.Drawing.Size(138, 44);
             this.btn_Save.TabIndex = 119;
             this.btn_Save.Text = "保存修改";
-            this.btn_Save.UseVisualStyleBackColor = false;
-            // 
+            //
             // btn_Delete
-            // 
-            this.btn_Delete.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.btn_Delete.Font = new System.Drawing.Font("幼圆", 10.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.btn_Delete.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            //
             this.btn_Delete.Location = new System.Drawing.Point(496, 456);
             this.btn_Delete.Name = "btn_Delete";
             this.btn_Delete.Size = new System.Drawing.Size(138, 44);
             this.btn_Delete.TabIndex = 120;
             this.btn_Delete.Text = "删除用户";
-            this.btn_Delete.UseVisualStyleBackColor = false;
             this.btn_Delete.Click += new System.EventHandler(this.btn_Delete_Click);
             // 
             // FrUserManagement
@@ -401,10 +385,10 @@ namespace DeepSightAI.SettingPages
         private System.Windows.Forms.DataGridViewTextBoxColumn LoginName;
         private System.Windows.Forms.Label label1;
         public System.Windows.Forms.TextBox txt_CurrentUser;
-        private System.Windows.Forms.Button btn_Select;
-        private System.Windows.Forms.Button btn_Add;
-        private System.Windows.Forms.Button btn_Save;
-        private System.Windows.Forms.Button btn_Delete;
+        private DeepSightAI.StyledButton btn_Select;
+        private DeepSightAI.StyledButton btn_Add;
+        private DeepSightAI.StyledButton btn_Save;
+        private DeepSightAI.StyledButton btn_Delete;
         private System.Windows.Forms.CheckBox chk_FunctionSet;
     }
 }

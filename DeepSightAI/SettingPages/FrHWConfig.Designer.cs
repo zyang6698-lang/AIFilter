@@ -34,7 +34,7 @@ namespace DeepSightAI.SettingPages
             this.uiGroupBox1 = new Sunny.UI.UIGroupBox();
             this.aviCtr2Container1 = new DeepSightAI.SettingPages.AviCtr2Container();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.btn_add_station = new System.Windows.Forms.Button();
+            this.btn_add_station = new DeepSightAI.StyledButton();
             this.tableLayoutPanel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.uiGroupBox1.SuspendLayout();
@@ -110,17 +110,11 @@ namespace DeepSightAI.SettingPages
             // 
             // btn_add_station
             // 
-            this.btn_add_station.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
-            this.btn_add_station.FlatAppearance.BorderSize = 0;
-            this.btn_add_station.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btn_add_station.Font = new System.Drawing.Font("微软雅黑", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.btn_add_station.ForeColor = System.Drawing.Color.White;
             this.btn_add_station.Location = new System.Drawing.Point(11, 11);
             this.btn_add_station.Name = "btn_add_station";
             this.btn_add_station.Size = new System.Drawing.Size(160, 50);
             this.btn_add_station.TabIndex = 0;
             this.btn_add_station.Text = "＋ 添加机台";
-            this.btn_add_station.UseVisualStyleBackColor = false;
             this.btn_add_station.Click += new System.EventHandler(this.btn_add_station_Click);
             // 
             // FrHWConfig
@@ -148,7 +142,7 @@ namespace DeepSightAI.SettingPages
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.Button btn_add_station;
+        private DeepSightAI.StyledButton btn_add_station;
         private Sunny.UI.UIGroupBox uiGroupBox1;
         private AviCtr2Container aviCtr2Container1;
     }
