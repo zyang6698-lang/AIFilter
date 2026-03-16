@@ -87,7 +87,7 @@
             this.panel_Main.Controls.Add(this.splitContainer_Main);
             this.panel_Main.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel_Main.Location = new System.Drawing.Point(0, 0);
-            this.panel_Main.Margin = new System.Windows.Forms.Padding(4);
+            this.panel_Main.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.panel_Main.Name = "panel_Main";
             this.panel_Main.Size = new System.Drawing.Size(1443, 870);
             this.panel_Main.TabIndex = 0;
@@ -97,7 +97,7 @@
             this.splitContainer_Main.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer_Main.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
             this.splitContainer_Main.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer_Main.Margin = new System.Windows.Forms.Padding(4);
+            this.splitContainer_Main.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.splitContainer_Main.Name = "splitContainer_Main";
             // 
             // splitContainer_Main.Panel1
@@ -152,7 +152,7 @@
             this.panel_ReviewDetail.Controls.Add(this.label_ReviewDetail);
             this.panel_ReviewDetail.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel_ReviewDetail.Location = new System.Drawing.Point(2, 254);
-            this.panel_ReviewDetail.Margin = new System.Windows.Forms.Padding(2);
+            this.panel_ReviewDetail.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.panel_ReviewDetail.Name = "panel_ReviewDetail";
             this.panel_ReviewDetail.Size = new System.Drawing.Size(359, 614);
             this.panel_ReviewDetail.TabIndex = 0;
@@ -165,7 +165,7 @@
             this.label_ReviewDetail.Location = new System.Drawing.Point(0, 0);
             this.label_ReviewDetail.MaximumSize = new System.Drawing.Size(262, 0);
             this.label_ReviewDetail.Name = "label_ReviewDetail";
-            this.label_ReviewDetail.Padding = new System.Windows.Forms.Padding(8);
+            this.label_ReviewDetail.Padding = new System.Windows.Forms.Padding(8, 8, 8, 8);
             this.label_ReviewDetail.Size = new System.Drawing.Size(84, 33);
             this.label_ReviewDetail.TabIndex = 0;
             this.label_ReviewDetail.Text = "复判详情区";
@@ -177,7 +177,7 @@
             this.tabControl_Main.Controls.Add(this.tabPage_ValidationTest);
             this.tabControl_Main.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl_Main.Location = new System.Drawing.Point(0, 0);
-            this.tabControl_Main.Margin = new System.Windows.Forms.Padding(4);
+            this.tabControl_Main.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.tabControl_Main.Name = "tabControl_Main";
             this.tabControl_Main.SelectedIndex = 0;
             this.tabControl_Main.Size = new System.Drawing.Size(1075, 870);
@@ -187,9 +187,9 @@
             // 
             this.tabPage_Grid.Controls.Add(this.panel_Grid);
             this.tabPage_Grid.Location = new System.Drawing.Point(4, 22);
-            this.tabPage_Grid.Margin = new System.Windows.Forms.Padding(4);
+            this.tabPage_Grid.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.tabPage_Grid.Name = "tabPage_Grid";
-            this.tabPage_Grid.Padding = new System.Windows.Forms.Padding(4);
+            this.tabPage_Grid.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.tabPage_Grid.Size = new System.Drawing.Size(1067, 844);
             this.tabPage_Grid.TabIndex = 0;
             this.tabPage_Grid.Text = "缺陷列表";
@@ -202,7 +202,7 @@
             this.panel_Grid.Controls.Add(this.panel_LotList);
             this.panel_Grid.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel_Grid.Location = new System.Drawing.Point(4, 4);
-            this.panel_Grid.Margin = new System.Windows.Forms.Padding(4);
+            this.panel_Grid.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.panel_Grid.Name = "panel_Grid";
             this.panel_Grid.Size = new System.Drawing.Size(1059, 836);
             this.panel_Grid.TabIndex = 1;
@@ -236,7 +236,7 @@
             this.dataGridView_Defects.DefaultCellStyle = dataGridViewCellStyle1;
             this.dataGridView_Defects.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView_Defects.Location = new System.Drawing.Point(204, 0);
-            this.dataGridView_Defects.Margin = new System.Windows.Forms.Padding(4);
+            this.dataGridView_Defects.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.dataGridView_Defects.MultiSelect = false;
             this.dataGridView_Defects.Name = "dataGridView_Defects";
             this.dataGridView_Defects.RowHeadersVisible = false;
@@ -373,7 +373,7 @@
             this.panel_SnSearch.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel_SnSearch.Location = new System.Drawing.Point(0, 25);
             this.panel_SnSearch.Name = "panel_SnSearch";
-            this.panel_SnSearch.Padding = new System.Windows.Forms.Padding(3);
+            this.panel_SnSearch.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
             this.panel_SnSearch.Size = new System.Drawing.Size(200, 30);
             this.panel_SnSearch.TabIndex = 2;
             // 
@@ -421,10 +421,10 @@
             // 
             this.tabPage_Details.Controls.Add(this.defectDetailControl1);
             this.tabPage_Details.Location = new System.Drawing.Point(4, 22);
-            this.tabPage_Details.Margin = new System.Windows.Forms.Padding(4);
+            this.tabPage_Details.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.tabPage_Details.Name = "tabPage_Details";
-            this.tabPage_Details.Padding = new System.Windows.Forms.Padding(4);
-            this.tabPage_Details.Size = new System.Drawing.Size(1067, 844);
+            this.tabPage_Details.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tabPage_Details.Size = new System.Drawing.Size(1158, 844);
             this.tabPage_Details.TabIndex = 1;
             this.tabPage_Details.Text = "缺陷详情";
             this.tabPage_Details.UseVisualStyleBackColor = true;
@@ -434,19 +434,19 @@
             this.defectDetailControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.defectDetailControl1.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.defectDetailControl1.Location = new System.Drawing.Point(4, 4);
-            this.defectDetailControl1.Margin = new System.Windows.Forms.Padding(5);
+            this.defectDetailControl1.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
             this.defectDetailControl1.Name = "defectDetailControl1";
-            this.defectDetailControl1.Size = new System.Drawing.Size(1059, 836);
+            this.defectDetailControl1.Size = new System.Drawing.Size(1150, 836);
             this.defectDetailControl1.TabIndex = 0;
             // 
             // tabPage_ValidationTest
             // 
             this.tabPage_ValidationTest.Controls.Add(this.validationTestResultControl1);
             this.tabPage_ValidationTest.Location = new System.Drawing.Point(4, 22);
-            this.tabPage_ValidationTest.Margin = new System.Windows.Forms.Padding(4);
+            this.tabPage_ValidationTest.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.tabPage_ValidationTest.Name = "tabPage_ValidationTest";
-            this.tabPage_ValidationTest.Padding = new System.Windows.Forms.Padding(4);
-            this.tabPage_ValidationTest.Size = new System.Drawing.Size(1067, 844);
+            this.tabPage_ValidationTest.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tabPage_ValidationTest.Size = new System.Drawing.Size(1158, 844);
             this.tabPage_ValidationTest.TabIndex = 2;
             this.tabPage_ValidationTest.Text = "模型一致性测试";
             this.tabPage_ValidationTest.UseVisualStyleBackColor = true;
@@ -457,9 +457,9 @@
             this.validationTestResultControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.validationTestResultControl1.Font = new System.Drawing.Font("微软雅黑", 9F);
             this.validationTestResultControl1.Location = new System.Drawing.Point(4, 4);
-            this.validationTestResultControl1.Margin = new System.Windows.Forms.Padding(4);
+            this.validationTestResultControl1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.validationTestResultControl1.Name = "validationTestResultControl1";
-            this.validationTestResultControl1.Size = new System.Drawing.Size(1059, 836);
+            this.validationTestResultControl1.Size = new System.Drawing.Size(1150, 836);
             this.validationTestResultControl1.TabIndex = 0;
             // 
             // contextMenuStrip_Lot
@@ -488,7 +488,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.panel_Main);
-            this.Margin = new System.Windows.Forms.Padding(4);
+            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.Name = "AIReviewControl";
             this.Size = new System.Drawing.Size(1443, 870);
             this.panel_Main.ResumeLayout(false);

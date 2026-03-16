@@ -39,6 +39,45 @@ namespace DeepSightAI
                 return _instance;
             }
         }
+
+        #region 页面切换配置
+
+        /// <summary>
+        /// FormMode → Panel 映射（字典驱动，替代 switch 中的 panel 可见性切换）
+        /// </summary>
+        private Dictionary<FormMode, Panel> _pagePanels;
+
+        /// <summary>
+        /// FormMode → (按钮, 选中图, 未选中图) 映射（字典驱动，替代 SwitchButton 中的 switch）
+        /// </summary>
+        private Dictionary<FormMode, (PictureBox btn, Image activeImg, Image inactiveImg)> _buttonConfigs;
+
+        /// <summary>
+        /// 初始化页面切换所需的字典映射
+        /// </summary>
+        private void InitPageSwitchConfig()
+        {
+            _pagePanels = new Dictionary<FormMode, Panel>
+            {
+                { FormMode.MainForm,    panel1 },
+                { FormMode.SettingForm, panel2 },
+                { FormMode.SearchForm,  panel3 },
+                { FormMode.AlarmForm,   panel4 },
+                { FormMode.ChartForm,   panel5 },
+            };
+
+            _buttonConfigs = new Dictionary<FormMode, (PictureBox, Image, Image)>
+            {
+                { FormMode.MainForm,    (btnHome,   Resources.home2,   Resources.home1)   },
+                { FormMode.SettingForm, (btnTool,   Resources.tool2,   Resources.tool1)   },
+                { FormMode.AlarmForm,   (btnAlarm,  Resources.alarm2,  Resources.alarm1)  },
+                { FormMode.ChartForm,   (btnChart,  Resources.chart2,  Resources.chart1)  },
+                { FormMode.SearchForm,  (btnSearch, Resources.search2, Resources.search1) },
+            };
+        }
+
+        #endregion
+
         public FrmMain()
         {
             InitializeComponent();
@@ -52,6 +91,7 @@ namespace DeepSightAI
             this.Load += FrmMain_Load;
             this.FormClosing += FrMain_FormClosing;
 
+            InitPageSwitchConfig();
 
             SystemEvent.EventSendTaskStatusToUI += new SendTaskStatus(SystemEvent_EventSendTaskStatusToUI);
             SystemEvent.EventSendTaskToUI += new SendTask(SystemEvent_EventSendTaskToUI);
@@ -446,7 +486,10 @@ namespace DeepSightAI
             row.Cells[2].Value = count;
             row.Cells[4].Value = msg;
             FrHome.Instance.str_SN = sn;
-            FrHome.Instance.dataGridViewData_CellClick(null, null);
+
+            // 优化：如果当前显示的就是这个SN，只更新AI结果标签，不重新从Minio加载图片
+            // 完整加载仅在用户点击新SN行或首次显示时触发
+            FrHome.Instance.UpdateAIResultLabels();
         }
 
         /// <summary>
@@ -497,45 +540,28 @@ namespace DeepSightAI
         {
             try
             {
-                //主页
-                FrmMain.Instance.panel1.Controls.Clear();
-                FrHome.Instance.TopLevel = false;
-                FrHome.Instance.Parent = FrmMain.Instance.panel1;
-                FrHome.Instance.Dock = DockStyle.Fill;
-                FrHome.Instance.Show();
-                //FrHome.Instance.LoadMethod();
+                // 统一嵌入子窗体到对应 Panel
+                var formPanelMap = new (Form form, Panel panel)[]
+                {
+                    (FrHome.Instance,    panel1),
+                    (FrSetting.Instance, panel2),
+                    (FrSearch.Instance,  panel3),
+                    (FrAlarm.Instance,   panel4),
+                    (FrChart.Instance,   panel5),
+                };
+
+                foreach (var (form, panel) in formPanelMap)
+                {
+                    panel.Controls.Clear();
+                    form.TopLevel = false;
+                    form.Parent = panel;
+                    form.Dock = DockStyle.Fill;
+                    form.Show();
+                }
+
+                // FrHome 特有的初始化
                 FrHome.Instance.InitMethod();
-                //事件订阅以及图片显示初始化
                 FrHome.Instance.InitWork();
-
-                ////设置
-                FrmMain.Instance.panel2.Controls.Clear();
-                FrSetting.Instance.TopLevel = false;
-                FrSetting.Instance.Parent = FrmMain.Instance.panel2;
-                FrSetting.Instance.Dock = DockStyle.Fill;
-                FrSetting.Instance.Show();
-
-                ////警报
-                FrmMain.Instance.panel4.Controls.Clear();
-                FrAlarm.Instance.TopLevel = false;
-                FrAlarm.Instance.Parent = FrmMain.Instance.panel4;
-                FrAlarm.Instance.Dock = DockStyle.Fill;
-                FrAlarm.Instance.Show();
-
-                ////图标
-                FrmMain.Instance.panel5.Controls.Clear();
-                FrChart.Instance.TopLevel = false;
-                FrChart.Instance.Parent = FrmMain.Instance.panel5;
-                FrChart.Instance.Dock = DockStyle.Fill;
-                FrChart.Instance.Show();
-
-                ////搜索
-                FrmMain.Instance.panel3.Controls.Clear();
-                FrSearch.Instance.TopLevel = false;
-                FrSearch.Instance.Parent = FrmMain.Instance.panel3;
-                FrSearch.Instance.Dock = DockStyle.Fill;
-                FrSearch.Instance.Show();
-
             }
             catch (Exception ex)
             {
@@ -689,165 +715,33 @@ namespace DeepSightAI
 
         internal void SwitchFrom(FormMode formMode)
         {
-            if (curFormMode != formMode)
+            if (curFormMode == formMode) return;
+
+            // 1. 将当前按钮恢复为未选中图标
+            if (_buttonConfigs.TryGetValue(curFormMode, out var oldCfg))
             {
-                SwitchButton();
+                oldCfg.btn.Image = oldCfg.inactiveImg;
             }
-            switch (formMode)
+
+            // 2. 切换 Panel 可见性（字典驱动）
+            foreach (var kvp in _pagePanels)
             {
-                case FormMode.MainForm:
-
-                    if (curFormMode != FormMode.MainForm)
-                    {
-                        curFormMode = FormMode.MainForm;
-
-                        btnHome.Image = Resources.home2;
-
-                        FrmMain.Instance.panel1.Dock = DockStyle.Fill;
-
-                        FrmMain.Instance.panel1.Visible = true;
-                        FrmMain.Instance.panel2.Visible = false;
-                        FrmMain.Instance.panel3.Visible = false;
-                        FrmMain.Instance.panel4.Visible = false;
-                        FrmMain.Instance.panel5.Visible = false;
-                        FrmMain.Instance.panel6.Visible = false;
-                        FrmMain.Instance.panel7.Visible = false;
-                    }
-                    break;
-
-                case FormMode.SettingForm:
-
-                    if (curFormMode != FormMode.SettingForm)
-                    {
-                        curFormMode = FormMode.SettingForm;
-
-                        btnTool.Image = Resources.tool2;
-
-                        FrmMain.Instance.panel2.Dock = DockStyle.Fill;
-
-                        FrmMain.Instance.panel1.Visible = false;
-                        FrmMain.Instance.panel2.Visible = true;
-                        FrmMain.Instance.panel3.Visible = false;
-                        FrmMain.Instance.panel4.Visible = false;
-                        FrmMain.Instance.panel5.Visible = false;
-                        FrmMain.Instance.panel6.Visible = false;
-                        FrmMain.Instance.panel7.Visible = false;
-                    }
-                    break;
-
-                case FormMode.AlarmForm:
-
-                    if (curFormMode != FormMode.AlarmForm)
-                    {
-                        curFormMode = FormMode.AlarmForm;
-
-                        btnAlarm.Image = Resources.alarm2;
-
-                        FrmMain.Instance.panel4.Dock = DockStyle.Fill;
-
-                        FrmMain.Instance.panel1.Visible = false;
-                        FrmMain.Instance.panel2.Visible = false;
-                        FrmMain.Instance.panel3.Visible = false;
-                        FrmMain.Instance.panel4.Visible = true;
-                        FrmMain.Instance.panel5.Visible = false;
-                        FrmMain.Instance.panel6.Visible = false;
-                        FrmMain.Instance.panel7.Visible = false;
-                    }
-                    break;
-
-                case FormMode.ChartForm:
-
-                    if (curFormMode != FormMode.ChartForm)
-                    {
-                        curFormMode = FormMode.ChartForm;
-
-                        btnChart.Image = Resources.chart2;
-
-                        FrmMain.Instance.panel5.Dock = DockStyle.Fill;
-
-                        FrmMain.Instance.panel1.Visible = false;
-                        FrmMain.Instance.panel2.Visible = false;
-                        FrmMain.Instance.panel3.Visible = false;
-                        FrmMain.Instance.panel4.Visible = false;
-                        FrmMain.Instance.panel5.Visible = true;
-                        FrmMain.Instance.panel6.Visible = false;
-                        FrmMain.Instance.panel7.Visible = false;
-                    }
-                    break;
-                case FormMode.SearchForm:
-
-                    if (curFormMode != FormMode.SearchForm)
-                    {
-                        curFormMode = FormMode.SearchForm;
-
-                        btnSearch.Image = Resources.search2;
-
-                        FrmMain.Instance.panel3.Dock = DockStyle.Fill;
-
-                        FrmMain.Instance.panel1.Visible = false;
-                        FrmMain.Instance.panel2.Visible = false;
-                        FrmMain.Instance.panel3.Visible = true;
-                        FrmMain.Instance.panel4.Visible = false;
-                        FrmMain.Instance.panel5.Visible = false;
-                        FrmMain.Instance.panel6.Visible = false;
-                        FrmMain.Instance.panel7.Visible = false;
-                    }
-                    break;
+                bool isTarget = kvp.Key == formMode;
+                kvp.Value.Visible = isTarget;
+                if (isTarget)
+                    kvp.Value.Dock = DockStyle.Fill;
             }
-        }
-        private void SwitchButton()
-        {
-            try
+            // 隐藏未使用的 panel6、panel7
+            panel6.Visible = false;
+            panel7.Visible = false;
+
+            // 3. 将新按钮设为选中图标
+            if (_buttonConfigs.TryGetValue(formMode, out var newCfg))
             {
-                switch (curFormMode)
-                {
-                    case FormMode.None:
-                        btnHome.Image = Resources.home1;
-                        btnTool.Image = Resources.tool1;
-                        //btnCamera.Image = Resources.pho1;
-                        btnAlarm.Image = Resources.alarm1;
-                        btnChart.Image = Resources.chart1;
-                        //btnFn.Image = Resources.Fn1;
-                        //btnSearch.Image = Resources.search1;
-                        break;
-
-                    case FormMode.MainForm:
-                        btnHome.Image = Resources.home1;
-                        break;
-
-                    case FormMode.SettingForm:
-                        btnTool.Image = Resources.tool1;
-
-                        break;
-
-                    //case FormMode.CameraForm:
-                    //    btnCamera.Image = Resources.pho1;
-                    //    break;
-
-                    case FormMode.AlarmForm:
-                        btnAlarm.Image = Resources.alarm1;
-                        break;
-
-                    case FormMode.ChartForm:
-                        btnChart.Image = Resources.chart1;
-                        break;
-
-                    //case FormMode.FnForm:
-                    //    btnFn.Image = Resources.Fn1;
-                    //    break;
-
-                    case FormMode.SearchForm:
-                        btnSearch.Image = Resources.search1;
-                        break;
-
-                    default:
-                        break;
-                }
+                newCfg.btn.Image = newCfg.activeImg;
             }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error("Error", ex);
-            }
+
+            curFormMode = formMode;
         }
 
         #region 窗体缩放
@@ -1055,36 +949,10 @@ namespace DeepSightAI
                 btnModelB.Checked = false;
             }
         }
-        private async void btnClear_Click(object sender, EventArgs e)
+        private void btnClear_Click(object sender, EventArgs e)
         {
             Machine.master.IsStart = false;
-            // 生成索引集合（0-99）
-            var indices = Enumerable.Range(0, FrHome.Instance.DispWin2.Length).ToList();
-
-            var options = new ParallelOptions
-            {
-                MaxDegreeOfParallelism = Math.Max(1, Environment.ProcessorCount - 2),
-                CancellationToken = CancellationToken.None
-            };
-            await Task.Factory.StartNew(() =>
-            {
-                Parallel.ForEach(indices, options, i =>
-                {
-                    if (i < 0 || i >= FrHome.Instance.DispWin2.Length || FrHome.Instance.DispWin2[i] == null) return;
-
-                    if (FrHome.Instance.DispWin2[i].InvokeRequired)
-                    {
-                        FrHome.Instance.DispWin2[i].BeginInvoke(new Action(() =>
-                        {
-                            FrHome.Instance.DispWin2[i].Clear();
-                        }));
-                    }
-                    else
-                    {
-                        FrHome.Instance.DispWin2[i].Clear();
-                    }
-                });
-            });
+            FrHome.Instance.ClearAllImages();
         }
         private async void btnModel_Click(object sender, EventArgs e)
         {

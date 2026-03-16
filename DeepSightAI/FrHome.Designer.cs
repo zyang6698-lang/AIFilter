@@ -29,9 +29,9 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
             this.table_main = new System.Windows.Forms.TableLayoutPanel();
             this.panel_show = new System.Windows.Forms.Panel();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
@@ -42,31 +42,33 @@
             this.AI = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Time = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Status = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.contextMenuStripData = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.btnShowDebugInfo = new System.Windows.Forms.ToolStripMenuItem();
             this.rich_log = new System.Windows.Forms.RichTextBox();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.btnClearLog = new System.Windows.Forms.ToolStripMenuItem();
             this.btnShowLog = new System.Windows.Forms.ToolStripMenuItem();
-            this.contextMenuStripData = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.btnShowDebugInfo = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.avi_panel = new System.Windows.Forms.Panel();
             this.aviCtr2Container = new DeepSightAI.SettingPages.AviCtr2Container();
             this.splitContainer3 = new System.Windows.Forms.SplitContainer();
             this.splitContainer5 = new System.Windows.Forms.SplitContainer();
             this.table_Small = new System.Windows.Forms.TableLayoutPanel();
-            this.lblPageInfo = new System.Windows.Forms.Label();
+            this.paginationPanel = new System.Windows.Forms.TableLayoutPanel();
             this.btnPrevious = new System.Windows.Forms.Button();
+            this.lblPageInfo = new System.Windows.Forms.Label();
             this.btnNext = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.lbl_CountPerPanel = new System.Windows.Forms.Label();
-            this.lbl_utilizationRate = new System.Windows.Forms.Label();
-            this.lbl_boardAiPassRate = new System.Windows.Forms.Label();
+            this.statsGridPanel = new System.Windows.Forms.TableLayoutPanel();
             this.lbl_SnTotalCount = new System.Windows.Forms.Label();
             this.lbl_totalDefectCount = new System.Windows.Forms.Label();
+            this.lbl_CountPerPanel = new System.Windows.Forms.Label();
             this.lbl_AiAllCount = new System.Windows.Forms.Label();
             this.lbl_aiFilterOKCount = new System.Windows.Forms.Label();
-            this.lbl_aviPassRateCount = new System.Windows.Forms.Label();
             this.lbl_filteredOkCount = new System.Windows.Forms.Label();
+            this.lbl_aviPassRateCount = new System.Windows.Forms.Label();
+            this.lbl_boardAiPassRate = new System.Windows.Forms.Label();
+            this.lbl_utilizationRate = new System.Windows.Forms.Label();
             this.table_main.SuspendLayout();
             this.panel_show.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -78,6 +80,7 @@
             this.splitContainer4.Panel2.SuspendLayout();
             this.splitContainer4.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewData)).BeginInit();
+            this.contextMenuStripData.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
             this.splitContainer2.Panel1.SuspendLayout();
@@ -92,7 +95,9 @@
             this.splitContainer5.Panel1.SuspendLayout();
             this.splitContainer5.Panel2.SuspendLayout();
             this.splitContainer5.SuspendLayout();
+            this.paginationPanel.SuspendLayout();
             this.panel1.SuspendLayout();
+            this.statsGridPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // table_main
@@ -162,14 +167,14 @@
             this.dataGridViewData.AllowUserToResizeColumns = false;
             this.dataGridViewData.AllowUserToResizeRows = false;
             this.dataGridViewData.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridViewData.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle4.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewData.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
             this.dataGridViewData.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewData.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Code,
@@ -177,28 +182,29 @@
             this.AI,
             this.Time,
             this.Status});
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(247)))), ((int)(((byte)(249)))), ((int)(((byte)(235)))));
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.InactiveCaption;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dataGridViewData.DefaultCellStyle = dataGridViewCellStyle2;
+            this.dataGridViewData.ContextMenuStrip = this.contextMenuStripData;
+            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            dataGridViewCellStyle5.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle5.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(247)))), ((int)(((byte)(249)))), ((int)(((byte)(235)))));
+            dataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.InactiveCaption;
+            dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dataGridViewData.DefaultCellStyle = dataGridViewCellStyle5;
             this.dataGridViewData.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridViewData.EnableHeadersVisualStyles = false;
             this.dataGridViewData.Location = new System.Drawing.Point(0, 0);
             this.dataGridViewData.MultiSelect = false;
             this.dataGridViewData.Name = "dataGridViewData";
             this.dataGridViewData.ReadOnly = true;
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridViewData.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            dataGridViewCellStyle6.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewData.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
             this.dataGridViewData.RowHeadersVisible = false;
             this.dataGridViewData.RowHeadersWidth = 51;
             this.dataGridViewData.RowTemplate.Height = 27;
@@ -209,24 +215,8 @@
             this.dataGridViewData.ShowRowErrors = false;
             this.dataGridViewData.Size = new System.Drawing.Size(494, 550);
             this.dataGridViewData.TabIndex = 2;
-            this.dataGridViewData.ContextMenuStrip = this.contextMenuStripData;
             this.dataGridViewData.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewData_CellClick);
-            //
-            // contextMenuStripData
-            //
-            this.contextMenuStripData.ImageScalingSize = new System.Drawing.Size(20, 20);
-            this.contextMenuStripData.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.btnShowDebugInfo});
-            this.contextMenuStripData.Name = "contextMenuStripData";
-            this.contextMenuStripData.Size = new System.Drawing.Size(150, 26);
-            //
-            // btnShowDebugInfo
-            //
-            this.btnShowDebugInfo.Name = "btnShowDebugInfo";
-            this.btnShowDebugInfo.Size = new System.Drawing.Size(149, 22);
-            this.btnShowDebugInfo.Text = "显示详情";
-            this.btnShowDebugInfo.Click += new System.EventHandler(this.btnShowDebugInfo_Click);
-            //
+            // 
             // Code
             // 
             this.Code.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
@@ -270,6 +260,21 @@
             this.Status.Name = "Status";
             this.Status.ReadOnly = true;
             this.Status.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            // 
+            // contextMenuStripData
+            // 
+            this.contextMenuStripData.ImageScalingSize = new System.Drawing.Size(20, 20);
+            this.contextMenuStripData.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.btnShowDebugInfo});
+            this.contextMenuStripData.Name = "contextMenuStripData";
+            this.contextMenuStripData.Size = new System.Drawing.Size(125, 26);
+            // 
+            // btnShowDebugInfo
+            // 
+            this.btnShowDebugInfo.Name = "btnShowDebugInfo";
+            this.btnShowDebugInfo.Size = new System.Drawing.Size(124, 22);
+            this.btnShowDebugInfo.Text = "显示详情";
+            this.btnShowDebugInfo.Click += new System.EventHandler(this.btnShowDebugInfo_Click);
             // 
             // rich_log
             // 
@@ -324,7 +329,7 @@
             this.splitContainer2.Panel2.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.splitContainer2.Panel2.Controls.Add(this.splitContainer3);
             this.splitContainer2.Size = new System.Drawing.Size(1257, 845);
-            this.splitContainer2.SplitterDistance = 564;
+            this.splitContainer2.SplitterDistance = 402;
             this.splitContainer2.TabIndex = 0;
             // 
             // avi_panel
@@ -334,7 +339,7 @@
             this.avi_panel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.avi_panel.Location = new System.Drawing.Point(0, 0);
             this.avi_panel.Name = "avi_panel";
-            this.avi_panel.Size = new System.Drawing.Size(1257, 564);
+            this.avi_panel.Size = new System.Drawing.Size(1257, 402);
             this.avi_panel.TabIndex = 0;
             // 
             // aviCtr2Container
@@ -344,7 +349,7 @@
             this.aviCtr2Container.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.aviCtr2Container.Name = "aviCtr2Container";
             this.aviCtr2Container.ShowDeleteButtons = true;
-            this.aviCtr2Container.Size = new System.Drawing.Size(1257, 564);
+            this.aviCtr2Container.Size = new System.Drawing.Size(1257, 402);
             this.aviCtr2Container.TabIndex = 0;
             // 
             // splitContainer3
@@ -360,7 +365,7 @@
             // splitContainer3.Panel2
             // 
             this.splitContainer3.Panel2.Controls.Add(this.panel1);
-            this.splitContainer3.Size = new System.Drawing.Size(1257, 277);
+            this.splitContainer3.Size = new System.Drawing.Size(1257, 439);
             this.splitContainer3.SplitterDistance = 545;
             this.splitContainer3.TabIndex = 0;
             // 
@@ -378,11 +383,9 @@
             // splitContainer5.Panel2
             // 
             this.splitContainer5.Panel2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.splitContainer5.Panel2.Controls.Add(this.lblPageInfo);
-            this.splitContainer5.Panel2.Controls.Add(this.btnPrevious);
-            this.splitContainer5.Panel2.Controls.Add(this.btnNext);
-            this.splitContainer5.Size = new System.Drawing.Size(545, 277);
-            this.splitContainer5.SplitterDistance = 236;
+            this.splitContainer5.Panel2.Controls.Add(this.paginationPanel);
+            this.splitContainer5.Size = new System.Drawing.Size(545, 439);
+            this.splitContainer5.SplitterDistance = 374;
             this.splitContainer5.TabIndex = 0;
             // 
             // table_Small
@@ -399,40 +402,59 @@
             this.table_Small.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 766F));
             this.table_Small.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 766F));
             this.table_Small.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 766F));
-            this.table_Small.Size = new System.Drawing.Size(545, 236);
+            this.table_Small.Size = new System.Drawing.Size(545, 374);
             this.table_Small.TabIndex = 11;
             // 
-            // lblPageInfo
+            // paginationPanel
             // 
-            this.lblPageInfo.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.lblPageInfo.AutoSize = true;
-            this.lblPageInfo.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.lblPageInfo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.lblPageInfo.Location = new System.Drawing.Point(223, 11);
-            this.lblPageInfo.Name = "lblPageInfo";
-            this.lblPageInfo.Size = new System.Drawing.Size(99, 17);
-            this.lblPageInfo.TabIndex = 46;
-            this.lblPageInfo.Text = "第 1 页 / 共 1 页";
-            this.lblPageInfo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.paginationPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.paginationPanel.ColumnCount = 3;
+            this.paginationPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 95F));
+            this.paginationPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.paginationPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 95F));
+            this.paginationPanel.Controls.Add(this.btnPrevious, 0, 0);
+            this.paginationPanel.Controls.Add(this.lblPageInfo, 1, 0);
+            this.paginationPanel.Controls.Add(this.btnNext, 2, 0);
+            this.paginationPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.paginationPanel.Location = new System.Drawing.Point(0, 0);
+            this.paginationPanel.Name = "paginationPanel";
+            this.paginationPanel.RowCount = 1;
+            this.paginationPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.paginationPanel.Size = new System.Drawing.Size(545, 61);
+            this.paginationPanel.TabIndex = 0;
             // 
             // btnPrevious
             // 
-            this.btnPrevious.Location = new System.Drawing.Point(17, 11);
+            this.btnPrevious.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.btnPrevious.Location = new System.Drawing.Point(10, 5);
+            this.btnPrevious.Margin = new System.Windows.Forms.Padding(10, 5, 5, 5);
             this.btnPrevious.Name = "btnPrevious";
-            this.btnPrevious.Size = new System.Drawing.Size(75, 35);
+            this.btnPrevious.Size = new System.Drawing.Size(80, 51);
             this.btnPrevious.TabIndex = 45;
             this.btnPrevious.Text = "上一页";
             this.btnPrevious.UseVisualStyleBackColor = true;
             this.btnPrevious.Click += new System.EventHandler(this.btnPrevious_Click);
             // 
+            // lblPageInfo
+            // 
+            this.lblPageInfo.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.lblPageInfo.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblPageInfo.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lblPageInfo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.lblPageInfo.Location = new System.Drawing.Point(98, 0);
+            this.lblPageInfo.Name = "lblPageInfo";
+            this.lblPageInfo.Size = new System.Drawing.Size(349, 61);
+            this.lblPageInfo.TabIndex = 46;
+            this.lblPageInfo.Text = "第 1 页 / 共 1 页";
+            this.lblPageInfo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
             // btnNext
             // 
-            this.btnNext.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnNext.Location = new System.Drawing.Point(457, 12);
+            this.btnNext.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.btnNext.Location = new System.Drawing.Point(455, 5);
+            this.btnNext.Margin = new System.Windows.Forms.Padding(5, 5, 10, 5);
             this.btnNext.Name = "btnNext";
-            this.btnNext.Size = new System.Drawing.Size(75, 32);
+            this.btnNext.Size = new System.Drawing.Size(80, 51);
             this.btnNext.TabIndex = 44;
             this.btnNext.Text = "下一页";
             this.btnNext.UseVisualStyleBackColor = true;
@@ -441,69 +463,51 @@
             // panel1
             // 
             this.panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.panel1.Controls.Add(this.lbl_CountPerPanel);
-            this.panel1.Controls.Add(this.lbl_utilizationRate);
-            this.panel1.Controls.Add(this.lbl_boardAiPassRate);
-            this.panel1.Controls.Add(this.lbl_SnTotalCount);
-            this.panel1.Controls.Add(this.lbl_totalDefectCount);
-            this.panel1.Controls.Add(this.lbl_AiAllCount);
-            this.panel1.Controls.Add(this.lbl_aiFilterOKCount);
-            this.panel1.Controls.Add(this.lbl_aviPassRateCount);
-            this.panel1.Controls.Add(this.lbl_filteredOkCount);
+            this.panel1.Controls.Add(this.statsGridPanel);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(708, 277);
+            this.panel1.Size = new System.Drawing.Size(708, 439);
             this.panel1.TabIndex = 0;
             // 
-            // lbl_CountPerPanel
+            // statsGridPanel
             // 
-            this.lbl_CountPerPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(66)))), ((int)(((byte)(82)))));
-            this.lbl_CountPerPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.lbl_CountPerPanel.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold);
-            this.lbl_CountPerPanel.ForeColor = System.Drawing.Color.FloralWhite;
-            this.lbl_CountPerPanel.Location = new System.Drawing.Point(469, 16);
-            this.lbl_CountPerPanel.Name = "lbl_CountPerPanel";
-            this.lbl_CountPerPanel.Size = new System.Drawing.Size(218, 77);
-            this.lbl_CountPerPanel.TabIndex = 9;
-            this.lbl_CountPerPanel.Text = "-";
-            this.lbl_CountPerPanel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // lbl_utilizationRate
-            // 
-            this.lbl_utilizationRate.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(66)))), ((int)(((byte)(82)))));
-            this.lbl_utilizationRate.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.lbl_utilizationRate.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold);
-            this.lbl_utilizationRate.ForeColor = System.Drawing.Color.FloralWhite;
-            this.lbl_utilizationRate.Location = new System.Drawing.Point(469, 197);
-            this.lbl_utilizationRate.Name = "lbl_utilizationRate";
-            this.lbl_utilizationRate.Size = new System.Drawing.Size(218, 77);
-            this.lbl_utilizationRate.TabIndex = 8;
-            this.lbl_utilizationRate.Text = "-";
-            this.lbl_utilizationRate.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // lbl_boardAiPassRate
-            // 
-            this.lbl_boardAiPassRate.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(66)))), ((int)(((byte)(82)))));
-            this.lbl_boardAiPassRate.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.lbl_boardAiPassRate.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold);
-            this.lbl_boardAiPassRate.ForeColor = System.Drawing.Color.FloralWhite;
-            this.lbl_boardAiPassRate.Location = new System.Drawing.Point(242, 197);
-            this.lbl_boardAiPassRate.Name = "lbl_boardAiPassRate";
-            this.lbl_boardAiPassRate.Size = new System.Drawing.Size(218, 77);
-            this.lbl_boardAiPassRate.TabIndex = 7;
-            this.lbl_boardAiPassRate.Text = "-";
-            this.lbl_boardAiPassRate.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.statsGridPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.statsGridPanel.ColumnCount = 3;
+            this.statsGridPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33F));
+            this.statsGridPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.34F));
+            this.statsGridPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33F));
+            this.statsGridPanel.Controls.Add(this.lbl_SnTotalCount, 0, 0);
+            this.statsGridPanel.Controls.Add(this.lbl_totalDefectCount, 1, 0);
+            this.statsGridPanel.Controls.Add(this.lbl_CountPerPanel, 2, 0);
+            this.statsGridPanel.Controls.Add(this.lbl_AiAllCount, 0, 1);
+            this.statsGridPanel.Controls.Add(this.lbl_aiFilterOKCount, 1, 1);
+            this.statsGridPanel.Controls.Add(this.lbl_filteredOkCount, 2, 1);
+            this.statsGridPanel.Controls.Add(this.lbl_aviPassRateCount, 0, 2);
+            this.statsGridPanel.Controls.Add(this.lbl_boardAiPassRate, 1, 2);
+            this.statsGridPanel.Controls.Add(this.lbl_utilizationRate, 2, 2);
+            this.statsGridPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.statsGridPanel.Location = new System.Drawing.Point(0, 0);
+            this.statsGridPanel.Name = "statsGridPanel";
+            this.statsGridPanel.Padding = new System.Windows.Forms.Padding(5);
+            this.statsGridPanel.RowCount = 3;
+            this.statsGridPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33F));
+            this.statsGridPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.34F));
+            this.statsGridPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33F));
+            this.statsGridPanel.Size = new System.Drawing.Size(708, 439);
+            this.statsGridPanel.TabIndex = 0;
             // 
             // lbl_SnTotalCount
             // 
             this.lbl_SnTotalCount.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(66)))), ((int)(((byte)(82)))));
             this.lbl_SnTotalCount.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lbl_SnTotalCount.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lbl_SnTotalCount.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lbl_SnTotalCount.ForeColor = System.Drawing.Color.FloralWhite;
-            this.lbl_SnTotalCount.Location = new System.Drawing.Point(17, 16);
+            this.lbl_SnTotalCount.Location = new System.Drawing.Point(8, 8);
+            this.lbl_SnTotalCount.Margin = new System.Windows.Forms.Padding(3);
             this.lbl_SnTotalCount.Name = "lbl_SnTotalCount";
-            this.lbl_SnTotalCount.Size = new System.Drawing.Size(218, 77);
+            this.lbl_SnTotalCount.Size = new System.Drawing.Size(226, 136);
             this.lbl_SnTotalCount.TabIndex = 5;
             this.lbl_SnTotalCount.Text = "-";
             this.lbl_SnTotalCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -512,24 +516,43 @@
             // 
             this.lbl_totalDefectCount.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(66)))), ((int)(((byte)(82)))));
             this.lbl_totalDefectCount.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lbl_totalDefectCount.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lbl_totalDefectCount.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold);
             this.lbl_totalDefectCount.ForeColor = System.Drawing.Color.FloralWhite;
-            this.lbl_totalDefectCount.Location = new System.Drawing.Point(242, 16);
+            this.lbl_totalDefectCount.Location = new System.Drawing.Point(240, 8);
+            this.lbl_totalDefectCount.Margin = new System.Windows.Forms.Padding(3);
             this.lbl_totalDefectCount.Name = "lbl_totalDefectCount";
-            this.lbl_totalDefectCount.Size = new System.Drawing.Size(218, 77);
+            this.lbl_totalDefectCount.Size = new System.Drawing.Size(226, 136);
             this.lbl_totalDefectCount.TabIndex = 0;
             this.lbl_totalDefectCount.Text = "-";
             this.lbl_totalDefectCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // lbl_CountPerPanel
+            // 
+            this.lbl_CountPerPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(66)))), ((int)(((byte)(82)))));
+            this.lbl_CountPerPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lbl_CountPerPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lbl_CountPerPanel.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold);
+            this.lbl_CountPerPanel.ForeColor = System.Drawing.Color.FloralWhite;
+            this.lbl_CountPerPanel.Location = new System.Drawing.Point(472, 8);
+            this.lbl_CountPerPanel.Margin = new System.Windows.Forms.Padding(3);
+            this.lbl_CountPerPanel.Name = "lbl_CountPerPanel";
+            this.lbl_CountPerPanel.Size = new System.Drawing.Size(228, 136);
+            this.lbl_CountPerPanel.TabIndex = 9;
+            this.lbl_CountPerPanel.Text = "-";
+            this.lbl_CountPerPanel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // lbl_AiAllCount
             // 
             this.lbl_AiAllCount.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(66)))), ((int)(((byte)(82)))));
             this.lbl_AiAllCount.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lbl_AiAllCount.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lbl_AiAllCount.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold);
             this.lbl_AiAllCount.ForeColor = System.Drawing.Color.FloralWhite;
-            this.lbl_AiAllCount.Location = new System.Drawing.Point(17, 107);
+            this.lbl_AiAllCount.Location = new System.Drawing.Point(8, 150);
+            this.lbl_AiAllCount.Margin = new System.Windows.Forms.Padding(3);
             this.lbl_AiAllCount.Name = "lbl_AiAllCount";
-            this.lbl_AiAllCount.Size = new System.Drawing.Size(218, 77);
+            this.lbl_AiAllCount.Size = new System.Drawing.Size(226, 137);
             this.lbl_AiAllCount.TabIndex = 1;
             this.lbl_AiAllCount.Text = "-";
             this.lbl_AiAllCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -538,40 +561,76 @@
             // 
             this.lbl_aiFilterOKCount.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(66)))), ((int)(((byte)(82)))));
             this.lbl_aiFilterOKCount.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lbl_aiFilterOKCount.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lbl_aiFilterOKCount.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold);
             this.lbl_aiFilterOKCount.ForeColor = System.Drawing.Color.FloralWhite;
-            this.lbl_aiFilterOKCount.Location = new System.Drawing.Point(242, 107);
+            this.lbl_aiFilterOKCount.Location = new System.Drawing.Point(240, 150);
+            this.lbl_aiFilterOKCount.Margin = new System.Windows.Forms.Padding(3);
             this.lbl_aiFilterOKCount.Name = "lbl_aiFilterOKCount";
-            this.lbl_aiFilterOKCount.Size = new System.Drawing.Size(218, 77);
+            this.lbl_aiFilterOKCount.Size = new System.Drawing.Size(226, 137);
             this.lbl_aiFilterOKCount.TabIndex = 2;
             this.lbl_aiFilterOKCount.Text = "-";
             this.lbl_aiFilterOKCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // lbl_aviPassRateCount
-            // 
-            this.lbl_aviPassRateCount.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(66)))), ((int)(((byte)(82)))));
-            this.lbl_aviPassRateCount.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.lbl_aviPassRateCount.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold);
-            this.lbl_aviPassRateCount.ForeColor = System.Drawing.Color.FloralWhite;
-            this.lbl_aviPassRateCount.Location = new System.Drawing.Point(17, 197);
-            this.lbl_aviPassRateCount.Name = "lbl_aviPassRateCount";
-            this.lbl_aviPassRateCount.Size = new System.Drawing.Size(218, 77);
-            this.lbl_aviPassRateCount.TabIndex = 3;
-            this.lbl_aviPassRateCount.Text = "-";
-            this.lbl_aviPassRateCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // lbl_filteredOkCount
             // 
             this.lbl_filteredOkCount.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(66)))), ((int)(((byte)(82)))));
             this.lbl_filteredOkCount.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lbl_filteredOkCount.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lbl_filteredOkCount.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold);
             this.lbl_filteredOkCount.ForeColor = System.Drawing.Color.FloralWhite;
-            this.lbl_filteredOkCount.Location = new System.Drawing.Point(469, 107);
+            this.lbl_filteredOkCount.Location = new System.Drawing.Point(472, 150);
+            this.lbl_filteredOkCount.Margin = new System.Windows.Forms.Padding(3);
             this.lbl_filteredOkCount.Name = "lbl_filteredOkCount";
-            this.lbl_filteredOkCount.Size = new System.Drawing.Size(218, 77);
+            this.lbl_filteredOkCount.Size = new System.Drawing.Size(228, 137);
             this.lbl_filteredOkCount.TabIndex = 4;
             this.lbl_filteredOkCount.Text = "-";
             this.lbl_filteredOkCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // lbl_aviPassRateCount
+            // 
+            this.lbl_aviPassRateCount.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(66)))), ((int)(((byte)(82)))));
+            this.lbl_aviPassRateCount.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lbl_aviPassRateCount.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lbl_aviPassRateCount.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold);
+            this.lbl_aviPassRateCount.ForeColor = System.Drawing.Color.FloralWhite;
+            this.lbl_aviPassRateCount.Location = new System.Drawing.Point(8, 293);
+            this.lbl_aviPassRateCount.Margin = new System.Windows.Forms.Padding(3);
+            this.lbl_aviPassRateCount.Name = "lbl_aviPassRateCount";
+            this.lbl_aviPassRateCount.Size = new System.Drawing.Size(226, 138);
+            this.lbl_aviPassRateCount.TabIndex = 3;
+            this.lbl_aviPassRateCount.Text = "-";
+            this.lbl_aviPassRateCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // lbl_boardAiPassRate
+            // 
+            this.lbl_boardAiPassRate.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(66)))), ((int)(((byte)(82)))));
+            this.lbl_boardAiPassRate.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lbl_boardAiPassRate.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lbl_boardAiPassRate.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold);
+            this.lbl_boardAiPassRate.ForeColor = System.Drawing.Color.FloralWhite;
+            this.lbl_boardAiPassRate.Location = new System.Drawing.Point(240, 293);
+            this.lbl_boardAiPassRate.Margin = new System.Windows.Forms.Padding(3);
+            this.lbl_boardAiPassRate.Name = "lbl_boardAiPassRate";
+            this.lbl_boardAiPassRate.Size = new System.Drawing.Size(226, 138);
+            this.lbl_boardAiPassRate.TabIndex = 7;
+            this.lbl_boardAiPassRate.Text = "-";
+            this.lbl_boardAiPassRate.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // lbl_utilizationRate
+            // 
+            this.lbl_utilizationRate.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(66)))), ((int)(((byte)(82)))));
+            this.lbl_utilizationRate.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lbl_utilizationRate.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lbl_utilizationRate.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold);
+            this.lbl_utilizationRate.ForeColor = System.Drawing.Color.FloralWhite;
+            this.lbl_utilizationRate.Location = new System.Drawing.Point(472, 293);
+            this.lbl_utilizationRate.Margin = new System.Windows.Forms.Padding(3);
+            this.lbl_utilizationRate.Name = "lbl_utilizationRate";
+            this.lbl_utilizationRate.Size = new System.Drawing.Size(228, 138);
+            this.lbl_utilizationRate.TabIndex = 8;
+            this.lbl_utilizationRate.Text = "-";
+            this.lbl_utilizationRate.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // FrHome
             // 
@@ -596,6 +655,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer4)).EndInit();
             this.splitContainer4.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewData)).EndInit();
+            this.contextMenuStripData.ResumeLayout(false);
             this.contextMenuStrip1.ResumeLayout(false);
             this.splitContainer2.Panel1.ResumeLayout(false);
             this.splitContainer2.Panel2.ResumeLayout(false);
@@ -608,10 +668,11 @@
             this.splitContainer3.ResumeLayout(false);
             this.splitContainer5.Panel1.ResumeLayout(false);
             this.splitContainer5.Panel2.ResumeLayout(false);
-            this.splitContainer5.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer5)).EndInit();
             this.splitContainer5.ResumeLayout(false);
+            this.paginationPanel.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
+            this.statsGridPanel.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -652,5 +713,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn Status;
         private System.Windows.Forms.ContextMenuStrip contextMenuStripData;
         private System.Windows.Forms.ToolStripMenuItem btnShowDebugInfo;
+        private System.Windows.Forms.TableLayoutPanel paginationPanel;
+        private System.Windows.Forms.TableLayoutPanel statsGridPanel;
     }
 }

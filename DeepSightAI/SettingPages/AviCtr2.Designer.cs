@@ -98,6 +98,7 @@
             this.lblOperatingRate.TabIndex = 15;
             this.lblOperatingRate.Text = "Utilization:";
             this.lblOperatingRate.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.lblOperatingRate.Visible = false;
             // 
             // lblAiPassRate
             // 
@@ -105,7 +106,7 @@
             this.lblAiPassRate.AutoSize = true;
             this.lblAiPassRate.Font = new System.Drawing.Font("Calibri", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblAiPassRate.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(199)))), ((int)(((byte)(220)))));
-            this.lblAiPassRate.Location = new System.Drawing.Point(155, 34);
+            this.lblAiPassRate.Location = new System.Drawing.Point(141, 68);
             this.lblAiPassRate.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblAiPassRate.Name = "lblAiPassRate";
             this.lblAiPassRate.Size = new System.Drawing.Size(77, 14);
@@ -119,7 +120,7 @@
             this.lblAviPassRate.AutoSize = true;
             this.lblAviPassRate.Font = new System.Drawing.Font("Calibri", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblAviPassRate.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(199)))), ((int)(((byte)(220)))));
-            this.lblAviPassRate.Location = new System.Drawing.Point(146, 12);
+            this.lblAviPassRate.Location = new System.Drawing.Point(132, 46);
             this.lblAviPassRate.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblAviPassRate.Name = "lblAviPassRate";
             this.lblAviPassRate.Size = new System.Drawing.Size(83, 14);
@@ -166,8 +167,8 @@
             this.Name = "AviCtr2";
             this.Size = new System.Drawing.Size(278, 87);
             this.DoubleClick += new System.EventHandler(this.AviCtr2_DoubleClick);
-            ((System.ComponentModel.ISupportInitialize)(this.btnDelete)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxStatus)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.btnDelete)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 

@@ -21,6 +21,22 @@ namespace DeepSightAI
         private Image _rawOriginalImage;
 
         /// <summary>
+        /// 主界面背景色（用于空白图片时与主界面保持一致）
+        /// </summary>
+        private static readonly Color MainBackColor = Color.FromArgb(29, 48, 60);
+
+        /// <summary>
+        /// 可注入的图片加载委托（输入Minio路径，返回Bitmap）。
+        /// 设置后将优先使用此委托加载图片，未设置时回退到 Machine.master.MinioService。
+        /// </summary>
+        public Func<string, Bitmap> ImageLoaderFunc { get; set; }
+
+        /// <summary>
+        /// 是否处于主界面模式。主界面模式下，状态栏只显示AI状态。
+        /// </summary>
+        public bool IsHomeMode { get; set; }
+
+        /// <summary>
         /// 当请求运行单图测试时触发
         /// </summary>
         public event EventHandler<SingleImageTestEventArgs> RunTestRequested;
@@ -113,8 +129,8 @@ namespace DeepSightAI
         {
             if (_heatPoint == null)
             {
-                label_SN.Text = "SN: -";
-                label_Status.Text = "AI: 未检测  |  VVS: 未检测";
+                label_SN.Text = "";
+                label_Status.Text = "";
                 pictureBox_OriginalImage.Image?.Dispose();
                 pictureBox_OriginalImage.Image = null;
                 pictureBox_TemplateImage.Image?.Dispose();
@@ -123,7 +139,7 @@ namespace DeepSightAI
             }
 
             // 第一行：SN信息
-            label_SN.Text = !string.IsNullOrEmpty(_heatPoint.DisplaySN) ? _heatPoint.DisplaySN : "SN: -";
+            label_SN.Text = !string.IsNullOrEmpty(_heatPoint.DisplaySN) ? _heatPoint.DisplaySN : "";
 
             // 第四行：状态信息
             UpdateStatusLabel();
@@ -138,16 +154,22 @@ namespace DeepSightAI
         }
 
         /// <summary>
-        /// 从Minio路径加载图片（格式：IP:objectKey）
+        /// 从Minio路径加载图片。优先使用 ImageLoaderFunc 委托，未设置时回退到 Machine.master.MinioService。
         /// </summary>
         private Bitmap LoadImageFromMinio(string minioPath)
         {
             if (string.IsNullOrEmpty(minioPath)) return null;
 
+            // 优先使用外部注入的加载器
+            if (ImageLoaderFunc != null)
+            {
+                return ImageLoaderFunc(minioPath);
+            }
+
+            // 回退到默认加载逻辑（格式：IP:objectKey）
             var parts = minioPath.Split(':');
             if (parts.Length < 2) return null;
 
-            // 格式：IP:objectKey
             string ip = parts[0];
             string objectKey = parts[1];
 
@@ -249,7 +271,15 @@ namespace DeepSightAI
         public void UpdateStatusLabel()
         {
             if (_heatPoint == null) return;
-            label_Status.Text = $"AI: {GetStatusText(_heatPoint.AIStatus)}  |  VVS: {GetStatusText(_heatPoint.VVSStatus)}";
+
+            if (IsHomeMode)
+            {
+                label_Status.Text = $"AI: {GetStatusText(_heatPoint.AIStatus)}";
+            }
+            else
+            {
+                label_Status.Text = $"AI: {GetStatusText(_heatPoint.AIStatus)}  |  VVS: {GetStatusText(_heatPoint.VVSStatus)}";
+            }
         }
 
         /// <summary>
@@ -329,6 +359,74 @@ namespace DeepSightAI
 
             pictureBox_OriginalImage.Height = imageHeight;
             pictureBox_TemplateImage.Height = imageHeight;
+        }
+
+        /// <summary>
+        /// 直接设置显示数据（用于 FrHome 等外部调用，不依赖 DetectInfo 的 ImagePath 自动加载）。
+        /// 调用方负责加载图片并传入 Bitmap，控件仅负责显示。
+        /// </summary>
+        /// <param name="headerText">标题栏文本（如 "缺陷1:XX"）</param>
+        /// <param name="originalImage">原图（已绘制缺陷框），控件获得所有权</param>
+        /// <param name="rawOriginalImage">原图（未绘制缺陷框，用于详情弹窗），控件获得所有权</param>
+        /// <param name="templateImage">模板图（已绘制缺陷框），控件获得所有权</param>
+        /// <param name="statusText">状态文本（如 "AI结果: OK"）</param>
+        /// <param name="detectInfo">可选的 DetectInfo，用于双击详情和运行测试</param>
+        public void SetDisplayData(string headerText, Bitmap originalImage, Bitmap rawOriginalImage,
+            Bitmap templateImage, string statusText, DetectInfo detectInfo = null)
+        {
+            _heatPoint = detectInfo;
+
+            // 标题
+            label_SN.Text = headerText ?? "";
+
+            // 原图
+            pictureBox_OriginalImage.Image?.Dispose();
+            pictureBox_OriginalImage.Image = originalImage;
+
+            // 原始未标注图
+            _rawOriginalImage?.Dispose();
+            _rawOriginalImage = rawOriginalImage;
+
+            // 模板图
+            pictureBox_TemplateImage.Image?.Dispose();
+            pictureBox_TemplateImage.Image = templateImage;
+
+            // 状态
+            label_Status.Text = statusText ?? "";
+
+            UpdateAppearance();
+        }
+
+        /// <summary>
+        /// 仅更新状态文本（不重新加载图片），用于 AI 结果回调后轻量刷新。
+        /// </summary>
+        public void UpdateStatusText(string statusText)
+        {
+            label_Status.Text = statusText ?? "";
+        }
+
+        /// <summary>
+        /// 当前控件是否已有图片显示内容（用于判断是否需要完整加载）
+        /// </summary>
+        public bool HasDisplayContent => pictureBox_OriginalImage.Image != null;
+
+        /// <summary>
+        /// 清空显示内容
+        /// </summary>
+        public void ClearDisplay()
+        {
+            _heatPoint = null;
+            label_SN.Text = "";
+            label_Status.Text = "";
+
+            pictureBox_OriginalImage.Image?.Dispose();
+            pictureBox_OriginalImage.Image = null;
+            pictureBox_TemplateImage.Image?.Dispose();
+            pictureBox_TemplateImage.Image = null;
+            _rawOriginalImage?.Dispose();
+            _rawOriginalImage = null;
+
+            UpdateAppearance();
         }
     }
 }

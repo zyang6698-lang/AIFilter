@@ -12,6 +12,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -60,8 +61,9 @@ namespace DeepSightAI
         private int currentPage = 1;     // 当前页码
         public string str_SN = "";       // 记录点击的SN
 
-        // 显示控件
-        public CvDisplay[] DispWin2 = null;
+        // 显示控件 - 3个缺陷图片项控件（水平排列）
+        private const int DefectControlCount = 3;
+        private DefectImageItemControl[] _defectImageControls = null;
 
         // 定时器
         public System.Timers.Timer uph_timer = new System.Timers.Timer();
@@ -81,6 +83,7 @@ namespace DeepSightAI
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.AllPaintingInWmPaint, true); // 禁止擦除背景.
             SetStyle(ControlStyles.DoubleBuffer, true); // 双缓冲
+            EnableDoubleBuffered(statsGridPanel);
             InitializeUI();
             Load += FrHome_Load;
 
@@ -265,18 +268,22 @@ namespace DeepSightAI
 
         public void InitWork()
         {
-            try
+            // DefectImageItemControl 不再依赖 CvDisplay，无需设置 HWindow
+        }
+
+        /// <summary>
+        /// 清空所有缺陷图片控件的显示内容（供外部调用，如 FrmMain.btnClear_Click）。
+        /// </summary>
+        public void ClearAllImages()
+        {
+            if (_defectImageControls == null) return;
+            foreach (var ctrl in _defectImageControls)
             {
-                var displaysList = new List<CvDisplay>();
-                for (int j = 0; j < DispWin2.Length; ++j)
-                {
-                    displaysList.Add(DispWin2[j]);
-                }
-                Machine.master.SetHWindow(displaysList);
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error("异常", ex);
+                if (ctrl == null) continue;
+                if (ctrl.InvokeRequired)
+                    ctrl.BeginInvoke(new Action(() => ctrl.ClearDisplay()));
+                else
+                    ctrl.ClearDisplay();
             }
         }
 
@@ -383,18 +390,45 @@ namespace DeepSightAI
 
                 this.BeginInvoke(new Action(() =>
                 {
-                    lbl_SnTotalCount.Text = $"今日总产量\n{boardStat.AviPanelCount}";
-                    lbl_totalDefectCount.Text = $"AVI产生图片数\n{boardStat.AiFilterCount}";
-                    lbl_AiAllCount.Text = $"AI推理图片数\n{aiProcessedCount}";
+                    SetLabelIfChanged(lbl_SnTotalCount, $"今日总产量\n{boardStat.AviPanelCount}");
+                    SetLabelIfChanged(lbl_totalDefectCount, $"AVI产生图片数\n{boardStat.AiFilterCount}");
+                    SetLabelIfChanged(lbl_AiAllCount, $"AI推理图片数\n{aiProcessedCount}");
 
-                    lbl_aiFilterOKCount.Text = $"AI通过图片数\n{boardStat.AiFilterOKCount}";
-                    lbl_aviPassRateCount.Text = $"AVI一次通过率\n{aviPassRateBefore}";
-                    lbl_filteredOkCount.Text = $"报点过滤率\n{aiPassRate}";
+                    SetLabelIfChanged(lbl_aiFilterOKCount, $"AI通过图片数\n{boardStat.AiFilterOKCount}");
+                    SetLabelIfChanged(lbl_aviPassRateCount, $"AVI一次通过率\n{aviPassRateBefore}");
+                    SetLabelIfChanged(lbl_filteredOkCount, $"报点过滤率\n{aiPassRate}");
 
-                    lbl_utilizationRate.Text = $"今日机台利用率\n{boardStat.Utilization:P1}";
-                    lbl_boardAiPassRate.Text = $"AI通过率\n{aviPassRateAfter}";
-                    lbl_CountPerPanel.Text = $"平均报点数\n{avgDefectText}";
+                    SetLabelIfChanged(lbl_utilizationRate, $"今日机台利用率\n{boardStat.Utilization:P1}");
+                    SetLabelIfChanged(lbl_boardAiPassRate, $"AI通过率\n{aviPassRateAfter}");
+                    SetLabelIfChanged(lbl_CountPerPanel, $"平均报点数\n{avgDefectText}");
                 }));
+            }
+        }
+
+        /// <summary>
+        /// 仅在文本实际变化时才更新Label，避免不必要的重绘导致闪烁
+        /// </summary>
+        private static void SetLabelIfChanged(Label label, string newText)
+        {
+            if (label.Text != newText)
+            {
+                label.Text = newText;
+            }
+        }
+
+        /// <summary>
+        /// 通过反射对控件及其所有子控件启用双缓冲，
+        /// 使文字更新时在内存中完成擦除+绘制后一次性呈现，消除闪烁。
+        /// </summary>
+        private static void EnableDoubleBuffered(Control container)
+        {
+            var method = typeof(Control).GetMethod("SetStyle", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (method == null) return;
+            var flags = ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint;
+            method.Invoke(container, new object[] { flags, true });
+            foreach (Control child in container.Controls)
+            {
+                method.Invoke(child, new object[] { flags, true });
             }
         }
 
@@ -408,49 +442,38 @@ namespace DeepSightAI
         #region 控件布局初始化
 
         /// <summary>
-        /// 窗体初始化 - 创建显示控件布局
+        /// 窗体初始化 - 创建显示控件布局（3个 DefectImageItemControl 水平排列）
         /// </summary>
         internal void InitMethod()
         {
             try
             {
-                DispWin2 = new CvDisplay[10];
-                //布局
+                _defectImageControls = new DefectImageItemControl[DefectControlCount];
+
+                // 布局：1 行 × 3 列
                 table_Small.Controls.Clear();
                 table_Small.RowStyles.Clear();
                 table_Small.ColumnStyles.Clear();
 
-                //table_Small.ColumnCount = 4;
-                table_Small.ColumnCount = 2;
-                table_Small.RowCount = 3;
+                table_Small.ColumnCount = DefectControlCount;
+                table_Small.RowCount = 1;
+                table_Small.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
-                int index = 0;
-                for (int i = 0; i < table_Small.RowCount; i++)
+                for (int i = 0; i < DefectControlCount; i++)
                 {
-                    table_Small.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, (100F / 1)));
+                    table_Small.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F / DefectControlCount));
 
-                    for (int j = 0; j < table_Small.ColumnCount; j++)
+                    _defectImageControls[i] = new DefectImageItemControl
                     {
-                        table_Small.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F / 20));
+                        Margin = new Padding(1),
+                        Dock = DockStyle.Fill,
+                        Name = "DefectImageItem" + i,
+                        ImageLoaderFunc = LoadBitmapFromMinioPath,
+                        IsHomeMode = true,
+                    };
 
-                        DispWin2[index] = new CvDisplay
-                        {
-                            Margin = new System.Windows.Forms.Padding(1),
-                            BackColor = Color.FromArgb(29, 48, 60),//ColorTranslator.FromHtml("#374c50"),//System.Drawing.SystemColors.InactiveCaption,
-                            Dock = System.Windows.Forms.DockStyle.Fill,
-                            Name = "Display" + index,
-                            AutoDisplay = CvDisplay.AutoDisplayMode.Fit,
-                        };
-                        DispWin2[index].stationIndex = index + 1;
-                        DispWin2[index].OnCallBackFullShowPro -= FrHome_OnCallBackFullShowPro;
-                        DispWin2[index].OnCallBackFullShowPro += FrHome_OnCallBackFullShowPro;
-                        DispWin2[index].OnCallBackRoiIndexAndInfo -= FrHome_OnCallBackRoiIndexAndInfo;
-                        DispWin2[index].OnCallBackRoiIndexAndInfo += FrHome_OnCallBackRoiIndexAndInfo;
-                        table_Small.Controls.Add(DispWin2[index], j, i);
-                        index++;
-                    }
+                    table_Small.Controls.Add(_defectImageControls[i], i, 0);
                 }
-                InitWork();
             }
             catch (Exception ex)
             {
@@ -458,44 +481,11 @@ namespace DeepSightAI
             }
         }
         /// <summary>
-        /// 重置panel
+        /// 重置panel — 现在由 ShowImage 内部通过 SetDisplayData 完成，此方法保留兼容签名但不再操作 CvDisplay。
         /// </summary>
-        /// <param name="panel"></param>
-        /// <param name="count">图片数量</param>
         public void InitTableStyle(TableLayoutPanel panel, int pixNum, List<DisPlayInfo> infos)
         {
-            try
-            {
-                int index = 0;
-                for (int i = 0; i < table_Small.RowCount; i++)
-                {
-                    for (int j = 0; j < table_Small.ColumnCount / 2; j++)
-                    {
-                        if (Index + index < infos.Count)
-                        {
-                            DispWin2[(index + 1) * 2 - 2].info = infos[Index + index];
-                            DispWin2[(index + 1) * 2 - 1].info = infos[Index + index];
-                            if (index + 1 <= pixNum)
-                            {
-                                DispWin2[(index + 1) * 2 - 2].DrawStation($"缺陷{Index + index + 1}:{infos[Index + index].defect_code}");
-                                DispWin2[(index + 1) * 2 - 1].DrawStation($"缺陷{Index + index + 1}:{infos[Index + index].defect_code}");
-                            }
-                        }
-                        else
-                        {
-                            DispWin2[(index + 1) * 2 - 2].DrawStation($"");
-                            DispWin2[(index + 1) * 2 - 1].DrawStation($"");
-                        }
-                        index++;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error(ex.ToString());
-                throw;
-            }
-
+            // 标签信息已在 ShowImage 中通过 SetDisplayData 设置到 DefectImageItemControl，此处无需额外操作。
         }
         private void FrHome_OnCallBackRoiIndexAndInfo(int index, DisPlayInfo info)
         {
@@ -669,7 +659,7 @@ namespace DeepSightAI
                             }
                         }
                     }
-                    totalPages = Math.Max(1, (int)Math.Ceiling((double)index / table_Small.RowCount));
+                    totalPages = Math.Max(1, (int)Math.Ceiling((double)index / DefectControlCount));
                     ShowImage();
                 }
             }
@@ -748,17 +738,14 @@ namespace DeepSightAI
         {
             try
             {
-                int pageSize = table_Small.RowCount;
+                int pageSize = DefectControlCount;
                 int skipCount = (currentPage - 1) * pageSize;
                 Index = skipCount;
 
-                InitWork();
-
-                // 先清空所有显示位（图片和标签），避免切换SN时残留旧内容
+                // 先清空所有控件
                 for (int i = 0; i < pageSize; i++)
                 {
-                    Machine.master.ShowImage("", (i + 1) * 2 - 2);
-                    Machine.master.ShowImage("", (i + 1) * 2 - 1);
+                    _defectImageControls[i].ClearDisplay();
                 }
 
                 // 获取当前页数据
@@ -766,50 +753,76 @@ namespace DeepSightAI
                 var defect_pagedData = imagePaths.Skip(skipCount).Take(pageSize).ToList();
                 var gerberOrtemp_pagedData = gerberOrtemp_paths.Skip(skipCount).Take(pageSize).ToList();
                 var defect_pagedRois = defectRois.Skip(skipCount).Take(pageSize).ToList();
-                var defect_indexPaths = defect_pagedData.Select((path, idx) => new { Path = path, Index = idx }).ToList();
-                var gerberOrtemp_indexPaths = gerberOrtemp_pagedData.Select((path, idx) => new { Path = path, Index = idx }).ToList();
-
-                var parallelOptions = new ParallelOptions
-                {
-                    MaxDegreeOfParallelism = Environment.ProcessorCount - 1,
-                    CancellationToken = CancellationToken.None
-                };
+                var pagedDisInfos = disInfosList.Skip(skipCount).Take(pageSize).ToList();
 
                 dic_Results.TryGetValue(str_SN, out List<string> res_lbl);
 
-                // 同时加载缺陷图和Gerber/Template图，确保同时刷新
-                await Task.Factory.StartNew(() =>
+                // 在后台线程并行加载所有图片
+                var loadedData = await Task.Run(() =>
                 {
-                    // 合并缺陷图和模板图的加载任务，并行执行
-                    var allTasks = new List<Action>();
+                    var results = new (Bitmap Original, Bitmap RawOriginal, Bitmap Template, string Header, string Status)[pageSize];
 
-                    foreach (var item in defect_indexPaths)
+                    Parallel.For(0, defect_pagedData.Count, new ParallelOptions
                     {
-                        var captured = item;
-                        allTasks.Add(() =>
-                        {
-                            string labelText = GetLabelText(res_lbl, skipCount + captured.Index);
-                            Roi roi = (captured.Index >= 0 && captured.Index < defect_pagedRois.Count) ? defect_pagedRois[captured.Index] : null;
-                            Machine.master.ShowImage(captured.Path, (captured.Index + 1) * 2 - 2, labelText, roi);
-                        });
-                    }
-
-                    foreach (var item in gerberOrtemp_indexPaths)
+                        MaxDegreeOfParallelism = Math.Max(1, Environment.ProcessorCount - 1)
+                    }, i =>
                     {
-                        var captured = item;
-                        allTasks.Add(() =>
+                        try
                         {
-                            string labelText = GetLabelText(res_lbl, skipCount + captured.Index);
-                            Roi roi = (captured.Index >= 0 && captured.Index < defect_pagedRois.Count) ? defect_pagedRois[captured.Index] : null;
-                            Machine.master.ShowImage(captured.Path, (captured.Index + 1) * 2 - 1, labelText, roi);
-                        });
-                    }
+                            Roi roi = (i >= 0 && i < defect_pagedRois.Count) ? defect_pagedRois[i] : null;
 
-                    Parallel.ForEach(allTasks, parallelOptions, action => action());
+                            // 加载缺陷图
+                            Bitmap rawOriginal = LoadBitmapFromMinioPath(defect_pagedData[i]);
+                            Bitmap original = null;
+                            if (rawOriginal != null)
+                            {
+                                original = DrawDefectBoxOnBitmap(rawOriginal, roi);
+                            }
+
+                            // 加载模板图
+                            Bitmap template = null;
+                            if (i < gerberOrtemp_pagedData.Count)
+                            {
+                                Bitmap rawTemplate = LoadBitmapFromMinioPath(gerberOrtemp_pagedData[i]);
+                                template = rawTemplate != null ? DrawDefectBoxOnBitmap(rawTemplate, roi) : null;
+                                // rawTemplate 已被 DrawDefectBoxOnBitmap 复制，可以释放
+                                if (rawTemplate != null && template != rawTemplate)
+                                    rawTemplate.Dispose();
+                            }
+
+                            // 标题
+                            string header = "";
+                            if (i < pagedDisInfos.Count)
+                            {
+                                header = $"缺陷{skipCount + i + 1}:{pagedDisInfos[i].defect_code}";
+                            }
+
+                            // AI结果状态
+                            string labelText = GetLabelText(res_lbl, skipCount + i);
+                            string statusText = string.IsNullOrEmpty(labelText) ? "" : $"AI结果:{ConvertResultCodeToText(labelText)}";
+
+                            results[i] = (original, rawOriginal, template, header, statusText);
+                        }
+                        catch (Exception ex)
+                        {
+                            LogTextHelper.Error($"加载第{i}张图片异常: {ex}");
+                        }
+                    });
+
+                    return results;
                 });
 
-                // 图片加载完成后再刷新标签，确保标签和图片同时出现
-                InitTableStyle(table_Small, pageSize, disInfosList);
+                // 回到UI线程设置数据
+                for (int i = 0; i < Math.Min(loadedData.Length, defect_pagedData.Count); i++)
+                {
+                    var data = loadedData[i];
+                    _defectImageControls[i].SetDisplayData(
+                        data.Header,
+                        data.Original,
+                        data.RawOriginal,
+                        data.Template,
+                        data.Status);
+                }
 
                 UpdatePagingControls();
             }
@@ -827,6 +840,122 @@ namespace DeepSightAI
             if (resultLabels != null && index >= 0 && index < resultLabels.Count)
                 return resultLabels[index] ?? "未处理";
             return "未处理";
+        }
+
+        /// <summary>
+        /// 从Minio路径加载Bitmap（路径格式：objectKey:IP，与FrHome的路径拼接格式一致）。
+        /// 此方法也作为 ImageLoaderFunc 委托提供给 DefectImageItemControl。
+        /// </summary>
+        private Bitmap LoadBitmapFromMinioPath(string minioPath)
+        {
+            if (string.IsNullOrEmpty(minioPath)) return null;
+
+            try
+            {
+                string[] parts = minioPath.Split(':');
+                if (parts.Length < 2) return null;
+
+                // FrHome 路径格式：objectKey:IP
+                string objectKey = parts[0];
+                string ip = parts[1];
+
+                using (var stream = Machine.master.MinioService.GetImageStreamSync("deepiresults", objectKey, ip))
+                {
+                    if (stream == null || stream.Length == 0) return null;
+
+                    using (var mt = OpenCvSharp.Cv2.ImDecode(stream.ToArray(), OpenCvSharp.ImreadModes.Color))
+                    {
+                        if (mt == null || mt.Empty()) return null;
+                        return OpenCvSharp.Extensions.BitmapConverter.ToBitmap(mt);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"LoadBitmapFromMinioPath 异常: {minioPath}\n{ex}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 在Bitmap上绘制缺陷框（红色矩形）。返回新的Bitmap副本，不修改原图。
+        /// </summary>
+        private Bitmap DrawDefectBoxOnBitmap(Bitmap source, Roi roi)
+        {
+            if (source == null) return null;
+            if (roi == null || roi.Width <= 0 || roi.Height <= 0) return new Bitmap(source);
+
+            Bitmap result = new Bitmap(source);
+            try
+            {
+                using (Graphics g = Graphics.FromImage(result))
+                {
+                    using (Pen pen = new Pen(Color.Red, 4))
+                    {
+                        g.DrawRectangle(pen, roi.X, roi.Y, roi.Width, roi.Height);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"DrawDefectBoxOnBitmap 异常: {ex}");
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// 将 AI 结果代码转换为显示文本（与 ImageDisplayService.ConvertResultCodeToText 逻辑一致）
+        /// </summary>
+        private static string ConvertResultCodeToText(string resultCode)
+        {
+            if (string.IsNullOrEmpty(resultCode)) return resultCode;
+            if (int.TryParse(resultCode, out int code))
+            {
+                switch (code)
+                {
+                    case 0: return "OK";
+                    case 1: return "NG";
+                    case 2: return "ByPass";
+                    default: return resultCode;
+                }
+            }
+            return resultCode;
+        }
+
+
+        /// <summary>
+        /// 仅更新当前页已显示控件的 AI 结果状态文本（不重新加载图片）。
+        /// 适用于 AI 推理完成回调场景：图片已在内存中，只需刷新状态标签。
+        /// </summary>
+        public void UpdateAIResultLabels()
+        {
+            try
+            {
+                if (_defectImageControls == null) return;
+                if (string.IsNullOrEmpty(str_SN)) return;
+
+                dic_Results.TryGetValue(str_SN, out List<string> res_lbl);
+
+                int pageSize = DefectControlCount;
+                int skipCount = (currentPage - 1) * pageSize;
+
+                for (int i = 0; i < pageSize; i++)
+                {
+                    if (!_defectImageControls[i].HasDisplayContent) continue;
+
+                    string labelText = GetLabelText(res_lbl, skipCount + i);
+                    string statusText = string.IsNullOrEmpty(labelText) ? "" : $"AI结果:{ConvertResultCodeToText(labelText)}";
+
+                    if (_defectImageControls[i].InvokeRequired)
+                        _defectImageControls[i].BeginInvoke(new Action(() => _defectImageControls[i].UpdateStatusText(statusText)));
+                    else
+                        _defectImageControls[i].UpdateStatusText(statusText);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error("UpdateAIResultLabels 异常: " + ex.ToString());
+            }
         }
 
         private void UpdatePagingControls()
@@ -888,6 +1017,7 @@ namespace DeepSightAI
         }
 
         #endregion
+
     }
 }
 

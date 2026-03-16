@@ -549,7 +549,7 @@ namespace DeepSightAI
         public void ClearDetails()
         {
             flowLayoutPanel_DefectImages.Controls.Clear();
-            label_DetailTitle.Text = "ȱ";
+            label_DetailTitle.Text = "-";
             _selectedIndex = -1;
             _allHeatPoints?.Clear();
             _filteredHeatPoints?.Clear();

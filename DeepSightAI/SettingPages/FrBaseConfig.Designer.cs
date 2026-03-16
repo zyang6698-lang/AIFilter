@@ -29,82 +29,55 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrBaseConfig));
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.txt_GetInferResultTimeout = new System.Windows.Forms.TextBox();
-            this.label23 = new System.Windows.Forms.Label();
-            this.txt_AgentShutdownTimeout = new System.Windows.Forms.TextBox();
-            this.label22 = new System.Windows.Forms.Label();
-            this.txt_MaxDefectCount = new System.Windows.Forms.TextBox();
-            this.label21 = new System.Windows.Forms.Label();
-            this.txt_Minioport = new System.Windows.Forms.TextBox();
-            this.label18 = new System.Windows.Forms.Label();
-            this.txt_endpoint_address = new System.Windows.Forms.TextBox();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.label17 = new System.Windows.Forms.Label();
-            this.txt_WelcomeTitle = new System.Windows.Forms.TextBox();
+            this.txt_endpoint_address = new System.Windows.Forms.TextBox();
+            this.label18 = new System.Windows.Forms.Label();
+            this.txt_Minioport = new System.Windows.Forms.TextBox();
+            this.label21 = new System.Windows.Forms.Label();
+            this.txt_MaxDefectCount = new System.Windows.Forms.TextBox();
+            this.label22 = new System.Windows.Forms.Label();
+            this.txt_AgentShutdownTimeout = new System.Windows.Forms.TextBox();
+            this.label23 = new System.Windows.Forms.Label();
+            this.txt_GetInferResultTimeout = new System.Windows.Forms.TextBox();
             this.label24 = new System.Windows.Forms.Label();
-            this.txt_WelcomeFontSize = new System.Windows.Forms.TextBox();
+            this.txt_WelcomeTitle = new System.Windows.Forms.TextBox();
             this.label25 = new System.Windows.Forms.Label();
-            this.panel1.SuspendLayout();
+            this.txt_WelcomeFontSize = new System.Windows.Forms.TextBox();
+            this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
-            // panel1
+            // tableLayoutPanel1
             // 
-            resources.ApplyResources(this.panel1, "panel1");
-            this.panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.panel1.Controls.Add(this.txt_WelcomeFontSize);
-            this.panel1.Controls.Add(this.label25);
-            this.panel1.Controls.Add(this.txt_WelcomeTitle);
-            this.panel1.Controls.Add(this.label24);
-            this.panel1.Controls.Add(this.txt_GetInferResultTimeout);
-            this.panel1.Controls.Add(this.label23);
-            this.panel1.Controls.Add(this.txt_AgentShutdownTimeout);
-            this.panel1.Controls.Add(this.label22);
-            this.panel1.Controls.Add(this.txt_MaxDefectCount);
-            this.panel1.Controls.Add(this.label21);
-            this.panel1.Controls.Add(this.txt_Minioport);
-            this.panel1.Controls.Add(this.label18);
-            this.panel1.Controls.Add(this.txt_endpoint_address);
-            this.panel1.Controls.Add(this.label17);
-            this.panel1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.panel1.Name = "panel1";
+            resources.ApplyResources(this.tableLayoutPanel1, "tableLayoutPanel1");
+            this.tableLayoutPanel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.tableLayoutPanel1.Controls.Add(this.label17, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.txt_endpoint_address, 1, 0);
+            this.tableLayoutPanel1.Controls.Add(this.label18, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this.txt_Minioport, 1, 1);
+            this.tableLayoutPanel1.Controls.Add(this.label21, 0, 2);
+            this.tableLayoutPanel1.Controls.Add(this.txt_MaxDefectCount, 1, 2);
+            this.tableLayoutPanel1.Controls.Add(this.label22, 0, 3);
+            this.tableLayoutPanel1.Controls.Add(this.txt_AgentShutdownTimeout, 1, 3);
+            this.tableLayoutPanel1.Controls.Add(this.label23, 0, 4);
+            this.tableLayoutPanel1.Controls.Add(this.txt_GetInferResultTimeout, 1, 4);
+            this.tableLayoutPanel1.Controls.Add(this.label24, 0, 5);
+            this.tableLayoutPanel1.Controls.Add(this.txt_WelcomeTitle, 1, 5);
+            this.tableLayoutPanel1.Controls.Add(this.label25, 0, 6);
+            this.tableLayoutPanel1.Controls.Add(this.txt_WelcomeFontSize, 1, 6);
+            this.tableLayoutPanel1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             // 
-            // txt_GetInferResultTimeout
+            // label17
             // 
-            resources.ApplyResources(this.txt_GetInferResultTimeout, "txt_GetInferResultTimeout");
-            this.txt_GetInferResultTimeout.Name = "txt_GetInferResultTimeout";
+            resources.ApplyResources(this.label17, "label17");
+            this.label17.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.label17.Name = "label17";
             // 
-            // label23
+            // txt_endpoint_address
             // 
-            resources.ApplyResources(this.label23, "label23");
-            this.label23.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label23.Name = "label23";
-            // 
-            // txt_AgentShutdownTimeout
-            // 
-            resources.ApplyResources(this.txt_AgentShutdownTimeout, "txt_AgentShutdownTimeout");
-            this.txt_AgentShutdownTimeout.Name = "txt_AgentShutdownTimeout";
-            // 
-            // label22
-            // 
-            resources.ApplyResources(this.label22, "label22");
-            this.label22.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label22.Name = "label22";
-            // 
-            // txt_MaxDefectCount
-            // 
-            resources.ApplyResources(this.txt_MaxDefectCount, "txt_MaxDefectCount");
-            this.txt_MaxDefectCount.Name = "txt_MaxDefectCount";
-            // 
-            // label21
-            // 
-            resources.ApplyResources(this.label21, "label21");
-            this.label21.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label21.Name = "label21";
-            // 
-            // txt_Minioport
-            // 
-            resources.ApplyResources(this.txt_Minioport, "txt_Minioport");
-            this.txt_Minioport.Name = "txt_Minioport";
+            resources.ApplyResources(this.txt_endpoint_address, "txt_endpoint_address");
+            this.txt_endpoint_address.Name = "txt_endpoint_address";
             // 
             // label18
             // 
@@ -112,62 +85,89 @@
             this.label18.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.label18.Name = "label18";
             // 
-            // txt_endpoint_address
+            // txt_Minioport
             // 
-            resources.ApplyResources(this.txt_endpoint_address, "txt_endpoint_address");
-            this.txt_endpoint_address.Name = "txt_endpoint_address";
+            resources.ApplyResources(this.txt_Minioport, "txt_Minioport");
+            this.txt_Minioport.Name = "txt_Minioport";
             // 
-            // label17
+            // label21
             // 
-            resources.ApplyResources(this.label17, "label17");
-            this.label17.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.label17.Name = "label17";
-            //
-            // txt_WelcomeTitle
-            //
-            resources.ApplyResources(this.txt_WelcomeTitle, "txt_WelcomeTitle");
-            this.txt_WelcomeTitle.Name = "txt_WelcomeTitle";
-            //
+            resources.ApplyResources(this.label21, "label21");
+            this.label21.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.label21.Name = "label21";
+            // 
+            // txt_MaxDefectCount
+            // 
+            resources.ApplyResources(this.txt_MaxDefectCount, "txt_MaxDefectCount");
+            this.txt_MaxDefectCount.Name = "txt_MaxDefectCount";
+            // 
+            // label22
+            // 
+            resources.ApplyResources(this.label22, "label22");
+            this.label22.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.label22.Name = "label22";
+            // 
+            // txt_AgentShutdownTimeout
+            // 
+            resources.ApplyResources(this.txt_AgentShutdownTimeout, "txt_AgentShutdownTimeout");
+            this.txt_AgentShutdownTimeout.Name = "txt_AgentShutdownTimeout";
+            // 
+            // label23
+            // 
+            resources.ApplyResources(this.label23, "label23");
+            this.label23.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.label23.Name = "label23";
+            // 
+            // txt_GetInferResultTimeout
+            // 
+            resources.ApplyResources(this.txt_GetInferResultTimeout, "txt_GetInferResultTimeout");
+            this.txt_GetInferResultTimeout.Name = "txt_GetInferResultTimeout";
+            // 
             // label24
-            //
+            // 
             resources.ApplyResources(this.label24, "label24");
             this.label24.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.label24.Name = "label24";
-            //
-            // txt_WelcomeFontSize
-            //
-            resources.ApplyResources(this.txt_WelcomeFontSize, "txt_WelcomeFontSize");
-            this.txt_WelcomeFontSize.Name = "txt_WelcomeFontSize";
-            //
+            // 
+            // txt_WelcomeTitle
+            // 
+            resources.ApplyResources(this.txt_WelcomeTitle, "txt_WelcomeTitle");
+            this.txt_WelcomeTitle.Name = "txt_WelcomeTitle";
+            // 
             // label25
-            //
+            // 
             resources.ApplyResources(this.label25, "label25");
             this.label25.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.label25.Name = "label25";
-            //
+            // 
+            // txt_WelcomeFontSize
+            // 
+            resources.ApplyResources(this.txt_WelcomeFontSize, "txt_WelcomeFontSize");
+            this.txt_WelcomeFontSize.Name = "txt_WelcomeFontSize";
+            // 
             // FrBaseConfig
-            //
+            // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
-            this.Controls.Add(this.panel1);
+            this.Controls.Add(this.tableLayoutPanel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Name = "FrBaseConfig";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.Load += new System.EventHandler(this.FrBaseConfig_Load);
-            this.panel1.ResumeLayout(false);
-            this.panel1.PerformLayout();
+            this.tableLayoutPanel1.ResumeLayout(false);
+            this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.Panel panel1;
-        internal System.Windows.Forms.TextBox txt_Minioport;
-        internal System.Windows.Forms.Label label18;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         internal System.Windows.Forms.TextBox txt_endpoint_address;
         internal System.Windows.Forms.Label label17;
+        internal System.Windows.Forms.TextBox txt_Minioport;
+        internal System.Windows.Forms.Label label18;
         internal System.Windows.Forms.TextBox txt_MaxDefectCount;
         internal System.Windows.Forms.Label label21;
         internal System.Windows.Forms.TextBox txt_AgentShutdownTimeout;
