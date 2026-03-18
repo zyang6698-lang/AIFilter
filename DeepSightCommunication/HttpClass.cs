@@ -86,8 +86,8 @@ namespace DeepSightCommunication
             {
                 outInfo = string.Empty;
                 result = false;
-                LogTextHelper.Error("HTTP流程异常" + ex.ToString());
-                SystemEvent.SendAlarmMsg("HTTP流程异常,详情请见LOG");
+                LogTextHelper.Error("LevelDB拉取数据异常" + ex.ToString());
+                SystemEvent.SendAlarmMsg("LevelDB拉取数据异常,详情请见LOG");
             }
 
             return result;

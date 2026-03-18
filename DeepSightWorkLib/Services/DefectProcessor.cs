@@ -17,11 +17,11 @@ namespace DeepSightWorkLib.Services
     public class DefectProcessor
     {
         private readonly DefectClass _defect;
-        private readonly ConcurrentQueue<Tuple<string, string, string, RootAIResult>> _aiResultQueue;
+        private readonly ConcurrentQueue<Tuple<List< AIDetailResultItem>, RootAIResult>> _aiResultQueue;
         private readonly ConcurrentQueue<InferenceResultModel> _inferencePostProcessQueue;
 
         public DefectProcessor(DefectClass defect,
-            ConcurrentQueue<Tuple<string, string, string, RootAIResult>> aiResultQueue,
+            ConcurrentQueue<Tuple<List<AIDetailResultItem>, RootAIResult>> aiResultQueue,
             ConcurrentQueue<InferenceResultModel> inferencePostProcessQueue)
         {
             _defect = defect ?? throw new ArgumentNullException(nameof(defect));
@@ -177,6 +177,8 @@ namespace DeepSightWorkLib.Services
 
             RootAIResult data = new RootAIResult
             {
+                SN=info.SN,
+                Side=info.Side,
                 DbName = writeBackDbName,
                 Operation = "put",
                 OpMode = info.Side == "A" ? "all_ow" : "ap",
@@ -185,6 +187,7 @@ namespace DeepSightWorkLib.Services
             };
             LogTextHelper.Info($"SN:{info.SN} Side:{info.Side} 回写目标DB:{writeBackDbName}, URL:{targetUrl}");
 
+            List<AIDetailResultItem> aIDetailResults=new List<AIDetailResultItem>();
             List<ResultInfo> results = new List<ResultInfo>();
             if (msg == null || msg.Count == 0)
             {
@@ -198,6 +201,17 @@ namespace DeepSightWorkLib.Services
                     Details = new Details()
                 };
                 results.Add(res);
+
+                aIDetailResults.Add(new AIDetailResultItem()
+                {
+                    Index = i,
+                    PcsIndex=i,
+                    AiLabel = msg[i] == "0" ? "OK" : "NG",
+                    AiClsType="",
+                    AiFlag="Standard",
+                    InferDetail=new Dictionary<string, object>(),
+                    
+                });
             }
             WriteBackData writeBackData = new WriteBackData()
             {
@@ -209,7 +223,9 @@ namespace DeepSightWorkLib.Services
             JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
             data.Value = JsonConvert.SerializeObject(writeBackData, Formatting.None, jsonSetting);
 
-            var dbTub = Tuple.Create(info.Key, info.SN, info.Side, data);
+
+
+            var dbTub = Tuple.Create(aIDetailResults, data);
             _aiResultQueue.Enqueue(dbTub);
         }
     }

@@ -12,7 +12,6 @@ using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -80,10 +79,6 @@ namespace DeepSightAI
         {
             InitializeComponent();
             Control.CheckForIllegalCrossThreadCalls = false;
-            SetStyle(ControlStyles.UserPaint, true);
-            SetStyle(ControlStyles.AllPaintingInWmPaint, true); // 禁止擦除背景.
-            SetStyle(ControlStyles.DoubleBuffer, true); // 双缓冲
-            EnableDoubleBuffered(statsGridPanel);
             InitializeUI();
             Load += FrHome_Load;
 
@@ -102,6 +97,82 @@ namespace DeepSightAI
         private void InitializeUI()
         {
             aviCtr2Container.CreateMachinePanels(GetMergedWatchPaths());
+            // 为统计卡片Label注册自绘事件，实现标题/数值分层显示
+            SetupStatsLabelOwnerDraw();
+        }
+
+        /// <summary>
+        /// 统计卡片标题字体（小号、常规）
+        /// </summary>
+        private static readonly Font _statsTitleFont = new Font("微软雅黑", 9F, FontStyle.Regular);
+        /// <summary>
+        /// 统计卡片数值字体（大号、粗体）
+        /// </summary>
+        private static readonly Font _statsValueFont = new Font("Calibri", 20F, FontStyle.Bold);
+        /// <summary>
+        /// 统计卡片标题颜色（浅灰，低调）
+        /// </summary>
+        private static readonly Color _statsTitleColor = Color.FromArgb(160, 180, 195);
+        /// <summary>
+        /// 统计卡片数值颜色（亮白，醒目）
+        /// </summary>
+        private static readonly Color _statsValueColor = Color.FromArgb(240, 250, 255);
+
+        /// <summary>
+        /// 为 statsGridPanel 中的所有 Label 启用 OwnerDraw，
+        /// 标题用小号浅色字体，数值用大号亮色字体，形成视觉层次。
+        /// </summary>
+        private void SetupStatsLabelOwnerDraw()
+        {
+            foreach (Control ctrl in statsGridPanel.Controls)
+            {
+                if (ctrl is Label lbl)
+                {
+                    lbl.AutoSize = false;
+                    lbl.Paint += StatsLabel_Paint;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 统计卡片Label自绘：标题行（小号浅色）+ 数值行（大号亮色）
+        /// 文本格式约定：用 \n 分隔，第一行为标题，第二行为数值
+        /// </summary>
+        private void StatsLabel_Paint(object sender, PaintEventArgs e)
+        {
+            var lbl = sender as Label;
+            if (lbl == null) return;
+
+            e.Graphics.Clear(lbl.BackColor);
+            e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+
+            string text = lbl.Text ?? "";
+            string[] parts = text.Split(new[] { '\n' }, 2);
+            string title = parts.Length > 0 ? parts[0] : "";
+            string value = parts.Length > 1 ? parts[1] : "";
+
+            // 测量标题和数值的尺寸
+            var titleSize = e.Graphics.MeasureString(title, _statsTitleFont);
+            var valueSize = e.Graphics.MeasureString(value, _statsValueFont);
+
+            // 垂直居中：两行总高度居中于控件
+            float totalHeight = titleSize.Height + 4 + valueSize.Height;
+            float startY = Math.Max(6, (lbl.Height - totalHeight) / 2f);
+
+            // 绘制标题（水平居中）
+            float titleX = (lbl.Width - titleSize.Width) / 2f;
+            using (var titleBrush = new SolidBrush(_statsTitleColor))
+            {
+                e.Graphics.DrawString(title, _statsTitleFont, titleBrush, titleX, startY);
+            }
+
+            // 绘制数值（水平居中）
+            float valueY = startY + titleSize.Height + 4;
+            float valueX = (lbl.Width - valueSize.Width) / 2f;
+            using (var valueBrush = new SolidBrush(_statsValueColor))
+            {
+                e.Graphics.DrawString(value, _statsValueFont, valueBrush, valueX, valueY);
+            }
         }
 
         /// <summary>
@@ -416,21 +487,7 @@ namespace DeepSightAI
             }
         }
 
-        /// <summary>
-        /// 通过反射对控件及其所有子控件启用双缓冲，
-        /// 使文字更新时在内存中完成擦除+绘制后一次性呈现，消除闪烁。
-        /// </summary>
-        private static void EnableDoubleBuffered(Control container)
-        {
-            var method = typeof(Control).GetMethod("SetStyle", BindingFlags.Instance | BindingFlags.NonPublic);
-            if (method == null) return;
-            var flags = ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint;
-            method.Invoke(container, new object[] { flags, true });
-            foreach (Control child in container.Controls)
-            {
-                method.Invoke(child, new object[] { flags, true });
-            }
-        }
+
 
         private async Task UpdateMachineBoard()
         {
@@ -479,17 +536,6 @@ namespace DeepSightAI
             {
                 LogTextHelper.Error("Error", ex);
             }
-        }
-        /// <summary>
-        /// 重置panel — 现在由 ShowImage 内部通过 SetDisplayData 完成，此方法保留兼容签名但不再操作 CvDisplay。
-        /// </summary>
-        public void InitTableStyle(TableLayoutPanel panel, int pixNum, List<DisPlayInfo> infos)
-        {
-            // 标签信息已在 ShowImage 中通过 SetDisplayData 设置到 DefectImageItemControl，此处无需额外操作。
-        }
-        private void FrHome_OnCallBackRoiIndexAndInfo(int index, DisPlayInfo info)
-        {
-            // 预留回调
         }
 
         /// <summary>

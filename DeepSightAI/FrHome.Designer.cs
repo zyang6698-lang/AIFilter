@@ -250,6 +250,7 @@
             this.Time.MinimumWidth = 6;
             this.Time.Name = "Time";
             this.Time.ReadOnly = true;
+            this.Time.Width = 125;
             // 
             // Status
             // 
@@ -267,12 +268,12 @@
             this.contextMenuStripData.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.btnShowDebugInfo});
             this.contextMenuStripData.Name = "contextMenuStripData";
-            this.contextMenuStripData.Size = new System.Drawing.Size(125, 26);
+            this.contextMenuStripData.Size = new System.Drawing.Size(139, 28);
             // 
             // btnShowDebugInfo
             // 
             this.btnShowDebugInfo.Name = "btnShowDebugInfo";
-            this.btnShowDebugInfo.Size = new System.Drawing.Size(124, 22);
+            this.btnShowDebugInfo.Size = new System.Drawing.Size(138, 24);
             this.btnShowDebugInfo.Text = "显示详情";
             this.btnShowDebugInfo.Click += new System.EventHandler(this.btnShowDebugInfo_Click);
             // 
@@ -297,19 +298,19 @@
             this.btnClearLog,
             this.btnShowLog});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(125, 48);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(139, 52);
             // 
             // btnClearLog
             // 
             this.btnClearLog.Name = "btnClearLog";
-            this.btnClearLog.Size = new System.Drawing.Size(124, 22);
+            this.btnClearLog.Size = new System.Drawing.Size(138, 24);
             this.btnClearLog.Text = "清空日志";
             this.btnClearLog.Click += new System.EventHandler(this.btnClearLog_Click);
             // 
             // btnShowLog
             // 
             this.btnShowLog.Name = "btnShowLog";
-            this.btnShowLog.Size = new System.Drawing.Size(124, 22);
+            this.btnShowLog.Size = new System.Drawing.Size(138, 24);
             this.btnShowLog.Text = "查看日志";
             this.btnShowLog.Click += new System.EventHandler(this.btnShowLog_Click);
             // 
@@ -366,7 +367,7 @@
             // 
             this.splitContainer3.Panel2.Controls.Add(this.panel1);
             this.splitContainer3.Size = new System.Drawing.Size(1257, 439);
-            this.splitContainer3.SplitterDistance = 545;
+            this.splitContainer3.SplitterDistance = 831;
             this.splitContainer3.TabIndex = 0;
             // 
             // splitContainer5
@@ -384,7 +385,7 @@
             // 
             this.splitContainer5.Panel2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.splitContainer5.Panel2.Controls.Add(this.paginationPanel);
-            this.splitContainer5.Size = new System.Drawing.Size(545, 439);
+            this.splitContainer5.Size = new System.Drawing.Size(831, 439);
             this.splitContainer5.SplitterDistance = 374;
             this.splitContainer5.TabIndex = 0;
             // 
@@ -402,7 +403,7 @@
             this.table_Small.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 766F));
             this.table_Small.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 766F));
             this.table_Small.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 766F));
-            this.table_Small.Size = new System.Drawing.Size(545, 374);
+            this.table_Small.Size = new System.Drawing.Size(831, 374);
             this.table_Small.TabIndex = 11;
             // 
             // paginationPanel
@@ -420,7 +421,7 @@
             this.paginationPanel.Name = "paginationPanel";
             this.paginationPanel.RowCount = 1;
             this.paginationPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.paginationPanel.Size = new System.Drawing.Size(545, 61);
+            this.paginationPanel.Size = new System.Drawing.Size(831, 61);
             this.paginationPanel.TabIndex = 0;
             // 
             // btnPrevious
@@ -443,7 +444,7 @@
             this.lblPageInfo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.lblPageInfo.Location = new System.Drawing.Point(98, 0);
             this.lblPageInfo.Name = "lblPageInfo";
-            this.lblPageInfo.Size = new System.Drawing.Size(349, 61);
+            this.lblPageInfo.Size = new System.Drawing.Size(635, 61);
             this.lblPageInfo.TabIndex = 46;
             this.lblPageInfo.Text = "第 1 页 / 共 1 页";
             this.lblPageInfo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -451,7 +452,7 @@
             // btnNext
             // 
             this.btnNext.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btnNext.Location = new System.Drawing.Point(455, 5);
+            this.btnNext.Location = new System.Drawing.Point(741, 5);
             this.btnNext.Margin = new System.Windows.Forms.Padding(5, 5, 10, 5);
             this.btnNext.Name = "btnNext";
             this.btnNext.Size = new System.Drawing.Size(80, 51);
@@ -467,7 +468,7 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(708, 439);
+            this.panel1.Size = new System.Drawing.Size(422, 439);
             this.panel1.TabIndex = 0;
             // 
             // statsGridPanel
@@ -494,7 +495,7 @@
             this.statsGridPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33F));
             this.statsGridPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.34F));
             this.statsGridPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33F));
-            this.statsGridPanel.Size = new System.Drawing.Size(708, 439);
+            this.statsGridPanel.Size = new System.Drawing.Size(422, 439);
             this.statsGridPanel.TabIndex = 0;
             // 
             // lbl_SnTotalCount
@@ -507,7 +508,7 @@
             this.lbl_SnTotalCount.Location = new System.Drawing.Point(8, 8);
             this.lbl_SnTotalCount.Margin = new System.Windows.Forms.Padding(3);
             this.lbl_SnTotalCount.Name = "lbl_SnTotalCount";
-            this.lbl_SnTotalCount.Size = new System.Drawing.Size(226, 136);
+            this.lbl_SnTotalCount.Size = new System.Drawing.Size(131, 136);
             this.lbl_SnTotalCount.TabIndex = 5;
             this.lbl_SnTotalCount.Text = "-";
             this.lbl_SnTotalCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -519,10 +520,10 @@
             this.lbl_totalDefectCount.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lbl_totalDefectCount.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold);
             this.lbl_totalDefectCount.ForeColor = System.Drawing.Color.FloralWhite;
-            this.lbl_totalDefectCount.Location = new System.Drawing.Point(240, 8);
+            this.lbl_totalDefectCount.Location = new System.Drawing.Point(145, 8);
             this.lbl_totalDefectCount.Margin = new System.Windows.Forms.Padding(3);
             this.lbl_totalDefectCount.Name = "lbl_totalDefectCount";
-            this.lbl_totalDefectCount.Size = new System.Drawing.Size(226, 136);
+            this.lbl_totalDefectCount.Size = new System.Drawing.Size(131, 136);
             this.lbl_totalDefectCount.TabIndex = 0;
             this.lbl_totalDefectCount.Text = "-";
             this.lbl_totalDefectCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -534,10 +535,10 @@
             this.lbl_CountPerPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lbl_CountPerPanel.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold);
             this.lbl_CountPerPanel.ForeColor = System.Drawing.Color.FloralWhite;
-            this.lbl_CountPerPanel.Location = new System.Drawing.Point(472, 8);
+            this.lbl_CountPerPanel.Location = new System.Drawing.Point(282, 8);
             this.lbl_CountPerPanel.Margin = new System.Windows.Forms.Padding(3);
             this.lbl_CountPerPanel.Name = "lbl_CountPerPanel";
-            this.lbl_CountPerPanel.Size = new System.Drawing.Size(228, 136);
+            this.lbl_CountPerPanel.Size = new System.Drawing.Size(132, 136);
             this.lbl_CountPerPanel.TabIndex = 9;
             this.lbl_CountPerPanel.Text = "-";
             this.lbl_CountPerPanel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -552,7 +553,7 @@
             this.lbl_AiAllCount.Location = new System.Drawing.Point(8, 150);
             this.lbl_AiAllCount.Margin = new System.Windows.Forms.Padding(3);
             this.lbl_AiAllCount.Name = "lbl_AiAllCount";
-            this.lbl_AiAllCount.Size = new System.Drawing.Size(226, 137);
+            this.lbl_AiAllCount.Size = new System.Drawing.Size(131, 137);
             this.lbl_AiAllCount.TabIndex = 1;
             this.lbl_AiAllCount.Text = "-";
             this.lbl_AiAllCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -564,10 +565,10 @@
             this.lbl_aiFilterOKCount.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lbl_aiFilterOKCount.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold);
             this.lbl_aiFilterOKCount.ForeColor = System.Drawing.Color.FloralWhite;
-            this.lbl_aiFilterOKCount.Location = new System.Drawing.Point(240, 150);
+            this.lbl_aiFilterOKCount.Location = new System.Drawing.Point(145, 150);
             this.lbl_aiFilterOKCount.Margin = new System.Windows.Forms.Padding(3);
             this.lbl_aiFilterOKCount.Name = "lbl_aiFilterOKCount";
-            this.lbl_aiFilterOKCount.Size = new System.Drawing.Size(226, 137);
+            this.lbl_aiFilterOKCount.Size = new System.Drawing.Size(131, 137);
             this.lbl_aiFilterOKCount.TabIndex = 2;
             this.lbl_aiFilterOKCount.Text = "-";
             this.lbl_aiFilterOKCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -579,10 +580,10 @@
             this.lbl_filteredOkCount.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lbl_filteredOkCount.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold);
             this.lbl_filteredOkCount.ForeColor = System.Drawing.Color.FloralWhite;
-            this.lbl_filteredOkCount.Location = new System.Drawing.Point(472, 150);
+            this.lbl_filteredOkCount.Location = new System.Drawing.Point(282, 150);
             this.lbl_filteredOkCount.Margin = new System.Windows.Forms.Padding(3);
             this.lbl_filteredOkCount.Name = "lbl_filteredOkCount";
-            this.lbl_filteredOkCount.Size = new System.Drawing.Size(228, 137);
+            this.lbl_filteredOkCount.Size = new System.Drawing.Size(132, 137);
             this.lbl_filteredOkCount.TabIndex = 4;
             this.lbl_filteredOkCount.Text = "-";
             this.lbl_filteredOkCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -597,7 +598,7 @@
             this.lbl_aviPassRateCount.Location = new System.Drawing.Point(8, 293);
             this.lbl_aviPassRateCount.Margin = new System.Windows.Forms.Padding(3);
             this.lbl_aviPassRateCount.Name = "lbl_aviPassRateCount";
-            this.lbl_aviPassRateCount.Size = new System.Drawing.Size(226, 138);
+            this.lbl_aviPassRateCount.Size = new System.Drawing.Size(131, 138);
             this.lbl_aviPassRateCount.TabIndex = 3;
             this.lbl_aviPassRateCount.Text = "-";
             this.lbl_aviPassRateCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -609,10 +610,10 @@
             this.lbl_boardAiPassRate.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lbl_boardAiPassRate.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold);
             this.lbl_boardAiPassRate.ForeColor = System.Drawing.Color.FloralWhite;
-            this.lbl_boardAiPassRate.Location = new System.Drawing.Point(240, 293);
+            this.lbl_boardAiPassRate.Location = new System.Drawing.Point(145, 293);
             this.lbl_boardAiPassRate.Margin = new System.Windows.Forms.Padding(3);
             this.lbl_boardAiPassRate.Name = "lbl_boardAiPassRate";
-            this.lbl_boardAiPassRate.Size = new System.Drawing.Size(226, 138);
+            this.lbl_boardAiPassRate.Size = new System.Drawing.Size(131, 138);
             this.lbl_boardAiPassRate.TabIndex = 7;
             this.lbl_boardAiPassRate.Text = "-";
             this.lbl_boardAiPassRate.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -624,17 +625,17 @@
             this.lbl_utilizationRate.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lbl_utilizationRate.Font = new System.Drawing.Font("Calibri", 12F, System.Drawing.FontStyle.Bold);
             this.lbl_utilizationRate.ForeColor = System.Drawing.Color.FloralWhite;
-            this.lbl_utilizationRate.Location = new System.Drawing.Point(472, 293);
+            this.lbl_utilizationRate.Location = new System.Drawing.Point(282, 293);
             this.lbl_utilizationRate.Margin = new System.Windows.Forms.Padding(3);
             this.lbl_utilizationRate.Name = "lbl_utilizationRate";
-            this.lbl_utilizationRate.Size = new System.Drawing.Size(228, 138);
+            this.lbl_utilizationRate.Size = new System.Drawing.Size(132, 138);
             this.lbl_utilizationRate.TabIndex = 8;
             this.lbl_utilizationRate.Text = "-";
             this.lbl_utilizationRate.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // FrHome
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
             this.ClientSize = new System.Drawing.Size(1761, 851);

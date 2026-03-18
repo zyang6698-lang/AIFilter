@@ -442,7 +442,7 @@ namespace DeepSightWorkLib
                 catch (Exception ex)
                 {
                     LogTextHelper.Error($"结果回写异常：{ex}");
-                    HandleProductError(info?.Item2, null, "结果回写", ex.Message);
+                    HandleProductError(info?.Item2.SN, null, "结果回写", ex.Message);
                 }
             }
             return false;

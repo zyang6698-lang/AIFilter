@@ -202,6 +202,23 @@ namespace DeepSightAI
                 }
 
                 Machine.config_class.Save(Machine.sysConfig);
+
+                // 自动触发图片显示：仅当面板数据包含缺陷图片时才刷新，避免清空已有显示
+                bool hasImages = info?.RootInfo?.PcsInfo?.Values?.Any(pcs =>
+                    pcs.DefectInfo?.Any(d => d.DefectVrsImages != null && d.DefectVrsImages.Count > 0) == true) == true;
+                if (hasImages)
+                {
+                    FrHome.Instance.str_SN = sn;
+                    if (FrHome.Instance.dataGridViewData.InvokeRequired)
+                    {
+                        FrHome.Instance.dataGridViewData.BeginInvoke(new MethodInvoker(() =>
+                            FrHome.Instance.dataGridViewData_CellClick(null, null)));
+                    }
+                    else
+                    {
+                        FrHome.Instance.dataGridViewData_CellClick(null, null);
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -487,9 +504,21 @@ namespace DeepSightAI
             row.Cells[4].Value = msg;
             FrHome.Instance.str_SN = sn;
 
-            // 优化：如果当前显示的就是这个SN，只更新AI结果标签，不重新从Minio加载图片
-            // 完整加载仅在用户点击新SN行或首次显示时触发
-            FrHome.Instance.UpdateAIResultLabels();
+            // B面完成时：仅当有缺陷图片时触发完整加载，否则仅更新AI结果标签
+            bool hasImages = false;
+            if (FrHome.Instance.dic_Infos.TryGetValue(sn, out var snInfos))
+            {
+                hasImages = snInfos.Any(inf => inf?.RootInfo?.PcsInfo?.Values?.Any(pcs =>
+                    pcs.DefectInfo?.Any(d => d.DefectVrsImages != null && d.DefectVrsImages.Count > 0) == true) == true);
+            }
+            if (hasImages)
+            {
+                FrHome.Instance.dataGridViewData_CellClick(null, null);
+            }
+            else
+            {
+                FrHome.Instance.UpdateAIResultLabels();
+            }
         }
 
         /// <summary>

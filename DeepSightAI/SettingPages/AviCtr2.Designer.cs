@@ -60,30 +60,30 @@
             this.labelLineName.Size = new System.Drawing.Size(88, 24);
             this.labelLineName.TabIndex = 6;
             this.labelLineName.Text = "AVI112";
-            // 
-            // labelCurrentPartNumberValue
-            // 
+            //
+            // labelCurrentPartNumberValue (title only)
+            //
             this.labelCurrentPartNumberValue.AutoSize = true;
-            this.labelCurrentPartNumberValue.Font = new System.Drawing.Font("Calibri", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelCurrentPartNumberValue.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(199)))), ((int)(((byte)(220)))));
-            this.labelCurrentPartNumberValue.Location = new System.Drawing.Point(10, 46);
+            this.labelCurrentPartNumberValue.Font = new System.Drawing.Font("Calibri", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelCurrentPartNumberValue.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(110)))), ((int)(((byte)(140)))), ((int)(((byte)(165)))));
+            this.labelCurrentPartNumberValue.Location = new System.Drawing.Point(10, 45);
             this.labelCurrentPartNumberValue.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.labelCurrentPartNumberValue.Name = "labelCurrentPartNumberValue";
-            this.labelCurrentPartNumberValue.Size = new System.Drawing.Size(11, 14);
+            this.labelCurrentPartNumberValue.Size = new System.Drawing.Size(43, 13);
             this.labelCurrentPartNumberValue.TabIndex = 13;
-            this.labelCurrentPartNumberValue.Text = "-";
-            // 
-            // labelLotValue
-            // 
+            this.labelCurrentPartNumberValue.Text = "Part No.";
+            //
+            // labelLotValue (title only)
+            //
             this.labelLotValue.AutoSize = true;
-            this.labelLotValue.Font = new System.Drawing.Font("Calibri", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelLotValue.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(199)))), ((int)(((byte)(220)))));
+            this.labelLotValue.Font = new System.Drawing.Font("Calibri", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelLotValue.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(110)))), ((int)(((byte)(140)))), ((int)(((byte)(165)))));
             this.labelLotValue.Location = new System.Drawing.Point(10, 67);
             this.labelLotValue.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.labelLotValue.Name = "labelLotValue";
-            this.labelLotValue.Size = new System.Drawing.Size(11, 14);
+            this.labelLotValue.Size = new System.Drawing.Size(16, 13);
             this.labelLotValue.TabIndex = 14;
-            this.labelLotValue.Text = "-";
+            this.labelLotValue.Text = "Lot";
             // 
             // lblOperatingRate
             // 
@@ -99,33 +99,33 @@
             this.lblOperatingRate.Text = "Utilization:";
             this.lblOperatingRate.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.lblOperatingRate.Visible = false;
-            // 
-            // lblAiPassRate
-            // 
+            //
+            // lblAiPassRate (title only)
+            //
             this.lblAiPassRate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lblAiPassRate.AutoSize = true;
-            this.lblAiPassRate.Font = new System.Drawing.Font("Calibri", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblAiPassRate.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(199)))), ((int)(((byte)(220)))));
-            this.lblAiPassRate.Location = new System.Drawing.Point(141, 68);
+            this.lblAiPassRate.Font = new System.Drawing.Font("Calibri", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblAiPassRate.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(110)))), ((int)(((byte)(140)))), ((int)(((byte)(165)))));
+            this.lblAiPassRate.Location = new System.Drawing.Point(148, 69);
             this.lblAiPassRate.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblAiPassRate.Name = "lblAiPassRate";
-            this.lblAiPassRate.Size = new System.Drawing.Size(77, 14);
+            this.lblAiPassRate.Size = new System.Drawing.Size(65, 13);
             this.lblAiPassRate.TabIndex = 18;
-            this.lblAiPassRate.Text = "AI Pass Rate:";
+            this.lblAiPassRate.Text = "AI Pass Rate";
             this.lblAiPassRate.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // lblAviPassRate
-            // 
+            //
+            // lblAviPassRate (title only)
+            //
             this.lblAviPassRate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lblAviPassRate.AutoSize = true;
-            this.lblAviPassRate.Font = new System.Drawing.Font("Calibri", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblAviPassRate.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(199)))), ((int)(((byte)(220)))));
-            this.lblAviPassRate.Location = new System.Drawing.Point(132, 46);
+            this.lblAviPassRate.Font = new System.Drawing.Font("Calibri", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblAviPassRate.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(110)))), ((int)(((byte)(140)))), ((int)(((byte)(165)))));
+            this.lblAviPassRate.Location = new System.Drawing.Point(148, 47);
             this.lblAviPassRate.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblAviPassRate.Name = "lblAviPassRate";
-            this.lblAviPassRate.Size = new System.Drawing.Size(83, 14);
+            this.lblAviPassRate.Size = new System.Drawing.Size(71, 13);
             this.lblAviPassRate.TabIndex = 20;
-            this.lblAviPassRate.Text = "AVI Pass Rate:";
+            this.lblAviPassRate.Text = "AVI Pass Rate";
             this.lblAviPassRate.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // pictureBoxStatus

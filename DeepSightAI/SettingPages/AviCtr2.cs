@@ -73,6 +73,12 @@ namespace DeepSightAI.SettingPages
             FileB = string.Empty,
         };
 
+        // 值显示标签（与标题标签分离，突出数字显示）
+        private Label lblPartNumberVal;
+        private Label lblLotIdVal;
+        private Label lblAviRateVal;
+        private Label lblAiRateVal;
+
         private double aviPassRate;
 
         public double AviPassRate
@@ -220,6 +226,7 @@ namespace DeepSightAI.SettingPages
 
             InitializeToolTip();
             InitializeDeleteButton();
+            InitializeValueLabels();
             ctrConfig = _config;
             SetName(ctrConfig.AviName);
             UpdateDisplay();
@@ -258,6 +265,68 @@ namespace DeepSightAI.SettingPages
             }
         }
 
+
+        /// <summary>
+        /// 初始化指标数值标签（加粗、高亮，与暗色标题形成对比）
+        /// </summary>
+        private void InitializeValueLabels()
+        {
+            Color leftValueColor = Color.FromArgb(230, 242, 255);       // 左侧值：明亮白蓝
+            Color rateValueColor = Color.FromArgb(80, 210, 245);        // 右侧率值：醒目青色
+            Font leftValueFont = new Font("Calibri", 10F, FontStyle.Bold);
+            Font rateValueFont = new Font("Calibri", 11F, FontStyle.Bold);
+
+            // Part Number 值
+            lblPartNumberVal = new Label
+            {
+                AutoSize = true,
+                Font = leftValueFont,
+                ForeColor = leftValueColor,
+                BackColor = Color.Transparent,
+                Location = new Point(56, 43),
+                Text = "-"
+            };
+
+            // Lot 值
+            lblLotIdVal = new Label
+            {
+                AutoSize = true,
+                Font = leftValueFont,
+                ForeColor = leftValueColor,
+                BackColor = Color.Transparent,
+                Location = new Point(30, 65),
+                Text = "-"
+            };
+
+            // AVI Pass Rate 值
+            lblAviRateVal = new Label
+            {
+                AutoSize = true,
+                Font = rateValueFont,
+                ForeColor = rateValueColor,
+                BackColor = Color.Transparent,
+                Location = new Point(224, 44),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                Text = "-"
+            };
+
+            // AI Pass Rate 值
+            lblAiRateVal = new Label
+            {
+                AutoSize = true,
+                Font = rateValueFont,
+                ForeColor = rateValueColor,
+                BackColor = Color.Transparent,
+                Location = new Point(224, 66),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                Text = "-"
+            };
+
+            this.Controls.Add(lblPartNumberVal);
+            this.Controls.Add(lblLotIdVal);
+            this.Controls.Add(lblAviRateVal);
+            this.Controls.Add(lblAiRateVal);
+        }
 
         protected override void OnPaint(PaintEventArgs e)
         {
@@ -380,11 +449,17 @@ namespace DeepSightAI.SettingPages
             //SetAiPassRate($"{ratio:P2}");
             SetOperatingRate($"Utilization: {Utilization:P1}");
 
-            lblAiPassRate.Text = $"AI Pass Rate:{ratio:P1}";
-            lblAviPassRate.Text = $"AVI Pass Rate:{AviPassRate:P1}";
+            // 标题标签（小字、暗色）保持固定文本
+            lblAiPassRate.Text = "AI Pass Rate";
+            lblAviPassRate.Text = "AVI Pass Rate";
+            labelCurrentPartNumberValue.Text = "Part No.";
+            labelLotValue.Text = "Lot";
 
-            labelCurrentPartNumberValue.Text =$"Part Number:{ProductSerial}";
-            labelLotValue.Text =$"Lot: {LotId}";
+            // 数值标签（大字、加粗、高亮）显示实际数据
+            lblAiRateVal.Text = $"{ratio:P1}";
+            lblAviRateVal.Text = $"{AviPassRate:P1}";
+            lblPartNumberVal.Text = string.IsNullOrEmpty(ProductSerial) ? "-" : ProductSerial;
+            lblLotIdVal.Text = string.IsNullOrEmpty(LotId) ? "-" : LotId;
 
             if (toolTip != null)
             {

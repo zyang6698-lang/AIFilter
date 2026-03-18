@@ -19,13 +19,13 @@ namespace DeepSightAI
         {
             this.tabControl = new System.Windows.Forms.TabControl();
             this.tabLevelDb = new System.Windows.Forms.TabPage();
-            this.txtLevelDbJson = new System.Windows.Forms.RichTextBox();
+            this.tvLevelDbJson = new System.Windows.Forms.TreeView();
             this.tabPanelInfo = new System.Windows.Forms.TabPage();
-            this.txtPanelInfoJson = new System.Windows.Forms.RichTextBox();
+            this.tvPanelInfoJson = new System.Windows.Forms.TreeView();
             this.tabVbJson = new System.Windows.Forms.TabPage();
-            this.txtVbInferenceJson = new System.Windows.Forms.RichTextBox();
+            this.tvVbInferenceJson = new System.Windows.Forms.TreeView();
             this.tabInferReturn = new System.Windows.Forms.TabPage();
-            this.txtInferenceReturnJson = new System.Windows.Forms.RichTextBox();
+            this.tvInferenceReturnJson = new System.Windows.Forms.TreeView();
             this.tabOther = new System.Windows.Forms.TabPage();
             this.txtOtherInfo = new System.Windows.Forms.RichTextBox();
             this.btnPanel = new System.Windows.Forms.Panel();
@@ -65,99 +65,95 @@ namespace DeepSightAI
             //
             // tabLevelDb
             //
-            this.tabLevelDb.Controls.Add(this.txtLevelDbJson);
+            this.tabLevelDb.Controls.Add(this.tvLevelDbJson);
             this.tabLevelDb.Location = new System.Drawing.Point(4, 34);
             this.tabLevelDb.Name = "tabLevelDb";
             this.tabLevelDb.Size = new System.Drawing.Size(1176, 777);
             this.tabLevelDb.TabIndex = 0;
             this.tabLevelDb.Text = "LevelDB推理请求";
             //
-            // txtLevelDbJson
+            // tvLevelDbJson
             //
-            this.txtLevelDbJson.BackColor = System.Drawing.Color.FromArgb(20, 35, 45);
-            this.txtLevelDbJson.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtLevelDbJson.Font = new System.Drawing.Font("Consolas", 12F);
-            this.txtLevelDbJson.ForeColor = System.Drawing.Color.FromArgb(200, 220, 240);
-            this.txtLevelDbJson.Location = new System.Drawing.Point(0, 0);
-            this.txtLevelDbJson.Name = "txtLevelDbJson";
-            this.txtLevelDbJson.ReadOnly = true;
-            this.txtLevelDbJson.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Both;
-            this.txtLevelDbJson.Size = new System.Drawing.Size(1176, 777);
-            this.txtLevelDbJson.TabIndex = 0;
-            this.txtLevelDbJson.Text = "";
-            this.txtLevelDbJson.WordWrap = false;
+            this.tvLevelDbJson.BackColor = System.Drawing.Color.FromArgb(20, 35, 45);
+            this.tvLevelDbJson.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tvLevelDbJson.Font = new System.Drawing.Font("Consolas", 11F);
+            this.tvLevelDbJson.ForeColor = System.Drawing.Color.FromArgb(200, 220, 240);
+            this.tvLevelDbJson.Location = new System.Drawing.Point(0, 0);
+            this.tvLevelDbJson.Name = "tvLevelDbJson";
+            this.tvLevelDbJson.Size = new System.Drawing.Size(1176, 777);
+            this.tvLevelDbJson.TabIndex = 0;
+            this.tvLevelDbJson.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.tvLevelDbJson.FullRowSelect = true;
+            this.tvLevelDbJson.ItemHeight = 24;
             //
             // tabPanelInfo
             //
-            this.tabPanelInfo.Controls.Add(this.txtPanelInfoJson);
+            this.tabPanelInfo.Controls.Add(this.tvPanelInfoJson);
             this.tabPanelInfo.Location = new System.Drawing.Point(4, 34);
             this.tabPanelInfo.Name = "tabPanelInfo";
             this.tabPanelInfo.Size = new System.Drawing.Size(1176, 777);
             this.tabPanelInfo.TabIndex = 1;
             this.tabPanelInfo.Text = "PanelInfo JSON";
             //
-            // txtPanelInfoJson
+            // tvPanelInfoJson
             //
-            this.txtPanelInfoJson.BackColor = System.Drawing.Color.FromArgb(20, 35, 45);
-            this.txtPanelInfoJson.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtPanelInfoJson.Font = new System.Drawing.Font("Consolas", 12F);
-            this.txtPanelInfoJson.ForeColor = System.Drawing.Color.FromArgb(200, 220, 240);
-            this.txtPanelInfoJson.Location = new System.Drawing.Point(0, 0);
-            this.txtPanelInfoJson.Name = "txtPanelInfoJson";
-            this.txtPanelInfoJson.ReadOnly = true;
-            this.txtPanelInfoJson.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Both;
-            this.txtPanelInfoJson.Size = new System.Drawing.Size(1176, 777);
-            this.txtPanelInfoJson.TabIndex = 0;
-            this.txtPanelInfoJson.Text = "";
-            this.txtPanelInfoJson.WordWrap = false;
+            this.tvPanelInfoJson.BackColor = System.Drawing.Color.FromArgb(20, 35, 45);
+            this.tvPanelInfoJson.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tvPanelInfoJson.Font = new System.Drawing.Font("Consolas", 11F);
+            this.tvPanelInfoJson.ForeColor = System.Drawing.Color.FromArgb(200, 220, 240);
+            this.tvPanelInfoJson.Location = new System.Drawing.Point(0, 0);
+            this.tvPanelInfoJson.Name = "tvPanelInfoJson";
+            this.tvPanelInfoJson.Size = new System.Drawing.Size(1176, 777);
+            this.tvPanelInfoJson.TabIndex = 0;
+            this.tvPanelInfoJson.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.tvPanelInfoJson.FullRowSelect = true;
+            this.tvPanelInfoJson.ItemHeight = 24;
             //
             // tabVbJson
             //
-            this.tabVbJson.Controls.Add(this.txtVbInferenceJson);
+            this.tabVbJson.Controls.Add(this.tvVbInferenceJson);
             this.tabVbJson.Location = new System.Drawing.Point(4, 34);
             this.tabVbJson.Name = "tabVbJson";
             this.tabVbJson.Size = new System.Drawing.Size(1176, 777);
             this.tabVbJson.TabIndex = 2;
             this.tabVbJson.Text = "VB推理JSON";
             //
-            // txtVbInferenceJson
+            // tvVbInferenceJson
             //
-            this.txtVbInferenceJson.BackColor = System.Drawing.Color.FromArgb(20, 35, 45);
-            this.txtVbInferenceJson.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtVbInferenceJson.Font = new System.Drawing.Font("Consolas", 12F);
-            this.txtVbInferenceJson.ForeColor = System.Drawing.Color.FromArgb(200, 220, 240);
-            this.txtVbInferenceJson.Location = new System.Drawing.Point(0, 0);
-            this.txtVbInferenceJson.Name = "txtVbInferenceJson";
-            this.txtVbInferenceJson.ReadOnly = true;
-            this.txtVbInferenceJson.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Both;
-            this.txtVbInferenceJson.Size = new System.Drawing.Size(1176, 777);
-            this.txtVbInferenceJson.TabIndex = 0;
-            this.txtVbInferenceJson.Text = "";
-            this.txtVbInferenceJson.WordWrap = false;
+            this.tvVbInferenceJson.BackColor = System.Drawing.Color.FromArgb(20, 35, 45);
+            this.tvVbInferenceJson.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tvVbInferenceJson.Font = new System.Drawing.Font("Consolas", 11F);
+            this.tvVbInferenceJson.ForeColor = System.Drawing.Color.FromArgb(200, 220, 240);
+            this.tvVbInferenceJson.Location = new System.Drawing.Point(0, 0);
+            this.tvVbInferenceJson.Name = "tvVbInferenceJson";
+            this.tvVbInferenceJson.Size = new System.Drawing.Size(1176, 777);
+            this.tvVbInferenceJson.TabIndex = 0;
+            this.tvVbInferenceJson.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.tvVbInferenceJson.FullRowSelect = true;
+            this.tvVbInferenceJson.ItemHeight = 24;
             //
             // tabInferReturn
             //
-            this.tabInferReturn.Controls.Add(this.txtInferenceReturnJson);
+            this.tabInferReturn.Controls.Add(this.tvInferenceReturnJson);
             this.tabInferReturn.Location = new System.Drawing.Point(4, 34);
             this.tabInferReturn.Name = "tabInferReturn";
             this.tabInferReturn.Size = new System.Drawing.Size(1176, 777);
             this.tabInferReturn.TabIndex = 3;
             this.tabInferReturn.Text = "推理返回JSON";
             //
-            // txtInferenceReturnJson
+            // tvInferenceReturnJson
             //
-            this.txtInferenceReturnJson.BackColor = System.Drawing.Color.FromArgb(20, 35, 45);
-            this.txtInferenceReturnJson.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtInferenceReturnJson.Font = new System.Drawing.Font("Consolas", 12F);
-            this.txtInferenceReturnJson.ForeColor = System.Drawing.Color.FromArgb(200, 220, 240);
-            this.txtInferenceReturnJson.Location = new System.Drawing.Point(0, 0);
-            this.txtInferenceReturnJson.Name = "txtInferenceReturnJson";
-            this.txtInferenceReturnJson.ReadOnly = true;
-            this.txtInferenceReturnJson.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Both;
-            this.txtInferenceReturnJson.Size = new System.Drawing.Size(1176, 777);
-            this.txtInferenceReturnJson.TabIndex = 0;
-            this.txtInferenceReturnJson.Text = "";
-            this.txtInferenceReturnJson.WordWrap = false;
+            this.tvInferenceReturnJson.BackColor = System.Drawing.Color.FromArgb(20, 35, 45);
+            this.tvInferenceReturnJson.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tvInferenceReturnJson.Font = new System.Drawing.Font("Consolas", 11F);
+            this.tvInferenceReturnJson.ForeColor = System.Drawing.Color.FromArgb(200, 220, 240);
+            this.tvInferenceReturnJson.Location = new System.Drawing.Point(0, 0);
+            this.tvInferenceReturnJson.Name = "tvInferenceReturnJson";
+            this.tvInferenceReturnJson.Size = new System.Drawing.Size(1176, 777);
+            this.tvInferenceReturnJson.TabIndex = 0;
+            this.tvInferenceReturnJson.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.tvInferenceReturnJson.FullRowSelect = true;
+            this.tvInferenceReturnJson.ItemHeight = 24;
             //
             // tabOther
             //
@@ -319,13 +315,13 @@ namespace DeepSightAI
 
         private System.Windows.Forms.TabControl tabControl;
         private System.Windows.Forms.TabPage tabLevelDb;
-        private System.Windows.Forms.RichTextBox txtLevelDbJson;
+        private System.Windows.Forms.TreeView tvLevelDbJson;
         private System.Windows.Forms.TabPage tabPanelInfo;
-        private System.Windows.Forms.RichTextBox txtPanelInfoJson;
+        private System.Windows.Forms.TreeView tvPanelInfoJson;
         private System.Windows.Forms.TabPage tabVbJson;
-        private System.Windows.Forms.RichTextBox txtVbInferenceJson;
+        private System.Windows.Forms.TreeView tvVbInferenceJson;
         private System.Windows.Forms.TabPage tabInferReturn;
-        private System.Windows.Forms.RichTextBox txtInferenceReturnJson;
+        private System.Windows.Forms.TreeView tvInferenceReturnJson;
         private System.Windows.Forms.TabPage tabOther;
         private System.Windows.Forms.RichTextBox txtOtherInfo;
         private System.Windows.Forms.Panel btnPanel;

@@ -3,8 +3,10 @@ using DeepSightDB;
 using DeepSightEvent;
 using DeepSightModel;
 using DeepSightTool;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace DeepSightWorkLib.Services
 {
@@ -19,27 +21,30 @@ namespace DeepSightWorkLib.Services
             _processingSnSet = processingSnSet ?? throw new ArgumentNullException(nameof(processingSnSet));
         }
 
-        public bool ReturnAVI(Tuple<string, string, string, RootAIResult> info)
+        public bool ReturnAVI(Tuple<List<AIDetailResultItem>, RootAIResult> info)
         {
             try
             {
-                // 优先使用 RootAIResult 中携带的目标 URL，退回到默认 _url
-                var targetUrl = !string.IsNullOrEmpty(info.Item4?.TargetUrl) ? info.Item4.TargetUrl :"";
-                TaskStatusSender.SendWritingResults(info.Item2, info.Item3);
-                LogTextHelper.Info($"SN:{info.Item2} Side:{info.Item3} 回写到 URL:{targetUrl}, DB:{info.Item4?.DbName}");
-                if (_httpDb.HttpPostMethod(targetUrl, info.Item4, 1, out string result))
-                {
-                    TaskStatusSender.SendCompleted(info.Item2, info.Item3);
+                var aiDetailResults= info.Item1;
+                var aiResult = info.Item2;
 
-                    string snKey = $"{info.Item2}_{info.Item3}";
+                // 优先使用 RootAIResult 中携带的目标 URL，退回到默认 _url
+                var targetUrl = !string.IsNullOrEmpty(aiResult?.TargetUrl) ? aiResult.TargetUrl :"";
+                TaskStatusSender.SendWritingResults(aiResult.SN, aiResult.Side);
+                LogTextHelper.Info($"SN:{aiResult.SN} Side:{aiResult.Side} 回写到 URL:{targetUrl}, DB:{aiResult?.DbName}");
+                if (_httpDb.HttpPostMethod(targetUrl, aiResult, 1, out string result))
+                {
+                    TaskStatusSender.SendCompleted(aiResult.SN, aiResult.Side);
+
+                    string snKey = $"{aiResult.SN}_{aiResult.Side}";
                     if (_processingSnSet.TryRemove(snKey, out DateTime addTime))
                     {
                         var duration = DateTime.Now - addTime;
-                        LogTextHelper.Info($"SN:{info.Item2} Side:{info.Item3} 处理完成，耗时：{duration.TotalSeconds:F2}秒，已从处理集合中移除");
+                        LogTextHelper.Info($"SN:{aiResult.SN} Side:{aiResult.Side} 处理完成，耗时：{duration.TotalSeconds:F2}秒，已从处理集合中移除");
                     }
                     else
                     {
-                        LogTextHelper.Warn($"SN:{info.Item2} Side:{info.Item3} 未在处理集合中找到，可能已被清理或未正确添加");
+                        LogTextHelper.Warn($"SN:{aiResult.SN} Side:{aiResult.Side} 未在处理集合中找到，可能已被清理或未正确添加");
                     }
 
                     return true;
@@ -51,6 +56,26 @@ namespace DeepSightWorkLib.Services
                 LogTextHelper.Error(ex.ToString());
                 return false;
             }
+        }
+        // TODO 完善VRS接口
+        public bool ReturnVRS(List<AIDetailResultItem> aIDetailResultItems)
+        {
+            var targetUrl = "";
+            var data = JsonConvert.SerializeObject(aIDetailResultItems);
+            //var data = new RootAIResult
+            //{
+            //    DbName = "ai_detail_results_tovrs",
+            //    Operation = "put",
+            //    OpMode = "all_ow",
+            //    Key = $"{sn}_{side}",
+            //    Value = JsonConvert.SerializeObject(aIDetailResultItems),
+            //};
+            if (_httpDb.HttpPostMethod(targetUrl, data, 1, out string result))
+            {
+
+                return true;
+            }
+            return false;
         }
     }
 }
