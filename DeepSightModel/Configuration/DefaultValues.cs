@@ -186,7 +186,7 @@ namespace DeepSightModel.Configuration
         /// <summary>
         /// 读取 AVI 轮询间隔
         /// </summary>
-        public const int ReadAviPollIntervalMs = 100;
+        public const int ReadAviPollIntervalMs = 5000;
 
         /// <summary>
         /// 图像加载轮询间隔

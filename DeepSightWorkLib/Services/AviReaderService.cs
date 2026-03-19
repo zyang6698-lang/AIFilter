@@ -60,6 +60,7 @@ namespace DeepSightWorkLib.Services
         /// </summary>
         public DateTime GetFetchTime(string dbName)
         {
+            return DateTime.Today.AddDays(-7);
             return _fetchTimeByDb.GetOrAdd(dbName, DateTime.MinValue);
         }
 
@@ -297,6 +298,15 @@ namespace DeepSightWorkLib.Services
                 LogTextHelper.Info($"SN:{serialNumber} Side:{side} 已标记为处理中，当前处理集合大小：{_processingSnSet.Count}");
 
                 string minioIp = resultInfo.MinioIp;
+                if (resultInfo.MinioIp == "192.168.77.99")
+                    minioIp = "192.168.76.241";
+                else if (resultInfo.MinioIp == "192.168.77.112")
+                    minioIp = "192.168.76.237";
+
+
+
+
+
                 string minioPort = resultInfo.MinioPort.ToString();
 
                 if (string.IsNullOrEmpty(minioIp) || resultInfo.MinioPort == 0)

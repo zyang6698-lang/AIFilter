@@ -1,4 +1,5 @@
 ﻿using DeepSightAI.Properties;
+using DeepSightDB;
 using DeepSightEvent;
 using DeepSightModel;
 using DeepSightModel.Configuration;
@@ -100,21 +101,27 @@ namespace DeepSightAI
             SystemEvent.EventSendDefectPanelInfoToUI += new SendDefectPanelInfo(SystemEvent_EventSendDefectPanelInfoToUI);
             SystemEvent.EventSendDefectResultInfoToUI += new SendDefectResultInfo(SystemEvent_EventSendDefectResultInfoToUI);
             SystemEvent.EventSendDefectRoiInfoToUI += new SendDefectRoiInfo(SystemEvent_EventSendDefectRoiInfoToUI);
+            SystemEvent.EventSendDefectDetectInfoToUI += new SendDefectDetectInfo(SystemEvent_EventSendDefectDetectInfoToUI);
         }
 
 
 
-        private void SystemEvent_EventSendDefectResultInfoToUI(string sn, List<string> msg)
+        private void SystemEvent_EventSendDefectResultInfoToUI(string sn, string side, List<string> msg)
         {
             try
             {
-                // 使用 GetOrAdd 线程安全地获取或添加结果
-                var resultList = FrHome.Instance.dic_Results.GetOrAdd(sn, _ => new List<string>());
+                // 以SN+Side为单位存储结果
+                string key = $"{sn}_{side}";
+                var resultList = FrHome.Instance.dic_Results.GetOrAdd(key, _ => new List<string>());
+                int resultCount;
                 lock (resultList)
                 {
                     resultList.AddRange(msg);
+                    resultCount = resultList.Count;
                 }
 
+                // 实时更新该面的 AI 列
+                UpdateAIColumnForRow(sn, side, resultCount);
             }
             catch (Exception ex)
             {
@@ -123,11 +130,13 @@ namespace DeepSightAI
             }
         }
 
-        private void SystemEvent_EventSendDefectRoiInfoToUI(string sn, List<Roi> rois)
+        private void SystemEvent_EventSendDefectRoiInfoToUI(string sn, string side, List<Roi> rois)
         {
             try
             {
-                var roiList = FrHome.Instance.dic_DetectRois.GetOrAdd(sn, _ => new List<Roi>());
+                // 以SN+Side为单位存储ROI
+                string key = $"{sn}_{side}";
+                var roiList = FrHome.Instance.dic_DetectRois.GetOrAdd(key, _ => new List<Roi>());
                 lock (roiList)
                 {
                     roiList.AddRange(rois);
@@ -139,16 +148,52 @@ namespace DeepSightAI
             }
         }
 
-        private void SystemEvent_EventSendDefectPanelInfoToUI(string sn, RootPanelInfoWithIP info)
+        private void SystemEvent_EventSendDefectDetectInfoToUI(string sn, string side, List<DetectInfo> detectInfos)
         {
             try
             {
-                // 使用 GetOrAdd 线程安全地获取或添加 Panel 信息
-                var infoList = FrHome.Instance.dic_Infos.GetOrAdd(sn, _ => new List<RootPanelInfoWithIP>());
+                // 以SN+Side为单位存储DetectInfo（用于图片放大和单图测试）
+                string key = $"{sn}_{side}";
+                var infoList = FrHome.Instance.dic_DetectInfos.GetOrAdd(key, _ => new List<DetectInfo>());
+                lock (infoList)
+                {
+                    infoList.AddRange(detectInfos);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error("DetectInfo回调异常" + ex.ToString());
+            }
+        }
+
+        private void SystemEvent_EventSendDefectPanelInfoToUI(string sn, string side, RootPanelInfoWithIP info)
+        {
+            try
+            {
+                // 以SN+Side为单位存储Panel信息
+                string key = $"{sn}_{side}";
+                var infoList = FrHome.Instance.dic_Infos.GetOrAdd(key, _ => new List<RootPanelInfoWithIP>());
                 lock (infoList)
                 {
                     infoList.Add(info);
                 }
+
+                // 实时更新该面的 AVI 列（缺陷图片数）
+                int aviCount = 0;
+                lock (infoList)
+                {
+                    foreach (var inf in infoList)
+                    {
+                        if (inf?.RootInfo?.PcsInfo != null)
+                        {
+                            foreach (var pcs in inf.RootInfo.PcsInfo.Values)
+                            {
+                                aviCount += pcs.DefectInfo?.Count ?? 0;
+                            }
+                        }
+                    }
+                }
+                UpdateAVIColumnForRow(sn, side, aviCount);
 
                 // 提取 MachineName，检查是否需要添加新工站
                 string machineName = info?.RootInfo?.MachineName;
@@ -201,14 +246,12 @@ namespace DeepSightAI
                     FrHome.Instance.UpdateStationDataReceived(machineName);
                 }
 
-                Machine.config_class.Save(Machine.sysConfig);
-
                 // 自动触发图片显示：仅当面板数据包含缺陷图片时才刷新，避免清空已有显示
                 bool hasImages = info?.RootInfo?.PcsInfo?.Values?.Any(pcs =>
                     pcs.DefectInfo?.Any(d => d.DefectVrsImages != null && d.DefectVrsImages.Count > 0) == true) == true;
                 if (hasImages)
                 {
-                    FrHome.Instance.str_SN = sn;
+                    FrHome.Instance.str_SN = $"{sn}_{side}";
                     if (FrHome.Instance.dataGridViewData.InvokeRequired)
                     {
                         FrHome.Instance.dataGridViewData.BeginInvoke(new MethodInvoker(() =>
@@ -270,8 +313,8 @@ namespace DeepSightAI
                 {
                     if (statusInfo.Status == DeepSightModel.TaskStatus.Queued)
                     {
-                        // 添加新任务
-                        AddNewTaskRow(statusInfo.SerialNumber);
+                        // 添加新任务（区分AB面）
+                        AddNewTaskRow(statusInfo.SerialNumber, statusInfo.Side);
                     }
                     else
                     {
@@ -308,8 +351,8 @@ namespace DeepSightAI
                 {
                     if (string.IsNullOrEmpty(msg))
                     {
-                        // 添加新任务
-                        AddNewTaskRow(sn);
+                        // 添加新任务（旧接口无side信息，默认空）
+                        AddNewTaskRow(sn, "");
                     }
                     else
                     {
@@ -328,12 +371,96 @@ namespace DeepSightAI
         }
 
         /// <summary>
-        /// 添加新任务行
+        /// 添加新任务行（区分AB面）
         /// </summary>
-        private void AddNewTaskRow(string sn)
+        private void AddNewTaskRow(string sn, string side)
         {
-            FrHome.Instance.dataGridViewData.Rows.Insert(0, new object[] { sn, "0", "0", "", "排队中" });
+            // 列顺序: SN[0], Side[1], AVI[2], AI[3], Time[4], Status[5]
+            FrHome.Instance.dataGridViewData.Rows.Insert(0, new object[] { sn, side, "0", "0", "", "排队中" });
             FrHome.Instance.dataGridViewData.Rows[0].DefaultCellStyle.ForeColor = Color.Yellow;
+        }
+
+        /// <summary>
+        /// 实时更新指定行的 AVI 列（缺陷图片数）
+        /// </summary>
+        private void UpdateAVIColumnForRow(string sn, string side, int aviCount)
+        {
+            try
+            {
+                if (FrHome.Instance.dataGridViewData.InvokeRequired)
+                {
+                    FrHome.Instance.dataGridViewData.BeginInvoke(new MethodInvoker(() => UpdateAVIColumnForRow(sn, side, aviCount)));
+                    return;
+                }
+                lock (Locker)
+                {
+                    var row = FindRowBySnSide(sn, side) ?? FindRowBySn(sn);
+                    if (row != null) row.Cells[2].Value = aviCount;
+                }
+            }
+            catch (Exception ex) { LogTextHelper.Error($"UpdateAVIColumnForRow 异常: {ex.Message}"); }
+        }
+
+        /// <summary>
+        /// 实时更新指定行的 AI 列（推理结果数）
+        /// </summary>
+        private void UpdateAIColumnForRow(string sn, string side, int aiCount)
+        {
+            try
+            {
+                if (FrHome.Instance.dataGridViewData.InvokeRequired)
+                {
+                    FrHome.Instance.dataGridViewData.BeginInvoke(new MethodInvoker(() => UpdateAIColumnForRow(sn, side, aiCount)));
+                    return;
+                }
+                lock (Locker)
+                {
+                    var row = FindRowBySnSide(sn, side) ?? FindRowBySn(sn);
+                    if (row != null) row.Cells[3].Value = aiCount;
+                }
+            }
+            catch (Exception ex) { LogTextHelper.Error($"UpdateAIColumnForRow 异常: {ex.Message}"); }
+        }
+
+        /// <summary>
+        /// 根据SN和Side查找行
+        /// </summary>
+        private DataGridViewRow FindRowBySnSide(string sn, string side)
+        {
+            foreach (DataGridViewRow row in FrHome.Instance.dataGridViewData.Rows)
+            {
+                if (row.Cells[0].Value?.ToString() == sn && row.Cells[1].Value?.ToString() == side)
+                {
+                    return row;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 根据SN查找行（不区分面，用于旧接口兼容）
+        /// </summary>
+        private DataGridViewRow FindRowBySn(string sn)
+        {
+            foreach (DataGridViewRow row in FrHome.Instance.dataGridViewData.Rows)
+            {
+                if (row.Cells[0].Value?.ToString() == sn)
+                {
+                    return row;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 从消息中提取面别信息
+        /// </summary>
+        private string ExtractSideFromMsg(string msg)
+        {
+            if (string.IsNullOrEmpty(msg)) return "";
+            if (msg.Contains("A面")) return "A";
+            if (msg.Contains("B面")) return "B";
+            return "";
         }
 
         /// <summary>
@@ -341,15 +468,13 @@ namespace DeepSightAI
         /// </summary>
         private void UpdateTaskRowWithStatus(TaskStatusInfo statusInfo)
         {
-            // 查找对应的行
-            DataGridViewRow targetRow = null;
-            foreach (DataGridViewRow row in FrHome.Instance.dataGridViewData.Rows)
+            // 按SN+Side精确查找行
+            DataGridViewRow targetRow = FindRowBySnSide(statusInfo.SerialNumber, statusInfo.Side);
+
+            // 兼容：如果找不到精确匹配，尝试按SN查找（旧数据兼容）
+            if (targetRow == null)
             {
-                if (row.Cells[0].Value?.ToString() == statusInfo.SerialNumber)
-                {
-                    targetRow = row;
-                    break;
-                }
+                targetRow = FindRowBySn(statusInfo.SerialNumber);
             }
 
             if (targetRow == null) return;
@@ -358,17 +483,17 @@ namespace DeepSightAI
             Color statusColor = TaskStatusHelper.GetStatusColor(statusInfo.Status);
             targetRow.DefaultCellStyle.ForeColor = statusColor;
 
-            // 更新时间列（如果有传入时间）
+            // 更新时间列[4]（如果有传入时间）
             if (statusInfo.ProcessingTimeMs > 0)
             {
-                string existingTime = targetRow.Cells[3].Value?.ToString();
+                string existingTime = targetRow.Cells[4].Value?.ToString();
                 if (!string.IsNullOrEmpty(existingTime))
                 {
-                    targetRow.Cells[3].Value = $"{existingTime}+{statusInfo.ProcessingTimeMs}";
+                    targetRow.Cells[4].Value = $"{existingTime}+{statusInfo.ProcessingTimeMs}";
                 }
                 else
                 {
-                    targetRow.Cells[3].Value = statusInfo.ProcessingTimeMs.ToString();
+                    targetRow.Cells[4].Value = statusInfo.ProcessingTimeMs.ToString();
                 }
             }
 
@@ -380,7 +505,7 @@ namespace DeepSightAI
             }
             else
             {
-                targetRow.Cells[4].Value = statusInfo.GetFullDisplayMessage();
+                targetRow.Cells[5].Value = statusInfo.GetFullDisplayMessage();
             }
         }
 
@@ -390,15 +515,17 @@ namespace DeepSightAI
         /// <param name="timeMs">AI处理时间(毫秒)</param>
         private void UpdateTaskRow(string sn, string msg, long timeMs = 0)
         {
-            // 查找对应的行
+            // 从消息中提取面别，精确匹配行
+            string side = ExtractSideFromMsg(msg);
             DataGridViewRow targetRow = null;
-            foreach (DataGridViewRow row in FrHome.Instance.dataGridViewData.Rows)
+            if (!string.IsNullOrEmpty(side))
             {
-                if (row.Cells[0].Value?.ToString() == sn)
-                {
-                    targetRow = row;
-                    break;
-                }
+                targetRow = FindRowBySnSide(sn, side);
+            }
+            // 兼容：找不到则按SN查找
+            if (targetRow == null)
+            {
+                targetRow = FindRowBySn(sn);
             }
 
             if (targetRow == null) return;
@@ -407,18 +534,17 @@ namespace DeepSightAI
             Color statusColor = GetStatusColor(msg);
             targetRow.DefaultCellStyle.ForeColor = statusColor;
 
-            // 更新时间列（如果有传入时间）
+            // 更新时间列[4]（如果有传入时间）
             if (timeMs > 0)
             {
-                // 拼接显示时间，如 A面100ms + B面100ms 显示为 "100+100"
-                string existingTime = targetRow.Cells[3].Value?.ToString();
+                string existingTime = targetRow.Cells[4].Value?.ToString();
                 if (!string.IsNullOrEmpty(existingTime))
                 {
-                    targetRow.Cells[3].Value = $"{existingTime}+{timeMs}";
+                    targetRow.Cells[4].Value = $"{existingTime}+{timeMs}";
                 }
                 else
                 {
-                    targetRow.Cells[3].Value = timeMs.ToString();
+                    targetRow.Cells[4].Value = timeMs.ToString();
                 }
             }
 
@@ -429,7 +555,7 @@ namespace DeepSightAI
             }
             else
             {
-                targetRow.Cells[4].Value = msg;
+                targetRow.Cells[5].Value = msg;
             }
         }
 
@@ -468,48 +594,70 @@ namespace DeepSightAI
             int aDefectCount = 0;
             int bDefectCount = 0;
 
-            // 获取A/B面缺陷数
-            if (FrHome.Instance.dic_Infos.TryGetValue(sn, out List<RootPanelInfoWithIP> infos))
+            // 以SN+Side为单位获取A/B面缺陷数
+            string keyA = $"{sn}_A";
+            string keyB = $"{sn}_B";
+
+            if (FrHome.Instance.dic_Infos.TryGetValue(keyA, out List<RootPanelInfoWithIP> aInfos))
             {
-                foreach (var info in infos)
+                foreach (var info in aInfos)
                 {
-                    int sideDefectCount = 0;
                     foreach (var pcsInfo in info.RootInfo.PcsInfo.Values)
                     {
-                        sideDefectCount += pcsInfo.DefectInfo?.Count ?? 0;
-                    }
-
-                    if (info.RootInfo.SideIndex == "A")
-                    {
-                        aDefectCount = sideDefectCount;
-                    }
-                    else if (info.RootInfo.SideIndex == "B")
-                    {
-                        bDefectCount = sideDefectCount;
+                        aDefectCount += pcsInfo.DefectInfo?.Count ?? 0;
                     }
                 }
             }
 
-            if (FrHome.Instance.dic_Results.TryGetValue(sn, out List<string> res_lbl))
+            if (FrHome.Instance.dic_Infos.TryGetValue(keyB, out List<RootPanelInfoWithIP> bInfos))
             {
-                count = res_lbl.Count;
-                ok = res_lbl.Count(o => o.Contains("0"));
-                ng = res_lbl.Count(o => o.Contains("1"));
-                byPass = res_lbl.Count(o => o.Contains("2"));
+                foreach (var info in bInfos)
+                {
+                    foreach (var pcsInfo in info.RootInfo.PcsInfo.Values)
+                    {
+                        bDefectCount += pcsInfo.DefectInfo?.Count ?? 0;
+                    }
+                }
+            }
+
+            // 合并A/B面的结果进行统计
+            var allResults = new List<string>();
+            if (FrHome.Instance.dic_Results.TryGetValue(keyA, out List<string> aResults))
+            {
+                allResults.AddRange(aResults);
+            }
+            if (FrHome.Instance.dic_Results.TryGetValue(keyB, out List<string> bResults))
+            {
+                allResults.AddRange(bResults);
+            }
+
+            if (allResults.Count > 0)
+            {
+                count = allResults.Count;
+                ok = allResults.Count(o => o.Contains("0"));
+                ng = allResults.Count(o => o.Contains("1"));
+                byPass = allResults.Count(o => o.Contains("2"));
                 msg = $"{msg}_A面:{aDefectCount} B面:{bDefectCount}_OK:{ok} NG:{ng} ByPass:{byPass}";
             }
 
-            row.Cells[1].Value = count;
-            row.Cells[2].Value = count;
-            row.Cells[4].Value = msg;
-            FrHome.Instance.str_SN = sn;
+            // 列顺序: SN[0], Side[1], AVI[2], AI[3], Time[4], Status[5]
+            // AVI列 = AVI缺陷图片总数（A面+B面），AI列 = AI推理结果总数
+            row.Cells[2].Value = aDefectCount + bDefectCount;
+            row.Cells[3].Value = count;
+            row.Cells[5].Value = msg;
+            FrHome.Instance.str_SN = $"{sn}_B";
 
             // B面完成时：仅当有缺陷图片时触发完整加载，否则仅更新AI结果标签
             bool hasImages = false;
-            if (FrHome.Instance.dic_Infos.TryGetValue(sn, out var snInfos))
+            // 检查A面和B面是否有缺陷图片
+            foreach (var key in new[] { keyA, keyB })
             {
-                hasImages = snInfos.Any(inf => inf?.RootInfo?.PcsInfo?.Values?.Any(pcs =>
-                    pcs.DefectInfo?.Any(d => d.DefectVrsImages != null && d.DefectVrsImages.Count > 0) == true) == true);
+                if (FrHome.Instance.dic_Infos.TryGetValue(key, out var sideInfos))
+                {
+                    hasImages = sideInfos.Any(inf => inf?.RootInfo?.PcsInfo?.Values?.Any(pcs =>
+                        pcs.DefectInfo?.Any(d => d.DefectVrsImages != null && d.DefectVrsImages.Count > 0) == true) == true);
+                    if (hasImages) break;
+                }
             }
             if (hasImages)
             {
@@ -534,16 +682,17 @@ namespace DeepSightAI
                 int checkIndex = FrHome.Instance.dataGridViewData.Rows.Count - KEEP_COMPLETED_ROWS;
                 if (checkIndex >= 0 && checkIndex < FrHome.Instance.dataGridViewData.Rows.Count)
                 {
-                    string status = FrHome.Instance.dataGridViewData.Rows[checkIndex].Cells[4].Value?.ToString() ?? "";
+                    string status = FrHome.Instance.dataGridViewData.Rows[checkIndex].Cells[5].Value?.ToString() ?? "";
 
                         int lastIndex = FrHome.Instance.dataGridViewData.Rows.Count - 1;
                         string snToRemove = FrHome.Instance.dataGridViewData.Rows[lastIndex].Cells[0].Value?.ToString() ?? "空值";
+                        string sideToRemove = FrHome.Instance.dataGridViewData.Rows[lastIndex].Cells[1].Value?.ToString() ?? "";
 
                         // 移除行
                         FrHome.Instance.dataGridViewData.Rows.RemoveAt(lastIndex);
 
-                        // 清理相关数据
-                        CleanupTaskData(snToRemove);
+                        // 清理相关数据（以SN+Side为单位）
+                        CleanupTaskData(snToRemove, sideToRemove);
                     
                 }
                 Machine.master.IsAllow = false;
@@ -557,13 +706,14 @@ namespace DeepSightAI
         /// <summary>
         /// 清理任务相关数据
         /// </summary>
-        private void CleanupTaskData(string sn)
+        private void CleanupTaskData(string sn, string side)
         {
-            FrHome.Instance.dic_Infos.TryRemove(sn,out _);
-            FrHome.Instance.dic_Results.TryRemove(sn, out _);
+            string key = $"{sn}_{side}";
+            FrHome.Instance.dic_Infos.TryRemove(key, out _);
+            FrHome.Instance.dic_Results.TryRemove(key, out _);
+            FrHome.Instance.dic_DetectRois.TryRemove(key, out _);
             // 清理SN调试信息缓存
-            SnDebugInfoCache.Remove(sn, "A");
-            SnDebugInfoCache.Remove(sn, "B");
+            SnDebugInfoCache.Remove(sn, side);
         }
         internal void LoadMethod()
         {

@@ -12,9 +12,9 @@ namespace DeepSightWorkLib.Services
         /// <summary>
         /// 发送排队状态
         /// </summary>
-        public static void SendQueued(string serialNumber)
+        public static void SendQueued(string serialNumber, string side = "")
         {
-            SystemEvent.SendTaskStatus(TaskStatusInfo.CreateQueued(serialNumber));
+            SystemEvent.SendTaskStatus(TaskStatusInfo.CreateQueued(serialNumber, side));
         }
 
         /// <summary>

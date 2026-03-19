@@ -50,6 +50,33 @@ namespace DeepSightCommunication
             }
         }
 
+        /// <summary>
+        /// 根据 IP 获取已有的 MinioClient，如果不存在则使用指定端口（或默认端口）动态创建
+        /// </summary>
+        /// <param name="ip">Minio 服务器 IP</param>
+        /// <param name="port">Minio 端口，为空时使用 MinioSettings.DefaultPort</param>
+        /// <returns>MinioClient 实例</returns>
+        private MinioClient GetOrCreateClient(string ip, string port = null)
+        {
+            if (dic_Minio.TryGetValue(ip, out var client))
+            {
+                return client;
+            }
+
+            // 动态创建新的 MinioClient
+            var actualPort = string.IsNullOrEmpty(port) ? MinioSettingsConfig.DefaultPort : port;
+            BuildClient(ip, actualPort);
+
+            if (dic_Minio.TryGetValue(ip, out client))
+            {
+                LogTextHelper.Info($"动态创建MinioClient成功, IP:{ip}, Port:{actualPort}");
+                return client;
+            }
+
+            LogTextHelper.Warn($"动态创建MinioClient失败, IP:{ip}, Port:{actualPort}");
+            return null;
+        }
+
         public string ReadJsonSync(string bucketName, string objectName, string ip)
         {
             try
@@ -105,12 +132,14 @@ namespace DeepSightCommunication
                         memoryStream.Position = 0; // 重置流位置
                     });
 
-                if (dic_Minio.TryGetValue(ip, out _minioClient))
+                var client = GetOrCreateClient(ip);
+                if (client != null)
                 {
-                    await _minioClient.GetObjectAsync(args);
+                    await client.GetObjectAsync(args);
                     return memoryStream;
                 }
 
+                LogTextHelper.Warn($"无法获取MinioClient, IP:{ip}, bucket:{bucketName}, object:{objectName}");
                 return new MemoryStream();
             }
             catch
@@ -151,7 +180,8 @@ namespace DeepSightCommunication
                 throw new ArgumentException("MinIO文件夹路径必须以'/'结尾");
             minioFolderPath = minioFolderPath.TrimEnd('/');
             Directory.CreateDirectory(localRootPath);
-            if (dic_Minio.TryGetValue(ip, out _minioClient))
+            _minioClient = GetOrCreateClient(ip);
+            if (_minioClient != null)
             {
                 try
                 {
@@ -183,7 +213,8 @@ namespace DeepSightCommunication
                 throw new ArgumentException("MinIO文件夹路径必须以'/'结尾");
 
             Directory.CreateDirectory(localRootPath);
-            if (dic_Minio.TryGetValue(ip, out _minioClient))
+            _minioClient = GetOrCreateClient(ip);
+            if (_minioClient != null)
             {
                 try
                 {

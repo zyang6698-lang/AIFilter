@@ -337,7 +337,30 @@ namespace DeepSightAI
 
                         if (success)
                         {
-                            MessageBox.Show("数据库清空成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            // 清空所有内存缓存
+                            BoardStatCache.Clear();
+                            SnDebugInfoCache.Clear();
+                            FrHome.Instance.dic_Infos.Clear();
+                            FrHome.Instance.dic_Results.Clear();
+                            FrHome.Instance.dic_DetectRois.Clear();
+                            FrHome.Instance.str_SN = "";
+
+                            // 清空 DataGridView 行
+                            if (FrHome.Instance.dataGridViewData.InvokeRequired)
+                            {
+                                FrHome.Instance.dataGridViewData.BeginInvoke(new MethodInvoker(() =>
+                                    FrHome.Instance.dataGridViewData.Rows.Clear()));
+                            }
+                            else
+                            {
+                                FrHome.Instance.dataGridViewData.Rows.Clear();
+                            }
+
+                            // 清空缺陷图片显示
+                            FrHome.Instance.ClearAllImages();
+
+                            LogTextHelper.Info("数据库及所有内存缓存已清空");
+                            MessageBox.Show("数据库及缓存清空成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                         else
                         {

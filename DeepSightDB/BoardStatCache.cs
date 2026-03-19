@@ -198,6 +198,25 @@ namespace DeepSightDB
             };
         }
 
+        /// <summary>
+        /// 清空所有缓存数据（清空数据库时调用）
+        /// </summary>
+        public static void Clear()
+        {
+            lock (SyncRoot)
+            {
+                PanelEntries.Clear();
+                MachineTimestamps.Clear();
+                MachineTotals.Clear();
+                SerialToMachine.Clear();
+                MachineLatestLotSn.Clear();
+                _totals = new BoardStat();
+                _pendingSaveCount = 0;
+                _stateLoadedForDate = true; // 防止重新加载旧状态
+                LogTextHelper.Info("BoardStatCache 已清空");
+            }
+        }
+
         private static void EnsureCurrentDate()
         {
             var today = DateTime.Today;
@@ -480,12 +499,14 @@ namespace DeepSightDB
                 EnsureStateForToday();
 
                 var currentHour = DateTime.Now.Hour;
-                
+                bool isNewEntry = false;
+
                 if (!PanelEntries.TryGetValue(record.SerialNumber, out var entry))
                 {
                     entry = new PanelStatEntry();
                     entry.Hour = currentHour;
                     PanelEntries[record.SerialNumber] = entry;
+                    isNewEntry = true;
                 }
 
                 // 记录 SN -> 机台 映射
@@ -500,6 +521,14 @@ namespace DeepSightDB
                 if (SerialToMachine.TryGetValue(record.SerialNumber, out var mid))
                 {
                     ApplyDeltaToMachine(mid, delta);
+                }
+
+                // 诊断日志：记录每次更新的关键信息
+                if (isNewEntry || delta.AviPanelCount != 0)
+                {
+                    LogTextHelper.Info($"[BoardStatCache] Update SN={record.SerialNumber}, Side={record.Side}, " +
+                        $"IsNew={isNewEntry}, Delta.AviPanelCount={delta.AviPanelCount}, " +
+                        $"Total.AviPanelCount={_totals.AviPanelCount}, PanelEntries.Count={PanelEntries.Count}");
                 }
 
                 if (wasEmpty && record.AviCreationTime.HasValue && !string.IsNullOrWhiteSpace(record.MachineId))
@@ -521,11 +550,36 @@ namespace DeepSightDB
             }
         }
 
+        private static int _integrityCheckCounter = 0;
+
         public static BoardStat GetTodayStat()
         {
             lock (SyncRoot)
             {
                 EnsureStateForToday();
+
+                // 每50次查询做一次完整性校验，防止_totals与实际数据不一致
+                _integrityCheckCounter++;
+                if (_integrityCheckCounter >= 50)
+                {
+                    _integrityCheckCounter = 0;
+                    var verifyTotal = new BoardStat();
+                    foreach (var kv in PanelEntries)
+                    {
+                        var c = kv.Value.GetContribution();
+                        verifyTotal.AviPanelCount += c.AviPanelCount;
+                        verifyTotal.AiFilterCount += c.AiFilterCount;
+                    }
+                    if (verifyTotal.AviPanelCount != _totals.AviPanelCount ||
+                        verifyTotal.AiFilterCount != _totals.AiFilterCount)
+                    {
+                        LogTextHelper.Warn($"[BoardStatCache] 完整性校验发现偏差! " +
+                            $"_totals.AviPanelCount={_totals.AviPanelCount} vs Verify={verifyTotal.AviPanelCount}, " +
+                            $"_totals.AiFilterCount={_totals.AiFilterCount} vs Verify={verifyTotal.AiFilterCount}, " +
+                            $"PanelEntries.Count={PanelEntries.Count}. 正在自动修复...");
+                        RecomputeTotals();
+                    }
+                }
 
                 return new BoardStat
                 {

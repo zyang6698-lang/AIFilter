@@ -43,6 +43,8 @@ namespace DeepSightAI
         public ConcurrentDictionary<string, List<string>> dic_Results = new ConcurrentDictionary<string, List<string>>();
         /// <summary>推理后的缺陷ROI信息（来源于PostProcessService推理结果）</summary>
         public ConcurrentDictionary<string, List<Roi>> dic_DetectRois = new ConcurrentDictionary<string, List<Roi>>();
+        /// <summary>推理后的缺陷DetectInfo信息（用于图片放大和单图测试）</summary>
+        public ConcurrentDictionary<string, List<DetectInfo>> dic_DetectInfos = new ConcurrentDictionary<string, List<DetectInfo>>();
 
         // 面板信息
         private List<RootPanelInfoWithIP> info = null;
@@ -53,6 +55,7 @@ namespace DeepSightAI
         private List<string> imagePaths_Gerber = new List<string>();   // Gerber图
         private List<string> imagePaths_Template = new List<string>(); // Template图
         private List<Roi> defectRois = new List<Roi>();                // 缺陷框信息
+        private List<DetectInfo> detectInfoList = new List<DetectInfo>(); // 缺陷详细信息（用于图片放大和单图测试）
 
         // 分页
         public int Index = 0;            // 缺陷小图索引
@@ -581,24 +584,6 @@ namespace DeepSightAI
             }
 
         }
-        public void FrHome_OnCallBackFullShowPro(string station, int index, string m_station, string status, string ocr, global::OpenCvSharp.Mat mat)
-        {
-            try
-            {
-                FrFullImage.Instance.cvDisplay1.stationName = "A";
-                FrFullImage.Instance.cvDisplay1.stationIndex = 1;
-                FrFullImage.Instance.LoadShow(mat.Clone());
-                FrFullImage.Instance.cvDisplay1.DrawStation(m_station);
-                FrFullImage.Instance.cvDisplay1.DrawStatus(status);
-                FrFullImage.Instance.cvDisplay1.DrawOCR(ocr);
-                FrFullImage.Instance.Show();
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error(ex.ToString());
-            }
-
-        }
 
         #endregion
 
@@ -621,15 +606,20 @@ namespace DeepSightAI
                     if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
                 }
                 string SN = string.Empty;
+                string snSideKey = string.Empty;
                 if (e == null)
                 {
-                    SN = str_SN;
+                    snSideKey = str_SN;
+                    SN = snSideKey;
                 }
                 else
                 {
                     int rowIndex = e.RowIndex;
-                    SN = dataGridViewData.Rows[rowIndex].Cells[0].Value?.ToString() ?? "空值";
-                    str_SN = SN;
+                    string rawSN = dataGridViewData.Rows[rowIndex].Cells[0].Value?.ToString() ?? "空值";
+                    string side = dataGridViewData.Rows[rowIndex].Cells[1].Value?.ToString() ?? "";
+                    snSideKey = $"{rawSN}_{side}";
+                    SN = rawSN;
+                    str_SN = snSideKey;
                 }
                 //初始化信息
                 Index = 0;
@@ -638,19 +628,22 @@ namespace DeepSightAI
                 imagePaths_Gerber?.Clear();
                 imagePaths_Template?.Clear();
                 defectRois?.Clear();
+                detectInfoList?.Clear();
                 disInfosList?.Clear();
-                if (dic_Infos.TryGetValue(SN, out info))
+                if (dic_Infos.TryGetValue(snSideKey, out info))
                 {
-                    //这里可能涉及到A/B面的切换
-                    //A面  info[0]
-                    //B面  info[1]
-                    //读取 缺陷小图
+                    //以SN+Side为单位读取缺陷小图
                     int index = 0;
 
                     // 获取推理后的ROI数据（来自PostProcessService推理结果）
                     List<Roi> inferRois = null;
-                    dic_DetectRois.TryGetValue(SN, out inferRois);
+                    dic_DetectRois.TryGetValue(snSideKey, out inferRois);
                     int roiIndex = 0;
+
+                    // 获取推理后的DetectInfo数据（用于图片放大和单图测试）
+                    List<DetectInfo> inferDetectInfos = null;
+                    dic_DetectInfos.TryGetValue(snSideKey, out inferDetectInfos);
+                    int detectInfoIndex = 0;
 
                     for (int i = 0; i < info.Count; i++)
                     {
@@ -691,6 +684,16 @@ namespace DeepSightAI
                                             defectRois.Add(pcsInfo.DefectInfo[k].DefectRoi);
                                         }
                                         roiIndex++;
+                                    }
+                                    // 收集DetectInfo（用于图片放大和单图测试）
+                                    if (inferDetectInfos != null && detectInfoIndex < inferDetectInfos.Count)
+                                    {
+                                        detectInfoList.Add(inferDetectInfos[detectInfoIndex]);
+                                        detectInfoIndex++;
+                                    }
+                                    else
+                                    {
+                                        detectInfoList.Add(null);
                                     }
                                     if (pcsInfo.DefectInfo[k].DefectVrsGerberImages != null)
                                     {
@@ -763,10 +766,12 @@ namespace DeepSightAI
                 string sn = dataGridViewData.CurrentRow.Cells[0].Value?.ToString();
                 if (string.IsNullOrEmpty(sn)) return;
 
-                // 获取该SN的所有调试信息
-                var debugInfos = SnDebugInfoCache.GetBySn(sn);
+                string side = dataGridViewData.CurrentRow.Cells[1].Value?.ToString() ?? "";
 
-                // 弹出调试信息窗口
+                // 获取该SN的所有调试信息
+                SnDebugInfoCache.TryGet(sn,side,out var debugInfos);
+
+                // 弹出调试信息窗口（按面过滤）
                 var form = new FrSnDebugInfo(sn, debugInfos);
                 form.ShowDialog(this);
             }
@@ -799,6 +804,7 @@ namespace DeepSightAI
                 var defect_pagedData = imagePaths.Skip(skipCount).Take(pageSize).ToList();
                 var gerberOrtemp_pagedData = gerberOrtemp_paths.Skip(skipCount).Take(pageSize).ToList();
                 var defect_pagedRois = defectRois.Skip(skipCount).Take(pageSize).ToList();
+                var pagedDetectInfos = detectInfoList.Skip(skipCount).Take(pageSize).ToList();
                 var pagedDisInfos = disInfosList.Skip(skipCount).Take(pageSize).ToList();
 
                 dic_Results.TryGetValue(str_SN, out List<string> res_lbl);
@@ -862,12 +868,15 @@ namespace DeepSightAI
                 for (int i = 0; i < Math.Min(loadedData.Length, defect_pagedData.Count); i++)
                 {
                     var data = loadedData[i];
+                    // 获取当前缺陷对应的DetectInfo（用于图片放大和单图测试）
+                    DetectInfo detectInfo = (i < pagedDetectInfos.Count) ? pagedDetectInfos[i] : null;
                     _defectImageControls[i].SetDisplayData(
                         data.Header,
                         data.Original,
                         data.RawOriginal,
                         data.Template,
-                        data.Status);
+                        data.Status,
+                        detectInfo);
                 }
 
                 UpdatePagingControls();

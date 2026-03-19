@@ -154,6 +154,14 @@ namespace DeepSightModel
         }
 
         /// <summary>
+        /// 清空所有缓存
+        /// </summary>
+        public static void Clear()
+        {
+            _cache.Clear();
+        }
+
+        /// <summary>
         /// 清理过期缓存（保留最近的MaxCacheSize条）
         /// </summary>
         public static void Cleanup()

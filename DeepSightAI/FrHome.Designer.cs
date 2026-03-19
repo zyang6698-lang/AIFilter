@@ -38,6 +38,7 @@
             this.splitContainer4 = new System.Windows.Forms.SplitContainer();
             this.dataGridViewData = new System.Windows.Forms.DataGridView();
             this.Code = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Side = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.AVI = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.AI = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Time = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -178,6 +179,7 @@
             this.dataGridViewData.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewData.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Code,
+            this.Side,
             this.AVI,
             this.AI,
             this.Time,
@@ -227,7 +229,16 @@
             this.Code.Name = "Code";
             this.Code.ReadOnly = true;
             this.Code.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            // 
+            //
+            // Side
+            //
+            this.Side.HeaderText = "面";
+            this.Side.MinimumWidth = 6;
+            this.Side.Name = "Side";
+            this.Side.ReadOnly = true;
+            this.Side.Width = 35;
+            this.Side.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            //
             // AVI
             // 
             this.AVI.HeaderText = "AVI";
@@ -708,6 +719,7 @@
         private System.Windows.Forms.Label lbl_utilizationRate;
         private System.Windows.Forms.Label lbl_CountPerPanel;
         private System.Windows.Forms.DataGridViewTextBoxColumn Code;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Side;
         private System.Windows.Forms.DataGridViewTextBoxColumn AVI;
         private System.Windows.Forms.DataGridViewTextBoxColumn AI;
         private System.Windows.Forms.DataGridViewTextBoxColumn Time;

@@ -49,6 +49,10 @@
     <Compile Include="SystemEvent.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DeepSightDB\DeepSightDB.csproj">
+      <Project>{7E93DCAE-D40B-4019-A1E9-8F710072B16A}</Project>
+      <Name>DeepSightDB</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DeepSightModel\DeepSightModel.csproj">
       <Project>{C3032123-71AF-4B9F-AAF1-5FDBB73274B0}</Project>
       <Name>DeepSightModel</Name>

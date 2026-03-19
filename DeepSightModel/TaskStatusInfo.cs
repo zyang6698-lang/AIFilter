@@ -3,37 +3,37 @@ using System;
 namespace DeepSightModel
 {
     /// <summary>
-    /// ÈÎÎñ×´Ì¬ÐÅÏ¢Ä£ÐÍ
+    /// ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½Ï¢Ä£ï¿½ï¿½
     /// </summary>
     public class TaskStatusInfo
     {
         /// <summary>
-        /// ÐòÁÐºÅ£¨SN£©
+        /// ï¿½ï¿½ï¿½ÐºÅ£ï¿½SNï¿½ï¿½
         /// </summary>
         public string SerialNumber { get; set; }
 
         /// <summary>
-        /// ÈÎÎñ×´Ì¬
+        /// ï¿½ï¿½ï¿½ï¿½×´Ì¬
         /// </summary>
         public TaskStatus Status { get; set; }
 
         /// <summary>
-        /// Ãæ£¨A/B£©
+        /// ï¿½æ£¨A/Bï¿½ï¿½
         /// </summary>
         public string Side { get; set; }
 
         /// <summary>
-        /// ¸½¼ÓÏûÏ¢£¨¿ÉÑ¡£©
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½
         /// </summary>
         public string Message { get; set; }
 
         /// <summary>
-        /// AI´¦ÀíÊ±¼ä£¨ºÁÃë£©
+        /// AIï¿½ï¿½ï¿½ï¿½Ê±ï¿½ä£¨ï¿½ï¿½ï¿½ë£©
         /// </summary>
         public long ProcessingTimeMs { get; set; }
 
         /// <summary>
-        /// Ê±¼ä´Á
+        /// Ê±ï¿½ï¿½ï¿½
         /// </summary>
         public DateTime Timestamp { get; set; }
 
@@ -43,7 +43,7 @@ namespace DeepSightModel
         }
 
         /// <summary>
-        /// »ñÈ¡ÍêÕûµÄÏÔÊ¾ÏûÏ¢
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½Ï¢
         /// </summary>
         public string GetFullDisplayMessage()
         {
@@ -58,20 +58,20 @@ namespace DeepSightModel
         }
 
         /// <summary>
-        /// ´´½¨ÐÂÈÎÎñ£¨ÅÅ¶Ó×´Ì¬£©
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å¶ï¿½×´Ì¬ï¿½ï¿½
         /// </summary>
-        public static TaskStatusInfo CreateQueued(string serialNumber)
+        public static TaskStatusInfo CreateQueued(string serialNumber, string side = "")
         {
             return new TaskStatusInfo
             {
                 SerialNumber = serialNumber,
                 Status = TaskStatus.Queued,
-                Side = ""
+                Side = side
             };
         }
 
         /// <summary>
-        /// ´´½¨×´Ì¬¸üÐÂ
+        /// ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public static TaskStatusInfo Create(string serialNumber, TaskStatus status, string side = "", string message = "", long timeMs = 0)
         {

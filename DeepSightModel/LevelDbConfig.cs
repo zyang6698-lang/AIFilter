@@ -173,7 +173,7 @@ namespace DeepSightModel
                     {
                         DbName = "ai_merged_results",
                         IP = "http://127.0.0.1",
-                        Port = "2000",
+                        Port = "9877",
                         IsEnabled = true
                     }
                 }

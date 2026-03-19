@@ -20,11 +20,12 @@ namespace DeepSightAI
         /// </summary>
         private readonly Dictionary<TabPage, string> _tabRawJsonMap = new Dictionary<TabPage, string>();
 
-        public FrSnDebugInfo(string sn, SnDebugInfo[] debugInfos)
+        public FrSnDebugInfo(string sn, SnDebugInfo debugInfo)
         {
             InitializeComponent();
             Text = $"SN调试信息 - {sn}";
-            LoadData(sn, debugInfos);
+
+            LoadData(sn, debugInfo);
         }
 
         private void TabControl_SelectedIndexChanged(object sender, EventArgs e)
@@ -50,9 +51,9 @@ namespace DeepSightAI
 
         #region LoadData
 
-        private void LoadData(string sn, SnDebugInfo[] debugInfos)
+        private void LoadData(string sn, SnDebugInfo debugInfo)
         {
-            if (debugInfos == null || debugInfos.Length == 0)
+            if (debugInfo == null )
             {
                 SetTreeViewPlaceholder(tvLevelDbJson, "暂无数据 - 该SN尚未完成数据读取");
                 SetTreeViewPlaceholder(tvPanelInfoJson, "暂无数据");
@@ -62,67 +63,53 @@ namespace DeepSightAI
                 return;
             }
 
-            // LevelDB请求AB侧相同，只显示一份
-            string rawLevelDb = null;
-            foreach (var info in debugInfos)
-            {
-                if (!string.IsNullOrEmpty(info.RawLevelDbJson))
-                {
-                    rawLevelDb = info.RawLevelDbJson;
-                    break;
-                }
-            }
-            LoadJsonToTreeView(tvLevelDbJson, tabLevelDb, rawLevelDb);
+            LoadJsonToTreeView(tvLevelDbJson, tabLevelDb, debugInfo.RawLevelDbJson);
 
             // 其余按AB侧分开显示（已排序A在前）
             var sbOther = new System.Text.StringBuilder();
 
-            foreach (var info in debugInfos)
             {
-                string sideLabel = $"===== {info.Side}面 =====";
-
                 // PanelInfo JSON - 按面添加到TreeView
-                LoadSideJsonToTreeView(tvPanelInfoJson, info.Side, info.PanelInfoJson);
+                LoadSideJsonToTreeView(tvPanelInfoJson, debugInfo.PanelInfoJson);
 
                 // VB Inference JSON
-                LoadSideJsonToTreeView(tvVbInferenceJson, info.Side, info.VbInferenceJson);
+                LoadSideJsonToTreeView(tvVbInferenceJson, debugInfo.VbInferenceJson);
 
                 // 推理返回JSON
-                LoadSideJsonToTreeView(tvInferenceReturnJson, info.Side, info.InferenceReturnJson);
+                LoadSideJsonToTreeView(tvInferenceReturnJson, debugInfo.InferenceReturnJson);
 
                 // Other info
-                sbOther.AppendLine(sideLabel);
-                sbOther.AppendLine($"SN:              {info.SerialNumber}");
-                sbOther.AppendLine($"面别:            {info.Side}");
-                sbOther.AppendLine($"缺陷数量:        {info.DefectCount}");
-                sbOther.AppendLine($"PCS数量:         {info.PcsCount}");
-                sbOther.AppendLine($"图片数量:        {info.ImageCount}");
-                sbOther.AppendLine($"是否ByPass:      {(info.IsByPass ? "是" : "否")}");
-                sbOther.AppendLine($"数据源DB:        {info.SourceDbName}");
-                sbOther.AppendLine($"数据源URL:       {info.SourceDbUrl}");
-                sbOther.AppendLine($"Minio路径:       {info.MinioPath}");
-                sbOther.AppendLine($"数据获取时间:    {info.CreateTime:yyyy-MM-dd HH:mm:ss.fff}");
+                sbOther.AppendLine($"SN:              {debugInfo.SerialNumber}");
+                sbOther.AppendLine($"面别:            {debugInfo.Side}");
+                sbOther.AppendLine($"缺陷数量:        {debugInfo.DefectCount}");
+                sbOther.AppendLine($"PCS数量:         {debugInfo.PcsCount}");
+                sbOther.AppendLine($"图片数量:        {debugInfo.ImageCount}");
+                sbOther.AppendLine($"是否ByPass:      {(debugInfo.IsByPass ? "是" : "否")}");
+                sbOther.AppendLine($"数据源DB:        {debugInfo.SourceDbName}");
+                sbOther.AppendLine($"数据源URL:       {debugInfo.SourceDbUrl}");
+                sbOther.AppendLine($"Minio路径:       {debugInfo.MinioPath}");
+                sbOther.AppendLine($"数据获取时间:    {debugInfo.CreateTime:yyyy-MM-dd HH:mm:ss.fff}");
 
-                if (info.HasError)
+                if (debugInfo.HasError)
                 {
                     sbOther.AppendLine();
                     sbOther.AppendLine("---------- 错误信息 ----------");
-                    sbOther.AppendLine($"出错步骤:        {info.ErrorStep}");
-                    sbOther.AppendLine($"错误原因:        {info.ErrorMessage}");
-                    sbOther.AppendLine($"错误时间:        {info.ErrorTime:yyyy-MM-dd HH:mm:ss.fff}");
+                    sbOther.AppendLine($"出错步骤:        {debugInfo.ErrorStep}");
+                    sbOther.AppendLine($"错误原因:        {debugInfo.ErrorMessage}");
+                    sbOther.AppendLine($"错误时间:        {debugInfo.ErrorTime:yyyy-MM-dd HH:mm:ss.fff}");
                 }
                 sbOther.AppendLine();
             }
 
             // 存储AB侧的原始JSON用于复制
-            StoreSideRawJson(tabPanelInfo, debugInfos, d => d.PanelInfoJson);
-            StoreSideRawJson(tabVbJson, debugInfos, d => d.VbInferenceJson);
-            StoreSideRawJson(tabInferReturn, debugInfos, d => d.InferenceReturnJson);
+            StoreSideRawJson(tabPanelInfo, debugInfo, d => d.PanelInfoJson);
+            StoreSideRawJson(tabVbJson, debugInfo, d => d.VbInferenceJson);
+            StoreSideRawJson(tabInferReturn, debugInfo, d => d.InferenceReturnJson);
 
             // 展开TreeView第一层节点
-            ExpandFirstLevel(tvPanelInfoJson);
-            ExpandFirstLevel(tvVbInferenceJson);
-            ExpandFirstLevel(tvInferenceReturnJson);
+           // ExpandFirstLevel(tvPanelInfoJson);
+           // ExpandFirstLevel(tvVbInferenceJson);
+           // ExpandFirstLevel(tvInferenceReturnJson);
 
             txtOtherInfo.Text = sbOther.ToString();
         }
@@ -166,12 +153,14 @@ namespace DeepSightAI
         }
 
         /// <summary>
-        /// 按面别将JSON添加到TreeView（用于AB侧分开显示的场景）
+        /// 按面别将JSON添加到TreeView
         /// </summary>
-        private void LoadSideJsonToTreeView(TreeView tv, string side, string json)
+        private void LoadSideJsonToTreeView(TreeView tv, string json)
         {
-            var sideNode = new TreeNode($"===== {side}面 =====");
-            sideNode.ForeColor = Color.FromArgb(100, 200, 255);
+            var sideNode = new TreeNode
+            {
+                ForeColor = Color.FromArgb(100, 200, 255)
+            };
 
             if (!string.IsNullOrEmpty(json))
             {
@@ -293,13 +282,12 @@ namespace DeepSightAI
             }
         }
 
-        private void StoreSideRawJson(TabPage tab, SnDebugInfo[] debugInfos, Func<SnDebugInfo, string> jsonSelector)
+        private void StoreSideRawJson(TabPage tab, SnDebugInfo debugInfo, Func<SnDebugInfo, string> jsonSelector)
         {
             var sb = new System.Text.StringBuilder();
-            foreach (var info in debugInfos)
             {
-                sb.AppendLine($"===== {info.Side}面 =====");
-                var json = jsonSelector(info);
+                sb.AppendLine($"===== {debugInfo.Side}面 =====");
+                var json = jsonSelector(debugInfo);
                 if (!string.IsNullOrEmpty(json))
                 {
                     try

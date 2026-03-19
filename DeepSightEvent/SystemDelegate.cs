@@ -1,4 +1,5 @@
-﻿using DeepSightModel;
+﻿using DeepSightDB;
+using DeepSightModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,19 +45,29 @@ namespace DeepSightEvent
     /// 发送缺陷信息
     /// </summary>
     /// <param name="sn">产品码</param>
+    /// <param name="side">面别（A/B）</param>
     /// <param name="info">产品缺陷信息</param>
-    public delegate void SendDefectPanelInfo(string sn, RootPanelInfoWithIP info);
+    public delegate void SendDefectPanelInfo(string sn, string side, RootPanelInfoWithIP info);
     /// <summary>
     /// 发送缺陷结果
     /// </summary>
     /// <param name="sn">产品码</param>
-    /// <param name="info">产品缺陷信息</param>
-    public delegate void SendDefectResultInfo(string sn, List<string> msg);
+    /// <param name="side">面别（A/B）</param>
+    /// <param name="msg">产品缺陷信息</param>
+    public delegate void SendDefectResultInfo(string sn, string side, List<string> msg);
     /// <summary>
     /// 发送推理后的缺陷ROI信息
     /// </summary>
     /// <param name="sn">产品码</param>
+    /// <param name="side">面别（A/B）</param>
     /// <param name="rois">推理后的缺陷ROI列表</param>
-    public delegate void SendDefectRoiInfo(string sn, List<Roi> rois);
+    public delegate void SendDefectRoiInfo(string sn, string side, List<Roi> rois);
+    /// <summary>
+    /// 发送推理后的缺陷DetectInfo信息（用于图片放大和单图测试）
+    /// </summary>
+    /// <param name="sn">产品码</param>
+    /// <param name="side">面别（A/B）</param>
+    /// <param name="detectInfos">推理后的DetectInfo列表</param>
+    public delegate void SendDefectDetectInfo(string sn, string side, List<DetectInfo> detectInfos);
 
 }

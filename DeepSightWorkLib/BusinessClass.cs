@@ -352,7 +352,7 @@ namespace DeepSightWorkLib
                     LogImageLoadResult(loadModel);
 
                     _queueManager.AviQueue.Enqueue(loadModel.Model);
-                    SystemEvent.SendPanelInfo(loadModel.Model.SN, loadModel.RootPanelInfo);
+                    SystemEvent.SendPanelInfo(loadModel.Model.SN, loadModel.Model.Side, loadModel.RootPanelInfo);
                     TaskStatusSender.SendImagesLoaded(loadModel.Model.SN, loadModel.Model.Side, loadModel.Model.Mats.Count);
 
                     LogTextHelper.Info($"图片加载完成，SN:{loadModel.Model.SN}，实际加载:{loadModel.Model.Mats.Count}张");
@@ -382,23 +382,23 @@ namespace DeepSightWorkLib
                 {
                     // 验证测试任务使用不同的日志前缀
                     string taskPrefix = info.IsValidationTest ? "[验证测试]" : "";
-                    SystemEvent.SendTaskMsg(info.SN, $"{taskPrefix}{info.Side}面开始AI检测(缺陷数:{info.Mats.Count})");
+                    TaskStatusSender.SendAIDetecting(info.SN, info.Side);
                     AIStopwatch.Restart();
 
                     if (_defectProcessor.DefectMethod(info, SysConfig.MaxDefectCount,
                         out List<string> msg,
                         AviConfig.GetInferResultTimeout))
                     {
-                        SystemEvent.SendTaskMsg(info.SN, $"{taskPrefix}{info.Side}面AI检测完成");
+                        TaskStatusSender.SendAICompleted(info.SN, info.Side);
                         if (!info.IsValidationTest)
                         {
-                            SystemEvent.SendResultInfo(info.SN, msg);
+                            SystemEvent.SendResultInfo(info.SN, info.Side, msg);
                         }
                     }
                     else
                     {
                         LogTextHelper.Error($"KEY:{info.Key} SN:{info.SN}检测失败！");
-                        SystemEvent.SendTaskMsg(info.SN, $"{taskPrefix}{info.Side}面已完成");
+                        TaskStatusSender.SendFailed(info.SN, info.Side, "检测失败");
                     }
 
                     // 验证测试任务不需要入队 AIResultQueue（不需要回写到LDB）
@@ -419,7 +419,7 @@ namespace DeepSightWorkLib
                     var elapsedMs = AIStopwatch.ElapsedMilliseconds;
                     if (elapsedMs > 20)
                     {
-                        SystemEvent.SendTaskMsg(info?.SN, $"{info?.Side}面AI耗时:{elapsedMs}ms", elapsedMs);
+                        TaskStatusSender.SendAICompleted(info?.SN, info?.Side, elapsedMs);
                     }
                     CleanupMats(info?.Mats);
                 }
@@ -546,13 +546,25 @@ namespace DeepSightWorkLib
         {
             try
             {
-                SystemEvent.SendTaskMsg(sn, $"{side}面正在读取Minio数据");
+                TaskStatusSender.SendQueued(sn, side);
                 string json = MinioService.ReadJsonSync("deepiresults", path, ip);
+
+                if (string.IsNullOrWhiteSpace(json))
+                {
+                    string errMsg = $"SN={sn}, Side={side}: 从Minio读取的JSON为空，路径={path}, IP={ip}";
+                    LogTextHelper.Error(errMsg);
+                    HandleProductError(sn, side, "通过Minio读取Json文件", "读取的JSON内容为空");
+                    return;
+                }
+
                 var obj = JsonConvert.DeserializeObject<RootPanelInfo>(json);
 
-                if (side == "A")
+                if (obj == null)
                 {
-                    TaskStatusSender.SendQueued(sn);
+                    string errMsg = $"SN={sn}, Side={side}: JSON反序列化结果为null，路径={path}";
+                    LogTextHelper.Error(errMsg);
+                    HandleProductError(sn, side, "通过Minio读取Json文件", "JSON反序列化为RootPanelInfo失败，结果为null");
+                    return;
                 }
 
                 LogTextHelper.Info($"{sn} {side} 开始将json转为vbinfo");
@@ -740,8 +752,11 @@ namespace DeepSightWorkLib
                     Width = dp.Width,
                     Height = dp.Height
                 }).ToList();
-                SystemEvent.SendRoiInfo(panelInfo.SerialNumber, rois);
+                SystemEvent.SendRoiInfo(panelInfo.SerialNumber, panelInfo.SideIndex, rois);
             }
+
+            // 将DetectInfo信息发送到UI（用于图片放大和单图测试）
+            SystemEvent.SendDetectInfo(panelInfo.SerialNumber, panelInfo.SideIndex, detectPoints ?? new List<DetectInfo>());
 
             List<PanelSideRecord> batchToFlush = null;
             lock (_panelRecordLock)
@@ -916,7 +931,7 @@ namespace DeepSightWorkLib
                 // 通知界面被清除的 SN
                 foreach (var sn in clearedSnSet)
                 {
-                    SystemEvent.SendTaskMsg(sn, "暂停-已从队列移除");
+                    TaskStatusSender.SendSkipped(sn, "", "暂停-已从队列移除");
                 }
 
                 if (clearedSnSet.Count > 0)

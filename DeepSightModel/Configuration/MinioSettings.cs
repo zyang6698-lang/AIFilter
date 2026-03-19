@@ -42,6 +42,11 @@ namespace DeepSightModel.Configuration
         public int StreamBufferSize { get; set; } = 81920;
 
         /// <summary>
+        /// 默认 Minio 端口（用于动态创建客户端时的缺省端口）
+        /// </summary>
+        public string DefaultPort { get; set; } = "9102";
+
+        /// <summary>
         /// 配置文件路径
         /// </summary>
         private static readonly string ConfigFilePath = Path.Combine(

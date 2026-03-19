@@ -1,4 +1,5 @@
-﻿using DeepSightModel;
+﻿using DeepSightDB;
+using DeepSightModel;
 using DeepSightTool;
 using System;
 using System.Collections.Generic;
@@ -109,40 +110,57 @@ namespace DeepSightEvent
         public static event SendDefectPanelInfo EventSendDefectPanelInfoToUI;
 
         /// <summary>
-        ///
+        /// 发送缺陷Panel信息到UI（以SN+Side为单位）
         /// </summary>
-        /// <param name="num"></param>
-        public static void SendPanelInfo(string Sn, RootPanelInfoWithIP info)
+        /// <param name="sn">产品码</param>
+        /// <param name="side">面别（A/B）</param>
+        /// <param name="info">Panel信息</param>
+        public static void SendPanelInfo(string sn, string side, RootPanelInfoWithIP info)
         {
             if (EventSendDefectPanelInfoToUI != null)
             {
-                EventSendDefectPanelInfoToUI(Sn, info);
+                EventSendDefectPanelInfoToUI(sn, side, info);
             }
         }
 
 
         public static event SendDefectResultInfo EventSendDefectResultInfoToUI;
         /// <summary>
-        ///
+        /// 发送缺陷结果信息到UI（以SN+Side为单位）
         /// </summary>
-        /// <param name="num"></param>
-        public static void SendResultInfo(string Sn, List<string>msg)
+        /// <param name="sn">产品码</param>
+        /// <param name="side">面别（A/B）</param>
+        /// <param name="msg">结果信息</param>
+        public static void SendResultInfo(string sn, string side, List<string> msg)
         {
             if (EventSendDefectResultInfoToUI != null)
             {
-                EventSendDefectResultInfoToUI(Sn, msg);
+                EventSendDefectResultInfoToUI(sn, side, msg);
             }
         }
 
         public static event SendDefectRoiInfo EventSendDefectRoiInfoToUI;
         /// <summary>
-        /// 发送推理后的缺陷ROI信息到UI
+        /// 发送推理后的缺陷ROI信息到UI（以SN+Side为单位）
         /// </summary>
         /// <param name="sn">产品码</param>
+        /// <param name="side">面别（A/B）</param>
         /// <param name="rois">推理后的缺陷ROI列表</param>
-        public static void SendRoiInfo(string sn, List<Roi> rois)
+        public static void SendRoiInfo(string sn, string side, List<Roi> rois)
         {
-            EventSendDefectRoiInfoToUI?.Invoke(sn, rois);
+            EventSendDefectRoiInfoToUI?.Invoke(sn, side, rois);
+        }
+
+        public static event SendDefectDetectInfo EventSendDefectDetectInfoToUI;
+        /// <summary>
+        /// 发送推理后的缺陷DetectInfo信息到UI（用于图片放大和单图测试）
+        /// </summary>
+        /// <param name="sn">产品码</param>
+        /// <param name="side">面别（A/B）</param>
+        /// <param name="detectInfos">推理后的DetectInfo列表</param>
+        public static void SendDetectInfo(string sn, string side, List<DetectInfo> detectInfos)
+        {
+            EventSendDefectDetectInfoToUI?.Invoke(sn, side, detectInfos);
         }
     }
 }
