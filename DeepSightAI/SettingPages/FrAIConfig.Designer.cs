@@ -127,6 +127,7 @@
             this.dgvPipeline.RowTemplate.Height = 28;
             this.dgvPipeline.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgvPipeline.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvPipeline_CellValueChanged);
+            this.dgvPipeline.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dgvPipeline_DataError);
             this.dgvPipeline.SelectionChanged += new System.EventHandler(this.dgvPipeline_SelectionChanged);
             // 
             // panelLeftHeader

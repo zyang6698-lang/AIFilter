@@ -113,6 +113,8 @@ namespace DeepSightWorkLib.Services
                             continue;
 
                         AddImages(defect.DefectVrsImages, info.IP, info.Head, results);
+                       // AddImages(defect.DefectVrsOkImages,info.IP, info.Head, results) ;
+                       // AddImages(defect.DefectVrsGerberImages, info.IP, info.Head, results);
                     }
                 }
             }
@@ -122,17 +124,78 @@ namespace DeepSightWorkLib.Services
             }
 
             return results;
+        }
 
-            void AddImages(List<string> images, string endpoint, string prefix, List<string> output)
+        /// <summary>
+        /// 从面板信息构建 Gerber 图片键列表（endpoint:objectKey 格式）
+        /// </summary>
+        public List<string> GetAllMinioGerberImageKeys(RootPanelInfoWithIP info)
+        {
+            return GetImageKeysByType(info, defect => defect.DefectVrsGerberImages, "GetAllMinioGerberImageKeys");
+        }
+
+        /// <summary>
+        /// 从面板信息构建 Template 图片键列表（endpoint:objectKey 格式）
+        /// </summary>
+        public List<string> GetAllMinioTemplateImageKeys(RootPanelInfoWithIP info)
+        {
+            return GetImageKeysByType(info, defect => defect.DefectVrsOkImages, "GetAllMinioTemplateImageKeys");
+        }
+
+        /// <summary>
+        /// 通用方法：按类型提取图片键列表
+        /// </summary>
+        private List<string> GetImageKeysByType(RootPanelInfoWithIP info, Func<DefectInfo, List<string>> imageSelector, string methodName)
+        {
+            var results = new List<string>();
+            try
             {
-                if (images == null || images.Count == 0) return;
-                foreach (var rel in images)
+                if (info == null || info.RootInfo == null || string.IsNullOrWhiteSpace(info.IP))
                 {
-                    if (string.IsNullOrWhiteSpace(rel)) continue;
-                    var normalizedRel = rel.Replace('\\', '/').TrimStart('/');
-                    var objectKey = $"{prefix}/{normalizedRel}";
-                    output.Add($"{endpoint}:{objectKey}");
+                    LogTextHelper.Warn($"{methodName}: 参数为空或 IP 缺失！");
+                    return results;
                 }
+
+                var panel = info.RootInfo;
+
+                if (panel.PcsInfo == null || panel.PcsInfo.Count == 0)
+                {
+                    return results;
+                }
+
+                foreach (var kvp in panel.PcsInfo)
+                {
+                    var pcs = kvp.Value;
+                    if (pcs == null || pcs.DefectInfo == null || pcs.DefectInfo.Count == 0)
+                        continue;
+
+                    for (int j = 0; j < pcs.DefectInfo.Count; j++)
+                    {
+                        var defect = pcs.DefectInfo[j];
+                        if (defect == null) continue;
+
+                        var images = imageSelector(defect);
+                        AddImages(images, info.IP, info.Head, results);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"{methodName} 异常：" + ex);
+            }
+
+            return results;
+        }
+
+        private static void AddImages(List<string> images, string endpoint, string prefix, List<string> output)
+        {
+            if (images == null || images.Count == 0) return;
+            foreach (var rel in images)
+            {
+                if (string.IsNullOrWhiteSpace(rel)) continue;
+                var normalizedRel = rel.Replace('\\', '/').TrimStart('/');
+                var objectKey = $"{prefix}/{normalizedRel}";
+                output.Add($"{endpoint}:{objectKey}");
             }
         }
     }

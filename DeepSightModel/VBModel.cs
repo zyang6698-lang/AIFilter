@@ -16,6 +16,8 @@ namespace DeepSightModel
         public List<int> PcsIndex { get; set; }
         public List<Mat> Mats { get;set; }
         public List<string > ImageKeys { get; set; }
+        public List<string > ImageKeys_Gerber { get; set; }
+        public List<string > ImageKeys_Temp { get; set; }
 
         public RootVBInfo VbInfo;
         //2025/08/21/增加minio路径信息

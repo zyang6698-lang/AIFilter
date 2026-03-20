@@ -19,7 +19,6 @@ using System.Drawing;
 using System.Text.RegularExpressions;
 using OpenCvSharp.Extensions;
 using System.Diagnostics;
-using HalconDotNet;
 
 namespace DeepSightAI
 {

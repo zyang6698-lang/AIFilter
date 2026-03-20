@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -14,9 +15,18 @@ namespace DeepSightAI
         /// <summary>
         /// 应用程序的主入口点。
         /// </summary>
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern bool SetDllDirectory(string lpPathName);
+
+        /// <summary>
+        /// 应用程序的主入口点。
+        /// </summary>
         [STAThread]
         static void Main()
         {
+            // 将 VisionBuilder 文件夹加入 DLL 搜索路径
+            string vbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "VisionBuilder");
+            SetDllDirectory(vbPath);
 
             GlobalMutex();
             Application.EnableVisualStyles();

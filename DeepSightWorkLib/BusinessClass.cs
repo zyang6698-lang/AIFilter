@@ -590,6 +590,8 @@ namespace DeepSightWorkLib
 
                 // 解耦：先获取图片Key列表，入图片加载队列，非阻塞
                 var imageKeys = _imageLoaderService.GetAllMinioImageKeys(rootobj);
+                var imageKeys_Gerber = _imageLoaderService.GetAllMinioGerberImageKeys(rootobj);
+                var imageKeys_Temp = _imageLoaderService.GetAllMinioTemplateImageKeys(rootobj);
 
                 //考虑用Model方式
                 VBModel model = new VBModel
@@ -604,6 +606,8 @@ namespace DeepSightWorkLib
                     panelInfo = obj,
                     isByPass = convertResult.IsByPass,
                     ImageKeys = imageKeys,
+                    ImageKeys_Gerber = imageKeys_Gerber,
+                    ImageKeys_Temp = imageKeys_Temp,
                     SourceDbUrl = dbUrl,
                     SourceWriteBackDbName = writeBackDbName
                 };

@@ -324,11 +324,18 @@ namespace DeepSightAI.SettingPages
                     break;
                 case "colASolution":
                     config.ASolution = cellValue?.ToString() ?? "";
-                    // 当Solution改变时，更新对应的Flow下拉选项
+                    // 当Solution改变时，更新对应的Flow下拉选项并同步单元格值
                     if (dic_solutionAndFlow.TryGetValue(config.ASolution, out var aFlows))
                     {
-                        ((DataGridViewComboBoxCell)dgvPipeline.Rows[e.RowIndex].Cells["colAFlow"]).DataSource = aFlows;
-                        if (aFlows.Count > 0) config.AFlow = aFlows[0];
+                        _isUpdating = true;
+                        var aFlowCell = (DataGridViewComboBoxCell)dgvPipeline.Rows[e.RowIndex].Cells["colAFlow"];
+                        aFlowCell.DataSource = aFlows;
+                        if (aFlows.Count > 0)
+                        {
+                            config.AFlow = aFlows[0];
+                            aFlowCell.Value = aFlows[0];
+                        }
+                        _isUpdating = false;
                     }
                     break;
                 case "colAFlow":
@@ -338,8 +345,15 @@ namespace DeepSightAI.SettingPages
                     config.BSolution = cellValue?.ToString() ?? "";
                     if (dic_solutionAndFlow.TryGetValue(config.BSolution, out var bFlows))
                     {
-                        ((DataGridViewComboBoxCell)dgvPipeline.Rows[e.RowIndex].Cells["colBFlow"]).DataSource = bFlows;
-                        if (bFlows.Count > 0) config.BFlow = bFlows[0];
+                        _isUpdating = true;
+                        var bFlowCell = (DataGridViewComboBoxCell)dgvPipeline.Rows[e.RowIndex].Cells["colBFlow"];
+                        bFlowCell.DataSource = bFlows;
+                        if (bFlows.Count > 0)
+                        {
+                            config.BFlow = bFlows[0];
+                            bFlowCell.Value = bFlows[0];
+                        }
+                        _isUpdating = false;
                     }
                     break;
                 case "colBFlow":
@@ -349,6 +363,15 @@ namespace DeepSightAI.SettingPages
                     config.IsSwitch = cellValue is bool b && b;
                     break;
             }
+        }
+
+        /// <summary>
+        /// 处理DataGridView数据错误，防止弹出错误对话框
+        /// </summary>
+        private void dgvPipeline_DataError(object sender, DataGridViewDataErrorEventArgs e)
+        {
+            // 抑制ComboBox值无效等错误的默认弹窗
+            e.ThrowException = false;
         }
 
         private void btn_GetAgain_Click(object sender, EventArgs e)

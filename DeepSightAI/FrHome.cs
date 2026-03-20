@@ -670,7 +670,7 @@ namespace DeepSightAI
                                         lot_id = info[i].RootInfo.LotId,
                                         lot_batch = info[i].RootInfo.LotBatch,
                                     });
-                                    if (pcsInfo.DefectInfo[k].DefectVrsImages != null)
+                                    if (pcsInfo.DefectInfo[k].DefectVrsImages != null && pcsInfo.DefectInfo[k].DefectVrsImages.Count > 0)
                                     {
                                         imagePaths.Add($"{info[i].Head}/{pcsInfo.DefectInfo[k].DefectVrsImages[0].ToString()}:{info[i].IP}");
                                         // 使用推理后的ROI数据（来自PostProcessService的InferDetails.Location）
@@ -695,11 +695,11 @@ namespace DeepSightAI
                                     {
                                         detectInfoList.Add(null);
                                     }
-                                    if (pcsInfo.DefectInfo[k].DefectVrsGerberImages != null)
+                                    if (pcsInfo.DefectInfo[k].DefectVrsGerberImages != null && pcsInfo.DefectInfo[k].DefectVrsGerberImages.Count > 0)
                                     {
                                         imagePaths_Gerber.Add($"{info[i].Head}/{pcsInfo.DefectInfo[k].DefectVrsGerberImages[0].ToString()}:{info[i].IP}");
                                     }
-                                    if (pcsInfo.DefectInfo[k].DefectVrsOkImages != null)
+                                    if (pcsInfo.DefectInfo[k].DefectVrsOkImages != null && pcsInfo.DefectInfo[k].DefectVrsOkImages.Count > 0)
                                     {
                                         imagePaths_Template.Add($"{info[i].Head}/{pcsInfo.DefectInfo[k].DefectVrsOkImages[0].ToString()}:{info[i].IP}");
                                     }

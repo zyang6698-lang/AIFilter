@@ -3,7 +3,6 @@ using DeepSightDB;
 using DeepSightDisplay;
 using DeepSightDisplay.HeatMap;
 using DeepSightTool;
-using HalconDotNet;
 using OpenCvSharp;
 using OpenCvSharp.Extensions;
 using Sunny.UI;
@@ -651,121 +650,7 @@ namespace DeepSightAI
             return null;
         }
 
-        private void GetProductROI(string path, ref Rect rect)
-        {
-            HObject ho_Image = null, ho_GrayImage = null, ho_Edges = null, ho_SelectedEdges = null;
-            HObject ho_ImageMean = null, ho_DarkRegions = null, ho_ClosedRegions = null;
-            HObject ho_FilledRegions = null, ho_ConnectedRegions = null, ho_CurrentRegion = null;
-            HObject ho_LargestRegion = null;
 
-            HTuple hv_NumberOfRegions = new HTuple(), hv_MaxArea = new HTuple();
-            HTuple hv_LargestRegionIndex = new HTuple(), hv_i = new HTuple();
-            HTuple hv_Area = new HTuple(), hv_Row = new HTuple(), hv_Column = new HTuple();
-            HTuple hv_Row1 = new HTuple(), hv_Column1 = new HTuple();
-            HTuple hv_Row2 = new HTuple(), hv_Column2 = new HTuple();
-            HTuple hv_Width = new HTuple(), hv_Height = new HTuple();
-
-            try
-            {
-                HOperatorSet.GenEmptyObj(out ho_Image);
-                HOperatorSet.GenEmptyObj(out ho_GrayImage);
-                HOperatorSet.GenEmptyObj(out ho_Edges);
-                HOperatorSet.GenEmptyObj(out ho_SelectedEdges);
-                HOperatorSet.GenEmptyObj(out ho_ImageMean);
-                HOperatorSet.GenEmptyObj(out ho_DarkRegions);
-                HOperatorSet.GenEmptyObj(out ho_ClosedRegions);
-                HOperatorSet.GenEmptyObj(out ho_FilledRegions);
-                HOperatorSet.GenEmptyObj(out ho_ConnectedRegions);
-                HOperatorSet.GenEmptyObj(out ho_CurrentRegion);
-                HOperatorSet.GenEmptyObj(out ho_LargestRegion);
-
-                ho_Image.Dispose();
-                HOperatorSet.ReadImage(out ho_Image, path);
-                HOperatorSet.ZoomImageFactor(ho_Image, out ho_Image, 0.1, 0.1, "bilinear");
-                ho_GrayImage.Dispose();
-                HOperatorSet.Rgb1ToGray(ho_Image, out ho_GrayImage);
-                ho_Edges.Dispose();
-                HOperatorSet.EdgesSubPix(ho_GrayImage, out ho_Edges, "canny", 1.8, 20, 40);
-                ho_SelectedEdges.Dispose();
-                HOperatorSet.SelectShapeXld(ho_Edges, out ho_SelectedEdges, "rectangularity", "and", 0.8, 1000);
-                ho_ImageMean.Dispose();
-                HOperatorSet.MeanImage(ho_GrayImage, out ho_ImageMean, 20, 20);
-                ho_DarkRegions.Dispose();
-                HOperatorSet.DynThreshold(ho_GrayImage, ho_ImageMean, out ho_DarkRegions, 8, "dark");
-                ho_ClosedRegions.Dispose();
-                HOperatorSet.ClosingRectangle1(ho_DarkRegions, out ho_ClosedRegions, 2, 2);
-                ho_FilledRegions.Dispose();
-                HOperatorSet.FillUp(ho_ClosedRegions, out ho_FilledRegions);
-                ho_ConnectedRegions.Dispose();
-                HOperatorSet.Connection(ho_FilledRegions, out ho_ConnectedRegions);
-                HOperatorSet.CountObj(ho_ConnectedRegions, out hv_NumberOfRegions);
-
-                hv_MaxArea.Dispose();
-                hv_MaxArea = 0;
-                hv_LargestRegionIndex.Dispose();
-                hv_LargestRegionIndex = -1;
-
-                for (hv_i = 1; hv_i.Continue(hv_NumberOfRegions, 1); hv_i = hv_i.TupleAdd(1))
-                {
-                    ho_CurrentRegion.Dispose();
-                    HOperatorSet.SelectObj(ho_ConnectedRegions, out ho_CurrentRegion, hv_i);
-                    HOperatorSet.AreaCenter(ho_CurrentRegion, out hv_Area, out hv_Row, out hv_Column);
-                    if ((int)(new HTuple(hv_Area.TupleGreater(hv_MaxArea))) != 0)
-                    {
-                        hv_MaxArea.Dispose();
-                        hv_MaxArea = new HTuple(hv_Area);
-                        hv_LargestRegionIndex.Dispose();
-                        hv_LargestRegionIndex = new HTuple(hv_i);
-                    }
-                }
-                if ((int)(new HTuple(hv_LargestRegionIndex.TupleNotEqual(-1))) != 0)
-                {
-                    ho_LargestRegion.Dispose();
-                    HOperatorSet.SelectObj(ho_ConnectedRegions, out ho_LargestRegion, hv_LargestRegionIndex);
-                    HOperatorSet.SmallestRectangle1(ho_LargestRegion, out hv_Row1, out hv_Column1, out hv_Row2, out hv_Column2);
-                    hv_Width.Dispose();
-                    hv_Width = hv_Column2.TupleSub(hv_Column1).TupleAdd(1);
-                    hv_Height.Dispose();
-                    hv_Height = hv_Row2.TupleSub(hv_Row1).TupleAdd(1);
-                    rect.X = hv_Column1.I;
-                    rect.Y = hv_Row1.I;
-                    rect.Width = hv_Width.I;
-                    rect.Height = hv_Height.I;
-                }
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Warn("裁图算法异常" + ex.ToString());
-            }
-            finally
-            {
-                ho_Image?.Dispose();
-                ho_GrayImage?.Dispose();
-                ho_Edges?.Dispose();
-                ho_SelectedEdges?.Dispose();
-                ho_ImageMean?.Dispose();
-                ho_DarkRegions?.Dispose();
-                ho_ClosedRegions?.Dispose();
-                ho_FilledRegions?.Dispose();
-                ho_ConnectedRegions?.Dispose();
-                ho_CurrentRegion?.Dispose();
-                ho_LargestRegion?.Dispose();
-
-                hv_NumberOfRegions?.Dispose();
-                hv_MaxArea?.Dispose();
-                hv_LargestRegionIndex?.Dispose();
-                hv_i?.Dispose();
-                hv_Area?.Dispose();
-                hv_Row?.Dispose();
-                hv_Column?.Dispose();
-                hv_Row1?.Dispose();
-                hv_Column1?.Dispose();
-                hv_Row2?.Dispose();
-                hv_Column2?.Dispose();
-                hv_Width?.Dispose();
-                hv_Height?.Dispose();
-            }
-        }
 
         #endregion
 

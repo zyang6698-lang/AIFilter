@@ -372,12 +372,28 @@ namespace DeepSightAI
 
         /// <summary>
         /// 添加新任务行（区分AB面）
+        /// 新排队任务插入到所有正在处理的行之后，避免将处理中的数据压到下方
         /// </summary>
         private void AddNewTaskRow(string sn, string side)
         {
+            var dgv = FrHome.Instance.dataGridViewData;
+
+            // 找到第一个"排队中"行的位置，新任务插在它前面（即所有处理中行之后）
+            int insertIndex = 0;
+            for (int i = 0; i < dgv.Rows.Count; i++)
+            {
+                string status = dgv.Rows[i].Cells[5].Value?.ToString() ?? "";
+                if (status == "排队中")
+                {
+                    insertIndex = i;
+                    break;
+                }
+                insertIndex = i + 1; // 跳过所有非排队行
+            }
+
             // 列顺序: SN[0], Side[1], AVI[2], AI[3], Time[4], Status[5]
-            FrHome.Instance.dataGridViewData.Rows.Insert(0, new object[] { sn, side, "0", "0", "", "排队中" });
-            FrHome.Instance.dataGridViewData.Rows[0].DefaultCellStyle.ForeColor = Color.Yellow;
+            dgv.Rows.Insert(insertIndex, new object[] { sn, side, "0", "0", "", "排队中" });
+            dgv.Rows[insertIndex].DefaultCellStyle.ForeColor = Color.Yellow;
         }
 
         /// <summary>
@@ -670,32 +686,41 @@ namespace DeepSightAI
         }
 
         /// <summary>
-        /// 清理超出限制的行
+        /// 判断状态文本是否为终态（已完成/跳过/失败）
+        /// </summary>
+        private bool IsTerminalStatus(string statusText)
+        {
+            if (string.IsNullOrEmpty(statusText)) return false;
+            return statusText.Contains("已完成") || statusText.Contains("跳过")
+                || statusText.Contains("失败") || statusText.Contains("错误") || statusText.Contains("异常");
+        }
+
+        /// <summary>
+        /// 清理超出限制的行 - 仅移除终态行，保护处理中和排队中的任务
         /// </summary>
         private void CleanupExcessRows()
         {
             const int MAX_ROWS = 27;
-            const int KEEP_COMPLETED_ROWS = 8;
+            var dgv = FrHome.Instance.dataGridViewData;
 
-            if (FrHome.Instance.dataGridViewData.Rows.Count > MAX_ROWS)
+            if (dgv.Rows.Count > MAX_ROWS)
             {
-                int checkIndex = FrHome.Instance.dataGridViewData.Rows.Count - KEEP_COMPLETED_ROWS;
-                if (checkIndex >= 0 && checkIndex < FrHome.Instance.dataGridViewData.Rows.Count)
+                // 从底部向上查找可移除的终态行
+                for (int i = dgv.Rows.Count - 1; i >= 0 && dgv.Rows.Count > MAX_ROWS; i--)
                 {
-                    string status = FrHome.Instance.dataGridViewData.Rows[checkIndex].Cells[5].Value?.ToString() ?? "";
+                    string status = dgv.Rows[i].Cells[5].Value?.ToString() ?? "";
+                    if (IsTerminalStatus(status))
+                    {
+                        string snToRemove = dgv.Rows[i].Cells[0].Value?.ToString() ?? "空值";
+                        string sideToRemove = dgv.Rows[i].Cells[1].Value?.ToString() ?? "";
 
-                        int lastIndex = FrHome.Instance.dataGridViewData.Rows.Count - 1;
-                        string snToRemove = FrHome.Instance.dataGridViewData.Rows[lastIndex].Cells[0].Value?.ToString() ?? "空值";
-                        string sideToRemove = FrHome.Instance.dataGridViewData.Rows[lastIndex].Cells[1].Value?.ToString() ?? "";
-
-                        // 移除行
-                        FrHome.Instance.dataGridViewData.Rows.RemoveAt(lastIndex);
-
-                        // 清理相关数据（以SN+Side为单位）
+                        dgv.Rows.RemoveAt(i);
                         CleanupTaskData(snToRemove, sideToRemove);
-                    
+                    }
                 }
-                Machine.master.IsAllow = false;
+
+                // 如果移除所有终态行后仍超限（全是活跃任务），则禁止新数据进入
+                Machine.master.IsAllow = dgv.Rows.Count <= MAX_ROWS;
             }
             else
             {
@@ -1073,7 +1098,17 @@ namespace DeepSightAI
         {
             try
             {
-                lbl_curTime.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                if (this.InvokeRequired)
+                {
+                    this.BeginInvoke(new Action(() =>
+                    {
+                        lbl_curTime.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    }));
+                }
+                else
+                {
+                    lbl_curTime.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                }
 
                 DateTime now = DateTime.Now;
 
