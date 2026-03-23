@@ -109,7 +109,6 @@ namespace DeepSightAI
                     aviconfig = new AVIConfig();
                     LogTextHelper.Info("未找到 Agent 配置文件，将以无 Agent 模式运行");
                 }
-
                 // 初始化机台注册表（首次启动时从 AVIConfig 迁移）
                 if (hasAgentConfig && aviconfig.WatchPaths != null && aviconfig.WatchPaths.Count > 0)
                 {
@@ -122,7 +121,6 @@ namespace DeepSightAI
                     machineRegistry = new MachineRegistryConfig();
                     machineRegistryManager.Save(machineRegistry);
                 }
-
                 master = new BusinessClass();
                 master.SolConfig = solconfig;
                 master.AviConfig = aviconfig;
