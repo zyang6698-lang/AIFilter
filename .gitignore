@@ -43,3 +43,5 @@
 /DeepSightModel/.vs/DeepSightModel.csproj.dtbcache.json
 /DeepSightAI/.vs/DeepSightAI.csproj.dtbcache.json
 /DeepSightAI/DeepSightAI.csproj.user
+/installer/postgresql-18.1-1-windows-x64.exe
+/installer/Output
