@@ -12,7 +12,7 @@ using System.Windows.Forms;
 
 namespace DeepSightAI.SettingPages
 {
-    public partial class AviCtr2 : UserControl
+    public partial class MachineStatusCard : UserControl
     {
         /// <summary>
         /// 删除请求事件，当用户点击删除按钮时触发
@@ -203,7 +203,7 @@ namespace DeepSightAI.SettingPages
         private readonly Pen _borderPen;
         private readonly Dictionary<ControlStatus, Bitmap> _statusBitmaps = new Dictionary<ControlStatus, Bitmap>();
 
-        public AviCtr2(WatchPathConfig _config)
+        public MachineStatusCard(WatchPathConfig _config)
         {
             InitializeComponent();
 
@@ -624,7 +624,7 @@ namespace DeepSightAI.SettingPages
             }
         }
 
-        private void AviCtr2_DoubleClick(object sender, EventArgs e)
+        private void MachineStatusCard_DoubleClick(object sender, EventArgs e)
         {
             // 实时从文件读取最新配置
             WatchPathConfig latestConfig = ReadLatestConfigFromFile();

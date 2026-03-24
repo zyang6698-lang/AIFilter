@@ -13,9 +13,9 @@ using System.Windows.Forms;
 
 namespace DeepSightAI.SettingPages
 {
-    public partial class AviCtr2Container : UserControl
+    public partial class MachineStatusPanel : UserControl
     {
-        private List<AviCtr2> aviCtr2Controls = new List<AviCtr2>();
+        private List<MachineStatusCard> _machineCards = new List<MachineStatusCard>();
 
         /// <summary>
         /// 控制所有子控件的删除按钮是否可见
@@ -30,7 +30,7 @@ namespace DeepSightAI.SettingPages
                 {
                     _showDeleteButtons = value;
                     // 更新所有现有控件的删除按钮可见性
-                    foreach (var ctr in aviCtr2Controls)
+                    foreach (var ctr in _machineCards)
                     {
                         ctr.ShowDeleteButton = value;
                     }
@@ -38,7 +38,7 @@ namespace DeepSightAI.SettingPages
             }
         }
 
-        public AviCtr2Container()
+        public MachineStatusPanel()
         {
             InitializeComponent();
             flowLayoutPanel1.BackColor = Color.Transparent;
@@ -60,7 +60,7 @@ namespace DeepSightAI.SettingPages
         }
 
         /// <summary>
-        /// 根据配置列表增量创建/更新 AviCtr2 控件（避免每次全清导致重绘开销）
+        /// 根据配置列表增量创建/更新机台状态卡片（避免每次全清导致重绘开销）
         /// </summary>
         /// <param name="watchPaths">配置列表</param>
         public void CreateMachinePanels(List<WatchPathConfig> watchPaths)
@@ -68,20 +68,20 @@ namespace DeepSightAI.SettingPages
             if (watchPaths == null) return;
 
             // 现有映射
-            var existingMap = aviCtr2Controls.ToDictionary(c => c.ctrConfig.AviName, c => c);
+            var existingMap = _machineCards.ToDictionary(c => c.ctrConfig.AviName, c => c);
             var incomingNames = new HashSet<string>(watchPaths.Select(w => w.AviName));
 
             flowLayoutPanel1.SuspendLayout();
             try
             {
                 // 移除不存在的
-                for (int i = aviCtr2Controls.Count - 1; i >= 0; i--)
+                for (int i = _machineCards.Count - 1; i >= 0; i--)
                 {
-                    var ctr = aviCtr2Controls[i];
+                    var ctr = _machineCards[i];
                     if (!incomingNames.Contains(ctr.ctrConfig.AviName))
                     {
                         flowLayoutPanel1.Controls.Remove(ctr);
-                        aviCtr2Controls.RemoveAt(i);
+                        _machineCards.RemoveAt(i);
                         ctr.Dispose();
                     }
                 }
@@ -97,7 +97,7 @@ namespace DeepSightAI.SettingPages
                     }
                     else
                     {
-                        AddAviControl(cfg);
+                        AddMachineCard(cfg);
                     }
                 }
             }
@@ -111,7 +111,7 @@ namespace DeepSightAI.SettingPages
         {
             if (watchPaths == null) return;
             var configMap = watchPaths.ToDictionary(w => w.AviName);
-            foreach (var ctr in aviCtr2Controls)
+            foreach (var ctr in _machineCards)
             {
                 if (configMap.TryGetValue(ctr.ctrConfig.AviName, out var cfg))
                 {
@@ -122,42 +122,42 @@ namespace DeepSightAI.SettingPages
         }
 
         /// <summary>
-        /// 添加单个 AviCtr2 控件
+        /// 添加单个机台状态卡片
         /// </summary>
-        private void AddAviControl(WatchPathConfig watchPath)
+        private void AddMachineCard(WatchPathConfig watchPath)
         {
             try
             {
-                AviCtr2 ctr = new AviCtr2(watchPath);
+                MachineStatusCard ctr = new MachineStatusCard(watchPath);
                 // 应用删除按钮可见性设置
                 ctr.ShowDeleteButton = _showDeleteButtons;
                 // 订阅删除事件
-                ctr.DeleteRequested += OnAviCtr2DeleteRequested;
-                aviCtr2Controls.Add(ctr);
+                ctr.DeleteRequested += OnMachineCardDeleteRequested;
+                _machineCards.Add(ctr);
                 flowLayoutPanel1.Controls.Add(ctr);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to create AviCtr2: {ex.Message}");
+                Console.WriteLine($"Failed to create MachineStatusCard: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// 处理 AviCtr2 删除请求事件
+        /// 处理机台状态卡片删除请求事件
         /// </summary>
-        private void OnAviCtr2DeleteRequested(object sender, EventArgs e)
+        private void OnMachineCardDeleteRequested(object sender, EventArgs e)
         {
-            if (sender is AviCtr2 ctr)
+            if (sender is MachineStatusCard ctr)
             {
-                RemoveAviControl(ctr);
+                RemoveMachineCard(ctr);
             }
         }
 
         /// <summary>
-        /// 移除指定的 AviCtr2 控件
+        /// 移除指定的机台状态卡片
         /// </summary>
         /// <param name="ctr">要移除的控件</param>
-        public void RemoveAviControl(AviCtr2 ctr)
+        public void RemoveMachineCard(MachineStatusCard ctr)
         {
             if (ctr == null) return;
 
@@ -165,10 +165,10 @@ namespace DeepSightAI.SettingPages
             try
             {
                 // 取消订阅事件
-                ctr.DeleteRequested -= OnAviCtr2DeleteRequested;
+                ctr.DeleteRequested -= OnMachineCardDeleteRequested;
 
                 flowLayoutPanel1.Controls.Remove(ctr);
-                aviCtr2Controls.Remove(ctr);
+                _machineCards.Remove(ctr);
                 ctr.Dispose();
             }
             finally
@@ -178,32 +178,32 @@ namespace DeepSightAI.SettingPages
         }
 
         /// <summary>
-        /// 根据 AviName 移除 AviCtr2 控件
+        /// 根据 AviName 移除机台状态卡片
         /// </summary>
         /// <param name="aviName">要移除的机台名称</param>
-        public void RemoveAviControlByName(string aviName)
+        public void RemoveMachineCardByName(string aviName)
         {
-            var ctr = aviCtr2Controls.FirstOrDefault(c => c.ctrConfig.AviName == aviName);
+            var ctr = _machineCards.FirstOrDefault(c => c.ctrConfig.AviName == aviName);
             if (ctr != null)
             {
-                RemoveAviControl(ctr);
+                RemoveMachineCard(ctr);
             }
         }
 
         /// <summary>
-        /// 获取所有 AviCtr2 控件的配置列表
+        /// 获取所有机台状态卡片的配置列表
         /// </summary>
         public List<WatchPathConfig> GetAllConfigs()
         {
-            return aviCtr2Controls.Select(ctr => ctr.ctrConfig).ToList();
+            return _machineCards.Select(ctr => ctr.ctrConfig).ToList();
         }
 
         /// <summary>
-        /// 更新指定名称的 AviCtr2 控件的统计信息
+        /// 更新指定名称的机台状态卡片的统计信息
         /// </summary>
-        public void UpdateAviCtrStats(string aviName, int totalImages, int aiOkImages)
+        public void UpdateMachineCardStats(string aviName, int totalImages, int aiOkImages)
         {
-            var ctr = aviCtr2Controls.FirstOrDefault(c => c.ctrConfig.AviName == aviName);
+            var ctr = _machineCards.FirstOrDefault(c => c.ctrConfig.AviName == aviName);
             if (ctr != null)
             {
                 ctr.AiFilterCount = totalImages;
@@ -212,15 +212,15 @@ namespace DeepSightAI.SettingPages
         }
 
         /// <summary>
-        /// 更新所有 AviCtr2 控件的信息
+        /// 更新所有机台状态卡片的信息
         /// </summary>
-        public void UpdateAllAviCtrsInfo(Func<string, (string LotNumber, string SerialNumber, string ProductSerial, double Utilization)> getLatestPanelInfo)
+        public void UpdateAllMachineCardsInfo(Func<string, (string LotNumber, string SerialNumber, string ProductSerial, double Utilization)> getLatestPanelInfo)
         {
             if (this.IsHandleCreated)
             {
                 this.BeginInvoke(new Action(() =>
                 {
-                    foreach (var ctr in aviCtr2Controls)
+                    foreach (var ctr in _machineCards)
                     {
                         if (ctr.ctrConfig.IsEnable)
                         {
@@ -234,9 +234,9 @@ namespace DeepSightAI.SettingPages
             }
         }
 
-        public void UpdateAviCtrInfo(string aviName, string productSerial, string lotId, double utilization)
+        public void UpdateMachineCardInfo(string aviName, string productSerial, string lotId, double utilization)
         {
-            foreach (var ctr in aviCtr2Controls)
+            foreach (var ctr in _machineCards)
             {
                 if (ctr.ctrConfig.AviName == aviName)
                 {
@@ -252,13 +252,13 @@ namespace DeepSightAI.SettingPages
 
 
         // 从缓存更新所有机台的 Lot/SN（不访问数据库）
-        public void UpdateAllAviCtrLotSnFromCache()
+        public void UpdateAllMachineCardLotSnFromCache()
         {
             if (this.IsHandleCreated)
             {
                 this.BeginInvoke(new Action(() =>
                 {
-                    foreach (var ctr in aviCtr2Controls.Where(c => c.ctrConfig.IsEnable))
+                    foreach (var ctr in _machineCards.Where(c => c.ctrConfig.IsEnable))
                     {
                         var (lot, sn, productSerial) = BoardStatCache.GetLatestLotSn(ctr.ctrConfig.AviName);
                         if (!string.IsNullOrEmpty(lot) || !string.IsNullOrEmpty(sn) || !string.IsNullOrEmpty(productSerial))
@@ -279,7 +279,7 @@ namespace DeepSightAI.SettingPages
             {
                 this.BeginInvoke(new Action(() =>
                 {
-                    foreach (var ctr in aviCtr2Controls.Where(c => c.ctrConfig.IsEnable))
+                    foreach (var ctr in _machineCards.Where(c => c.ctrConfig.IsEnable))
                     {
                         var machineId = ctr.ctrConfig.AviName;
                         var stat = BoardStatCache.GetTodayStatForMachine(machineId);
@@ -309,7 +309,7 @@ namespace DeepSightAI.SettingPages
             {
                 this.BeginInvoke(new Action(() =>
                 {
-                    foreach (var ctr in aviCtr2Controls.Where(c => c.ctrConfig.IsEnable))
+                    foreach (var ctr in _machineCards.Where(c => c.ctrConfig.IsEnable))
                     {
                         ctr.CheckTimeoutAndUpdateStatus();
                     }
@@ -330,7 +330,7 @@ namespace DeepSightAI.SettingPages
                 this.BeginInvoke(new Action(() =>
                 {
                     // 根据 MachineName 查找对应的工站控件
-                    var ctr = aviCtr2Controls.FirstOrDefault(c =>
+                    var ctr = _machineCards.FirstOrDefault(c =>
                         c.ctrConfig.AviName == machineName ||
                         c.MachineName == machineName);
 
@@ -352,7 +352,7 @@ namespace DeepSightAI.SettingPages
         {
             if (string.IsNullOrEmpty(machineName)) return false;
 
-            return aviCtr2Controls.Any(c =>
+            return _machineCards.Any(c =>
                 c.ctrConfig.AviName == machineName ||
                 c.MachineName == machineName);
         }
@@ -360,9 +360,9 @@ namespace DeepSightAI.SettingPages
         /// <summary>
         /// 获取内部控件列表（用于外部访问）
         /// </summary>
-        public IReadOnlyList<AviCtr2> GetAviControls()
+        public IReadOnlyList<MachineStatusCard> GetMachineCards()
         {
-            return aviCtr2Controls.AsReadOnly();
+            return _machineCards.AsReadOnly();
         }
     }
 }

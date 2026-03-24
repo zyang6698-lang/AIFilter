@@ -237,7 +237,7 @@ namespace DeepSightAI
                         }
 
                         // 更新 UI 显示新工站
-                        FrHome.Instance.RefreshAviCtrConfigs();
+                        FrHome.Instance.RefreshMachineStatusConfigs();
 
                         LogTextHelper.Info($"自动发现并添加新工站: {machineName}");
                     }
@@ -372,28 +372,15 @@ namespace DeepSightAI
 
         /// <summary>
         /// 添加新任务行（区分AB面）
-        /// 新排队任务插入到所有正在处理的行之后，避免将处理中的数据压到下方
+        /// 新排队任务始终插入到最顶部
         /// </summary>
         private void AddNewTaskRow(string sn, string side)
         {
             var dgv = FrHome.Instance.dataGridViewData;
 
-            // 找到第一个"排队中"行的位置，新任务插在它前面（即所有处理中行之后）
-            int insertIndex = 0;
-            for (int i = 0; i < dgv.Rows.Count; i++)
-            {
-                string status = dgv.Rows[i].Cells[5].Value?.ToString() ?? "";
-                if (status == "排队中")
-                {
-                    insertIndex = i;
-                    break;
-                }
-                insertIndex = i + 1; // 跳过所有非排队行
-            }
-
             // 列顺序: SN[0], Side[1], AVI[2], AI[3], Time[4], Status[5]
-            dgv.Rows.Insert(insertIndex, new object[] { sn, side, "0", "0", "", "排队中" });
-            dgv.Rows[insertIndex].DefaultCellStyle.ForeColor = Color.Yellow;
+            dgv.Rows.Insert(0, new object[] { sn, side, "0", "0", "", "排队中" });
+            dgv.Rows[0].DefaultCellStyle.ForeColor = Color.Yellow;
         }
 
         /// <summary>

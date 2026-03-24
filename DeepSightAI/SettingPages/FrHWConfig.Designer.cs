@@ -32,7 +32,7 @@ namespace DeepSightAI.SettingPages
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.panel2 = new System.Windows.Forms.Panel();
             this.uiGroupBox1 = new Sunny.UI.UIGroupBox();
-            this.aviCtr2Container1 = new DeepSightAI.SettingPages.AviCtr2Container();
+            this.machineStatusPanel1 = new DeepSightAI.SettingPages.MachineStatusPanel();
             this.panel1 = new System.Windows.Forms.Panel();
             this.btn_add_station = new DeepSightAI.StyledButton();
             this.tableLayoutPanel1.SuspendLayout();
@@ -70,7 +70,7 @@ namespace DeepSightAI.SettingPages
             // 
             // uiGroupBox1
             // 
-            this.uiGroupBox1.Controls.Add(this.aviCtr2Container1);
+            this.uiGroupBox1.Controls.Add(this.machineStatusPanel1);
             this.uiGroupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.uiGroupBox1.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.uiGroupBox1.FillDisableColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
@@ -88,15 +88,15 @@ namespace DeepSightAI.SettingPages
             this.uiGroupBox1.Text = "AVI配置";
             this.uiGroupBox1.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // aviCtr2Container1
-            // 
-            this.aviCtr2Container1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.aviCtr2Container1.Location = new System.Drawing.Point(27, 25);
-            this.aviCtr2Container1.Margin = new System.Windows.Forms.Padding(72, 304, 72, 304);
-            this.aviCtr2Container1.Name = "aviCtr2Container1";
-            this.aviCtr2Container1.ShowDeleteButtons = true;
-            this.aviCtr2Container1.Size = new System.Drawing.Size(2188, 841);
-            this.aviCtr2Container1.TabIndex = 0;
+            // machineStatusPanel1
+            //
+            this.machineStatusPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.machineStatusPanel1.Location = new System.Drawing.Point(27, 25);
+            this.machineStatusPanel1.Margin = new System.Windows.Forms.Padding(72, 304, 72, 304);
+            this.machineStatusPanel1.Name = "machineStatusPanel1";
+            this.machineStatusPanel1.ShowDeleteButtons = true;
+            this.machineStatusPanel1.Size = new System.Drawing.Size(2188, 841);
+            this.machineStatusPanel1.TabIndex = 0;
             // 
             // panel1
             // 
@@ -144,6 +144,6 @@ namespace DeepSightAI.SettingPages
         private System.Windows.Forms.Panel panel1;
         private DeepSightAI.StyledButton btn_add_station;
         private Sunny.UI.UIGroupBox uiGroupBox1;
-        private AviCtr2Container aviCtr2Container1;
+        private MachineStatusPanel machineStatusPanel1;
     }
 }

@@ -85,7 +85,7 @@ namespace DeepSightAI
             InitializeUI();
             Load += FrHome_Load;
 
-            aviCtr2Container.ShowDeleteButtons = false;
+            machineStatusPanel.ShowDeleteButtons = false;
             uph_timer.Interval = 1000 * 6;
             uph_timer.Enabled = true;
             uph_timer.Elapsed += Uph_timer_Elapsed;
@@ -99,7 +99,7 @@ namespace DeepSightAI
 
         private void InitializeUI()
         {
-            aviCtr2Container.CreateMachinePanels(GetMergedWatchPaths());
+            machineStatusPanel.CreateMachinePanels(GetMergedWatchPaths());
             // 为统计卡片Label注册自绘事件，实现标题/数值分层显示
             SetupStatsLabelOwnerDraw();
         }
@@ -494,7 +494,7 @@ namespace DeepSightAI
 
         private async Task UpdateMachineBoard()
         {
-            await aviCtr2Container.UpdateMachineBoardFromCache();
+            await machineStatusPanel.UpdateMachineBoardFromCache();
         }
 
         #endregion
@@ -1033,23 +1033,23 @@ namespace DeepSightAI
 
         private void UpdateLotSn()
         {
-            aviCtr2Container.UpdateAllAviCtrLotSnFromCache();
+            machineStatusPanel.UpdateAllMachineCardLotSnFromCache();
         }
         /// <summary>
-        /// 更新所有AviCtr控件的配置（保存机台配置后调用）
+        /// 更新所有机台状态卡片的配置（保存机台配置后调用）
         /// </summary>
-        public void RefreshAviCtrConfigs()
+        public void RefreshMachineStatusConfigs()
         {
             if (this.IsHandleCreated)
             {
                 var merged = GetMergedWatchPaths();
                 if (this.InvokeRequired)
                 {
-                    this.BeginInvoke(new Action(() => aviCtr2Container.CreateMachinePanels(merged)));
+                    this.BeginInvoke(new Action(() => machineStatusPanel.CreateMachinePanels(merged)));
                 }
                 else
                 {
-                    aviCtr2Container.CreateMachinePanels(merged);
+                    machineStatusPanel.CreateMachinePanels(merged);
                 }
             }
         }
@@ -1060,7 +1060,7 @@ namespace DeepSightAI
         /// <param name="machineName">工站名称</param>
         public void UpdateStationDataReceived(string machineName)
         {
-            aviCtr2Container.UpdateStationDataReceived(machineName);
+            machineStatusPanel.UpdateStationDataReceived(machineName);
         }
 
         /// <summary>
@@ -1068,7 +1068,7 @@ namespace DeepSightAI
         /// </summary>
         public void CheckAllStationsTimeout()
         {
-            aviCtr2Container.CheckAllStationsTimeout();
+            machineStatusPanel.CheckAllStationsTimeout();
         }
 
         #endregion

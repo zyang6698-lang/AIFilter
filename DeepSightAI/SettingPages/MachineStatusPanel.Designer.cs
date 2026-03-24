@@ -1,6 +1,6 @@
 ﻿namespace DeepSightAI.SettingPages
 {
-    partial class AviCtr2Container
+    partial class MachineStatusPanel
     {
         /// <summary> 
         /// 必需的设计器变量。
@@ -40,12 +40,12 @@
             this.flowLayoutPanel1.Size = new System.Drawing.Size(800, 600);
             this.flowLayoutPanel1.TabIndex = 0;
             // 
-            // AviCtr2Container
-            // 
+            // MachineStatusPanel
+            //
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.flowLayoutPanel1);
-            this.Name = "AviCtr2Container";
+            this.Name = "MachineStatusPanel";
             this.Size = new System.Drawing.Size(800, 600);
             this.ResumeLayout(false);
 

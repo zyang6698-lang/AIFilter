@@ -51,7 +51,7 @@
             this.btnShowLog = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.avi_panel = new System.Windows.Forms.Panel();
-            this.aviCtr2Container = new DeepSightAI.SettingPages.AviCtr2Container();
+            this.machineStatusPanel = new DeepSightAI.SettingPages.MachineStatusPanel();
             this.splitContainer3 = new System.Windows.Forms.SplitContainer();
             this.splitContainer5 = new System.Windows.Forms.SplitContainer();
             this.table_Small = new System.Windows.Forms.TableLayoutPanel();
@@ -347,22 +347,22 @@
             // avi_panel
             // 
             this.avi_panel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.avi_panel.Controls.Add(this.aviCtr2Container);
+            this.avi_panel.Controls.Add(this.machineStatusPanel);
             this.avi_panel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.avi_panel.Location = new System.Drawing.Point(0, 0);
             this.avi_panel.Name = "avi_panel";
             this.avi_panel.Size = new System.Drawing.Size(1257, 402);
             this.avi_panel.TabIndex = 0;
-            // 
-            // aviCtr2Container
-            // 
-            this.aviCtr2Container.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.aviCtr2Container.Location = new System.Drawing.Point(0, 0);
-            this.aviCtr2Container.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.aviCtr2Container.Name = "aviCtr2Container";
-            this.aviCtr2Container.ShowDeleteButtons = true;
-            this.aviCtr2Container.Size = new System.Drawing.Size(1257, 402);
-            this.aviCtr2Container.TabIndex = 0;
+            //
+            // machineStatusPanel
+            //
+            this.machineStatusPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.machineStatusPanel.Location = new System.Drawing.Point(0, 0);
+            this.machineStatusPanel.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.machineStatusPanel.Name = "machineStatusPanel";
+            this.machineStatusPanel.ShowDeleteButtons = true;
+            this.machineStatusPanel.Size = new System.Drawing.Size(1257, 402);
+            this.machineStatusPanel.TabIndex = 0;
             // 
             // splitContainer3
             // 
@@ -708,7 +708,7 @@
         public System.Windows.Forms.DataGridView dataGridViewData;
         private System.Windows.Forms.Panel avi_panel;
         private System.Windows.Forms.Panel panel1;
-        private SettingPages.AviCtr2Container aviCtr2Container;
+        private SettingPages.MachineStatusPanel machineStatusPanel;
         private System.Windows.Forms.Label lbl_totalDefectCount;
         private System.Windows.Forms.Label lbl_AiAllCount;
         private System.Windows.Forms.Label lbl_aiFilterOKCount;

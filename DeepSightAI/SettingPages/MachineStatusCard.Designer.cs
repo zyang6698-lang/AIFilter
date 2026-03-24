@@ -1,6 +1,6 @@
 ﻿namespace DeepSightAI.SettingPages
 {
-    partial class AviCtr2
+    partial class MachineStatusCard
     {
         /// <summary> 
         /// 必需的设计器变量。
@@ -150,8 +150,8 @@
             this.btnDelete.TabStop = false;
             this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
             // 
-            // AviCtr2
-            // 
+            // MachineStatusCard
+            //
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(57)))), ((int)(((byte)(69)))));
@@ -164,9 +164,9 @@
             this.Controls.Add(this.pictureBoxStatus);
             this.Controls.Add(this.labelLineName);
             this.Margin = new System.Windows.Forms.Padding(2);
-            this.Name = "AviCtr2";
+            this.Name = "MachineStatusCard";
             this.Size = new System.Drawing.Size(278, 87);
-            this.DoubleClick += new System.EventHandler(this.AviCtr2_DoubleClick);
+            this.DoubleClick += new System.EventHandler(this.MachineStatusCard_DoubleClick);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxStatus)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.btnDelete)).EndInit();
             this.ResumeLayout(false);

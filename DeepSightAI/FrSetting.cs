@@ -257,7 +257,7 @@ namespace DeepSightAI
                         RestartApplication(appPath, appExe, Machine.sysConfig.AgentShutdownTimeout);
                         Machine.master.AviConfig = Machine.aviconfig;
                         // 更新FrHome中的AviCtr状态
-                        FrHome.Instance.RefreshAviCtrConfigs();
+                        FrHome.Instance.RefreshMachineStatusConfigs();
                         MessageBox.Show("保存Agent配置文件成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                     }

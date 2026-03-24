@@ -98,7 +98,7 @@ namespace DeepSightAI.SettingPages
                     if (frStation.ShowDialog() == DialogResult.OK)
                     {
                         Machine.aviconfig.WatchPaths.Add(frStation.stationConfig);
-                        aviCtr2Container1.CreateMachinePanels(Machine.aviconfig.WatchPaths);
+                        machineStatusPanel1.CreateMachinePanels(Machine.aviconfig.WatchPaths);
                     }
                 }
             }
@@ -117,7 +117,7 @@ namespace DeepSightAI.SettingPages
         {
             try
             {
-                aviCtr2Container1.CreateMachinePanels(Machine.aviconfig.WatchPaths);
+                machineStatusPanel1.CreateMachinePanels(Machine.aviconfig.WatchPaths);
             }
             catch (Exception ex)
             {
@@ -131,7 +131,7 @@ namespace DeepSightAI.SettingPages
             {
                 Machine.aviconfig.WatchPaths.Clear();
 
-                var watchPaths = aviCtr2Container1.GetAllConfigs();
+                var watchPaths = machineStatusPanel1.GetAllConfigs();
 
                 foreach (var stationParam in watchPaths)
                 {
