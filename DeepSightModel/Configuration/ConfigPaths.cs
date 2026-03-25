@@ -51,9 +51,19 @@ namespace DeepSightModel.Configuration
         public const string MachineRegistryConfigFileName = "machines.config.json";
 
         /// <summary>
-        /// 重点缺陷配置文件名
+        /// 重点缺陷配置文件名（旧版单文件，用于迁移）
         /// </summary>
         public const string KeyDefectConfigFileName = "keydefect.config.json";
+
+        /// <summary>
+        /// 重点缺陷配置子目录名
+        /// </summary>
+        public const string KeyDefectProfileDirectoryName = "keydefect";
+
+        /// <summary>
+        /// 料号与缺陷配置映射文件名
+        /// </summary>
+        public const string KeyDefectMappingFileName = "keydefect_mapping.config.json";
 
         /// <summary>
         /// 旧版常规配置文件名 (XML)
@@ -90,9 +100,19 @@ namespace DeepSightModel.Configuration
         public static string MachineRegistryConfigPath => Path.Combine(ConfigDirectory, MachineRegistryConfigFileName);
 
         /// <summary>
-        /// 重点缺陷配置完整路径
+        /// 重点缺陷配置完整路径（旧版单文件，用于迁移）
         /// </summary>
         public static string KeyDefectConfigPath => Path.Combine(ConfigDirectory, KeyDefectConfigFileName);
+
+        /// <summary>
+        /// 重点缺陷配置子目录完整路径
+        /// </summary>
+        public static string KeyDefectProfileDirectory => Path.Combine(ConfigDirectory, KeyDefectProfileDirectoryName);
+
+        /// <summary>
+        /// 料号与缺陷配置映射文件完整路径
+        /// </summary>
+        public static string KeyDefectMappingPath => Path.Combine(ConfigDirectory, KeyDefectMappingFileName);
 
         /// <summary>
         /// 旧版常规配置完整路径 (XML)
@@ -115,6 +135,26 @@ namespace DeepSightModel.Configuration
             {
                 Directory.CreateDirectory(ConfigDirectory);
             }
+        }
+
+        /// <summary>
+        /// 确保重点缺陷配置子目录存在
+        /// </summary>
+        public static void EnsureKeyDefectProfileDirectory()
+        {
+            EnsureConfigDirectory();
+            if (!Directory.Exists(KeyDefectProfileDirectory))
+            {
+                Directory.CreateDirectory(KeyDefectProfileDirectory);
+            }
+        }
+
+        /// <summary>
+        /// 获取指定 profile 名称的缺陷配置文件完整路径
+        /// </summary>
+        public static string GetKeyDefectProfilePath(string profileName)
+        {
+            return Path.Combine(KeyDefectProfileDirectory, $"{profileName}.json");
         }
 
         /// <summary>

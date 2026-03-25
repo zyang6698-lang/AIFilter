@@ -44,6 +44,7 @@
             this.colIndex = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colProductSerial = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colMode = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.colKeyDefectProfile = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.panelRightHeader = new System.Windows.Forms.Panel();
             this.btnAutoAdd = new DeepSightAI.StyledButton();
             this.btnDeleteProduct = new DeepSightAI.StyledButton();
@@ -181,7 +182,8 @@
             this.dgvProducts.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colIndex,
             this.colProductSerial,
-            this.colMode});
+            this.colMode,
+            this.colKeyDefectProfile});
             dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             dataGridViewCellStyle4.Font = new System.Drawing.Font("微软雅黑", 9F);
@@ -218,7 +220,14 @@
             "copy",
             "cut"});
             this.colMode.Name = "colMode";
-            // 
+            //
+            // colKeyDefectProfile
+            //
+            this.colKeyDefectProfile.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
+            this.colKeyDefectProfile.HeaderText = "缺陷配置";
+            this.colKeyDefectProfile.Name = "colKeyDefectProfile";
+            this.colKeyDefectProfile.Width = 120;
+            //
             // panelRightHeader
             // 
             this.panelRightHeader.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
@@ -349,6 +358,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn colIndex;
         private System.Windows.Forms.DataGridViewTextBoxColumn colProductSerial;
         private System.Windows.Forms.DataGridViewComboBoxColumn colMode;
+        private System.Windows.Forms.DataGridViewComboBoxColumn colKeyDefectProfile;
         private System.Windows.Forms.DataGridViewTextBoxColumn colConfigName;
         private System.Windows.Forms.DataGridViewComboBoxColumn colASolution;
         private System.Windows.Forms.DataGridViewComboBoxColumn colAFlow;

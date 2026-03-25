@@ -87,7 +87,7 @@ namespace DeepSightWorkLib.Services
                         foreach (var defect in pcsEntry.DefectInfo)
                         {
                             if (!string.IsNullOrEmpty(defect.DefectCode))
-                                KeyDefectConfigManager.Instance.AutoDiscoverDefect(defect.DefectCode);
+                                KeyDefectConfigManager.Instance.AutoDiscoverDefect(defect.DefectCode, KeyDefectConfigManager.Instance.GetProfileNameForProduct(panelInfo.ProductSerial));
                         }
                     }
                 }
@@ -160,11 +160,12 @@ namespace DeepSightWorkLib.Services
                             }
                         }
 
-                        // 重点缺陷标记 & 自动发现
+                        // 重点缺陷标记 & 自动发现（根据料号对应的 profile）
                         if (heatInfo.AIStatus == 2 && !string.IsNullOrEmpty(heatInfo.DefectName))
                         {
-                            KeyDefectConfigManager.Instance.AutoDiscoverDefect(heatInfo.DefectName);
-                            if (KeyDefectConfigManager.Instance.IsKeyDefect(heatInfo.DefectName))
+                            var profileName = KeyDefectConfigManager.Instance.GetProfileNameForProduct(panelInfo.ProductSerial);
+                            KeyDefectConfigManager.Instance.AutoDiscoverDefect(heatInfo.DefectName, profileName);
+                            if (KeyDefectConfigManager.Instance.IsKeyDefect(heatInfo.DefectName, profileName))
                             {
                                 heatInfo.IsKeyDefect = true;
                             }
@@ -176,6 +177,20 @@ namespace DeepSightWorkLib.Services
                         }
 
                         avi_HeatInfo.Add(heatInfo);
+                    }
+
+                    // 追加直报缺陷（AIStatus=3，跳过了AI推理）
+                    if (vBModel.DirectReportDefectIndices != null && vBModel.DirectReportDefectIndices.Count > 0)
+                    {
+                        for (int i = 0; i < vBModel.DirectReportDefectIndices.Count; i++)
+                        {
+                            var directReportInfo = new DetectInfo
+                            {
+                                AIStatus = 3
+                            };
+                            avi_HeatInfo.Add(directReportInfo);
+                        }
+                        LogTextHelper.Info($"SN:{vBModel.SN} 追加 {vBModel.DirectReportDefectIndices.Count} 个直报缺陷到后处理结果");
                     }
 
                     // 保存数据到数据库
@@ -194,9 +209,24 @@ namespace DeepSightWorkLib.Services
                 }
                 else if (code == "600")
                 {
-                    // 无缺陷：AVI OK, AI OK
-                    _savePanelSideAction(panelInfo, new List<DetectInfo>(), 1, 1);
-                    LogTextHelper.Info($"处理完成(无缺陷): SN={vBModel.SN}, Side={panelInfo.SideIndex}");
+                    // 无缺陷但可能有直报缺陷
+                    var directReportList = new List<DetectInfo>();
+                    if (vBModel.DirectReportDefectIndices != null && vBModel.DirectReportDefectIndices.Count > 0)
+                    {
+                        for (int i = 0; i < vBModel.DirectReportDefectIndices.Count; i++)
+                        {
+                            directReportList.Add(new DetectInfo { AIStatus = 3 });
+                        }
+                        int aviState600 = 2;
+                        int aiState600 = 3;
+                        _savePanelSideAction(panelInfo, directReportList, aviState600, aiState600);
+                        LogTextHelper.Info($"处理完成(AI无缺陷,有{directReportList.Count}个直报): SN={vBModel.SN}, Side={panelInfo.SideIndex}");
+                    }
+                    else
+                    {
+                        _savePanelSideAction(panelInfo, new List<DetectInfo>(), 1, 1);
+                        LogTextHelper.Info($"处理完成(无缺陷): SN={vBModel.SN}, Side={panelInfo.SideIndex}");
+                    }
                 }
                 else
                 {

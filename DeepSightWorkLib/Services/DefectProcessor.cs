@@ -210,8 +210,33 @@ namespace DeepSightWorkLib.Services
                     AiClsType="",
                     AiFlag="Standard",
                     InferDetail=new Dictionary<string, object>(),
-                    
+
                 });
+            }
+
+            // 追加直报缺陷的结果（标记为bypass "2"）
+            if (info.DirectReportDefectIndices != null && info.DirectReportDefectIndices.Count > 0)
+            {
+                for (int i = 0; i < info.DirectReportDefectIndices.Count; i++)
+                {
+                    ResultInfo res = new ResultInfo
+                    {
+                        ResultInfos = $"{info.Side}_{info.DirectReportPcsIndices[i]}_{info.DirectReportDefectIndices[i]}_2",
+                        Details = new Details()
+                    };
+                    results.Add(res);
+
+                    aIDetailResults.Add(new AIDetailResultItem()
+                    {
+                        Index = info.DefectIndex.Count + i,
+                        PcsIndex = info.DefectIndex.Count + i,
+                        AiLabel = "NG",
+                        AiClsType = "",
+                        AiFlag = "DirectReport",
+                        InferDetail = new Dictionary<string, object>(),
+                    });
+                }
+                LogTextHelper.Info($"SN:{info.SN} 追加 {info.DirectReportDefectIndices.Count} 个直报缺陷结果");
             }
             WriteBackData writeBackData = new WriteBackData()
             {

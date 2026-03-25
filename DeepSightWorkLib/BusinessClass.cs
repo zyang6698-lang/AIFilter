@@ -609,7 +609,9 @@ namespace DeepSightWorkLib
                     ImageKeys_Gerber = imageKeys_Gerber,
                     ImageKeys_Temp = imageKeys_Temp,
                     SourceDbUrl = dbUrl,
-                    SourceWriteBackDbName = writeBackDbName
+                    SourceWriteBackDbName = writeBackDbName,
+                    DirectReportDefectIndices = convertResult.DirectReportDefectIndices,
+                    DirectReportPcsIndices = convertResult.DirectReportPcsIndices
                 };
 
                 // 存储调试信息到缓存

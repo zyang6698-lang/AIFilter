@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using DeepSightModel;
+using DeepSightModel.Configuration;
 using System.Collections.Generic;
 using Sunny.UI;
 
@@ -40,6 +41,7 @@ namespace DeepSightAI.SettingPages
         {
             public string ProductSerial { get; set; }
             public string Mode { get; set; } = "by_machine";
+            public string KeyDefectProfile { get; set; } = KeyDefectConfigManager.DefaultProfileName;
         }
 
         // 内部数据
@@ -216,7 +218,8 @@ namespace DeepSightAI.SettingPages
                             Products = group.Select(s => new ProductEntry
                             {
                                 ProductSerial = s.ProductSerial ?? "",
-                                Mode = modeDict.TryGetValue(s.ProductSerial ?? "", out var m) ? m : PicOptMode.by_machine.ToString()
+                                Mode = modeDict.TryGetValue(s.ProductSerial ?? "", out var m) ? m : PicOptMode.by_machine.ToString(),
+                                KeyDefectProfile = KeyDefectConfigManager.Instance.GetProfileNameForProduct(s.ProductSerial ?? "")
                             }).ToList()
                         };
                         _pipelineConfigs.Add(config);
@@ -281,6 +284,9 @@ namespace DeepSightAI.SettingPages
             dgvProducts.Rows.Clear();
             if (pipelineIndex < 0 || pipelineIndex >= _pipelineConfigs.Count) return;
 
+            // 刷新缺陷配置 ComboBox 选项
+            RefreshKeyDefectProfileColumn();
+
             var products = _pipelineConfigs[pipelineIndex].Products;
             for (int i = 0; i < products.Count; i++)
             {
@@ -288,7 +294,19 @@ namespace DeepSightAI.SettingPages
                 dgvProducts.Rows[rowIdx].Cells["colIndex"].Value = i + 1;
                 dgvProducts.Rows[rowIdx].Cells["colProductSerial"].Value = products[i].ProductSerial;
                 dgvProducts.Rows[rowIdx].Cells["colMode"].Value = products[i].Mode;
+                dgvProducts.Rows[rowIdx].Cells["colKeyDefectProfile"].Value = products[i].KeyDefectProfile;
             }
+        }
+
+        /// <summary>
+        /// 刷新缺陷配置 Profile 下拉列表
+        /// </summary>
+        private void RefreshKeyDefectProfileColumn()
+        {
+            colKeyDefectProfile.Items.Clear();
+            var profileNames = KeyDefectConfigManager.Instance.GetProfileNames();
+            foreach (var name in profileNames)
+                colKeyDefectProfile.Items.Add(name);
         }
 
         #region 事件处理
@@ -439,6 +457,22 @@ namespace DeepSightAI.SettingPages
                     result = false;
                     MessageBox.Show("料号模式配置保存失败", "保存失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
+
+                // 保存料号与缺陷配置的映射
+                var mappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var config in _pipelineConfigs)
+                {
+                    foreach (var product in config.Products)
+                    {
+                        if (!string.IsNullOrWhiteSpace(product.ProductSerial) &&
+                            !string.IsNullOrWhiteSpace(product.KeyDefectProfile) &&
+                            !product.KeyDefectProfile.Equals(KeyDefectConfigManager.DefaultProfileName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            mappings[product.ProductSerial] = product.KeyDefectProfile;
+                        }
+                    }
+                }
+                KeyDefectConfigManager.Instance.SaveMappings(mappings);
             }
             catch (Exception ex)
             {
@@ -470,7 +504,8 @@ namespace DeepSightAI.SettingPages
                 config.Products.Add(new ProductEntry
                 {
                     ProductSerial = serial,
-                    Mode = row.Cells["colMode"].Value?.ToString() ?? PicOptMode.by_machine.ToString()
+                    Mode = row.Cells["colMode"].Value?.ToString() ?? PicOptMode.by_machine.ToString(),
+                    KeyDefectProfile = row.Cells["colKeyDefectProfile"].Value?.ToString() ?? KeyDefectConfigManager.DefaultProfileName
                 });
             }
 
@@ -589,7 +624,8 @@ namespace DeepSightAI.SettingPages
             var newProduct = new ProductEntry
             {
                 ProductSerial = newCode,
-                Mode = PicOptMode.by_machine.ToString()
+                Mode = PicOptMode.by_machine.ToString(),
+                KeyDefectProfile = KeyDefectConfigManager.DefaultProfileName
             };
             _pipelineConfigs[selectedIndex].Products.Add(newProduct);
 
@@ -597,6 +633,7 @@ namespace DeepSightAI.SettingPages
             dgvProducts.Rows[rowIdx].Cells["colIndex"].Value = rowIdx + 1;
             dgvProducts.Rows[rowIdx].Cells["colProductSerial"].Value = newProduct.ProductSerial;
             dgvProducts.Rows[rowIdx].Cells["colMode"].Value = newProduct.Mode;
+            dgvProducts.Rows[rowIdx].Cells["colKeyDefectProfile"].Value = newProduct.KeyDefectProfile;
 
             UpdatePipelineProductCount();
         }
@@ -704,7 +741,8 @@ namespace DeepSightAI.SettingPages
                 var newProduct = new ProductEntry
                 {
                     ProductSerial = code,
-                    Mode = PicOptMode.by_machine.ToString()
+                    Mode = PicOptMode.by_machine.ToString(),
+                    KeyDefectProfile = KeyDefectConfigManager.DefaultProfileName
                 };
                 _pipelineConfigs[selectedIndex].Products.Add(newProduct);
 
@@ -712,6 +750,7 @@ namespace DeepSightAI.SettingPages
                 dgvProducts.Rows[rowIdx].Cells["colIndex"].Value = rowIdx + 1;
                 dgvProducts.Rows[rowIdx].Cells["colProductSerial"].Value = newProduct.ProductSerial;
                 dgvProducts.Rows[rowIdx].Cells["colMode"].Value = newProduct.Mode;
+                dgvProducts.Rows[rowIdx].Cells["colKeyDefectProfile"].Value = newProduct.KeyDefectProfile;
 
                 existingCodes.Add(code);
                 added++;

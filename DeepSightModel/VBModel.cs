@@ -26,6 +26,16 @@ namespace DeepSightModel
         //用于判断ai是否部署该料号，若未部署则为true
         public bool isByPass { get; set; } = false;
 
+        /// <summary>
+        /// 直报缺陷的原始 DefectIndex 列表（这些缺陷跳过AI推理，结果标记为bypass）
+        /// </summary>
+        public List<int> DirectReportDefectIndices { get; set; } = new List<int>();
+
+        /// <summary>
+        /// 直报缺陷对应的 PcsIndex 列表
+        /// </summary>
+        public List<int> DirectReportPcsIndices { get; set; } = new List<int>();
+
         #region 源数据库追踪（多DB回写支持）
         /// <summary>
         /// 数据来源的 LevelDB 服务器 URL（IP:Port），用于回写时定位目标服务器

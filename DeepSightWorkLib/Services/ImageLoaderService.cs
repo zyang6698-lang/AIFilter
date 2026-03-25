@@ -1,10 +1,11 @@
 using DeepSightCommunication;
+using DeepSightModel;
+using DeepSightModel.Configuration;
 using DeepSightTool;
 using OpenCvSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DeepSightModel;
 
 namespace DeepSightWorkLib.Services
 {
@@ -110,6 +111,10 @@ namespace DeepSightWorkLib.Services
                     {
                         var defect = pcs.DefectInfo[j];
                         if (defect == null)
+                            continue;
+
+                        // 跳过直报缺陷的图片加载（根据料号对应的 profile）
+                        if (KeyDefectConfigManager.Instance.IsDirectReportByProduct(defect.DefectCode, panel.ProductSerial))
                             continue;
 
                         AddImages(defect.DefectVrsImages, info.IP, info.Head, results);

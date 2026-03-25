@@ -3,6 +3,33 @@ using System.Collections.Generic;
 namespace DeepSightModel.Configuration
 {
     /// <summary>
+    /// 料号与缺陷配置 profile 映射
+    /// </summary>
+    public class ProductDefectMappingConfig
+    {
+        /// <summary>
+        /// 料号 → 缺陷配置 profile 名称的映射列表
+        /// </summary>
+        public List<ProductDefectMappingEntry> Mappings { get; set; } = new List<ProductDefectMappingEntry>();
+    }
+
+    /// <summary>
+    /// 单条料号映射条目
+    /// </summary>
+    public class ProductDefectMappingEntry
+    {
+        /// <summary>
+        /// 料号
+        /// </summary>
+        public string ProductSerial { get; set; }
+
+        /// <summary>
+        /// 对应的缺陷配置 profile 名称（如 "Default"、"HighDensity" 等）
+        /// </summary>
+        public string ProfileName { get; set; } = "Default";
+    }
+
+    /// <summary>
     /// 单个缺陷条目（已知缺陷列表中的一项）
     /// </summary>
     public class KeyDefectEntry
@@ -21,6 +48,11 @@ namespace DeepSightModel.Configuration
         /// 是否由系统自动发现（而非手动添加）
         /// </summary>
         public bool AutoDiscovered { get; set; }
+
+        /// <summary>
+        /// 是否标记为直报缺陷（跳过图片加载和AI推理，类似bypass但针对单个缺陷）
+        /// </summary>
+        public bool IsDirectReport { get; set; }
     }
 
     /// <summary>

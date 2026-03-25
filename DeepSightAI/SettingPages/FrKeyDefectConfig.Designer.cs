@@ -18,6 +18,7 @@ namespace DeepSightAI.SettingPages
             this.dgvDefects = new System.Windows.Forms.DataGridView();
             this.colDefectName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colIsKey = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            this.colIsDirectReport = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.colAutoDiscovered = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.txtNewDefectName = new System.Windows.Forms.TextBox();
             this.btnAdd = new System.Windows.Forms.Button();
@@ -32,12 +33,61 @@ namespace DeepSightAI.SettingPages
             this.lblCooldown = new System.Windows.Forms.Label();
             this.nudCooldown = new System.Windows.Forms.NumericUpDown();
             this.lblNewName = new System.Windows.Forms.Label();
+            this.lblProfile = new System.Windows.Forms.Label();
+            this.cboProfile = new System.Windows.Forms.ComboBox();
+            this.btnNewProfile = new System.Windows.Forms.Button();
+            this.btnDeleteProfile = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dgvDefects)).BeginInit();
             this.grpAlarm.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudRatioThreshold)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudCountThreshold)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudCooldown)).BeginInit();
             this.SuspendLayout();
+            //
+            // lblProfile
+            //
+            this.lblProfile.AutoSize = true;
+            this.lblProfile.ForeColor = System.Drawing.Color.FromArgb(216, 219, 188);
+            this.lblProfile.Location = new System.Drawing.Point(12, 16);
+            this.lblProfile.Name = "lblProfile";
+            this.lblProfile.Size = new System.Drawing.Size(65, 12);
+            this.lblProfile.Text = "缺陷配置:";
+            //
+            // cboProfile
+            //
+            this.cboProfile.BackColor = System.Drawing.Color.FromArgb(29, 48, 60);
+            this.cboProfile.ForeColor = System.Drawing.Color.FromArgb(216, 219, 188);
+            this.cboProfile.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cboProfile.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.cboProfile.Location = new System.Drawing.Point(83, 12);
+            this.cboProfile.Name = "cboProfile";
+            this.cboProfile.Size = new System.Drawing.Size(200, 20);
+            this.cboProfile.TabIndex = 10;
+            this.cboProfile.SelectedIndexChanged += new System.EventHandler(this.cboProfile_SelectedIndexChanged);
+            //
+            // btnNewProfile
+            //
+            this.btnNewProfile.BackColor = System.Drawing.Color.FromArgb(0, 64, 82);
+            this.btnNewProfile.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnNewProfile.ForeColor = System.Drawing.Color.FromArgb(216, 219, 188);
+            this.btnNewProfile.Location = new System.Drawing.Point(295, 10);
+            this.btnNewProfile.Name = "btnNewProfile";
+            this.btnNewProfile.Size = new System.Drawing.Size(75, 25);
+            this.btnNewProfile.Text = "新建配置";
+            this.btnNewProfile.UseVisualStyleBackColor = false;
+            this.btnNewProfile.Click += new System.EventHandler(this.btnNewProfile_Click);
+            //
+            // btnDeleteProfile
+            //
+            this.btnDeleteProfile.BackColor = System.Drawing.Color.FromArgb(0, 64, 82);
+            this.btnDeleteProfile.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnDeleteProfile.ForeColor = System.Drawing.Color.FromArgb(216, 219, 188);
+            this.btnDeleteProfile.Location = new System.Drawing.Point(380, 10);
+            this.btnDeleteProfile.Name = "btnDeleteProfile";
+            this.btnDeleteProfile.Size = new System.Drawing.Size(75, 25);
+            this.btnDeleteProfile.Text = "删除配置";
+            this.btnDeleteProfile.UseVisualStyleBackColor = false;
+            this.btnDeleteProfile.Click += new System.EventHandler(this.btnDeleteProfile_Click);
             //
             // dgvDefects
             //
@@ -65,10 +115,10 @@ namespace DeepSightAI.SettingPages
             this.dgvDefects.RowHeadersVisible = false;
             this.dgvDefects.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgvDefects.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-                this.colDefectName, this.colIsKey, this.colAutoDiscovered});
-            this.dgvDefects.Location = new System.Drawing.Point(12, 12);
+                this.colDefectName, this.colIsKey, this.colIsDirectReport, this.colAutoDiscovered});
+            this.dgvDefects.Location = new System.Drawing.Point(12, 42);
             this.dgvDefects.Name = "dgvDefects";
-            this.dgvDefects.Size = new System.Drawing.Size(560, 320);
+            this.dgvDefects.Size = new System.Drawing.Size(560, 250);
             this.dgvDefects.TabIndex = 0;
             this.dgvDefects.CurrentCellDirtyStateChanged += new System.EventHandler(this.dgvDefects_CurrentCellDirtyStateChanged);
             //
@@ -84,6 +134,12 @@ namespace DeepSightAI.SettingPages
             this.colIsKey.Name = "colIsKey";
             this.colIsKey.Width = 80;
             //
+            // colIsDirectReport
+            //
+            this.colIsDirectReport.HeaderText = "直报";
+            this.colIsDirectReport.Name = "colIsDirectReport";
+            this.colIsDirectReport.Width = 80;
+            //
             // colAutoDiscovered
             //
             this.colAutoDiscovered.HeaderText = "来源";
@@ -95,7 +151,7 @@ namespace DeepSightAI.SettingPages
             //
             this.lblNewName.AutoSize = true;
             this.lblNewName.ForeColor = System.Drawing.Color.FromArgb(216, 219, 188);
-            this.lblNewName.Location = new System.Drawing.Point(12, 345);
+            this.lblNewName.Location = new System.Drawing.Point(12, 300);
             this.lblNewName.Name = "lblNewName";
             this.lblNewName.Size = new System.Drawing.Size(65, 12);
             this.lblNewName.Text = "缺陷名称:";
@@ -104,7 +160,7 @@ namespace DeepSightAI.SettingPages
             //
             this.txtNewDefectName.BackColor = System.Drawing.Color.FromArgb(29, 48, 60);
             this.txtNewDefectName.ForeColor = System.Drawing.Color.FromArgb(216, 219, 188);
-            this.txtNewDefectName.Location = new System.Drawing.Point(83, 342);
+            this.txtNewDefectName.Location = new System.Drawing.Point(83, 297);
             this.txtNewDefectName.Name = "txtNewDefectName";
             this.txtNewDefectName.Size = new System.Drawing.Size(150, 21);
             this.txtNewDefectName.TabIndex = 1;
@@ -114,7 +170,7 @@ namespace DeepSightAI.SettingPages
             this.btnAdd.BackColor = System.Drawing.Color.FromArgb(0, 64, 82);
             this.btnAdd.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnAdd.ForeColor = System.Drawing.Color.FromArgb(216, 219, 188);
-            this.btnAdd.Location = new System.Drawing.Point(245, 340);
+            this.btnAdd.Location = new System.Drawing.Point(245, 295);
             this.btnAdd.Name = "btnAdd";
             this.btnAdd.Size = new System.Drawing.Size(75, 25);
             this.btnAdd.Text = "添加";
@@ -126,7 +182,7 @@ namespace DeepSightAI.SettingPages
             this.btnDelete.BackColor = System.Drawing.Color.FromArgb(0, 64, 82);
             this.btnDelete.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnDelete.ForeColor = System.Drawing.Color.FromArgb(216, 219, 188);
-            this.btnDelete.Location = new System.Drawing.Point(330, 340);
+            this.btnDelete.Location = new System.Drawing.Point(330, 295);
             this.btnDelete.Name = "btnDelete";
             this.btnDelete.Size = new System.Drawing.Size(75, 25);
             this.btnDelete.Text = "删除";
@@ -138,7 +194,7 @@ namespace DeepSightAI.SettingPages
             this.btnToggleAll.BackColor = System.Drawing.Color.FromArgb(0, 64, 82);
             this.btnToggleAll.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnToggleAll.ForeColor = System.Drawing.Color.FromArgb(216, 219, 188);
-            this.btnToggleAll.Location = new System.Drawing.Point(415, 340);
+            this.btnToggleAll.Location = new System.Drawing.Point(415, 295);
             this.btnToggleAll.Name = "btnToggleAll";
             this.btnToggleAll.Size = new System.Drawing.Size(85, 25);
             this.btnToggleAll.Text = "全选/取消";
@@ -149,7 +205,7 @@ namespace DeepSightAI.SettingPages
             //
             this.grpAlarm.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
             this.grpAlarm.ForeColor = System.Drawing.Color.FromArgb(216, 219, 188);
-            this.grpAlarm.Location = new System.Drawing.Point(12, 375);
+            this.grpAlarm.Location = new System.Drawing.Point(12, 328);
             this.grpAlarm.Name = "grpAlarm";
             this.grpAlarm.Size = new System.Drawing.Size(560, 95);
             this.grpAlarm.TabIndex = 5;
@@ -228,7 +284,11 @@ namespace DeepSightAI.SettingPages
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(20, 38, 48);
-            this.ClientSize = new System.Drawing.Size(584, 481);
+            this.ClientSize = new System.Drawing.Size(584, 600);
+            this.Controls.Add(this.lblProfile);
+            this.Controls.Add(this.cboProfile);
+            this.Controls.Add(this.btnNewProfile);
+            this.Controls.Add(this.btnDeleteProfile);
             this.Controls.Add(this.dgvDefects);
             this.Controls.Add(this.lblNewName);
             this.Controls.Add(this.txtNewDefectName);
@@ -255,6 +315,7 @@ namespace DeepSightAI.SettingPages
         private System.Windows.Forms.DataGridView dgvDefects;
         private System.Windows.Forms.DataGridViewTextBoxColumn colDefectName;
         private System.Windows.Forms.DataGridViewCheckBoxColumn colIsKey;
+        private System.Windows.Forms.DataGridViewCheckBoxColumn colIsDirectReport;
         private System.Windows.Forms.DataGridViewTextBoxColumn colAutoDiscovered;
         private System.Windows.Forms.TextBox txtNewDefectName;
         private System.Windows.Forms.Button btnAdd;
@@ -269,5 +330,10 @@ namespace DeepSightAI.SettingPages
         private System.Windows.Forms.Label lblCooldown;
         private System.Windows.Forms.NumericUpDown nudCooldown;
         private System.Windows.Forms.Label lblNewName;
+        private System.Windows.Forms.Label lblProfile;
+        private System.Windows.Forms.ComboBox cboProfile;
+        private System.Windows.Forms.Button btnNewProfile;
+        private System.Windows.Forms.Button btnDeleteProfile;
+
     }
 }

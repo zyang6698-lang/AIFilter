@@ -9,7 +9,7 @@ using System.Windows.Forms;
 namespace DeepSightAI.SettingPages
 {
     /// <summary>
-    /// 重点缺陷管理配置界面
+    /// 重点缺陷管理配置界面（支持多 profile + 料号映射）
     /// </summary>
     public partial class FrKeyDefectConfig : Form
     {
@@ -36,28 +36,111 @@ namespace DeepSightAI.SettingPages
 
         private bool _isLoading = false;
 
+        /// <summary>
+        /// 当前选中的 profile 名称
+        /// </summary>
+        private string CurrentProfileName =>
+            cboProfile.SelectedItem?.ToString() ?? KeyDefectConfigManager.DefaultProfileName;
+
         private void FrKeyDefectConfig_Load(object sender, EventArgs e)
         {
+            LoadProfileList();
+        }
+
+        #region Profile 管理
+
+        /// <summary>
+        /// 加载 profile 列表到 ComboBox，并选中 Default
+        /// </summary>
+        private void LoadProfileList()
+        {
+            _isLoading = true;
+            try
+            {
+                cboProfile.Items.Clear();
+                var names = KeyDefectConfigManager.Instance.GetProfileNames();
+                foreach (var name in names)
+                    cboProfile.Items.Add(name);
+
+                var defaultIdx = cboProfile.Items.IndexOf(KeyDefectConfigManager.DefaultProfileName);
+                cboProfile.SelectedIndex = defaultIdx >= 0 ? defaultIdx : 0;
+            }
+            finally
+            {
+                _isLoading = false;
+            }
+
             LoadConfigToGrid();
             LoadAlarmConfig();
         }
 
-        /// <summary>
-        /// 从配置管理器加载数据到 DataGridView
-        /// </summary>
+        private void cboProfile_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_isLoading) return;
+            LoadConfigToGrid();
+            LoadAlarmConfig();
+        }
+
+        private void btnNewProfile_Click(object sender, EventArgs e)
+        {
+            string name = ShowInputDialog("请输入新配置名称：", "新建缺陷配置");
+            if (string.IsNullOrEmpty(name)) return;
+
+            if (name.Equals(KeyDefectConfigManager.DefaultProfileName, StringComparison.OrdinalIgnoreCase))
+            {
+                MessageBox.Show("不能使用保留名称 'Default'", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (!KeyDefectConfigManager.Instance.CreateProfile(name))
+            {
+                MessageBox.Show($"配置 '{name}' 已存在或创建失败", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            _isLoading = true;
+            cboProfile.Items.Add(name);
+            _isLoading = false;
+            cboProfile.SelectedItem = name;
+        }
+
+        private void btnDeleteProfile_Click(object sender, EventArgs e)
+        {
+            var name = CurrentProfileName;
+            if (name.Equals(KeyDefectConfigManager.DefaultProfileName, StringComparison.OrdinalIgnoreCase))
+            {
+                MessageBox.Show("不能删除默认配置 'Default'", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (MessageBox.Show($"确定要删除配置 '{name}' 吗？\n引用此配置的料号将回退到 Default。",
+                "确认删除", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                return;
+
+            if (KeyDefectConfigManager.Instance.DeleteProfile(name))
+            {
+                LoadProfileList();
+            }
+        }
+
+        #endregion
+
+        #region 缺陷列表
+
         private void LoadConfigToGrid()
         {
             _isLoading = true;
             try
             {
                 dgvDefects.Rows.Clear();
-                var config = KeyDefectConfigManager.Instance.GetCachedConfig();
+                var config = KeyDefectConfigManager.Instance.GetCachedConfig(CurrentProfileName);
                 foreach (var entry in config.DefectEntries)
                 {
                     int rowIndex = dgvDefects.Rows.Add();
                     var row = dgvDefects.Rows[rowIndex];
                     row.Cells["colDefectName"].Value = entry.DefectName;
                     row.Cells["colIsKey"].Value = entry.IsKey;
+                    row.Cells["colIsDirectReport"].Value = entry.IsDirectReport;
                     row.Cells["colAutoDiscovered"].Value = entry.AutoDiscovered ? "自动发现" : "手动添加";
                 }
             }
@@ -67,21 +150,15 @@ namespace DeepSightAI.SettingPages
             }
         }
 
-        /// <summary>
-        /// 加载报警配置到UI
-        /// </summary>
         private void LoadAlarmConfig()
         {
-            var alarm = KeyDefectConfigManager.Instance.GetAlarmConfig();
+            var alarm = KeyDefectConfigManager.Instance.GetAlarmConfig(CurrentProfileName);
             chkAlarmEnabled.Checked = alarm.Enabled;
             nudRatioThreshold.Value = (decimal)(alarm.AlarmRatioThreshold * 100);
             nudCountThreshold.Value = alarm.AlarmCountThreshold;
             nudCooldown.Value = alarm.AlarmCooldownSeconds;
         }
 
-        /// <summary>
-        /// 手动添加缺陷名称
-        /// </summary>
         private void btnAdd_Click(object sender, EventArgs e)
         {
             string name = txtNewDefectName.Text.Trim();
@@ -91,7 +168,6 @@ namespace DeepSightAI.SettingPages
                 return;
             }
 
-            // 检查重复
             foreach (DataGridViewRow row in dgvDefects.Rows)
             {
                 if (row.IsNewRow) continue;
@@ -110,9 +186,6 @@ namespace DeepSightAI.SettingPages
             txtNewDefectName.Text = "";
         }
 
-        /// <summary>
-        /// 删除选中行
-        /// </summary>
         private void btnDelete_Click(object sender, EventArgs e)
         {
             if (dgvDefects.SelectedRows.Count == 0)
@@ -127,9 +200,6 @@ namespace DeepSightAI.SettingPages
             }
         }
 
-        /// <summary>
-        /// 全选/全不选重点标记
-        /// </summary>
         private void btnToggleAll_Click(object sender, EventArgs e)
         {
             bool anyUnchecked = dgvDefects.Rows.Cast<DataGridViewRow>()
@@ -141,18 +211,69 @@ namespace DeepSightAI.SettingPages
             }
         }
 
-        /// <summary>
-        /// 当 CheckBox 列的 dirty state 变化时立即提交
-        /// </summary>
         private void dgvDefects_CurrentCellDirtyStateChanged(object sender, EventArgs e)
         {
             if (dgvDefects.IsCurrentCellDirty)
                 dgvDefects.CommitEdit(DataGridViewDataErrorContexts.Commit);
         }
 
+        #endregion
+
+        #region 辅助方法
+
         /// <summary>
-        /// 保存配置
+        /// 简易输入对话框（替代 Microsoft.VisualBasic.Interaction.InputBox）
         /// </summary>
+        private static string ShowInputDialog(string prompt, string title)
+        {
+            using (var form = new Form())
+            using (var lbl = new Label())
+            using (var txt = new TextBox())
+            using (var btnOk = new Button())
+            using (var btnCancel = new Button())
+            {
+                form.Text = title;
+                form.ClientSize = new Size(320, 110);
+                form.FormBorderStyle = FormBorderStyle.FixedDialog;
+                form.StartPosition = FormStartPosition.CenterParent;
+                form.MinimizeBox = false;
+                form.MaximizeBox = false;
+                form.BackColor = Color.FromArgb(20, 38, 48);
+
+                lbl.Text = prompt;
+                lbl.ForeColor = Color.FromArgb(216, 219, 188);
+                lbl.SetBounds(12, 12, 296, 18);
+
+                txt.SetBounds(12, 34, 296, 21);
+                txt.BackColor = Color.FromArgb(29, 48, 60);
+                txt.ForeColor = Color.FromArgb(216, 219, 188);
+
+                btnOk.Text = "确定";
+                btnOk.DialogResult = DialogResult.OK;
+                btnOk.SetBounds(148, 65, 75, 28);
+                btnOk.BackColor = Color.FromArgb(0, 64, 82);
+                btnOk.ForeColor = Color.FromArgb(216, 219, 188);
+                btnOk.FlatStyle = FlatStyle.Flat;
+
+                btnCancel.Text = "取消";
+                btnCancel.DialogResult = DialogResult.Cancel;
+                btnCancel.SetBounds(233, 65, 75, 28);
+                btnCancel.BackColor = Color.FromArgb(0, 64, 82);
+                btnCancel.ForeColor = Color.FromArgb(216, 219, 188);
+                btnCancel.FlatStyle = FlatStyle.Flat;
+
+                form.Controls.AddRange(new Control[] { lbl, txt, btnOk, btnCancel });
+                form.AcceptButton = btnOk;
+                form.CancelButton = btnCancel;
+
+                return form.ShowDialog() == DialogResult.OK ? txt.Text.Trim() : "";
+            }
+        }
+
+        #endregion
+
+        #region 保存
+
         public bool SaveConfig()
         {
             try
@@ -167,6 +288,7 @@ namespace DeepSightAI.SettingPages
                     {
                         DefectName = row.Cells["colDefectName"].Value?.ToString() ?? "",
                         IsKey = row.Cells["colIsKey"].Value != null && (bool)row.Cells["colIsKey"].Value,
+                        IsDirectReport = row.Cells["colIsDirectReport"].Value != null && (bool)row.Cells["colIsDirectReport"].Value,
                         AutoDiscovered = row.Cells["colAutoDiscovered"].Value?.ToString() == "自动发现"
                     });
                 }
@@ -179,7 +301,10 @@ namespace DeepSightAI.SettingPages
                     AlarmCooldownSeconds = (int)nudCooldown.Value
                 };
 
-                return KeyDefectConfigManager.Instance.SaveAndReload(config);
+                if (!KeyDefectConfigManager.Instance.SaveAndReload(config, CurrentProfileName))
+                    return false;
+
+                return true;
             }
             catch (Exception ex)
             {
@@ -187,6 +312,8 @@ namespace DeepSightAI.SettingPages
                 return false;
             }
         }
+
+        #endregion
     }
 }
 
