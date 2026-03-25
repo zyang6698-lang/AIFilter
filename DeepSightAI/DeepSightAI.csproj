@@ -285,6 +285,9 @@
     <Compile Include="ExportOptionsDialog.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="ExportOptionsDialog.Designer.cs">
+      <DependentUpon>ExportOptionsDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="DefectDetailControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

@@ -348,7 +348,7 @@ namespace DeepSightWorkLib
                     TaskStatusSender.SendLoadingImages(loadModel.Model.SN, loadModel.Model.Side);
 
                     loadModel.Model.Mats = _imageLoaderService.LoadImages(loadModel.Model.ImageKeys);
-
+                    loadModel.Model.Mats_Temp = _imageLoaderService.LoadImages(loadModel.Model.ImageKeys_Temp);
                     LogImageLoadResult(loadModel);
 
                     _queueManager.AviQueue.Enqueue(loadModel.Model);

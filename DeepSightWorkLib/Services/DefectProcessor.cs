@@ -49,6 +49,13 @@ namespace DeepSightWorkLib.Services
                 return true;
             }
 
+            if (vBModel.Mats_Temp == null || vBModel.Mats_Temp.Count == 0)
+            {
+                EnqueuePostProcess(vBModel, "", false);
+                TaskStatusSender.SendSkipped(vBModel.SN, vBModel.Side, "模板图为空");
+                return true;
+            }
+
             RootVBInfo info = vBModel.VbInfo;
             bool result;
             try
@@ -63,7 +70,8 @@ namespace DeepSightWorkLib.Services
                 // 使用Task封装算法调用实现超时机制
                 var task = Task.Run(() =>
                 {
-                    _defect.DefectMethodWithImages(info, vBModel.Mats, out string outMsg);
+                    _defect.DefectMethodWithImages2(info, vBModel.Mats,vBModel.Mats_Temp, out string outMsg);
+
                     return outMsg;
                 });
 

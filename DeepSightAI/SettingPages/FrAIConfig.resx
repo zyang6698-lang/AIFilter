@@ -123,10 +123,10 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="splitContainer1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 7</value>
+    <value>8, 8</value>
   </data>
   <data name="splitContainer1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 3, 2, 3</value>
+    <value>3, 4, 3, 4</value>
   </data>
   <data name="colConfigName.HeaderText" xml:space="preserve">
     <value>配置名称</value>
@@ -196,16 +196,16 @@
     <value>Fill</value>
   </data>
   <data name="dgvPipeline.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 45</value>
+    <value>4, 53</value>
   </data>
   <data name="dgvPipeline.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 3, 2, 3</value>
+    <value>3, 4, 3, 4</value>
   </data>
   <data name="dgvPipeline.RowHeadersWidth" type="System.Int32, mscorlib">
     <value>51</value>
   </data>
   <data name="dgvPipeline.Size" type="System.Drawing.Size, System.Drawing">
-    <value>486, 533</value>
+    <value>624, 627</value>
   </data>
   <data name="dgvPipeline.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -232,13 +232,13 @@
     <value>微软雅黑, 9pt</value>
   </data>
   <data name="btn_GetAgain.Location" type="System.Drawing.Point, System.Drawing">
-    <value>400, 9</value>
+    <value>514, 11</value>
   </data>
   <data name="btn_GetAgain.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 3, 2, 3</value>
+    <value>3, 4, 3, 4</value>
   </data>
   <data name="btn_GetAgain.Size" type="System.Drawing.Size, System.Drawing">
-    <value>84, 27</value>
+    <value>108, 32</value>
   </data>
   <data name="btn_GetAgain.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -250,7 +250,7 @@
     <value>btn_GetAgain</value>
   </data>
   <data name="&gt;&gt;btn_GetAgain.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;btn_GetAgain.Parent" xml:space="preserve">
     <value>panelLeftHeader</value>
@@ -268,25 +268,25 @@
     <value>微软雅黑, 9pt</value>
   </data>
   <data name="btnDeleteConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>307, 9</value>
+    <value>394, 11</value>
   </data>
   <data name="btnDeleteConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 3, 2, 3</value>
+    <value>3, 4, 3, 4</value>
   </data>
   <data name="btnDeleteConfig.Size" type="System.Drawing.Size, System.Drawing">
-    <value>84, 27</value>
+    <value>108, 32</value>
   </data>
   <data name="btnDeleteConfig.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
   <data name="btnDeleteConfig.Text" xml:space="preserve">
-    <value>- 删除配置</value>
+    <value>删除配置</value>
   </data>
   <data name="&gt;&gt;btnDeleteConfig.Name" xml:space="preserve">
     <value>btnDeleteConfig</value>
   </data>
   <data name="&gt;&gt;btnDeleteConfig.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;btnDeleteConfig.Parent" xml:space="preserve">
     <value>panelLeftHeader</value>
@@ -304,25 +304,25 @@
     <value>微软雅黑, 9pt</value>
   </data>
   <data name="btnAddConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>214, 9</value>
+    <value>275, 11</value>
   </data>
   <data name="btnAddConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 3, 2, 3</value>
+    <value>3, 4, 3, 4</value>
   </data>
   <data name="btnAddConfig.Size" type="System.Drawing.Size, System.Drawing">
-    <value>84, 27</value>
+    <value>108, 32</value>
   </data>
   <data name="btnAddConfig.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
   <data name="btnAddConfig.Text" xml:space="preserve">
-    <value>+ 新增配置</value>
+    <value>新增配置</value>
   </data>
   <data name="&gt;&gt;btnAddConfig.Name" xml:space="preserve">
     <value>btnAddConfig</value>
   </data>
   <data name="&gt;&gt;btnAddConfig.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;btnAddConfig.Parent" xml:space="preserve">
     <value>panelLeftHeader</value>
@@ -337,13 +337,10 @@
     <value>微软雅黑, 10pt, style=Bold</value>
   </data>
   <data name="lblLeftTitle.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 12</value>
-  </data>
-  <data name="lblLeftTitle.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 0, 2, 0</value>
+    <value>8, 14</value>
   </data>
   <data name="lblLeftTitle.Size" type="System.Drawing.Size, System.Drawing">
-    <value>93, 19</value>
+    <value>112, 24</value>
   </data>
   <data name="lblLeftTitle.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -367,13 +364,13 @@
     <value>Top</value>
   </data>
   <data name="panelLeftHeader.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
+    <value>4, 4</value>
   </data>
   <data name="panelLeftHeader.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 3, 2, 3</value>
+    <value>3, 4, 3, 4</value>
   </data>
   <data name="panelLeftHeader.Size" type="System.Drawing.Size, System.Drawing">
-    <value>486, 42</value>
+    <value>624, 49</value>
   </data>
   <data name="panelLeftHeader.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -391,7 +388,7 @@
     <value>1</value>
   </data>
   <data name="splitContainer1.Panel1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="&gt;&gt;splitContainer1.Panel1.Name" xml:space="preserve">
     <value>splitContainer1.Panel1</value>
@@ -432,20 +429,29 @@
   <data name="colMode.Width" type="System.Int32, mscorlib">
     <value>125</value>
   </data>
+  <data name="colKeyDefectProfile.HeaderText" xml:space="preserve">
+    <value>缺陷配置</value>
+  </data>
+  <data name="colKeyDefectProfile.MinimumWidth" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="colKeyDefectProfile.Width" type="System.Int32, mscorlib">
+    <value>120</value>
+  </data>
   <data name="dgvProducts.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
   <data name="dgvProducts.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 45</value>
+    <value>4, 53</value>
   </data>
   <data name="dgvProducts.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 3, 2, 3</value>
+    <value>3, 4, 3, 4</value>
   </data>
   <data name="dgvProducts.RowHeadersWidth" type="System.Int32, mscorlib">
     <value>51</value>
   </data>
   <data name="dgvProducts.Size" type="System.Drawing.Size, System.Drawing">
-    <value>620, 533</value>
+    <value>797, 627</value>
   </data>
   <data name="dgvProducts.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -463,7 +469,7 @@
     <value>0</value>
   </data>
   <data name="btnAutoAdd.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top</value>
+    <value>Top, Right</value>
   </data>
   <data name="btnAutoAdd.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
     <value>Flat</value>
@@ -472,13 +478,13 @@
     <value>微软雅黑, 9pt</value>
   </data>
   <data name="btnAutoAdd.Location" type="System.Drawing.Point, System.Drawing">
-    <value>534, 7</value>
+    <value>689, 8</value>
   </data>
   <data name="btnAutoAdd.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 3, 2, 3</value>
+    <value>3, 4, 3, 4</value>
   </data>
   <data name="btnAutoAdd.Size" type="System.Drawing.Size, System.Drawing">
-    <value>84, 27</value>
+    <value>108, 32</value>
   </data>
   <data name="btnAutoAdd.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -490,7 +496,7 @@
     <value>btnAutoAdd</value>
   </data>
   <data name="&gt;&gt;btnAutoAdd.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;btnAutoAdd.Parent" xml:space="preserve">
     <value>panelRightHeader</value>
@@ -499,7 +505,7 @@
     <value>0</value>
   </data>
   <data name="btnDeleteProduct.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top</value>
+    <value>Top, Right</value>
   </data>
   <data name="btnDeleteProduct.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
     <value>Flat</value>
@@ -508,25 +514,25 @@
     <value>微软雅黑, 9pt</value>
   </data>
   <data name="btnDeleteProduct.Location" type="System.Drawing.Point, System.Drawing">
-    <value>436, 7</value>
+    <value>563, 8</value>
   </data>
   <data name="btnDeleteProduct.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 3, 2, 3</value>
+    <value>3, 4, 3, 4</value>
   </data>
   <data name="btnDeleteProduct.Size" type="System.Drawing.Size, System.Drawing">
-    <value>84, 27</value>
+    <value>108, 32</value>
   </data>
   <data name="btnDeleteProduct.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
   <data name="btnDeleteProduct.Text" xml:space="preserve">
-    <value>- 删除料号</value>
+    <value>删除料号</value>
   </data>
   <data name="&gt;&gt;btnDeleteProduct.Name" xml:space="preserve">
     <value>btnDeleteProduct</value>
   </data>
   <data name="&gt;&gt;btnDeleteProduct.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;btnDeleteProduct.Parent" xml:space="preserve">
     <value>panelRightHeader</value>
@@ -535,7 +541,7 @@
     <value>1</value>
   </data>
   <data name="btnAddProduct.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top</value>
+    <value>Top, Right</value>
   </data>
   <data name="btnAddProduct.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
     <value>Flat</value>
@@ -544,25 +550,25 @@
     <value>微软雅黑, 9pt</value>
   </data>
   <data name="btnAddProduct.Location" type="System.Drawing.Point, System.Drawing">
-    <value>338, 7</value>
+    <value>437, 8</value>
   </data>
   <data name="btnAddProduct.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 3, 2, 3</value>
+    <value>3, 4, 3, 4</value>
   </data>
   <data name="btnAddProduct.Size" type="System.Drawing.Size, System.Drawing">
-    <value>84, 27</value>
+    <value>108, 32</value>
   </data>
   <data name="btnAddProduct.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
   <data name="btnAddProduct.Text" xml:space="preserve">
-    <value>+ 增加料号</value>
+    <value>增加料号</value>
   </data>
   <data name="&gt;&gt;btnAddProduct.Name" xml:space="preserve">
     <value>btnAddProduct</value>
   </data>
   <data name="&gt;&gt;btnAddProduct.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;btnAddProduct.Parent" xml:space="preserve">
     <value>panelRightHeader</value>
@@ -577,13 +583,10 @@
     <value>微软雅黑, 10pt, style=Bold</value>
   </data>
   <data name="lblRightTitle.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 12</value>
-  </data>
-  <data name="lblRightTitle.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 0, 2, 0</value>
+    <value>8, 14</value>
   </data>
   <data name="lblRightTitle.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 19</value>
+    <value>233, 24</value>
   </data>
   <data name="lblRightTitle.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -607,13 +610,13 @@
     <value>Top</value>
   </data>
   <data name="panelRightHeader.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
+    <value>4, 4</value>
   </data>
   <data name="panelRightHeader.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 3, 2, 3</value>
+    <value>3, 4, 3, 4</value>
   </data>
   <data name="panelRightHeader.Size" type="System.Drawing.Size, System.Drawing">
-    <value>620, 42</value>
+    <value>797, 49</value>
   </data>
   <data name="panelRightHeader.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -631,7 +634,7 @@
     <value>1</value>
   </data>
   <data name="splitContainer1.Panel2.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="&gt;&gt;splitContainer1.Panel2.Name" xml:space="preserve">
     <value>splitContainer1.Panel2</value>
@@ -646,13 +649,13 @@
     <value>1</value>
   </data>
   <data name="splitContainer1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>1123, 581</value>
+    <value>1443, 684</value>
   </data>
   <data name="splitContainer1.SplitterDistance" type="System.Int32, mscorlib">
-    <value>492</value>
+    <value>632</value>
   </data>
   <data name="splitContainer1.SplitterWidth" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="splitContainer1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -676,13 +679,13 @@
     <value>0, 0</value>
   </data>
   <data name="panel1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 3, 2, 3</value>
+    <value>3, 4, 3, 4</value>
   </data>
   <data name="panel1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 7, 6, 7</value>
+    <value>8, 8, 8, 8</value>
   </data>
   <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>1135, 595</value>
+    <value>1459, 700</value>
   </data>
   <data name="panel1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -703,16 +706,16 @@
     <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>7, 17</value>
+    <value>9, 20</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>1135, 595</value>
+    <value>1459, 700</value>
   </data>
   <data name="$this.Font" type="System.Drawing.Font, System.Drawing">
     <value>微软雅黑, 9pt</value>
   </data>
   <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 3, 2, 3</value>
+    <value>3, 4, 3, 4</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterScreen</value>
@@ -778,6 +781,12 @@
     <value>colMode</value>
   </data>
   <data name="&gt;&gt;colMode.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewComboBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;colKeyDefectProfile.Name" xml:space="preserve">
+    <value>colKeyDefectProfile</value>
+  </data>
+  <data name="&gt;&gt;colKeyDefectProfile.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewComboBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">

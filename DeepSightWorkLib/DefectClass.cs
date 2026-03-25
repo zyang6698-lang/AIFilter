@@ -66,8 +66,8 @@ namespace DeepSightWorkLib
                 {
                     vb_outStr = "";
                     LogTextHelper.Info("DefectMethodWithImages: mats为空或没有图片数据");
+                    return;
                 }
-
 
                 JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
                 string jsonStr = JsonConvert.SerializeObject(info, Formatting.None, jsonSetting);
@@ -92,6 +92,61 @@ namespace DeepSightWorkLib
             {
                 vb_outStr = "";
                 SystemEvent.SendAlarmMsg($"VB算法调用异常(WithImages):{ex.ToString()}");
+            }
+        }
+
+        /// <summary>
+        /// 带图片数据的推理方法（原图+模板图，直接传递图片指针给C++，避免C++读取Minio）
+        /// </summary>
+        /// <param name="info">推理参数信息</param>
+        /// <param name="mats">原图数据列表（已解码的Mat）</param>
+        /// <param name="mats_Tmp">模板图数据列表（已解码的Mat）</param>
+        /// <param name="vb_outStr">推理结果输出</param>
+        public void DefectMethodWithImages2(RootVBInfo info, List<Mat> mats, List<Mat> mats_Tmp, out string vb_outStr)
+        {
+            try
+            {
+                // 检查 mats 是否为空
+                if (mats == null || mats.Count == 0)
+                {
+                    vb_outStr = "";
+                    LogTextHelper.Info("DefectMethodWithImages2: mats为空或没有图片数据");
+                    return;
+                }
+
+                // 检查 mats_Tmp 是否为空
+                if (mats_Tmp == null || mats_Tmp.Count == 0)
+                {
+                    vb_outStr = "";
+                    LogTextHelper.Info("DefectMethodWithImages2: mats_Tmp为空或没有模板图数据");
+                    return;
+                }
+
+                JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+                string jsonStr = JsonConvert.SerializeObject(info, Formatting.None, jsonSetting);
+
+                LogTextHelper.Info($"DefectMethodWithImages2: 准备调用推理，原图数量={mats.Count}，模板图数量={mats_Tmp.Count}");
+
+                // 使用 BatchImageData 管理图片数据的非托管内存
+                using (var batchData = ImageHelper.CreateBatchImageData(mats))
+                {
+                    using (var batchData_Tmp = ImageHelper.CreateBatchImageData(mats_Tmp))
+                    {
+                        LogTextHelper.Info($"DefectMethodWithImages2: BatchImageData创建完成，ImagesPtr={batchData.ImagesPtr}, Count={batchData.Count}");
+
+                        IntPtr result = IntPtr.Zero;
+                        int ret = _aiDefect.InferenceWithImages2(jsonStr, batchData.ImagesPtr, batchData_Tmp.ImagesPtr, batchData.Count, out result);
+
+                        LogTextHelper.Info($"DefectMethodWithImages2: 推理返回，ret={ret}, result={result}");
+
+                        vb_outStr = Marshal.PtrToStringAnsi(result);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                vb_outStr = "";
+                SystemEvent.SendAlarmMsg($"VB算法调用异常(WithImages2):{ex.ToString()}");
             }
         }
     }
@@ -141,6 +196,15 @@ namespace DeepSightWorkLib
             IntPtr images,
             int image_count,
             out IntPtr output);
+
+        [DllImport(strName, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
+        public static extern int basehandler_handle_message_with_images2(
+    IntPtr handler,
+    [MarshalAs(UnmanagedType.LPStr)] string json_input,
+    IntPtr images,IntPtr images_temp,
+    int image_count,
+    out IntPtr output);
+
         #endregion
 
         public AI_DefectClass()
@@ -179,6 +243,19 @@ namespace DeepSightWorkLib
         public int InferenceWithImages(string jsonInput, IntPtr imagesPtr, int imageCount, out IntPtr output)
         {
             return basehandler_handle_message_with_images(handler, jsonInput, imagesPtr, imageCount, out output);
+        }
+        /// <summary>
+        /// 原图+模板图推理
+        /// </summary>
+        /// <param name="jsonInput"></param>
+        /// <param name="imagesPtr"></param>
+        /// <param name="imagesPtr_Temp"></param>
+        /// <param name="imageCount"></param>
+        /// <param name="output"></param>
+        /// <returns></returns>
+        public int InferenceWithImages2(string jsonInput, IntPtr imagesPtr,IntPtr imagesPtr_Temp, int imageCount, out IntPtr output)
+        {
+            return basehandler_handle_message_with_images2(handler, jsonInput, imagesPtr, imagesPtr_Temp, imageCount, out output);
         }
     }
 }

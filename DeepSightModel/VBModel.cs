@@ -15,6 +15,7 @@ namespace DeepSightModel
         public List<int> DefectIndex { get; set; }
         public List<int> PcsIndex { get; set; }
         public List<Mat> Mats { get;set; }
+        public List<Mat> Mats_Temp { get; set; }
         public List<string > ImageKeys { get; set; }
         public List<string > ImageKeys_Gerber { get; set; }
         public List<string > ImageKeys_Temp { get; set; }

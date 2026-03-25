@@ -35,6 +35,13 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.dgvPipeline = new System.Windows.Forms.DataGridView();
+            this.colConfigName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colASolution = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.colAFlow = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.colBSolution = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.colBFlow = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.colIsSwitch = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            this.colProductCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.panelLeftHeader = new System.Windows.Forms.Panel();
             this.btn_GetAgain = new DeepSightAI.StyledButton();
             this.btnDeleteConfig = new DeepSightAI.StyledButton();
@@ -51,13 +58,6 @@
             this.btnAddProduct = new DeepSightAI.StyledButton();
             this.lblRightTitle = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.colConfigName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colASolution = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.colAFlow = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.colBSolution = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.colBFlow = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.colIsSwitch = new System.Windows.Forms.DataGridViewCheckBoxColumn();
-            this.colProductCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -131,6 +131,46 @@
             this.dgvPipeline.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dgvPipeline_DataError);
             this.dgvPipeline.SelectionChanged += new System.EventHandler(this.dgvPipeline_SelectionChanged);
             // 
+            // colConfigName
+            // 
+            resources.ApplyResources(this.colConfigName, "colConfigName");
+            this.colConfigName.Name = "colConfigName";
+            // 
+            // colASolution
+            // 
+            this.colASolution.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
+            resources.ApplyResources(this.colASolution, "colASolution");
+            this.colASolution.Name = "colASolution";
+            // 
+            // colAFlow
+            // 
+            this.colAFlow.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
+            resources.ApplyResources(this.colAFlow, "colAFlow");
+            this.colAFlow.Name = "colAFlow";
+            // 
+            // colBSolution
+            // 
+            this.colBSolution.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
+            resources.ApplyResources(this.colBSolution, "colBSolution");
+            this.colBSolution.Name = "colBSolution";
+            // 
+            // colBFlow
+            // 
+            this.colBFlow.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
+            resources.ApplyResources(this.colBFlow, "colBFlow");
+            this.colBFlow.Name = "colBFlow";
+            // 
+            // colIsSwitch
+            // 
+            resources.ApplyResources(this.colIsSwitch, "colIsSwitch");
+            this.colIsSwitch.Name = "colIsSwitch";
+            // 
+            // colProductCount
+            // 
+            resources.ApplyResources(this.colProductCount, "colProductCount");
+            this.colProductCount.Name = "colProductCount";
+            this.colProductCount.ReadOnly = true;
+            // 
             // panelLeftHeader
             // 
             this.panelLeftHeader.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
@@ -144,19 +184,31 @@
             // btn_GetAgain
             // 
             resources.ApplyResources(this.btn_GetAgain, "btn_GetAgain");
+            this.btn_GetAgain.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
+            this.btn_GetAgain.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btn_GetAgain.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.btn_GetAgain.Name = "btn_GetAgain";
+            this.btn_GetAgain.UseVisualStyleBackColor = false;
             this.btn_GetAgain.Click += new System.EventHandler(this.btn_GetAgain_Click);
-            //
+            // 
             // btnDeleteConfig
-            //
+            // 
             resources.ApplyResources(this.btnDeleteConfig, "btnDeleteConfig");
+            this.btnDeleteConfig.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
+            this.btnDeleteConfig.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnDeleteConfig.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.btnDeleteConfig.Name = "btnDeleteConfig";
+            this.btnDeleteConfig.UseVisualStyleBackColor = false;
             this.btnDeleteConfig.Click += new System.EventHandler(this.btnDeleteConfig_Click);
-            //
+            // 
             // btnAddConfig
-            //
+            // 
             resources.ApplyResources(this.btnAddConfig, "btnAddConfig");
+            this.btnAddConfig.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
+            this.btnAddConfig.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnAddConfig.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.btnAddConfig.Name = "btnAddConfig";
+            this.btnAddConfig.UseVisualStyleBackColor = false;
             this.btnAddConfig.Click += new System.EventHandler(this.btnAddConfig_Click);
             // 
             // lblLeftTitle
@@ -220,14 +272,13 @@
             "copy",
             "cut"});
             this.colMode.Name = "colMode";
-            //
+            // 
             // colKeyDefectProfile
-            //
+            // 
             this.colKeyDefectProfile.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
-            this.colKeyDefectProfile.HeaderText = "缺陷配置";
+            resources.ApplyResources(this.colKeyDefectProfile, "colKeyDefectProfile");
             this.colKeyDefectProfile.Name = "colKeyDefectProfile";
-            this.colKeyDefectProfile.Width = 120;
-            //
+            // 
             // panelRightHeader
             // 
             this.panelRightHeader.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
@@ -241,19 +292,31 @@
             // btnAutoAdd
             // 
             resources.ApplyResources(this.btnAutoAdd, "btnAutoAdd");
+            this.btnAutoAdd.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
+            this.btnAutoAdd.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnAutoAdd.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.btnAutoAdd.Name = "btnAutoAdd";
+            this.btnAutoAdd.UseVisualStyleBackColor = false;
             this.btnAutoAdd.Click += new System.EventHandler(this.btnAutoAdd_Click);
-            //
+            // 
             // btnDeleteProduct
-            //
+            // 
             resources.ApplyResources(this.btnDeleteProduct, "btnDeleteProduct");
+            this.btnDeleteProduct.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
+            this.btnDeleteProduct.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnDeleteProduct.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.btnDeleteProduct.Name = "btnDeleteProduct";
+            this.btnDeleteProduct.UseVisualStyleBackColor = false;
             this.btnDeleteProduct.Click += new System.EventHandler(this.btnDeleteProduct_Click);
-            //
+            // 
             // btnAddProduct
-            //
+            // 
             resources.ApplyResources(this.btnAddProduct, "btnAddProduct");
+            this.btnAddProduct.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
+            this.btnAddProduct.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnAddProduct.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.btnAddProduct.Name = "btnAddProduct";
+            this.btnAddProduct.UseVisualStyleBackColor = false;
             this.btnAddProduct.Click += new System.EventHandler(this.btnAddProduct_Click);
             // 
             // lblRightTitle
@@ -269,46 +332,6 @@
             resources.ApplyResources(this.panel1, "panel1");
             this.panel1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.panel1.Name = "panel1";
-            // 
-            // colConfigName
-            // 
-            resources.ApplyResources(this.colConfigName, "colConfigName");
-            this.colConfigName.Name = "colConfigName";
-            // 
-            // colASolution
-            // 
-            this.colASolution.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
-            resources.ApplyResources(this.colASolution, "colASolution");
-            this.colASolution.Name = "colASolution";
-            // 
-            // colAFlow
-            // 
-            this.colAFlow.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
-            resources.ApplyResources(this.colAFlow, "colAFlow");
-            this.colAFlow.Name = "colAFlow";
-            // 
-            // colBSolution
-            // 
-            this.colBSolution.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
-            resources.ApplyResources(this.colBSolution, "colBSolution");
-            this.colBSolution.Name = "colBSolution";
-            // 
-            // colBFlow
-            // 
-            this.colBFlow.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
-            resources.ApplyResources(this.colBFlow, "colBFlow");
-            this.colBFlow.Name = "colBFlow";
-            // 
-            // colIsSwitch
-            // 
-            resources.ApplyResources(this.colIsSwitch, "colIsSwitch");
-            this.colIsSwitch.Name = "colIsSwitch";
-            // 
-            // colProductCount
-            // 
-            resources.ApplyResources(this.colProductCount, "colProductCount");
-            this.colProductCount.Name = "colProductCount";
-            this.colProductCount.ReadOnly = true;
             // 
             // FrAIConfig
             // 

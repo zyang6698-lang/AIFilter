@@ -28,6 +28,15 @@ namespace DeepSightWorkLib.Interfaces
         /// <param name="mats">图片数据列表（已解码的 Mat）</param>
         /// <param name="vb_outStr">推理结果输出</param>
         void DefectMethodWithImages(RootVBInfo info, List<Mat> mats, out string vb_outStr);
+
+        /// <summary>
+        /// 带图片数据的推理方法（原图+模板图，直接传递图片指针给 C++）
+        /// </summary>
+        /// <param name="info">推理参数信息</param>
+        /// <param name="mats">原图数据列表（已解码的 Mat）</param>
+        /// <param name="mats_Tmp">模板图数据列表（已解码的 Mat）</param>
+        /// <param name="vb_outStr">推理结果输出</param>
+        void DefectMethodWithImages2(RootVBInfo info, List<Mat> mats, List<Mat> mats_Tmp, out string vb_outStr);
     }
 }
 
