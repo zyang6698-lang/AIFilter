@@ -512,7 +512,6 @@ namespace DeepSightAI
             this.btnTest.Name = "btnTest";
             this.btnTest.Size = new System.Drawing.Size(53, 24);
             this.btnTest.Text = "调试";
-            this.btnTest.Click += new System.EventHandler(this.btnTest_Click);
             // 
             // btn_showBox
             // 
@@ -588,7 +587,6 @@ namespace DeepSightAI
             this.toolStripButton2.Size = new System.Drawing.Size(73, 24);
             this.toolStripButton2.Text = "批量测试";
             this.toolStripButton2.ToolTipText = "循环测试";
-            this.toolStripButton2.Click += new System.EventHandler(this.toolStripButton2_Click);
             // 
             // btnRunVB
             // 

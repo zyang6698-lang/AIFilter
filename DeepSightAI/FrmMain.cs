@@ -5,6 +5,7 @@ using DeepSightModel;
 using DeepSightModel.Configuration;
 using DeepSightTool;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
@@ -23,6 +24,34 @@ namespace DeepSightAI
         public bool IsAllow = false;
 
         private DateTime _lastResetDate = DateTime.Now.Date;
+
+        #region UI 批量刷新 — 缓冲区 & Timer
+
+        /// <summary>任务状态待处理队列（后台线程写入，Timer 读取）</summary>
+        private readonly ConcurrentQueue<TaskStatusInfo> _pendingTaskStatus = new ConcurrentQueue<TaskStatusInfo>();
+
+        /// <summary>AVI 列待更新字典（key=sn_side, 最新计数覆盖旧值）</summary>
+        private readonly ConcurrentDictionary<string, (string sn, string side, int count)> _pendingAviUpdates
+            = new ConcurrentDictionary<string, (string sn, string side, int count)>();
+
+        /// <summary>AI 列待更新字典</summary>
+        private readonly ConcurrentDictionary<string, (string sn, string side, int count)> _pendingAiUpdates
+            = new ConcurrentDictionary<string, (string sn, string side, int count)>();
+
+        /// <summary>待刷新的图片 SN_Side（仅保留最新一条，通过 Interlocked 访问）</summary>
+        private string _pendingImageRefreshKey;
+
+        /// <summary>待更新的工站数据接收时间（工站名 → 最新接收）</summary>
+        private readonly ConcurrentQueue<string> _pendingStationUpdates = new ConcurrentQueue<string>();
+
+        /// <summary>是否需要刷新工站配置列表（新工站发现时设置）</summary>
+        private volatile bool _machineConfigDirty;
+
+        /// <summary>UI 刷新定时器（200ms 间隔，WinForms.Timer 天然在 UI 线程触发）</summary>
+        private System.Windows.Forms.Timer _uiRefreshTimer;
+
+        #endregion
+
         /// <summary>
         /// 窗体对象实例
         /// </summary>
@@ -95,9 +124,7 @@ namespace DeepSightAI
             InitPageSwitchConfig();
 
             SystemEvent.EventSendTaskStatusToUI += new SendTaskStatus(SystemEvent_EventSendTaskStatusToUI);
-            SystemEvent.EventSendTaskToUI += new SendTask(SystemEvent_EventSendTaskToUI);
             SystemEvent.EventSendAlarmToUI += new SendAlarm(SystemEvent_EventSendAlarmToUI);
-            SystemEvent.EventSendDefectNumToUI += new SendDefectNum(SystemEvent_EventSendDefectNumToUI);
             SystemEvent.EventSendDefectPanelInfoToUI += new SendDefectPanelInfo(SystemEvent_EventSendDefectPanelInfoToUI);
             SystemEvent.EventSendDefectResultInfoToUI += new SendDefectResultInfo(SystemEvent_EventSendDefectResultInfoToUI);
             SystemEvent.EventSendDefectRoiInfoToUI += new SendDefectRoiInfo(SystemEvent_EventSendDefectRoiInfoToUI);
@@ -110,7 +137,7 @@ namespace DeepSightAI
         {
             try
             {
-                // 以SN+Side为单位存储结果
+                // 以SN+Side为单位存储结果（ConcurrentDictionary，线程安全）
                 string key = $"{sn}_{side}";
                 var resultList = FrHome.Instance.dic_Results.GetOrAdd(key, _ => new List<string>());
                 int resultCount;
@@ -120,8 +147,8 @@ namespace DeepSightAI
                     resultCount = resultList.Count;
                 }
 
-                // 实时更新该面的 AI 列
-                UpdateAIColumnForRow(sn, side, resultCount);
+                // 入队：AI 列待更新（Timer Tick 中批量刷新）
+                _pendingAiUpdates[key] = (sn, side, resultCount);
             }
             catch (Exception ex)
             {
@@ -170,7 +197,7 @@ namespace DeepSightAI
         {
             try
             {
-                // 以SN+Side为单位存储Panel信息
+                // ── 数据存储（线程安全，可在后台线程执行） ──
                 string key = $"{sn}_{side}";
                 var infoList = FrHome.Instance.dic_Infos.GetOrAdd(key, _ => new List<RootPanelInfoWithIP>());
                 lock (infoList)
@@ -178,7 +205,7 @@ namespace DeepSightAI
                     infoList.Add(info);
                 }
 
-                // 实时更新该面的 AVI 列（缺陷图片数）
+                // 计算 AVI 计数并入队（Timer 中刷新 DataGridView）
                 int aviCount = 0;
                 lock (infoList)
                 {
@@ -193,29 +220,25 @@ namespace DeepSightAI
                         }
                     }
                 }
-                UpdateAVIColumnForRow(sn, side, aviCount);
+                _pendingAviUpdates[key] = (sn, side, aviCount);
 
-                // 提取 MachineName，检查是否需要添加新工站
+                // ── 机台注册（配置写入，非 UI 操作，可在后台线程执行） ──
                 string machineName = info?.RootInfo?.MachineName;
                 if (!string.IsNullOrEmpty(machineName))
                 {
-                    // 检查工站是否已存在于机台注册表中
                     bool registryExists = Machine.machineRegistry?.Machines?.Any(m => m.MachineName == machineName) ?? false;
 
                     if (!registryExists)
                     {
-                        // 1. 添加到机台注册表（主配置源）
                         var newEntry = new MachineEntry
                         {
                             MachineName = machineName,
                             IsEnable = true,
-                            DataSourceType = DataSourceType.LevelDb  // 自动发现的工站默认 LevelDb
+                            DataSourceType = DataSourceType.LevelDb
                         };
                         Machine.machineRegistryManager.AddOrUpdate(newEntry);
-                        // 刷新内存中的注册表
                         Machine.machineRegistryManager.Read(out Machine.machineRegistry);
 
-                        // 2. 同步添加到 aviconfig（保持向后兼容）
                         if (Machine.aviconfig?.WatchPaths != null)
                         {
                             bool aviExists = Machine.aviconfig.WatchPaths.Any(w => w.AviName == machineName);
@@ -236,31 +259,22 @@ namespace DeepSightAI
                             }
                         }
 
-                        // 更新 UI 显示新工站
-                        FrHome.Instance.RefreshMachineStatusConfigs();
-
+                        // 标记：需要在 UI 线程刷新工站列表
+                        _machineConfigDirty = true;
                         LogTextHelper.Info($"自动发现并添加新工站: {machineName}");
                     }
 
-                    // 更新工站数据接收时间（状态变为绿色）
-                    FrHome.Instance.UpdateStationDataReceived(machineName);
+                    // 入队：工站数据接收时间更新（Timer 中刷新 UI）
+                    _pendingStationUpdates.Enqueue(machineName);
                 }
 
-                // 自动触发图片显示：仅当面板数据包含缺陷图片时才刷新，避免清空已有显示
+                // ── 图片刷新标记（仅当有缺陷图片时） ──
                 bool hasImages = info?.RootInfo?.PcsInfo?.Values?.Any(pcs =>
                     pcs.DefectInfo?.Any(d => d.DefectVrsImages != null && d.DefectVrsImages.Count > 0) == true) == true;
                 if (hasImages)
                 {
-                    FrHome.Instance.str_SN = $"{sn}_{side}";
-                    if (FrHome.Instance.dataGridViewData.InvokeRequired)
-                    {
-                        FrHome.Instance.dataGridViewData.BeginInvoke(new MethodInvoker(() =>
-                            FrHome.Instance.dataGridViewData_CellClick(null, null)));
-                    }
-                    else
-                    {
-                        FrHome.Instance.dataGridViewData_CellClick(null, null);
-                    }
+                    // 原子写入：多次写入只保留最新的 key，Timer 中取最后值
+                    Interlocked.Exchange(ref _pendingImageRefreshKey, key);
                 }
             }
             catch (Exception ex)
@@ -269,10 +283,7 @@ namespace DeepSightAI
                 SystemEvent.SendAlarmMsg("Panel回调异常" + ex.ToString());
             }
         }
-        private void SystemEvent_EventSendDefectNumToUI(int num)
-        {
 
-        }
 
         private void FrmMain_Load(object sender, EventArgs e)
         {
@@ -285,6 +296,11 @@ namespace DeepSightAI
             DateTime lastWriteTime = File.GetLastWriteTime(filePath);
             this.lbl_title.Text = "ATS_AI ~ " + lastWriteTime.ToString("MMdd");
 
+            // 启动 UI 批量刷新定时器（200ms ≈ 5FPS，足够流畅且不卡顿）
+            _uiRefreshTimer = new System.Windows.Forms.Timer();
+            _uiRefreshTimer.Interval = 200;
+            _uiRefreshTimer.Tick += UiRefreshTimer_Tick;
+            _uiRefreshTimer.Start();
         }
 
         private void SystemEvent_EventSendAlarmToUI(string massage)
@@ -299,76 +315,11 @@ namespace DeepSightAI
         private void SystemEvent_EventSendTaskStatusToUI(TaskStatusInfo statusInfo)
         {
             if (statusInfo == null) return;
-
-            try
-            {
-                // 确保在 UI 线程上执行
-                if (FrHome.Instance.dataGridViewData.InvokeRequired)
-                {
-                    FrHome.Instance.dataGridViewData.BeginInvoke(new MethodInvoker(() => SystemEvent_EventSendTaskStatusToUI(statusInfo)));
-                    return;
-                }
-
-                lock (Locker)
-                {
-                    if (statusInfo.Status == DeepSightModel.TaskStatus.Queued)
-                    {
-                        // 添加新任务（区分AB面）
-                        AddNewTaskRow(statusInfo.SerialNumber, statusInfo.Side);
-                    }
-                    else
-                    {
-                        // 更新现有任务状态
-                        UpdateTaskRowWithStatus(statusInfo);
-                    }
-
-                    // 清理超出限制的行
-                    CleanupExcessRows();
-                }
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error($"SystemEvent_EventSendTaskStatusToUI 异常: {ex}");
-            }
+            // 入队即返回，不阻塞后台线程，Timer Tick 中批量消费
+            _pendingTaskStatus.Enqueue(statusInfo);
         }
         
-        private void SystemEvent_EventSendTaskToUI(object task, string msg = "", long timeMs = 0)
-        {
-            if (task == null) return;
 
-            try
-            {
-                string sn = task.ToString();
-
-                // 确保在 UI 线程上执行（使用 BeginInvoke 避免阻塞）
-                if (FrHome.Instance.dataGridViewData.InvokeRequired)
-                {
-                    FrHome.Instance.dataGridViewData.BeginInvoke(new MethodInvoker(() => SystemEvent_EventSendTaskToUI(task, msg, timeMs)));
-                    return;
-                }
-
-                lock (Locker)
-                {
-                    if (string.IsNullOrEmpty(msg))
-                    {
-                        // 添加新任务（旧接口无side信息，默认空）
-                        AddNewTaskRow(sn, "");
-                    }
-                    else
-                    {
-                        // 更新现有任务状态
-                        UpdateTaskRow(sn, msg, timeMs);
-                    }
-
-                    // 清理超出限制的行
-                    CleanupExcessRows();
-                }
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error($"SystemEvent_EventSendTaskToUI 异常: {ex}");
-            }
-        }
 
         /// <summary>
         /// 添加新任务行（区分AB面）
@@ -384,45 +335,21 @@ namespace DeepSightAI
         }
 
         /// <summary>
-        /// 实时更新指定行的 AVI 列（缺陷图片数）
+        /// 更新指定行的 AVI 列（仅在 UI 线程 Timer Tick 中调用）
         /// </summary>
         private void UpdateAVIColumnForRow(string sn, string side, int aviCount)
         {
-            try
-            {
-                if (FrHome.Instance.dataGridViewData.InvokeRequired)
-                {
-                    FrHome.Instance.dataGridViewData.BeginInvoke(new MethodInvoker(() => UpdateAVIColumnForRow(sn, side, aviCount)));
-                    return;
-                }
-                lock (Locker)
-                {
-                    var row = FindRowBySnSide(sn, side) ?? FindRowBySn(sn);
-                    if (row != null) row.Cells[2].Value = aviCount;
-                }
-            }
-            catch (Exception ex) { LogTextHelper.Error($"UpdateAVIColumnForRow 异常: {ex.Message}"); }
+            var row = FindRowBySnSide(sn, side) ?? FindRowBySn(sn);
+            if (row != null) row.Cells[2].Value = aviCount;
         }
 
         /// <summary>
-        /// 实时更新指定行的 AI 列（推理结果数）
+        /// 更新指定行的 AI 列（仅在 UI 线程 Timer Tick 中调用）
         /// </summary>
         private void UpdateAIColumnForRow(string sn, string side, int aiCount)
         {
-            try
-            {
-                if (FrHome.Instance.dataGridViewData.InvokeRequired)
-                {
-                    FrHome.Instance.dataGridViewData.BeginInvoke(new MethodInvoker(() => UpdateAIColumnForRow(sn, side, aiCount)));
-                    return;
-                }
-                lock (Locker)
-                {
-                    var row = FindRowBySnSide(sn, side) ?? FindRowBySn(sn);
-                    if (row != null) row.Cells[3].Value = aiCount;
-                }
-            }
-            catch (Exception ex) { LogTextHelper.Error($"UpdateAIColumnForRow 异常: {ex.Message}"); }
+            var row = FindRowBySnSide(sn, side) ?? FindRowBySn(sn);
+            if (row != null) row.Cells[3].Value = aiCount;
         }
 
         /// <summary>
@@ -453,17 +380,6 @@ namespace DeepSightAI
                 }
             }
             return null;
-        }
-
-        /// <summary>
-        /// 从消息中提取面别信息
-        /// </summary>
-        private string ExtractSideFromMsg(string msg)
-        {
-            if (string.IsNullOrEmpty(msg)) return "";
-            if (msg.Contains("A面")) return "A";
-            if (msg.Contains("B面")) return "B";
-            return "";
         }
 
         /// <summary>
@@ -510,79 +426,6 @@ namespace DeepSightAI
             {
                 targetRow.Cells[5].Value = statusInfo.GetFullDisplayMessage();
             }
-        }
-
-        /// <summary>
-        /// 更新任务行状态
-        /// </summary>
-        /// <param name="timeMs">AI处理时间(毫秒)</param>
-        private void UpdateTaskRow(string sn, string msg, long timeMs = 0)
-        {
-            // 从消息中提取面别，精确匹配行
-            string side = ExtractSideFromMsg(msg);
-            DataGridViewRow targetRow = null;
-            if (!string.IsNullOrEmpty(side))
-            {
-                targetRow = FindRowBySnSide(sn, side);
-            }
-            // 兼容：找不到则按SN查找
-            if (targetRow == null)
-            {
-                targetRow = FindRowBySn(sn);
-            }
-
-            if (targetRow == null) return;
-
-            // 根据消息内容设置颜色和更新数据
-            Color statusColor = GetStatusColor(msg);
-            targetRow.DefaultCellStyle.ForeColor = statusColor;
-
-            // 更新时间列[4]（如果有传入时间）
-            if (timeMs > 0)
-            {
-                string existingTime = targetRow.Cells[4].Value?.ToString();
-                if (!string.IsNullOrEmpty(existingTime))
-                {
-                    targetRow.Cells[4].Value = $"{existingTime}+{timeMs}";
-                }
-                else
-                {
-                    targetRow.Cells[4].Value = timeMs.ToString();
-                }
-            }
-
-            // 处理 B 面完成的特殊逻辑
-            if (msg.Contains("已完成") && msg.Contains("B面"))
-            {
-                UpdateBSideCompletedRow(targetRow, sn, ref msg);
-            }
-            else
-            {
-                targetRow.Cells[5].Value = msg;
-            }
-        }
-
-        /// <summary>
-        /// 根据消息内容获取状态颜色
-        /// </summary>
-        private Color GetStatusColor(string msg)
-        {
-            if (msg.Contains("已完成"))
-                return Color.Green;
-            else if (msg.Contains("正在读取数据") || msg.Contains("正在加载图片"))
-                return Color.Orange;
-            else if (msg.Contains("图片加载完成"))
-                return Color.DarkOrange;
-            else if (msg.Contains("开始AI检测") || msg.Contains("处理中"))
-                return Color.White;
-            else if (msg.Contains("AI检测完成"))
-                return Color.DarkCyan;
-            else if (msg.Contains("正在回写结果"))
-                return Color.Purple;
-            else if (msg.Contains("错误") || msg.Contains("失败") || msg.Contains("异常"))
-                return Color.Red;
-            else
-                return Color.Gray;
         }
 
         /// <summary>
@@ -727,6 +570,96 @@ namespace DeepSightAI
             // 清理SN调试信息缓存
             SnDebugInfoCache.Remove(sn, side);
         }
+
+        #region UI 批量刷新 — Timer Tick
+
+        /// <summary>
+        /// UI 刷新定时器核心回调（200ms 间隔，天然在 UI 线程执行）
+        /// 一次 Tick 内批量处理所有缓冲区中的待更新数据
+        /// </summary>
+        private void UiRefreshTimer_Tick(object sender, EventArgs e)
+        {
+            try
+            {
+                var dgv = FrHome.Instance.dataGridViewData;
+                bool gridChanged = false;
+
+                // ═══ 1. 批量处理任务状态队列 ═══
+                if (!_pendingTaskStatus.IsEmpty)
+                {
+                    dgv.SuspendLayout();
+                    try
+                    {
+                        while (_pendingTaskStatus.TryDequeue(out var statusInfo))
+                        {
+                            if (statusInfo.Status == DeepSightModel.TaskStatus.Queued)
+                            {
+                                AddNewTaskRow(statusInfo.SerialNumber, statusInfo.Side);
+                            }
+                            else
+                            {
+                                UpdateTaskRowWithStatus(statusInfo);
+                            }
+                            gridChanged = true;
+                        }
+                        if (gridChanged) CleanupExcessRows();
+                    }
+                    finally
+                    {
+                        dgv.ResumeLayout();
+                    }
+                }
+
+                // ═══ 2. 批量更新 AVI 列 ═══
+                if (!_pendingAviUpdates.IsEmpty)
+                {
+                    // 快照并清空，避免迭代中被修改
+                    var snapshot = _pendingAviUpdates.ToArray();
+                    foreach (var kv in snapshot)
+                    {
+                        _pendingAviUpdates.TryRemove(kv.Key, out _);
+                        UpdateAVIColumnForRow(kv.Value.sn, kv.Value.side, kv.Value.count);
+                    }
+                }
+
+                // ═══ 3. 批量更新 AI 列 ═══
+                if (!_pendingAiUpdates.IsEmpty)
+                {
+                    var snapshot = _pendingAiUpdates.ToArray();
+                    foreach (var kv in snapshot)
+                    {
+                        _pendingAiUpdates.TryRemove(kv.Key, out _);
+                        UpdateAIColumnForRow(kv.Value.sn, kv.Value.side, kv.Value.count);
+                    }
+                }
+
+                // ═══ 4. 刷新工站状态面板 ═══
+                if (_machineConfigDirty)
+                {
+                    _machineConfigDirty = false;
+                    FrHome.Instance.RefreshMachineStatusConfigs();
+                }
+                while (_pendingStationUpdates.TryDequeue(out var machineName))
+                {
+                    FrHome.Instance.UpdateStationDataReceived(machineName);
+                }
+
+                // ═══ 5. 图片显示刷新（仅最新一条，防抖） ═══
+                string imageKey = Interlocked.Exchange(ref _pendingImageRefreshKey, null);
+                if (imageKey != null)
+                {
+                    FrHome.Instance.str_SN = imageKey;
+                    FrHome.Instance.dataGridViewData_CellClick(null, null);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"UiRefreshTimer_Tick 异常: {ex}");
+            }
+        }
+
+        #endregion
+
         internal void LoadMethod()
         {
             try
@@ -752,7 +685,6 @@ namespace DeepSightAI
 
                 // FrHome 特有的初始化
                 FrHome.Instance.InitMethod();
-                FrHome.Instance.InitWork();
             }
             catch (Exception ex)
             {
@@ -1101,7 +1033,7 @@ namespace DeepSightAI
 
                 if (now.Date > _lastResetDate)
                 {
-                    ResetCount();
+                    LogTextHelper.Info("Data Reset");
                     _lastResetDate = now.Date;
                 }
 
@@ -1111,26 +1043,12 @@ namespace DeepSightAI
                 LogTextHelper.Error("Error", ex);
             }
         }
-        private void ResetCount()
-        {
-            LogTextHelper.Info("Data Reset");
-        }
 
         #endregion 状态栏-运行时间-当前时间
 
         private void toolStripMenuItem2_Click(object sender, EventArgs e)
         {
-            if (!btn_showBox.Checked)
-            {
-                btn_showBox.Checked = false;
-                Machine.master.IsShowBox = false;
-            }
-            else
-            {
-                btn_showBox.Checked = true;
-                Machine.master.IsShowBox = true;
-            }
-           
+            Machine.master.IsShowBox = btn_showBox.Checked;
         }
 
         private void btnModelB_Click(object sender, EventArgs e)
@@ -1177,15 +1095,6 @@ namespace DeepSightAI
             {
                 Machine.master.DefectService.AiDefect.Vision_Show_View(1);
             }));
-        }
-        private void toolStripButton2_Click(object sender, EventArgs e)
-        {
-            return;
-        }
-
-        private void btnTest_Click(object sender, EventArgs e)
-        {
-
         }
 
         private void btnSearch_Click(object sender, EventArgs e)

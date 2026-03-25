@@ -19,6 +19,10 @@ namespace DeepSightDB
             public int TotalPoints { get; set; }
             public int AiOkPoints { get; set; }
             public int UninspectedPoints { get; set; }
+            /// <summary>
+            /// 该面中重点缺陷的数量
+            /// </summary>
+            public int KeyDefectPoints { get; set; }
 
             public static SideSnapshot FromRecord(PanelSideRecord record)
             {
@@ -29,7 +33,8 @@ namespace DeepSightDB
                     AiState = record.Data?.AiState ?? 0,
                     TotalPoints = points.Count,
                     AiOkPoints = points.Count(p => p.AIStatus == 1),
-                    UninspectedPoints = points.Count(p => p.AIStatus == 3)
+                    UninspectedPoints = points.Count(p => p.AIStatus == 3),
+                    KeyDefectPoints = points.Count(p => p.IsKeyDefect)
                 };
             }
         }
@@ -96,10 +101,13 @@ namespace DeepSightDB
 
                 result.AviPanelCount = 1;
 
+                int keyDefectTotal = 0;
+
                 if (_sideA != null)
                 {
                     result.AiFilterCount += _sideA.TotalPoints;
                     result.AiFilterOKCount += _sideA.AiOkPoints;
+                    keyDefectTotal += _sideA.KeyDefectPoints;
                     if (_sideA.AiState == 3)
                     {
                         result.AiFilterUninspectedCount += _sideA.UninspectedPoints;
@@ -110,11 +118,15 @@ namespace DeepSightDB
                 {
                     result.AiFilterCount += _sideB.TotalPoints;
                     result.AiFilterOKCount += _sideB.AiOkPoints;
+                    keyDefectTotal += _sideB.KeyDefectPoints;
                     if (_sideB.AiState == 3)
                     {
                         result.AiFilterUninspectedCount += _sideB.UninspectedPoints;
                     }
                 }
+
+                result.KeyDefectCount = keyDefectTotal;
+                if (keyDefectTotal > 0) result.KeyDefectPanelCount = 1;
 
                 if (_sideA != null && _sideB != null)
                 {
@@ -268,6 +280,8 @@ namespace DeepSightDB
             _totals.AiFilterCount += delta.AiFilterCount;
             _totals.AiFilterOKCount += delta.AiFilterOKCount;
             _totals.AiFilterUninspectedCount += delta.AiFilterUninspectedCount;
+            _totals.KeyDefectCount += delta.KeyDefectCount;
+            _totals.KeyDefectPanelCount += delta.KeyDefectPanelCount;
         }
 
         private static void ApplyDeltaToMachine(string machineId, BoardStat delta)
@@ -284,6 +298,8 @@ namespace DeepSightDB
             s.AiFilterCount += delta.AiFilterCount;
             s.AiFilterOKCount += delta.AiFilterOKCount;
             s.AiFilterUninspectedCount += delta.AiFilterUninspectedCount;
+            s.KeyDefectCount += delta.KeyDefectCount;
+            s.KeyDefectPanelCount += delta.KeyDefectPanelCount;
         }
 
         private static void RecomputeTotals()
@@ -589,7 +605,9 @@ namespace DeepSightDB
                     AiFilterCount = _totals.AiFilterCount,
                     AiFilterOKCount = _totals.AiFilterOKCount,
                     AiFilterUninspectedCount = _totals.AiFilterUninspectedCount,
-                    Utilization = CalculateUtilization()
+                    Utilization = CalculateUtilization(),
+                    KeyDefectCount = _totals.KeyDefectCount,
+                    KeyDefectPanelCount = _totals.KeyDefectPanelCount
                 };
             }
         }
@@ -611,7 +629,9 @@ namespace DeepSightDB
                     AiFilterCount = s.AiFilterCount,
                     AiFilterOKCount = s.AiFilterOKCount,
                     AiFilterUninspectedCount = s.AiFilterUninspectedCount,
-                    Utilization = CalculateUtilization(machineId)
+                    Utilization = CalculateUtilization(machineId),
+                    KeyDefectCount = s.KeyDefectCount,
+                    KeyDefectPanelCount = s.KeyDefectPanelCount
                 };
             }
         }

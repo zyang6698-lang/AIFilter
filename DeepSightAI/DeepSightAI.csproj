@@ -121,7 +121,6 @@
     <Reference Include="CsvHelper, Version=33.0.0.0, Culture=neutral, PublicKeyToken=8c4959082be5c823, processorArchitecture=MSIL">
       <HintPath>..\packages\CsvHelper.33.1.0\lib\net47\CsvHelper.dll</HintPath>
     </Reference>
-
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.8.0.0\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
@@ -382,6 +381,12 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SettingPages\FrKeyDefectConfig.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingPages\FrKeyDefectConfig.Designer.cs">
+      <DependentUpon>FrKeyDefectConfig.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingPages\MachineStatusCard.cs">
       <SubType>UserControl</SubType>
     </Compile>

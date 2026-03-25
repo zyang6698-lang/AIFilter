@@ -30,6 +30,12 @@ namespace DeepSightDB
         public int VrsState { get; set; }
         public int FinalState { get; set; }
         /// <summary>
+        /// 是否为重点缺陷（运行时标记，不持久化到数据库）
+        /// </summary>
+        [Newtonsoft.Json.JsonIgnore]
+        public bool IsKeyDefect { get; set; }
+
+        /// <summary>
         /// 用于显示的序列号（非持久化字段，由界面赋值）
         /// </summary>
         [Newtonsoft.Json.JsonIgnore]
@@ -140,6 +146,11 @@ namespace DeepSightDB
                         (sideA.AiState == 3 ? pointsA.Count(t => t.AIStatus == 3) : 0) +
                         (sideB.AiState == 3 ? pointsB.Count(t => t.AIStatus == 3) : 0);
 
+                    // 重点缺陷统计
+                    int keyCount = pointsA.Count(t => t.IsKeyDefect) + pointsB.Count(t => t.IsKeyDefect);
+                    s.KeyDefectCount = keyCount;
+                    if (keyCount > 0) s.KeyDefectPanelCount = 1;
+
                     return s;
                 })
                 .Aggregate(new BoardStat(), (total, current) =>
@@ -150,6 +161,8 @@ namespace DeepSightDB
                     total.AiFilterCount += current.AiFilterCount;
                     total.AiFilterOKCount += current.AiFilterOKCount;
                     total.AiFilterUninspectedCount += current.AiFilterUninspectedCount;
+                    total.KeyDefectCount += current.KeyDefectCount;
+                    total.KeyDefectPanelCount += current.KeyDefectPanelCount;
                     return total;
                 });
 
@@ -169,6 +182,16 @@ namespace DeepSightDB
         public int AiFilterOKCount { get; set; }
         public int AiFilterUninspectedCount { get; set; }
         public double Utilization { get; set; }
+
+        // 重点缺陷维度
+        /// <summary>
+        /// 重点缺陷报点总数（AI 判定为 NG 且缺陷名在重点列表中）
+        /// </summary>
+        public int KeyDefectCount { get; set; }
+        /// <summary>
+        /// 含有重点缺陷的面板数量
+        /// </summary>
+        public int KeyDefectPanelCount { get; set; }
     }
 
     /// <summary>

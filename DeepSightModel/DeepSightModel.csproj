@@ -85,6 +85,8 @@
     <Compile Include="Configuration\GeneralConfigManager.cs" />
     <Compile Include="Configuration\AISolutionConfigManager.cs" />
     <Compile Include="ConfigurationClass.cs" />
+    <Compile Include="Configuration\KeyDefectConfig.cs" />
+    <Compile Include="Configuration\KeyDefectConfigManager.cs" />
     <Compile Include="LevelDbConfig.cs" />
     <Compile Include="Configuration\MachineRegistry.cs" />
     <Compile Include="Configuration\MachineRegistryManager.cs" />

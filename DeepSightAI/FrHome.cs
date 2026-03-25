@@ -81,7 +81,6 @@ namespace DeepSightAI
         public FrHome()
         {
             InitializeComponent();
-            Control.CheckForIllegalCrossThreadCalls = false;
             InitializeUI();
             Load += FrHome_Load;
 
@@ -307,44 +306,6 @@ namespace DeepSightAI
 
         #region 菜单与工具事件
 
-        private void ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                ToolStripMenuItem toolStripMenuItem = sender as ToolStripMenuItem;
-                if (toolStripMenuItem.Tag != null)
-                {
-                    int index = (int)toolStripMenuItem.Tag;
-
-                    string[] str = toolStripMenuItem.Name.Split(';');
-                    string strcamera = toolStripMenuItem.Text;
-
-                    string station = str[0];
-                    int workIndex = int.Parse(str[1]);
-                    int snapIndex = int.Parse(str[2]);
-                    if (index >= 0)
-                    {
-                        OpenFileDialog dig_openImage = new OpenFileDialog
-                        {
-                            Title = "请选择图像文件",
-                            RestoreDirectory = true,
-                            FilterIndex = 1
-                        };
-                        dig_openImage.Filter = string.Format("{1} | *{0}*.bmp; *{0}*.jpg; *{0}*.jpeg; *{0}*.gif; *{0}*.png; *{0}*.tif;", station, "图片文件");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error("Error", ex);
-            }
-        }
-
-        public void InitWork()
-        {
-            // DefectImageItemControl 不再依赖 CvDisplay，无需设置 HWindow
-        }
-
         /// <summary>
         /// 清空所有缺陷图片控件的显示内容（供外部调用，如 FrmMain.btnClear_Click）。
         /// </summary>
@@ -539,50 +500,6 @@ namespace DeepSightAI
             {
                 LogTextHelper.Error("Error", ex);
             }
-        }
-
-        /// <summary>
-        /// 递归加载JSON到TreeView
-        /// </summary>
-        /// <param name="token"></param>
-        /// <param name="parentNodes"></param>
-        private void LoadJsonToTreeView(JToken token, TreeNodeCollection parentNodes)
-        {
-            try
-            {
-                if (token == null) return;
-                //
-                switch (token.Type)
-                {
-                    case JTokenType.Object:
-                        foreach (var prop in (JObject)token)
-                        {
-                            var node = parentNodes.Add(prop.Key);
-                            LoadJsonToTreeView(prop.Value, node.Nodes);
-                        }
-                        break;
-
-                    case JTokenType.Array:
-                        int index = 0;
-                        foreach (var item in (JArray)token)
-                        {
-                            var node = parentNodes.Add($"[{index}]");
-                            LoadJsonToTreeView(item, node.Nodes);
-                            index++;
-                        }
-                        break;
-
-                    default:
-                        parentNodes.Add(token.ToString());
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error(ex.ToString());
-                throw;
-            }
-
         }
 
         #endregion

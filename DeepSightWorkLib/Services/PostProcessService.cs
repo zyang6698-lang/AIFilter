@@ -1,5 +1,7 @@
 using DeepSightDB;
+using DeepSightEvent;
 using DeepSightModel;
+using DeepSightModel.Configuration;
 using DeepSightTool;
 using DeepSightWorkLib.Interfaces;
 using Newtonsoft.Json;
@@ -21,6 +23,10 @@ namespace DeepSightWorkLib.Services
 
         // 模型验证测试服务（可选注入）
         private ModelValidationTestService _validationTestService;
+
+        // 重点缺陷报警冷却时间记录
+        private static DateTime _lastKeyDefectAlarmTime = DateTime.MinValue;
+        private static readonly object _alarmLock = new object();
 
         public PostProcessService(
             ConfigurationClass sysConfig,
@@ -71,6 +77,20 @@ namespace DeepSightWorkLib.Services
                 }
 
                 LogTextHelper.Info($"开始处理: SN={vBModel.SN}, Side={panelInfo.SideIndex}");
+
+                // 从 PanelInfo 中自动发现缺陷名称（AVI 上报的 DefectCode）
+                if (panelInfo.PcsInfo != null)
+                {
+                    foreach (var pcsEntry in panelInfo.PcsInfo.Values)
+                    {
+                        if (pcsEntry?.DefectInfo == null) continue;
+                        foreach (var defect in pcsEntry.DefectInfo)
+                        {
+                            if (!string.IsNullOrEmpty(defect.DefectCode))
+                                KeyDefectConfigManager.Instance.AutoDiscoverDefect(defect.DefectCode);
+                        }
+                    }
+                }
 
                 var obj = JsonConvert.DeserializeObject<RootVBOutInfo>(msg);
                 if (obj == null)
@@ -140,6 +160,16 @@ namespace DeepSightWorkLib.Services
                             }
                         }
 
+                        // 重点缺陷标记 & 自动发现
+                        if (heatInfo.AIStatus == 2 && !string.IsNullOrEmpty(heatInfo.DefectName))
+                        {
+                            KeyDefectConfigManager.Instance.AutoDiscoverDefect(heatInfo.DefectName);
+                            if (KeyDefectConfigManager.Instance.IsKeyDefect(heatInfo.DefectName))
+                            {
+                                heatInfo.IsKeyDefect = true;
+                            }
+                        }
+
                         if (vBModel.isByPass)
                         {
                             heatInfo.AIStatus = 3;
@@ -153,7 +183,14 @@ namespace DeepSightWorkLib.Services
                     int aiState = avi_HeatInfo.Any(h => h.AIStatus == 3) ? 3 : avi_HeatInfo.Any(h => h.AIStatus == 2) ? 2 : 1;
                     _savePanelSideAction(panelInfo, avi_HeatInfo, aviState, aiState);
 
-                    LogTextHelper.Info($"处理完成: SN={vBModel.SN}, Side={panelInfo.SideIndex}, AviState={aviState}, AiState={aiState}");
+                    // 重点缺陷报警检查
+                    int keyDefectInThisSide = avi_HeatInfo.Count(h => h.IsKeyDefect);
+                    if (keyDefectInThisSide > 0)
+                    {
+                        CheckKeyDefectAlarm(vBModel.SN);
+                    }
+
+                    LogTextHelper.Info($"处理完成: SN={vBModel.SN}, Side={panelInfo.SideIndex}, AviState={aviState}, AiState={aiState}, KeyDefects={keyDefectInThisSide}");
                 }
                 else if (code == "600")
                 {
@@ -240,6 +277,59 @@ namespace DeepSightWorkLib.Services
             }
 
             return results;
+        }
+
+        /// <summary>
+        /// 检查重点缺陷报警条件（基于当日统计）
+        /// </summary>
+        private void CheckKeyDefectAlarm(string currentSN)
+        {
+            try
+            {
+                var alarmConfig = KeyDefectConfigManager.Instance.GetAlarmConfig();
+                if (!alarmConfig.Enabled) return;
+
+                var todayStat = BoardStatCache.GetTodayStat();
+                int totalDefects = todayStat.AiFilterCount - todayStat.AiFilterOKCount; // NG缺陷总数
+                int keyDefects = todayStat.KeyDefectCount;
+
+                if (totalDefects <= 0 || keyDefects <= 0) return;
+
+                bool shouldAlarm = false;
+                string reason = "";
+
+                // 比例报警
+                double ratio = (double)keyDefects / totalDefects;
+                if (alarmConfig.AlarmRatioThreshold > 0 && ratio >= alarmConfig.AlarmRatioThreshold)
+                {
+                    shouldAlarm = true;
+                    reason = $"重点缺陷占比 {ratio:P1} 超过阈值 {alarmConfig.AlarmRatioThreshold:P1}";
+                }
+
+                // 绝对数量报警
+                if (alarmConfig.AlarmCountThreshold > 0 && keyDefects >= alarmConfig.AlarmCountThreshold)
+                {
+                    shouldAlarm = true;
+                    reason = $"重点缺陷数量 {keyDefects} 超过阈值 {alarmConfig.AlarmCountThreshold}";
+                }
+
+                if (!shouldAlarm) return;
+
+                // 冷却检查
+                lock (_alarmLock)
+                {
+                    if ((DateTime.Now - _lastKeyDefectAlarmTime).TotalSeconds < alarmConfig.AlarmCooldownSeconds)
+                        return;
+                    _lastKeyDefectAlarmTime = DateTime.Now;
+                }
+
+                SystemEvent.SendAlarmMsg($"[重点缺陷报警] {reason} (当前SN: {currentSN}, 今日重点缺陷: {keyDefects}, NG总数: {totalDefects})");
+                LogTextHelper.Warn($"[重点缺陷报警] {reason}, SN={currentSN}");
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"重点缺陷报警检查异常: {ex.Message}");
+            }
         }
     }
 }

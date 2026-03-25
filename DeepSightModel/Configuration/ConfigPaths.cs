@@ -51,6 +51,11 @@ namespace DeepSightModel.Configuration
         public const string MachineRegistryConfigFileName = "machines.config.json";
 
         /// <summary>
+        /// 重点缺陷配置文件名
+        /// </summary>
+        public const string KeyDefectConfigFileName = "keydefect.config.json";
+
+        /// <summary>
         /// 旧版常规配置文件名 (XML)
         /// </summary>
         public const string LegacyGeneralConfigFileName = "general.config.xml";
@@ -83,6 +88,11 @@ namespace DeepSightModel.Configuration
         /// 机台注册表配置完整路径
         /// </summary>
         public static string MachineRegistryConfigPath => Path.Combine(ConfigDirectory, MachineRegistryConfigFileName);
+
+        /// <summary>
+        /// 重点缺陷配置完整路径
+        /// </summary>
+        public static string KeyDefectConfigPath => Path.Combine(ConfigDirectory, KeyDefectConfigFileName);
 
         /// <summary>
         /// 旧版常规配置完整路径 (XML)
