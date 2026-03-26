@@ -567,8 +567,8 @@ namespace DeepSightAI
             FrHome.Instance.dic_Infos.TryRemove(key, out _);
             FrHome.Instance.dic_Results.TryRemove(key, out _);
             FrHome.Instance.dic_DetectRois.TryRemove(key, out _);
-            // 清理SN调试信息缓存
-            SnDebugInfoCache.Remove(sn, side);
+            // 不再删除 SnDebugInfoCache，让缓存独立管理生命周期（MaxCacheSize=1000）
+            // FrSearch 需要访问历史调试数据，不能随 FrHome 行清理而删除
         }
 
         #region UI 批量刷新 — Timer Tick

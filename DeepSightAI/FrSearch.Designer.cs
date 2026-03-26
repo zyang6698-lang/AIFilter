@@ -86,7 +86,7 @@
             this.label_Title.Name = "label_Title";
             this.label_Title.Size = new System.Drawing.Size(158, 31);
             this.label_Title.TabIndex = 0;
-            this.label_Title.Text = "生产事件查看";
+            this.label_Title.Text = "最近生产信息";
             // 
             // label_Loading
             // 
@@ -102,12 +102,18 @@
             // btn_Refresh
             // 
             this.btn_Refresh.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btn_Refresh.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
+            this.btn_Refresh.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btn_Refresh.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btn_Refresh.Font = new System.Drawing.Font("微软雅黑", 9F);
+            this.btn_Refresh.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.btn_Refresh.Location = new System.Drawing.Point(745, 4);
             this.btn_Refresh.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btn_Refresh.Name = "btn_Refresh";
             this.btn_Refresh.Size = new System.Drawing.Size(100, 40);
             this.btn_Refresh.TabIndex = 2;
             this.btn_Refresh.Text = "刷新";
+            this.btn_Refresh.UseVisualStyleBackColor = false;
             this.btn_Refresh.Click += new System.EventHandler(this.btn_Refresh_Click);
             // 
             // splitContainer
@@ -125,8 +131,8 @@
             // splitContainer.Panel2
             // 
             this.splitContainer.Panel2.Controls.Add(this.panel_Detail);
-            this.splitContainer.Size = new System.Drawing.Size(851, 376);
-            this.splitContainer.SplitterDistance = 186;
+            this.splitContainer.Size = new System.Drawing.Size(851, 447);
+            this.splitContainer.SplitterDistance = 221;
             this.splitContainer.SplitterWidth = 3;
             this.splitContainer.TabIndex = 1;
             // 
@@ -152,7 +158,7 @@
             this.dgv_Lots.RowHeadersWidth = 51;
             this.dgv_Lots.RowTemplate.Height = 32;
             this.dgv_Lots.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgv_Lots.Size = new System.Drawing.Size(851, 186);
+            this.dgv_Lots.Size = new System.Drawing.Size(851, 221);
             this.dgv_Lots.TabIndex = 0;
             this.dgv_Lots.SelectionChanged += new System.EventHandler(this.dgv_Lots_SelectionChanged);
             // 
@@ -164,7 +170,7 @@
             this.panel_Detail.Location = new System.Drawing.Point(0, 0);
             this.panel_Detail.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panel_Detail.Name = "panel_Detail";
-            this.panel_Detail.Size = new System.Drawing.Size(851, 187);
+            this.panel_Detail.Size = new System.Drawing.Size(851, 223);
             this.panel_Detail.TabIndex = 0;
             // 
             // dgv_Panels
@@ -188,7 +194,7 @@
             this.dgv_Panels.RowHeadersWidth = 51;
             this.dgv_Panels.RowTemplate.Height = 28;
             this.dgv_Panels.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgv_Panels.Size = new System.Drawing.Size(851, 164);
+            this.dgv_Panels.Size = new System.Drawing.Size(851, 200);
             this.dgv_Panels.TabIndex = 1;
             // 
             // label_DetailTitle
@@ -201,9 +207,9 @@
             this.label_DetailTitle.Padding = new System.Windows.Forms.Padding(4, 0, 0, 0);
             this.label_DetailTitle.Size = new System.Drawing.Size(851, 23);
             this.label_DetailTitle.TabIndex = 0;
-            this.label_DetailTitle.Text = "请选择一个Lot查看详情";
+            this.label_DetailTitle.Text = "请选择一个Lot查看SN列表";
             this.label_DetailTitle.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            //
+            // 
             // FrSearch
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);

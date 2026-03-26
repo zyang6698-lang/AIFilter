@@ -625,6 +625,35 @@ namespace DeepSightWorkLib
                     debugInfo.ImageCount = imageKeys?.Count ?? 0;
                     debugInfo.IsByPass = convertResult.IsByPass;
                     debugInfo.MinioPath = head;
+                    debugInfo.ProductSerial = obj.ProductSerial;
+                    debugInfo.LotNumber = obj.LotId ?? obj.LotBatch;
+
+                    // 构建判断过程摘要
+                    var defectCodes = new System.Collections.Generic.List<string>();
+                    if (obj.PcsInfo != null)
+                    {
+                        foreach (var pcs in obj.PcsInfo.Values)
+                        {
+                            if (pcs?.DefectInfo != null)
+                            {
+                                foreach (var d in pcs.DefectInfo)
+                                {
+                                    if (!string.IsNullOrEmpty(d.DefectCode))
+                                        defectCodes.Add(d.DefectCode);
+                                }
+                            }
+                        }
+                    }
+                    var summary = new System.Text.StringBuilder();
+                    if (convertResult.IsByPass) summary.Append("[ByPass] ");
+                    if (defectCodes.Count > 0)
+                        summary.Append($"AVI报点{defectCodes.Count}个: {string.Join(",", defectCodes.Distinct())}");
+                    else
+                        summary.Append("AVI无报点");
+                    if (convertResult.DirectReportDefectIndices?.Count > 0)
+                        summary.Append($" | 直报{convertResult.DirectReportDefectIndices.Count}个");
+                    debugInfo.JudgmentSummary = summary.ToString();
+
                     SnDebugInfoCache.Cleanup();
                 }
                 catch (Exception debugEx)
@@ -908,6 +937,8 @@ namespace DeepSightWorkLib
                 debugInfo.ErrorStep = errorStep;
                 debugInfo.ErrorMessage = errorMessage;
                 debugInfo.ErrorTime = DateTime.Now;
+                // 更新判断摘要为错误信息
+                debugInfo.JudgmentSummary = $"[异常] {errorStep}: {errorMessage}";
 
                 // 3. 向UI发送失败状态（显示红色报错状态）
                 TaskStatusSender.SendFailed(sn, effectiveSide, $"[{errorStep}] {errorMessage}");

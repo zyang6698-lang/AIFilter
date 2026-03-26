@@ -97,6 +97,21 @@ namespace DeepSightModel
         /// 错误发生时间
         /// </summary>
         public DateTime? ErrorTime { get; set; }
+
+        /// <summary>
+        /// 料号
+        /// </summary>
+        public string ProductSerial { get; set; }
+
+        /// <summary>
+        /// Lot号
+        /// </summary>
+        public string LotNumber { get; set; }
+
+        /// <summary>
+        /// 判断过程摘要（检出缺陷码、异常等）
+        /// </summary>
+        public string JudgmentSummary { get; set; }
     }
 
     /// <summary>
@@ -113,7 +128,7 @@ namespace DeepSightModel
         /// <summary>
         /// 最大缓存数量
         /// </summary>
-        private const int MaxCacheSize = 100;
+        private const int MaxCacheSize = 1000;
 
         public static SnDebugInfo GetOrCreate(string sn, string side)
         {
@@ -144,6 +159,62 @@ namespace DeepSightModel
             }
             // A侧排在前面
             list.Sort((a, b) => string.Compare(a.Side, b.Side, StringComparison.OrdinalIgnoreCase));
+            return list.ToArray();
+        }
+
+        /// <summary>
+        /// 获取所有缓存的调试信息（按创建时间降序）
+        /// </summary>
+        public static SnDebugInfo[] GetAll()
+        {
+            var list = new System.Collections.Generic.List<SnDebugInfo>(_cache.Values);
+            list.Sort((a, b) => b.CreateTime.CompareTo(a.CreateTime));
+            return list.ToArray();
+        }
+
+        /// <summary>
+        /// 获取所有不重复的Lot号列表（按最新时间降序）
+        /// </summary>
+        public static System.Collections.Generic.List<(string LotNumber, string ProductSerial, int Count, DateTime LatestTime)> GetLotSummary()
+        {
+            var lotGroups = new System.Collections.Generic.Dictionary<string, (string ProductSerial, int Count, DateTime LatestTime)>();
+            foreach (var kvp in _cache)
+            {
+                var info = kvp.Value;
+                string lot = info.LotNumber ?? "(未知)";
+                if (lotGroups.TryGetValue(lot, out var existing))
+                {
+                    lotGroups[lot] = (
+                        existing.ProductSerial ?? info.ProductSerial,
+                        existing.Count + 1,
+                        info.CreateTime > existing.LatestTime ? info.CreateTime : existing.LatestTime
+                    );
+                }
+                else
+                {
+                    lotGroups[lot] = (info.ProductSerial, 1, info.CreateTime);
+                }
+            }
+            var result = new System.Collections.Generic.List<(string, string, int, DateTime)>();
+            foreach (var kvp in lotGroups)
+                result.Add((kvp.Key, kvp.Value.ProductSerial, kvp.Value.Count, kvp.Value.LatestTime));
+            result.Sort((a, b) => b.Item4.CompareTo(a.Item4));
+            return result;
+        }
+
+        /// <summary>
+        /// 获取指定Lot下的所有调试信息（按创建时间降序）
+        /// </summary>
+        public static SnDebugInfo[] GetByLot(string lotNumber)
+        {
+            var list = new System.Collections.Generic.List<SnDebugInfo>();
+            foreach (var kvp in _cache)
+            {
+                string lot = kvp.Value.LotNumber ?? "(未知)";
+                if (lot == lotNumber)
+                    list.Add(kvp.Value);
+            }
+            list.Sort((a, b) => b.CreateTime.CompareTo(a.CreateTime));
             return list.ToArray();
         }
 

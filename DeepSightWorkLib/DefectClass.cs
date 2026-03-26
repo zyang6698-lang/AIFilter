@@ -198,7 +198,7 @@ namespace DeepSightWorkLib
             out IntPtr output);
 
         [DllImport(strName, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
-        public static extern int basehandler_handle_message_with_images2(
+        public static extern int basehandler_handle_message_with_images_template(
     IntPtr handler,
     [MarshalAs(UnmanagedType.LPStr)] string json_input,
     IntPtr images,IntPtr images_temp,
@@ -255,7 +255,7 @@ namespace DeepSightWorkLib
         /// <returns></returns>
         public int InferenceWithImages2(string jsonInput, IntPtr imagesPtr,IntPtr imagesPtr_Temp, int imageCount, out IntPtr output)
         {
-            return basehandler_handle_message_with_images2(handler, jsonInput, imagesPtr, imagesPtr_Temp, imageCount, out output);
+            return basehandler_handle_message_with_images_template(handler, jsonInput, imagesPtr, imagesPtr_Temp, imageCount, out output);
         }
     }
 }

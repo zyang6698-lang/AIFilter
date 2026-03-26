@@ -99,6 +99,9 @@ namespace DeepSightWorkLib.Services
                 {
                     var debugInfo = SnDebugInfoCache.GetOrCreate(vBModel.SN, vBModel.Side);
                     debugInfo.InferenceReturnJson = msg;
+                    // 追加AI推理完成到判断摘要
+                    var prev = debugInfo.JudgmentSummary ?? "";
+                    debugInfo.JudgmentSummary = prev + " → AI推理完成";
                 }
                 catch { }
 

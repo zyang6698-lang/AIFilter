@@ -1,29 +1,23 @@
 ﻿﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using DeepSightDB;
+using DeepSightModel;
 using DeepSightTool;
 
 namespace DeepSightAI
 {
+    /// <summary>
+    /// 最近生产信息查看器 - 上方Lot列表，下方选中Lot的SN列表（含判断过程）
+    /// </summary>
     public partial class FrSearch : Form
     {
         #region 字段
 
-        private const int MAX_LOT_COUNT = 100; // 最多加载的Lot数量
-        private const int MAX_PANELS_PER_LOT = 100; // 每个Lot最多加载的Panel数量
-        private bool _isLoading = false;
-
-        // 当前页Lot汇总数据
-        private DataTable _lotSummaryTable;
-        // 当前选中Lot的Panel详情
-        private DataTable _panelDetailTable;
-        // 缓存当前页每个Lot的Panel数据
-        private Dictionary<string, List<PanelDataRecord>> _lotDataCache = new Dictionary<string, List<PanelDataRecord>>();
+        private DataTable _lotTable;      // 上方：Lot汇总
+        private DataTable _snTable;       // 下方：SN详情
+        private SnDebugInfo[] _currentSnItems; // 当前选中Lot下的SN快照
 
         #endregion
 
@@ -32,13 +26,11 @@ namespace DeepSightAI
         public FrSearch()
         {
             InitializeComponent();
-            Control.CheckForIllegalCrossThreadCalls = false;
-            SetStyle(ControlStyles.UserPaint, true);
-            SetStyle(ControlStyles.AllPaintingInWmPaint, true);
-            SetStyle(ControlStyles.DoubleBuffer, true);
+            SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.DoubleBuffer, true);
 
-            InitDataTables();
+            InitTables();
             ApplyGridStyles();
+            InitContextMenu();
         }
 
         private static FrSearch _instance;
@@ -48,9 +40,7 @@ namespace DeepSightAI
             get
             {
                 if (_instance == null)
-                {
                     _instance = new FrSearch();
-                }
                 return _instance;
             }
         }
@@ -59,37 +49,30 @@ namespace DeepSightAI
 
         #region 初始化
 
-        private void InitDataTables()
+        private void InitTables()
         {
             // Lot汇总表
-            _lotSummaryTable = new DataTable();
-            _lotSummaryTable.Columns.Add("Lot号", typeof(string));
-            _lotSummaryTable.Columns.Add("料号", typeof(string));
-            _lotSummaryTable.Columns.Add("机台", typeof(string));
-            _lotSummaryTable.Columns.Add("板数", typeof(int));
-            _lotSummaryTable.Columns.Add("最早检测", typeof(string));
-            _lotSummaryTable.Columns.Add("最新检测", typeof(string));
-            _lotSummaryTable.Columns.Add("AVI OK率", typeof(string));
-            _lotSummaryTable.Columns.Add("AI OK率", typeof(string));
-            _lotSummaryTable.Columns.Add("总报点", typeof(int));
-            _lotSummaryTable.Columns.Add("AI过滤OK", typeof(int));
+            _lotTable = new DataTable();
+            _lotTable.Columns.Add("Lot号", typeof(string));
+            _lotTable.Columns.Add("料号", typeof(string));
+            _lotTable.Columns.Add("板数", typeof(int));
+            _lotTable.Columns.Add("最新时间", typeof(string));
 
-            dgv_Lots.DataSource = _lotSummaryTable;
+            dgv_Lots.DataSource = _lotTable;
 
-            // Panel详情表
-            _panelDetailTable = new DataTable();
-            _panelDetailTable.Columns.Add("序列号", typeof(string));
-            _panelDetailTable.Columns.Add("料号", typeof(string));
-            _panelDetailTable.Columns.Add("机台", typeof(string));
-            _panelDetailTable.Columns.Add("检测时间", typeof(string));
-            _panelDetailTable.Columns.Add("A面AVI", typeof(string));
-            _panelDetailTable.Columns.Add("A面AI", typeof(string));
-            _panelDetailTable.Columns.Add("A面报点", typeof(int));
-            _panelDetailTable.Columns.Add("B面AVI", typeof(string));
-            _panelDetailTable.Columns.Add("B面AI", typeof(string));
-            _panelDetailTable.Columns.Add("B面报点", typeof(int));
+            // SN详情表
+            _snTable = new DataTable();
+            _snTable.Columns.Add("SN", typeof(string));
+            _snTable.Columns.Add("面别", typeof(string));
+            _snTable.Columns.Add("料号", typeof(string));
+            _snTable.Columns.Add("缺陷数", typeof(int));
+            _snTable.Columns.Add("PCS数", typeof(int));
+            _snTable.Columns.Add("图片数", typeof(int));
+            _snTable.Columns.Add("判断过程", typeof(string));
+            _snTable.Columns.Add("数据源", typeof(string));
+            _snTable.Columns.Add("时间", typeof(string));
 
-            dgv_Panels.DataSource = _panelDetailTable;
+            dgv_Panels.DataSource = _snTable;
         }
 
         private void ApplyGridStyles()
@@ -112,181 +95,164 @@ namespace DeepSightAI
                 Alignment = DataGridViewContentAlignment.MiddleCenter
             };
 
-            dgv_Lots.ColumnHeadersDefaultCellStyle = headerStyle;
-            dgv_Lots.DefaultCellStyle = cellStyle;
-            dgv_Panels.ColumnHeadersDefaultCellStyle = headerStyle;
-            dgv_Panels.DefaultCellStyle = cellStyle;
+            foreach (var dgv in new[] { dgv_Lots, dgv_Panels })
+            {
+                dgv.ColumnHeadersDefaultCellStyle = headerStyle;
+                dgv.DefaultCellStyle = cellStyle;
+            }
         }
 
-        private async void FrSearch_Load(object sender, EventArgs e)
+        private void InitContextMenu()
         {
-            await LoadDataAsync();
+            // SN表右键菜单
+            var contextMenu = new ContextMenuStrip();
+            var menuItem = new ToolStripMenuItem("查看调试详情 (JSON)");
+            menuItem.Click += ShowDebugInfo_Click;
+            contextMenu.Items.Add(menuItem);
+            dgv_Panels.ContextMenuStrip = contextMenu;
+
+            // 右键时自动选中行
+            dgv_Panels.CellMouseClick += (s, e) =>
+            {
+                if (e.Button == MouseButtons.Right && e.RowIndex >= 0)
+                {
+                    dgv_Panels.ClearSelection();
+                    dgv_Panels.Rows[e.RowIndex].Selected = true;
+                    dgv_Panels.CurrentCell = dgv_Panels.Rows[e.RowIndex].Cells[0];
+                }
+            };
+        }
+
+        private void FrSearch_Load(object sender, EventArgs e)
+        {
+            RefreshData();
         }
 
         #endregion
 
-        #region 数据加载
+        #region 数据刷新
 
-        private async Task LoadDataAsync()
+        private void RefreshData()
         {
-            if (_isLoading) return;
-            _isLoading = true;
-
             try
             {
-                SetLoadingState(true, "正在加载...");
+                // 刷新Lot汇总
+                var lotSummary = SnDebugInfoCache.GetLotSummary();
+                _lotTable.Rows.Clear();
 
-                // 获取最近的Lot列表
-                var lotNumbers = await Machine.master.GetRecentLotNumbers(1, MAX_LOT_COUNT);
-
-                // 清空缓存和表格
-                _lotDataCache.Clear();
-                _lotSummaryTable.Rows.Clear();
-                _panelDetailTable.Rows.Clear();
-                label_DetailTitle.Text = "请选择一个Lot查看详情";
-
-                // 逐个加载Lot数据并填充汇总信息
-                SetLoadingState(true, $"正在加载 {lotNumbers.Count} 个Lot的数据...");
-
-                foreach (var lotNumber in lotNumbers)
+                foreach (var lot in lotSummary)
                 {
-                    var allPanels = await Machine.master.GetPanelsDataByMachineAndLot(null, lotNumber);
-                    var panels = allPanels.Take(MAX_PANELS_PER_LOT).ToList();
-                    _lotDataCache[lotNumber] = panels;
-                    AddLotSummaryRow(lotNumber, panels, allPanels.Count);
+                    _lotTable.Rows.Add(
+                        lot.LotNumber,
+                        lot.ProductSerial ?? "-",
+                        lot.Count,
+                        lot.LatestTime.ToString("HH:mm:ss")
+                    );
                 }
 
-                SetLoadingState(false, "");
+                int totalSnCount = SnDebugInfoCache.GetAll().Length;
+                label_Loading.Text = $"共 {lotSummary.Count} 个Lot，{totalSnCount} 条SN记录";
+                label_Loading.Visible = true;
+
+                // 自动选中第一行
+                if (dgv_Lots.Rows.Count > 0)
+                {
+                    dgv_Lots.ClearSelection();
+                    dgv_Lots.Rows[0].Selected = true;
+                }
+                else
+                {
+                    _snTable.Rows.Clear();
+                    _currentSnItems = null;
+                    label_DetailTitle.Text = "暂无数据";
+                }
             }
             catch (Exception ex)
             {
-                LogTextHelper.Error($"加载生产事件数据失败: {ex}");
-                MessageBox.Show("加载数据失败，请检查数据库连接。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                SetLoadingState(false, "");
+                LogTextHelper.Error($"刷新最近生产信息异常: {ex}");
             }
-            finally
-            {
-                _isLoading = false;
-            }
-        }
-
-        private void AddLotSummaryRow(string lotNumber, List<PanelDataRecord> panels, int totalCount = -1)
-        {
-            if (panels == null || panels.Count == 0)
-            {
-                _lotSummaryTable.Rows.Add(lotNumber, "-", "-", 0, "-", "-", "-", "-", 0, 0);
-                return;
-            }
-
-            int displayCount = totalCount > 0 ? totalCount : panels.Count;
-            var productSerials = panels.Select(p => p.ProductSerial).Where(s => !string.IsNullOrEmpty(s)).Distinct();
-            var machineIds = panels.Select(p => p.MachineId).Where(s => !string.IsNullOrEmpty(s)).Distinct();
-            var minDate = panels.Min(p => p.DetectionDate);
-            var maxDate = panels.Max(p => p.DetectionDate);
-
-            // 统计
-            var stat = PanelDataRecord.GetBoardStat(panels);
-            string aviOkRate = stat.AviPanelCount > 0
-                ? $"{(double)stat.AviPanelOKCount / stat.AviPanelCount * 100:F1}%"
-                : "-";
-            string aiOkRate = stat.AviPanelCount > 0
-                ? $"{(double)stat.AiPanelOKCount / stat.AviPanelCount * 100:F1}%"
-                : "-";
-
-            _lotSummaryTable.Rows.Add(
-                lotNumber,
-                string.Join(",", productSerials),
-                string.Join(",", machineIds),
-                displayCount,
-                minDate.ToString("MM-dd HH:mm"),
-                maxDate.ToString("MM-dd HH:mm"),
-                aviOkRate,
-                aiOkRate,
-                stat.AiFilterCount,
-                stat.AiFilterOKCount
-            );
         }
 
         #endregion
 
-        #region Lot选择 → 加载Panel详情
+        #region 选中Lot → 加载SN列表
 
         private void dgv_Lots_SelectionChanged(object sender, EventArgs e)
         {
             if (dgv_Lots.SelectedRows.Count == 0) return;
 
             var row = dgv_Lots.SelectedRows[0];
-            var lotNumber = row.Cells["Lot号"]?.Value?.ToString();
+            string lotNumber = row.Cells["Lot号"].Value?.ToString();
             if (string.IsNullOrEmpty(lotNumber)) return;
 
-            LoadPanelDetails(lotNumber);
+            LoadSnForLot(lotNumber);
         }
 
-        private void LoadPanelDetails(string lotNumber)
+        private void LoadSnForLot(string lotNumber)
         {
-            _panelDetailTable.Rows.Clear();
+            _currentSnItems = SnDebugInfoCache.GetByLot(lotNumber);
+            _snTable.Rows.Clear();
 
-            if (!_lotDataCache.TryGetValue(lotNumber, out var panels) || panels.Count == 0)
+            foreach (var info in _currentSnItems)
             {
-                label_DetailTitle.Text = $"Lot: {lotNumber} - 无数据";
-                return;
-            }
-
-            var displayPanels = panels.Take(MAX_PANELS_PER_LOT).ToList();
-            string countText = panels.Count > MAX_PANELS_PER_LOT
-                ? $"共 {panels.Count} 块板 (显示前{MAX_PANELS_PER_LOT}条)"
-                : $"共 {panels.Count} 块板";
-            label_DetailTitle.Text = $"Lot: {lotNumber} - {countText}";
-
-            foreach (var panel in displayPanels)
-            {
-                var sideA = panel.Sides?.FirstOrDefault(s => s.Side == "A");
-                var sideB = panel.Sides?.FirstOrDefault(s => s.Side == "B");
-
-                _panelDetailTable.Rows.Add(
-                    panel.SerialNumber,
-                    panel.ProductSerial ?? "-",
-                    panel.MachineId ?? "-",
-                    panel.DetectionDate.ToString("MM-dd HH:mm:ss"),
-                    GetStateText(sideA?.AviState ?? 0),
-                    GetStateText(sideA?.AiState ?? 0),
-                    sideA?.DetectPoints?.Count ?? 0,
-                    GetStateText(sideB?.AviState ?? 0),
-                    GetStateText(sideB?.AiState ?? 0),
-                    sideB?.DetectPoints?.Count ?? 0
+                _snTable.Rows.Add(
+                    info.SerialNumber,
+                    info.Side,
+                    info.ProductSerial ?? "-",
+                    info.DefectCount,
+                    info.PcsCount,
+                    info.ImageCount,
+                    info.JudgmentSummary ?? "-",
+                    info.SourceDbName ?? "-",
+                    info.CreateTime.ToString("HH:mm:ss.fff")
                 );
             }
+
+            // 行颜色标注
+            for (int i = 0; i < dgv_Panels.Rows.Count && i < _currentSnItems.Length; i++)
+            {
+                var dgvRow = dgv_Panels.Rows[i];
+                var info = _currentSnItems[i];
+                if (info.HasError)
+                    dgvRow.DefaultCellStyle.ForeColor = Color.FromArgb(255, 100, 100);
+                else if (info.IsByPass)
+                    dgvRow.DefaultCellStyle.ForeColor = Color.Yellow;
+                else if (info.InferenceReturnJson != null)
+                    dgvRow.DefaultCellStyle.ForeColor = Color.FromArgb(100, 255, 100);
+            }
+
+            label_DetailTitle.Text = $"Lot: {lotNumber} — 共 {_currentSnItems.Length} 条SN";
         }
 
-        private static string GetStateText(int state)
+        #endregion
+
+        #region 右键 → 打开调试窗口
+
+        private void ShowDebugInfo_Click(object sender, EventArgs e)
         {
-            switch (state)
+            try
             {
-                case 0: return "未运行";
-                case 1: return "OK";
-                case 2: return "NG";
-                case 3: return "异常";
-                default: return state.ToString();
+                if (dgv_Panels.CurrentRow == null || _currentSnItems == null) return;
+
+                int idx = dgv_Panels.CurrentRow.Index;
+                if (idx < 0 || idx >= _currentSnItems.Length) return;
+
+                var info = _currentSnItems[idx];
+                var form = new FrSnDebugInfo(info.SerialNumber, info);
+                form.ShowDialog(this);
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"打开SN调试详情异常: {ex}");
             }
         }
 
         #endregion
 
-        private async void btn_Refresh_Click(object sender, EventArgs e)
+        private void btn_Refresh_Click(object sender, EventArgs e)
         {
-            await LoadDataAsync();
+            RefreshData();
         }
-
-        #region UI辅助
-
-        private void SetLoadingState(bool loading, string message)
-        {
-            label_Loading.Text = message;
-            label_Loading.Visible = loading;
-            btn_Refresh.Enabled = !loading;
-        }
-
-        #endregion
     }
 }
 
