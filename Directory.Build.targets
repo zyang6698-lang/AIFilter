@@ -1,0 +1,25 @@
+<!--
+  Directory.Build.targets - 自动从 Git Tag 获取版本号
+  
+  放在解决方案根目录，MSBuild 会自动发现并应用到所有子项目。
+  每次构建时（仅 Release 配置），自动运行 UpdateVersion.ps1 脚本。
+  
+  工作流程:
+    1. git tag v1.2.0        (打标签)
+    2. 在 VS 中构建           (自动更新版本号)
+    3. 或手动: .\scripts\UpdateVersion.ps1
+-->
+<Project>
+  <Target Name="UpdateVersionFromGitTag" 
+          BeforeTargets="BeforeBuild"
+          Condition="'$(UpdateVersionFromGit)' != 'false' AND '$(Configuration)' == 'Release'">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(SolutionDir)scripts\UpdateVersion.ps1&quot;"
+          WorkingDirectory="$(SolutionDir)"
+          IgnoreExitCode="true"
+          ConsoleToMSBuild="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="VersionOutput" />
+    </Exec>
+    <Message Text="$(VersionOutput)" Importance="high" />
+  </Target>
+</Project>
+

@@ -32,21 +32,6 @@ namespace DeepSightWorkLib.Services
         /// </summary>
         private readonly ConcurrentDictionary<string, DateTime> _fetchTimeByDb = new ConcurrentDictionary<string, DateTime>();
 
-        /// <summary>
-        /// 当前正在处理的数据库名称（用于 ProcessAviDataItem 更新对应的 fetchTime）
-        /// </summary>
-        private string _currentDbName;
-
-        /// <summary>
-        /// 当前正在处理的数据库 URL（用于回写时定位目标服务器）
-        /// </summary>
-        private string _currentDbUrl;
-
-        /// <summary>
-        /// 当前正在处理的数据库回写 DbName
-        /// </summary>
-        private string _currentWriteBackDbName;
-
         // Updated constructor to accept delegate for ReadJsonByMinio (with source DB info)
         public AviReaderService(HttpClass httpDb, ConcurrentDictionary<string, DateTime> processingSnSet, Action<string, string, string, string, string, string, string, string, string> readJsonByMinio)
         {
@@ -113,10 +98,7 @@ namespace DeepSightWorkLib.Services
                 {
                     if (ReadAVI(config, out string result))
                     {
-                        _currentDbName = config.DbName;
-                        _currentDbUrl = config.Url;
-                        _currentWriteBackDbName = config.WriteBackDbName;
-                        DoAviJsonTyped(result);
+                        DoAviJsonTyped(result, config);
                         anySuccess = true;
                     }
                 }
@@ -152,7 +134,9 @@ namespace DeepSightWorkLib.Services
         /// 将传入的 AVI JSON 解析为 AviDataItem，并对每个数据项调用回调处理。
         /// 该方法不做后续业务处理，仅负责解析与类型转换。
         /// </summary>
-        public void DoAviJsonTyped(string jsonInfo)
+        /// <param name="jsonInfo">AVI JSON 字符串</param>
+        /// <param name="config">当前正在处理的 LevelDB 配置</param>
+        public void DoAviJsonTyped(string jsonInfo, LevelDbConfig config)
         {
             if (string.IsNullOrEmpty(jsonInfo) )
                 return;
@@ -182,13 +166,13 @@ namespace DeepSightWorkLib.Services
 
                             var dataItem = JsonConvert.DeserializeObject<AviDataItem>(strItem, settings);
                             if (dataItem == null) continue;
-                            ProcessAviDataItem(dataItem,settings);
+                            ProcessAviDataItem(dataItem, settings, config);
                         }
                         else if (item is JObject jObj)
                         {
                             var dataItem = jObj.ToObject<AviDataItem>();
                             if (dataItem == null) continue;
-                            ProcessAviDataItem(dataItem, settings);
+                            ProcessAviDataItem(dataItem, settings, config);
                         }
                     }
                     catch (Exception ex)
@@ -242,7 +226,7 @@ namespace DeepSightWorkLib.Services
 
 
 
-        private void ProcessAviDataItem(AviDataItem dataItem, JsonSerializerSettings settings)
+        private void ProcessAviDataItem(AviDataItem dataItem, JsonSerializerSettings settings, LevelDbConfig config)
         {
             LogTextHelper.Info($"开始处理AVI数据项");
             if (string.IsNullOrEmpty(dataItem.Key) || string.IsNullOrEmpty(dataItem.Value))
@@ -256,8 +240,7 @@ namespace DeepSightWorkLib.Services
             result: out DateTime dt))
             {
                 // 更新当前数据库的 fetchTime
-                var dbName = _currentDbName ?? "ai_merged_results";
-                SetFetchTime(dbName, dt.AddMilliseconds(1));
+                SetFetchTime(config.DbName, dt.AddMilliseconds(1));
             }
             // 第二层：反序列化 value 字符串
             var valueData = JsonConvert.DeserializeObject<AviValueData>(dataItem.Value, settings);
@@ -297,15 +280,24 @@ namespace DeepSightWorkLib.Services
 
                 LogTextHelper.Info($"SN:{serialNumber} Side:{side} 已标记为处理中，当前处理集合大小：{_processingSnSet.Count}");
 
-                string minioIp = resultInfo.MinioIp;
-                if (resultInfo.MinioIp == "192.168.77.99")
-                    minioIp = "192.168.76.241";
-                else if (resultInfo.MinioIp == "192.168.77.112")
-                    minioIp = "192.168.76.237";
-
-
-
-
+                // 根据 side 信息从当前 LevelDB 配置中获取对应的 MinIO IP
+                // A面使用 MinioIpA，B面使用 MinioIpB，未配置时回退到 LevelDB 数据中的 MinioIp
+                string minioIp;
+                if (string.Equals(side, "A", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(config.MinioIpA))
+                {
+                    minioIp = config.MinioIpA;
+                    LogTextHelper.Info($"SN:{serialNumber} Side:{side} 使用配置的A面MinIO IP: {minioIp} (来源DB:{config.DbName})");
+                }
+                else if (string.Equals(side, "B", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(config.MinioIpB))
+                {
+                    minioIp = config.MinioIpB;
+                    LogTextHelper.Info($"SN:{serialNumber} Side:{side} 使用配置的B面MinIO IP: {minioIp} (来源DB:{config.DbName})");
+                }
+                else
+                {
+                    minioIp = resultInfo.MinioIp;
+                    LogTextHelper.Info($"SN:{serialNumber} Side:{side} 使用LevelDB数据中的MinIO IP: {minioIp}");
+                }
 
                 string minioPort = resultInfo.MinioPort.ToString();
 
@@ -333,13 +325,13 @@ namespace DeepSightWorkLib.Services
                     ParseMinioPath(resultPath, out string path, out string result);
                     LogTextHelper.Info($"SN:{serialNumber} Side:{side} 解析Minio路径完成");
                     // call injected ReadJsonByMinio delegate (含源DB回写信息)
-                    var writeBackDbName = _currentWriteBackDbName ?? "filter_time_to_airesults";
-                    var dbUrl = _currentDbUrl ?? "";
+                    var writeBackDbName = config.WriteBackDbName ?? "filter_time_to_airesults";
+                    var dbUrl = config.Url ?? "";
                     // 存储原始LevelDB JSON到调试缓存
                     var debugInfo = SnDebugInfoCache.GetOrCreate(serialNumber, side);
                     debugInfo.RawLevelDbJson = rawLevelDbJson;
-                    debugInfo.SourceDbName = _currentDbName;
-                    debugInfo.SourceDbUrl = _currentDbUrl;
+                    debugInfo.SourceDbName = config.DbName;
+                    debugInfo.SourceDbUrl = config.Url;
 
                     _readJsonByMinio(minioIp, minioPort, dataItem.Key, result, serialNumber, side, path, writeBackDbName, dbUrl);
                     LogTextHelper.Info($"SN:{serialNumber} Side:{side} 通过Minio读取Json完成, 回写DB:{writeBackDbName}, URL:{dbUrl}");

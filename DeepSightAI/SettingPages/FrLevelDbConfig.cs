@@ -1,4 +1,5 @@
 using DeepSightModel;
+using DeepSightModel.Configuration;
 using DeepSightTool;
 using System;
 using System.Collections.Generic;
@@ -110,6 +111,10 @@ namespace DeepSightAI.SettingPages
                     row.Cells["colWriteBackDbName"].Value = db.WriteBackDbName;
                     row.Cells["colConnectionStatus"].Value = "未测试";
                     row.Cells["colIsEnabled"].Value = db.IsEnabled;
+                    row.Cells["colMinioIpA"].Value = db.MinioIpA;
+                    row.Cells["colMinioStatusA"].Value = "未测试";
+                    row.Cells["colMinioIpB"].Value = db.MinioIpB;
+                    row.Cells["colMinioStatusB"].Value = "未测试";
                 }
             }
             finally
@@ -126,11 +131,15 @@ namespace DeepSightAI.SettingPages
             int rowIndex = dgvDatabases.Rows.Add();
             var row = dgvDatabases.Rows[rowIndex];
             row.Cells["colDbName"].Value = "ai_merged_results";
-            row.Cells["colIP"].Value = "http://127.0.0.1";
-            row.Cells["colPort"].Value = "2000";
+            row.Cells["colIP"].Value = "127.0.0.1";
+            row.Cells["colPort"].Value = "9877";
             row.Cells["colWriteBackDbName"].Value = "filter_time_to_airesults";
             row.Cells["colConnectionStatus"].Value = "未测试";
             row.Cells["colIsEnabled"].Value = false;
+            row.Cells["colMinioIpA"].Value = "127.0.0.1";
+            row.Cells["colMinioStatusA"].Value = "未测试";
+            row.Cells["colMinioIpB"].Value = "127.0.0.1";
+            row.Cells["colMinioStatusB"].Value = "未测试";
 
             dgvDatabases.CurrentCell = row.Cells["colDbName"];
             dgvDatabases.BeginEdit(true);
@@ -181,10 +190,12 @@ namespace DeepSightAI.SettingPages
                     var config = new LevelDbConfig
                     {
                         DbName = row.Cells["colDbName"].Value?.ToString() ?? "ai_merged_results",
-                        IP = row.Cells["colIP"].Value?.ToString() ?? "http://127.0.0.1",
-                        Port = row.Cells["colPort"].Value?.ToString() ?? "2000",
+                        IP = row.Cells["colIP"].Value?.ToString() ?? "127.0.0.1",
+                        Port = row.Cells["colPort"].Value?.ToString() ?? "9877",
                         WriteBackDbName = row.Cells["colWriteBackDbName"].Value?.ToString() ?? "filter_time_to_airesults",
-                        IsEnabled = row.Cells["colIsEnabled"].Value != null && (bool)row.Cells["colIsEnabled"].Value
+                        IsEnabled = row.Cells["colIsEnabled"].Value != null && (bool)row.Cells["colIsEnabled"].Value,
+                        MinioIpA = row.Cells["colMinioIpA"].Value?.ToString() ?? "127.0.0.1",
+                        MinioIpB = row.Cells["colMinioIpB"].Value?.ToString() ?? "127.0.0.1"
                     };
                     configList.Databases.Add(config);
                 }
@@ -220,6 +231,16 @@ namespace DeepSightAI.SettingPages
             {
                 TestConnectionAsync(e.RowIndex);
             }
+            // 点击A面MinIO测试按钮
+            else if (dgvDatabases.Columns[e.ColumnIndex].Name == "colMinioTestA")
+            {
+                TestMinioConnectionAsync(e.RowIndex, "A");
+            }
+            // 点击B面MinIO测试按钮
+            else if (dgvDatabases.Columns[e.ColumnIndex].Name == "colMinioTestB")
+            {
+                TestMinioConnectionAsync(e.RowIndex, "B");
+            }
         }
 
         /// <summary>
@@ -253,6 +274,28 @@ namespace DeepSightAI.SettingPages
                 TestConnectionAsync(e.RowIndex);
             }
 
+            // MinIO A IP 改变时，重置A面状态并自动测试
+            if (colName == "colMinioIpA")
+            {
+                var row = dgvDatabases.Rows[e.RowIndex];
+                row.Cells["colMinioStatusA"].Value = "未测试";
+                row.Cells["colMinioStatusA"].Style.ForeColor = Color.FromArgb(216, 219, 188);
+                string minioIp = row.Cells["colMinioIpA"].Value?.ToString() ?? "";
+                if (!string.IsNullOrWhiteSpace(minioIp))
+                    TestMinioConnectionAsync(e.RowIndex, "A");
+            }
+
+            // MinIO B IP 改变时，重置B面状态并自动测试
+            if (colName == "colMinioIpB")
+            {
+                var row = dgvDatabases.Rows[e.RowIndex];
+                row.Cells["colMinioStatusB"].Value = "未测试";
+                row.Cells["colMinioStatusB"].Style.ForeColor = Color.FromArgb(216, 219, 188);
+                string minioIp = row.Cells["colMinioIpB"].Value?.ToString() ?? "";
+                if (!string.IsNullOrWhiteSpace(minioIp))
+                    TestMinioConnectionAsync(e.RowIndex, "B");
+            }
+
             // 尝试启用时，检查连接状态
             if (colName == "colIsEnabled")
             {
@@ -270,7 +313,7 @@ namespace DeepSightAI.SettingPages
         }
 
         /// <summary>
-        /// 异步测试所有行的连接
+        /// 异步测试所有行的连接（包括 MinIO）
         /// </summary>
         private async void TestAllConnectionsAsync()
         {
@@ -279,6 +322,7 @@ namespace DeepSightAI.SettingPages
                 if (dgvDatabases.Rows[i].IsNewRow) continue;
                 await TestConnectionCoreAsync(i);
             }
+            await TestAllMinioConnectionsAsync();
         }
 
         /// <summary>
@@ -323,7 +367,7 @@ namespace DeepSightAI.SettingPages
                 return;
             }
 
-            string url = $"{ip}:{port}";
+            string url = $"http://{ip}:{port}";
             SetConnectionStatus(row, "测试中...", Color.FromArgb(100, 180, 255));
 
             try
@@ -385,6 +429,113 @@ namespace DeepSightAI.SettingPages
             row.Cells["colConnectionStatus"].Value = status;
             row.Cells["colConnectionStatus"].Style.ForeColor = color;
             row.Cells["colConnectionStatus"].Style.Font = new Font("微软雅黑", 9F, FontStyle.Bold);
+        }
+
+        #endregion
+
+        #region MinIO 连接测试
+
+        /// <summary>
+        /// MinIO 默认端口
+        /// </summary>
+        private static readonly string MinioDefaultPort = MinioSettings.Instance.DefaultPort;
+
+        /// <summary>
+        /// 异步测试指定行的 MinIO 连接
+        /// </summary>
+        /// <param name="rowIndex">行索引</param>
+        /// <param name="side">面别：A 或 B</param>
+        private async void TestMinioConnectionAsync(int rowIndex, string side)
+        {
+            await TestMinioConnectionCoreAsync(rowIndex, side);
+        }
+
+        /// <summary>
+        /// 全部测试时也测试 MinIO
+        /// </summary>
+        private async Task TestAllMinioConnectionsAsync()
+        {
+            for (int i = 0; i < dgvDatabases.Rows.Count; i++)
+            {
+                if (dgvDatabases.Rows[i].IsNewRow) continue;
+                var row = dgvDatabases.Rows[i];
+                string ipA = row.Cells["colMinioIpA"].Value?.ToString() ?? "";
+                string ipB = row.Cells["colMinioIpB"].Value?.ToString() ?? "";
+                if (!string.IsNullOrWhiteSpace(ipA))
+                    await TestMinioConnectionCoreAsync(i, "A");
+                if (!string.IsNullOrWhiteSpace(ipB))
+                    await TestMinioConnectionCoreAsync(i, "B");
+            }
+        }
+
+        /// <summary>
+        /// MinIO 连接测试核心逻辑
+        /// </summary>
+        private async Task TestMinioConnectionCoreAsync(int rowIndex, string side)
+        {
+            if (rowIndex < 0 || rowIndex >= dgvDatabases.Rows.Count) return;
+
+            var row = dgvDatabases.Rows[rowIndex];
+            string ipColName = side == "A" ? "colMinioIpA" : "colMinioIpB";
+            string statusColName = side == "A" ? "colMinioStatusA" : "colMinioStatusB";
+
+            string minioIp = row.Cells[ipColName].Value?.ToString() ?? "";
+
+            if (string.IsNullOrWhiteSpace(minioIp))
+            {
+                SetMinioStatus(row, statusColName, "未配置", Color.Gray);
+                return;
+            }
+
+            SetMinioStatus(row, statusColName, "测试中...", Color.FromArgb(100, 180, 255));
+
+            try
+            {
+                bool success = await Task.Run(() =>
+                {
+                    try
+                    {
+                        // 使用 MinIO health 端点测试连通性
+                        string url = $"http://{minioIp}:{MinioDefaultPort}/minio/health/live";
+                        var request = (HttpWebRequest)WebRequest.Create(url);
+                        request.Method = "GET";
+                        request.Timeout = TestTimeoutMs;
+
+                        using (var response = (HttpWebResponse)request.GetResponse())
+                        {
+                            return response.StatusCode == HttpStatusCode.OK;
+                        }
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                });
+
+                if (success)
+                {
+                    SetMinioStatus(row, statusColName, "已连接 ✓", Color.FromArgb(0, 200, 83));
+                }
+                else
+                {
+                    SetMinioStatus(row, statusColName, "连接失败 ✗", Color.FromArgb(255, 82, 82));
+                }
+            }
+            catch (Exception ex)
+            {
+                SetMinioStatus(row, statusColName, "连接失败 ✗", Color.FromArgb(255, 82, 82));
+                LogTextHelper.Error($"MinIO {side}面连接测试异常: {minioIp} - {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 设置 MinIO 状态单元格的显示文本和颜色
+        /// </summary>
+        private void SetMinioStatus(DataGridViewRow row, string statusColName, string status, Color color)
+        {
+            row.Cells[statusColName].Value = status;
+            row.Cells[statusColName].Style.ForeColor = color;
+            row.Cells[statusColName].Style.Font = new Font("微软雅黑", 9F, FontStyle.Bold);
         }
 
         #endregion

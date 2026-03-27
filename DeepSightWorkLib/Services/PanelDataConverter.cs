@@ -40,8 +40,7 @@ namespace DeepSightWorkLib.Services
                 LogTextHelper.Info($"{panelInfo.SerialNumber} {panelInfo.SideIndex} ProductSerial: {panelInfo.ProductSerial}");
 
                 //  解析方案配置
-                var solutionInfo = ResolveSolution(panelInfo, context, out bool isByPass);
-                result.IsByPass = isByPass;
+                var solutionInfo = ResolveSolution(panelInfo, context);
 
                 //  构建 VBInfo
                 result.VBInfo = BuildVBInfo(panelInfo, context, solutionInfo,
@@ -64,9 +63,8 @@ namespace DeepSightWorkLib.Services
         /// 解析方案配置（料号未配置时自动基于 DEFAULT 新增并保存）
         /// </summary>
         private (string Solution, string Flow, bool IsSwitch) ResolveSolution(
-            RootPanelInfo panelInfo, PanelConvertContext context, out bool isByPass)
+            RootPanelInfo panelInfo, PanelConvertContext context)
         {
-            isByPass = false;
             var solConfig = context.SolutionConfig;
 
             var solutionFlow = solConfig?.solus?.FirstOrDefault(o => o.ProductSerial == panelInfo.ProductSerial);
@@ -74,7 +72,6 @@ namespace DeepSightWorkLib.Services
             if (solutionFlow == null)
             {
                 // 料号未配置，基于 DEFAULT 自动新增
-                isByPass = true;    
                 solutionFlow = AutoAddProductSerial(panelInfo.ProductSerial, context);
             }
 

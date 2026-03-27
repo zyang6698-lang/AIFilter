@@ -84,7 +84,6 @@ namespace DeepSightAI
                 sbOther.AppendLine($"缺陷数量:        {debugInfo.DefectCount}");
                 sbOther.AppendLine($"PCS数量:         {debugInfo.PcsCount}");
                 sbOther.AppendLine($"图片数量:        {debugInfo.ImageCount}");
-                sbOther.AppendLine($"是否ByPass:      {(debugInfo.IsByPass ? "是" : "否")}");
                 sbOther.AppendLine($"数据源DB:        {debugInfo.SourceDbName}");
                 sbOther.AppendLine($"数据源URL:       {debugInfo.SourceDbUrl}");
                 sbOther.AppendLine($"Minio路径:       {debugInfo.MinioPath}");

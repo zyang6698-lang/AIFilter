@@ -39,6 +39,12 @@ namespace DeepSightAI.SettingPages
             this.colConnectionStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTestConnection = new System.Windows.Forms.DataGridViewButtonColumn();
             this.colIsEnabled = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            this.colMinioIpA = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colMinioStatusA = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colMinioTestA = new System.Windows.Forms.DataGridViewButtonColumn();
+            this.colMinioIpB = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colMinioStatusB = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colMinioTestB = new System.Windows.Forms.DataGridViewButtonColumn();
             this.panelButtons = new System.Windows.Forms.Panel();
             this.btnAdd = new DeepSightAI.StyledButton();
             this.btnDelete = new DeepSightAI.StyledButton();
@@ -118,7 +124,13 @@ namespace DeepSightAI.SettingPages
             this.colWriteBackDbName,
             this.colConnectionStatus,
             this.colTestConnection,
-            this.colIsEnabled});
+            this.colIsEnabled,
+            this.colMinioIpA,
+            this.colMinioStatusA,
+            this.colMinioTestA,
+            this.colMinioIpB,
+            this.colMinioStatusB,
+            this.colMinioTestB});
             dataGridViewCellStyle2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             dataGridViewCellStyle2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             dataGridViewCellStyle2.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
@@ -181,7 +193,49 @@ namespace DeepSightAI.SettingPages
             this.colIsEnabled.HeaderText = "启用";
             this.colIsEnabled.Name = "colIsEnabled";
             this.colIsEnabled.Width = 60;
-            // 
+            //
+            // colMinioIpA
+            //
+            this.colMinioIpA.HeaderText = "A面MinIO IP";
+            this.colMinioIpA.Name = "colMinioIpA";
+            this.colMinioIpA.Width = 150;
+            //
+            // colMinioStatusA
+            //
+            this.colMinioStatusA.HeaderText = "A面MinIO状态";
+            this.colMinioStatusA.Name = "colMinioStatusA";
+            this.colMinioStatusA.ReadOnly = true;
+            this.colMinioStatusA.Width = 100;
+            //
+            // colMinioTestA
+            //
+            this.colMinioTestA.HeaderText = "A面测试";
+            this.colMinioTestA.Name = "colMinioTestA";
+            this.colMinioTestA.Text = "测试";
+            this.colMinioTestA.UseColumnTextForButtonValue = true;
+            this.colMinioTestA.Width = 60;
+            //
+            // colMinioIpB
+            //
+            this.colMinioIpB.HeaderText = "B面MinIO IP";
+            this.colMinioIpB.Name = "colMinioIpB";
+            this.colMinioIpB.Width = 150;
+            //
+            // colMinioStatusB
+            //
+            this.colMinioStatusB.HeaderText = "B面MinIO状态";
+            this.colMinioStatusB.Name = "colMinioStatusB";
+            this.colMinioStatusB.ReadOnly = true;
+            this.colMinioStatusB.Width = 100;
+            //
+            // colMinioTestB
+            //
+            this.colMinioTestB.HeaderText = "B面测试";
+            this.colMinioTestB.Name = "colMinioTestB";
+            this.colMinioTestB.Text = "测试";
+            this.colMinioTestB.UseColumnTextForButtonValue = true;
+            this.colMinioTestB.Width = 60;
+            //
             // FrLevelDbConfig
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
@@ -214,6 +268,12 @@ namespace DeepSightAI.SettingPages
         private System.Windows.Forms.DataGridViewTextBoxColumn colConnectionStatus;
         private System.Windows.Forms.DataGridViewButtonColumn colTestConnection;
         private System.Windows.Forms.DataGridViewCheckBoxColumn colIsEnabled;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colMinioIpA;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colMinioStatusA;
+        private System.Windows.Forms.DataGridViewButtonColumn colMinioTestA;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colMinioIpB;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colMinioStatusB;
+        private System.Windows.Forms.DataGridViewButtonColumn colMinioTestB;
         private System.Windows.Forms.Panel panelButtons;
         private DeepSightAI.StyledButton btnAdd;
         private DeepSightAI.StyledButton btnDelete;

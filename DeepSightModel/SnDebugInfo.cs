@@ -54,11 +54,6 @@ namespace DeepSightModel
         public int ImageCount { get; set; }
 
         /// <summary>
-        /// 是否ByPass
-        /// </summary>
-        public bool IsByPass { get; set; }
-
-        /// <summary>
         /// 数据来源DB名称
         /// </summary>
         public string SourceDbName { get; set; }

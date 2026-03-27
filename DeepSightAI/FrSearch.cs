@@ -215,8 +215,6 @@ namespace DeepSightAI
                 var info = _currentSnItems[i];
                 if (info.HasError)
                     dgvRow.DefaultCellStyle.ForeColor = Color.FromArgb(255, 100, 100);
-                else if (info.IsByPass)
-                    dgvRow.DefaultCellStyle.ForeColor = Color.Yellow;
                 else if (info.InferenceReturnJson != null)
                     dgvRow.DefaultCellStyle.ForeColor = Color.FromArgb(100, 255, 100);
             }

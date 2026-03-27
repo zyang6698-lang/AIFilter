@@ -18,10 +18,10 @@ namespace DeepSightModel
         public string DbName { get; set; } = "ai_merged_results";
 
         /// <summary>
-        /// 数据库服务器 IP
+        /// 数据库服务器 IP（仅存储纯IP/主机名，不含 http:// 前缀）
         /// </summary>
         [JsonProperty("ip")]
-        public string IP { get; set; } = "http://127.0.0.1";
+        public string IP { get; set; } = "127.0.0.1";
 
         /// <summary>
         /// 数据库服务器端口
@@ -42,10 +42,22 @@ namespace DeepSightModel
         public bool IsEnabled { get; set; } = true;
 
         /// <summary>
-        /// 获取完整的 URL
+        /// A面 MinIO 服务器 IP（仅IP，端口使用 MinioSettings.DefaultPort）
+        /// </summary>
+        [JsonProperty("minio_ip_a")]
+        public string MinioIpA { get; set; } = "127.0.0.1";
+
+        /// <summary>
+        /// B面 MinIO 服务器 IP（仅IP，端口使用 MinioSettings.DefaultPort）
+        /// </summary>
+        [JsonProperty("minio_ip_b")]
+        public string MinioIpB { get; set; } = "127.0.0.1";
+
+        /// <summary>
+        /// 获取完整的 URL（自动加上 http:// 前缀）
         /// </summary>
         [JsonIgnore]
-        public string Url => $"{IP}:{Port}";
+        public string Url => $"http://{IP}:{Port}";
 
         /// <summary>
         /// 用于显示的友好名称
@@ -172,7 +184,7 @@ namespace DeepSightModel
                     new LevelDbConfig
                     {
                         DbName = "ai_merged_results",
-                        IP = "http://127.0.0.1",
+                        IP = "127.0.0.1",
                         Port = "9877",
                         IsEnabled = true
                     }

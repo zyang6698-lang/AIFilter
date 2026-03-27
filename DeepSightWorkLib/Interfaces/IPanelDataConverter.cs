@@ -61,11 +61,6 @@ namespace DeepSightWorkLib.Interfaces
         public List<int> PcsIndexList { get; set; } = new List<int>();
 
         /// <summary>
-        /// 是否为 ByPass 模式（料号未配置）
-        /// </summary>
-        public bool IsByPass { get; set; }
-
-        /// <summary>
         /// 直报缺陷的原始 DefectIndex 列表（这些缺陷跳过AI推理）
         /// </summary>
         public List<int> DirectReportDefectIndices { get; set; } = new List<int>();

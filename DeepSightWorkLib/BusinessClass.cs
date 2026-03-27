@@ -604,7 +604,6 @@ namespace DeepSightWorkLib
                     VbInfo = convertResult.VBInfo,
                     minioPath = head,
                     panelInfo = obj,
-                    isByPass = convertResult.IsByPass,
                     ImageKeys = imageKeys,
                     ImageKeys_Gerber = imageKeys_Gerber,
                     ImageKeys_Temp = imageKeys_Temp,
@@ -623,7 +622,6 @@ namespace DeepSightWorkLib
                     debugInfo.DefectCount = convertResult.DefectIndexList?.Count ?? 0;
                     debugInfo.PcsCount = convertResult.PcsIndexList?.Count ?? 0;
                     debugInfo.ImageCount = imageKeys?.Count ?? 0;
-                    debugInfo.IsByPass = convertResult.IsByPass;
                     debugInfo.MinioPath = head;
                     debugInfo.ProductSerial = obj.ProductSerial;
                     debugInfo.LotNumber = obj.LotId ?? obj.LotBatch;
@@ -645,7 +643,6 @@ namespace DeepSightWorkLib
                         }
                     }
                     var summary = new System.Text.StringBuilder();
-                    if (convertResult.IsByPass) summary.Append("[ByPass] ");
                     if (defectCodes.Count > 0)
                         summary.Append($"AVI报点{defectCodes.Count}个: {string.Join(",", defectCodes.Distinct())}");
                     else

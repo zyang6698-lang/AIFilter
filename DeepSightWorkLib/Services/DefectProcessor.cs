@@ -127,14 +127,7 @@ namespace DeepSightWorkLib.Services
                 {
                     for (int i = 0; i < obj.Data.InferWholeData.InferResults.Count; i++)
                     {
-                        if (vBModel.isByPass)
-                        {
-                            resList.Add("2");
-                        }
-                        else
-                        {
-                            resList.Add(obj.Data.InferWholeData.InferResults[i].Infer_Result == "NG" ? "1" : "0");
-                        }
+                        resList.Add(obj.Data.InferWholeData.InferResults[i].Infer_Result == "NG" ? "1" : "0");
                     }
 
                     result = true;

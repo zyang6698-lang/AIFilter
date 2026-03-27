@@ -7,12 +7,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Serialization;
 
 namespace DeepSightModel
 {
     [Serializable]
-    [XmlRoot("DeepSight")]
     //常规配置
     public class ConfigurationClass
     {
@@ -59,25 +57,18 @@ namespace DeepSightModel
     }
 
     /// <summary>
-    /// 常规配置读写类（已升级为 JSON 格式，兼容旧 XML 配置自动迁移）
+    /// 常规配置读写类（JSON 格式）
     /// </summary>
     public class DeepSight_Config_class
     {
         private static readonly string BaseDirectory = AppDomain.CurrentDomain.BaseDirectory;
         private static readonly string ConfigDirectory = Path.Combine(BaseDirectory, "configs");
 
-        // JSON 配置路径（新格式，优先使用）
         private static readonly string JsonConfigPath = Path.Combine(ConfigDirectory, "general.config.json");
-        // XML 配置路径（旧格式，用于兼容和迁移）
-        private static readonly string XmlConfigPath = Path.Combine(ConfigDirectory, "general.config.xml");
-        // 更旧的配置路径
-        private static readonly string LegacyConfigDirectory = Path.Combine(BaseDirectory, "config");
-        private static readonly string LegacyConfigPath = Path.Combine(LegacyConfigDirectory, "config.xml");
 
         public DeepSight_Config_class()
         {
             EnsureConfigDirectory();
-            TryMigrateToJson();
 
             if (!File.Exists(JsonConfigPath))
             {
@@ -109,34 +100,17 @@ namespace DeepSightModel
         }
 
         /// <summary>
-        /// 获取配置信息（优先读取 JSON，兼容旧 XML）
+        /// 获取配置信息
         /// </summary>
         public bool Read(out ConfigurationClass system_config)
         {
             system_config = new ConfigurationClass();
             try
             {
-                // 优先读取 JSON 配置
                 if (File.Exists(JsonConfigPath))
                 {
                     var json = File.ReadAllText(JsonConfigPath);
                     system_config = JsonConvert.DeserializeObject<ConfigurationClass>(json) ?? new ConfigurationClass();
-                    return true;
-                }
-
-                // 兼容旧 XML 配置
-                string xmlPath = File.Exists(XmlConfigPath) ? XmlConfigPath :
-                                 File.Exists(LegacyConfigPath) ? LegacyConfigPath : null;
-
-                if (xmlPath != null)
-                {
-                    using (var stream = new FileStream(xmlPath, FileMode.Open, FileAccess.Read, FileShare.Read))
-                    {
-                        var xs = new XmlSerializer(typeof(ConfigurationClass));
-                        system_config = (ConfigurationClass)xs.Deserialize(stream);
-                    }
-                    // 自动迁移到 JSON
-                    Save(system_config);
                     return true;
                 }
 
@@ -176,41 +150,7 @@ namespace DeepSightModel
             }
         }
 
-        /// <summary>
-        /// 尝试从旧 XML 配置迁移到 JSON
-        /// </summary>
-        private void TryMigrateToJson()
-        {
-            if (File.Exists(JsonConfigPath))
-            {
-                return; // 已有 JSON 配置，无需迁移
-            }
 
-            // 按优先级查找旧配置
-            var legacyPaths = new[] { XmlConfigPath, LegacyConfigPath };
-            foreach (var path in legacyPaths)
-            {
-                if (File.Exists(path))
-                {
-                    try
-                    {
-                        using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
-                        {
-                            var xs = new XmlSerializer(typeof(ConfigurationClass));
-                            var config = (ConfigurationClass)xs.Deserialize(stream);
-                            var json = JsonConvert.SerializeObject(config, Formatting.Indented);
-                            File.WriteAllText(JsonConfigPath, json);
-                            LogTextHelper.Info($"常规配置已从 XML 迁移到 JSON: {path} -> {JsonConfigPath}");
-                        }
-                        return;
-                    }
-                    catch (Exception ex)
-                    {
-                        LogTextHelper.Error($"迁移常规配置失败: {path}", ex);
-                    }
-                }
-            }
-        }
     }
 
     public class WatchPathConfig

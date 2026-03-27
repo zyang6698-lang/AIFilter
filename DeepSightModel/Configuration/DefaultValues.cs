@@ -37,20 +37,6 @@ namespace DeepSightModel.Configuration
 
         #endregion
 
-        #region 服务器配置
-
-        /// <summary>
-        /// 默认服务器 IP
-        /// </summary>
-        public const string ServerIP = "http://";
-
-        /// <summary>
-        /// 默认服务器端口
-        /// </summary>
-        public const string ServerPort = "9877";
-
-        #endregion
-
         #region Minio 配置
 
         /// <summary>

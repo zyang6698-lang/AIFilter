@@ -294,7 +294,7 @@ namespace DeepSightAI
             Machine.master.IsShowBox = this.btn_showBox.Checked;
             string filePath = Assembly.GetExecutingAssembly().Location;
             DateTime lastWriteTime = File.GetLastWriteTime(filePath);
-            this.lbl_title.Text = "ATS_AI ~ " + lastWriteTime.ToString("MMdd");
+            this.lbl_title.Text = "AI过滤软件 ~ " + lastWriteTime.ToString("MMdd");
 
             // 启动 UI 批量刷新定时器（200ms ≈ 5FPS，足够流畅且不卡顿）
             _uiRefreshTimer = new System.Windows.Forms.Timer();
@@ -749,7 +749,14 @@ namespace DeepSightAI
                 {
                     Machine.master.IsStart = true;
                     btnStart.Image = Resources.pause2;
-                    FrSetting.Instance.RestartApplication(FrSetting.Instance.appPath, FrSetting.Instance.appExe, Machine.sysConfig.AgentShutdownTimeout, true);
+                    if (Machine.HasAgentMachines)
+                    {
+                        FrSetting.Instance.RestartApplication(FrSetting.Instance.appPath, FrSetting.Instance.appExe, Machine.sysConfig.AgentShutdownTimeout, true);
+                    }
+                    else
+                    {
+                        LogTextHelper.Info("未配置 Agent 类型机台，跳过启动 Agent 程序");
+                    }
 
                     LogTextHelper.Info("开始作业...");
                 }
@@ -757,7 +764,10 @@ namespace DeepSightAI
                 {
                     Machine.master.IsStart = false;
                     btnStart.Image = Resources.start2;
-                    FrSetting.Instance.KillProcessInDirectory(FrSetting.Instance.appPath, FrSetting.Instance.appExe, Machine.sysConfig.AgentShutdownTimeout);
+                    if (Machine.HasAgentMachines)
+                    {
+                        FrSetting.Instance.KillProcessInDirectory(FrSetting.Instance.appPath, FrSetting.Instance.appExe, Machine.sysConfig.AgentShutdownTimeout);
+                    }
 
                     LogTextHelper.Info("暂停作业...");
                 }

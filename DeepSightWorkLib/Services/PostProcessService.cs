@@ -171,11 +171,6 @@ namespace DeepSightWorkLib.Services
                             }
                         }
 
-                        if (vBModel.isByPass)
-                        {
-                            heatInfo.AIStatus = 3;
-                        }
-
                         avi_HeatInfo.Add(heatInfo);
                     }
 

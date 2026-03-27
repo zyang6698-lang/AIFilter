@@ -626,6 +626,17 @@ namespace DeepSightAI.SettingPages
 
         private void MachineStatusCard_DoubleClick(object sender, EventArgs e)
         {
+            // 如果该机台的数据来源是 Agent，双击不显示信息
+            string currentName = ctrConfig?.AviName;
+            if (!string.IsNullOrEmpty(currentName))
+            {
+                var entry = Machine.machineRegistryManager.FindByName(currentName);
+                if (entry != null && entry.DataSourceType != DataSourceType.Agent)
+                {
+                    return;
+                }
+            }
+
             // 实时从文件读取最新配置
             WatchPathConfig latestConfig = ReadLatestConfigFromFile();
             if (latestConfig != null)
