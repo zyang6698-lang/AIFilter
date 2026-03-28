@@ -487,8 +487,8 @@ namespace DeepSightAI
             }
 
             // 列顺序: SN[0], Side[1], AVI[2], AI[3], Time[4], Status[5]
-            // AVI列 = AVI缺陷图片总数（A面+B面），AI列 = AI推理结果总数
-            row.Cells[2].Value = aDefectCount + bDefectCount;
+            // AVI列 = B面自身的缺陷图片数，A/B面各自独立显示
+            row.Cells[2].Value = bDefectCount;
             row.Cells[3].Value = count;
             row.Cells[5].Value = msg;
             FrHome.Instance.str_SN = $"{sn}_B";

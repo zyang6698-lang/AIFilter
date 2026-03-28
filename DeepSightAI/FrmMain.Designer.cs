@@ -69,7 +69,6 @@ namespace DeepSightAI
             this.btnModelC = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
             this.toolStrip = new System.Windows.Forms.ToolStrip();
-            this.toolStripButton2 = new System.Windows.Forms.ToolStripButton();
             this.btnRunVB = new System.Windows.Forms.ToolStripButton();
             this.btnClear = new System.Windows.Forms.ToolStripButton();
             this.lbl_title = new System.Windows.Forms.Label();
@@ -440,7 +439,7 @@ namespace DeepSightAI
             this.table_menu.TabIndex = 12;
             // 
             // panel_search
-            //
+            // 
             this.panel_search.Controls.Add(this.btnSearch);
             this.panel_search.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel_search.Location = new System.Drawing.Point(268, 2);
@@ -538,7 +537,7 @@ namespace DeepSightAI
             // 
             this.btnModelB.CheckOnClick = true;
             this.btnModelB.Name = "btnModelB";
-            this.btnModelB.Size = new System.Drawing.Size(158, 26);
+            this.btnModelB.Size = new System.Drawing.Size(224, 26);
             this.btnModelB.Text = "Gerber图";
             this.btnModelB.Click += new System.EventHandler(this.btnModelB_Click);
             // 
@@ -548,7 +547,7 @@ namespace DeepSightAI
             this.btnModelC.CheckOnClick = true;
             this.btnModelC.CheckState = System.Windows.Forms.CheckState.Checked;
             this.btnModelC.Name = "btnModelC";
-            this.btnModelC.Size = new System.Drawing.Size(158, 26);
+            this.btnModelC.Size = new System.Drawing.Size(224, 26);
             this.btnModelC.Text = "Temp图";
             this.btnModelC.Click += new System.EventHandler(this.btnModelC_Click);
             // 
@@ -565,7 +564,6 @@ namespace DeepSightAI
             this.toolStrip.ImageScalingSize = new System.Drawing.Size(30, 30);
             this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.btnTest,
-            this.toolStripButton2,
             this.toolStripDropDownButton1,
             this.btnRunVB,
             this.btnClear,
@@ -576,17 +574,6 @@ namespace DeepSightAI
             this.toolStrip.ShowItemToolTips = false;
             this.toolStrip.Size = new System.Drawing.Size(1417, 27);
             this.toolStrip.TabIndex = 14;
-            // 
-            // toolStripButton2
-            // 
-            this.toolStripButton2.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.toolStripButton2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.toolStripButton2.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton2.Image")));
-            this.toolStripButton2.ImageTransparentColor = System.Drawing.Color.Maroon;
-            this.toolStripButton2.Name = "toolStripButton2";
-            this.toolStripButton2.Size = new System.Drawing.Size(73, 24);
-            this.toolStripButton2.Text = "批量测试";
-            this.toolStripButton2.ToolTipText = "循环测试";
             // 
             // btnRunVB
             // 
@@ -791,7 +778,6 @@ namespace DeepSightAI
         public System.Windows.Forms.Button btnModel;
         public System.Windows.Forms.ToolStripDropDownButton btnTest;
         private System.Windows.Forms.ToolStripMenuItem btn_showBox;
-        public System.Windows.Forms.ToolStripButton toolStripButton2;
         public System.Windows.Forms.ToolStripDropDownButton toolStripDropDownButton1;
         private System.Windows.Forms.ToolStripMenuItem btnModelB;
         private System.Windows.Forms.ToolStripMenuItem btnModelC;
