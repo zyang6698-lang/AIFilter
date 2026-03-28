@@ -108,8 +108,6 @@ namespace DeepSightAI
                 stationIndex = 1
             };
             DispWinHeatMap.OnSelectionFinished += CvDisplay1_OnSelectionFinished;
-            DispWinHeatMap.OnCallBackFullShowPro -= FrHome_OnCallBackFullShowPro;
-            DispWinHeatMap.OnCallBackFullShowPro += FrHome_OnCallBackFullShowPro;
             table_HeatMap.Controls.Add(DispWinHeatMap, 0, 0);
         }
 
@@ -412,23 +410,6 @@ namespace DeepSightAI
             // 操作完成后重置模式
             _currentSelectionMode = SelectionMode.None;
             DispWinHeatMap.IsSelectionMode = false;
-        }
-        private void FrHome_OnCallBackFullShowPro(string station, int index, string m_station, string status, string ocr, Mat mat)
-        {
-            try
-            {
-                FrFullImage.Instance.cvDisplay1.stationName = "A";
-                FrFullImage.Instance.cvDisplay1.stationIndex = 1;
-                FrFullImage.Instance.LoadShow(mat.Clone());
-                FrFullImage.Instance.cvDisplay1.DrawStation(m_station);
-                FrFullImage.Instance.cvDisplay1.DrawStatus(status);
-                FrFullImage.Instance.cvDisplay1.DrawOCR(ocr);
-                FrFullImage.Instance.Show();
-            }
-            catch (Exception)
-            {
-                throw;
-            }
         }
 
         #endregion

@@ -1,5 +1,6 @@
 using DeepSightDB;
 using DeepSightModel;
+using DeepSightModel.Configuration;
 using OpenCvSharp;
 using System;
 using System.Collections.Generic;
@@ -14,14 +15,11 @@ namespace DeepSightWorkLib.Services
     public class VBModelBuilder
     {
         private readonly SolutionConfig _solutionConfig;
-        private readonly string _minioIP;
-        private readonly string _minioPort;
+        private static MinioSettings MinioSettingsConfig => MinioSettings.Instance;
 
-        public VBModelBuilder(SolutionConfig solutionConfig, string minioIP, string minioPort)
+        public VBModelBuilder(SolutionConfig solutionConfig)
         {
             _solutionConfig = solutionConfig;
-            _minioIP = minioIP;
-            _minioPort = minioPort;
         }
 
         /// <summary>
@@ -127,11 +125,11 @@ namespace DeepSightWorkLib.Services
                         {
                             imageminio = new ImageMminio
                             {
-                                access_key_id = "deepiobjectdata",
-                                bucket = "deepiresults",
-                                endpoint_url = _minioIP,
-                                secret_key = "deepiobject2019",
-                                secret_port = _minioPort
+                                access_key_id = MinioSettingsConfig.AccessKey,
+                                bucket = MinioSettingsConfig.DefaultBucket,
+                                endpoint_url = "",
+                                secret_key = MinioSettingsConfig.SecretKey,
+                                secret_port = MinioSettingsConfig.DefaultPort
                             }
                         }
                     }

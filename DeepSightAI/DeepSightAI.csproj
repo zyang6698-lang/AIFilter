@@ -338,12 +338,6 @@
     <Compile Include="FrDefectImageDetail.Designer.cs">
       <DependentUpon>FrDefectImageDetail.cs</DependentUpon>
     </Compile>
-    <Compile Include="FrFullImage.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FrFullImage.Designer.cs">
-      <DependentUpon>FrFullImage.cs</DependentUpon>
-    </Compile>
     <Compile Include="FrHome.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -485,9 +479,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FrChart.resx">
       <DependentUpon>FrChart.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FrFullImage.resx">
-      <DependentUpon>FrFullImage.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FrHome.resx">
       <DependentUpon>FrHome.cs</DependentUpon>

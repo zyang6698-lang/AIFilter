@@ -40,16 +40,6 @@ namespace DeepSightModel.Configuration
         #region Minio 配置
 
         /// <summary>
-        /// 默认 Minio IP
-        /// </summary>
-        public const string MinioIP = "127.0.0.1";
-
-        /// <summary>
-        /// 默认 Minio 端口
-        /// </summary>
-        public const string MinioPort = "9102";
-
-        /// <summary>
         /// 默认 Minio 配置（IP:Port 格式）
         /// </summary>
         public const string MinioConfig = "127.0.0.1:9102";

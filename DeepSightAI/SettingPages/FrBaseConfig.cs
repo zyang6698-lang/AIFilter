@@ -46,8 +46,6 @@ namespace DeepSightAI.SettingPages
         {
             try
             {
-                Machine.sysConfig.endpoint_address = FrBaseConfig.Instance.txt_endpoint_address.Text;
-                Machine.sysConfig.MinioPort = FrBaseConfig.Instance.txt_Minioport.Text;
                 if (int.TryParse(this.txt_MaxDefectCount.Text, out int maxDefectCount))
                 {
                     Machine.sysConfig.MaxDefectCount = maxDefectCount;
@@ -73,8 +71,6 @@ namespace DeepSightAI.SettingPages
         }
         private void FrBaseConfig_Load(object sender, EventArgs e)
         {
-            this.txt_endpoint_address.Text = Machine.sysConfig.endpoint_address;
-            this.txt_Minioport.Text = Machine.sysConfig.MinioPort;
             this.txt_MaxDefectCount.Text = Machine.sysConfig.MaxDefectCount.ToString();
             this.txt_AgentShutdownTimeout.Text = Machine.sysConfig.AgentShutdownTimeout.ToString();
             this.txt_GetInferResultTimeout.Text = Machine.aviconfig.GetInferResultTimeout.ToString();

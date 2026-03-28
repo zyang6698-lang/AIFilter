@@ -87,7 +87,7 @@
             this.panel_Main.Controls.Add(this.splitContainer_Main);
             this.panel_Main.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel_Main.Location = new System.Drawing.Point(0, 0);
-            this.panel_Main.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.panel_Main.Margin = new System.Windows.Forms.Padding(5);
             this.panel_Main.Name = "panel_Main";
             this.panel_Main.Size = new System.Drawing.Size(1924, 1088);
             this.panel_Main.TabIndex = 0;
@@ -97,7 +97,7 @@
             this.splitContainer_Main.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer_Main.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
             this.splitContainer_Main.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer_Main.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.splitContainer_Main.Margin = new System.Windows.Forms.Padding(5);
             this.splitContainer_Main.Name = "splitContainer_Main";
             // 
             // splitContainer_Main.Panel1
@@ -178,7 +178,7 @@
             this.tabControl_Main.Controls.Add(this.tabPage_ValidationTest);
             this.tabControl_Main.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl_Main.Location = new System.Drawing.Point(0, 0);
-            this.tabControl_Main.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.tabControl_Main.Margin = new System.Windows.Forms.Padding(5);
             this.tabControl_Main.Name = "tabControl_Main";
             this.tabControl_Main.SelectedIndex = 0;
             this.tabControl_Main.Size = new System.Drawing.Size(1554, 1088);
@@ -188,9 +188,9 @@
             // 
             this.tabPage_Grid.Controls.Add(this.panel_Grid);
             this.tabPage_Grid.Location = new System.Drawing.Point(4, 25);
-            this.tabPage_Grid.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.tabPage_Grid.Margin = new System.Windows.Forms.Padding(5);
             this.tabPage_Grid.Name = "tabPage_Grid";
-            this.tabPage_Grid.Padding = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.tabPage_Grid.Padding = new System.Windows.Forms.Padding(5);
             this.tabPage_Grid.Size = new System.Drawing.Size(1546, 1059);
             this.tabPage_Grid.TabIndex = 0;
             this.tabPage_Grid.Text = "缺陷列表";
@@ -203,7 +203,7 @@
             this.panel_Grid.Controls.Add(this.panel_LotList);
             this.panel_Grid.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel_Grid.Location = new System.Drawing.Point(5, 5);
-            this.panel_Grid.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.panel_Grid.Margin = new System.Windows.Forms.Padding(5);
             this.panel_Grid.Name = "panel_Grid";
             this.panel_Grid.Size = new System.Drawing.Size(1536, 1049);
             this.panel_Grid.TabIndex = 1;
@@ -237,7 +237,7 @@
             this.dataGridView_Defects.DefaultCellStyle = dataGridViewCellStyle1;
             this.dataGridView_Defects.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView_Defects.Location = new System.Drawing.Point(272, 0);
-            this.dataGridView_Defects.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.dataGridView_Defects.Margin = new System.Windows.Forms.Padding(5);
             this.dataGridView_Defects.MultiSelect = false;
             this.dataGridView_Defects.Name = "dataGridView_Defects";
             this.dataGridView_Defects.RowHeadersVisible = false;
@@ -336,7 +336,7 @@
             // splitter_LotGrid
             // 
             this.splitter_LotGrid.Location = new System.Drawing.Point(267, 0);
-            this.splitter_LotGrid.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.splitter_LotGrid.Margin = new System.Windows.Forms.Padding(4);
             this.splitter_LotGrid.Name = "splitter_LotGrid";
             this.splitter_LotGrid.Size = new System.Drawing.Size(5, 1049);
             this.splitter_LotGrid.TabIndex = 3;
@@ -349,7 +349,7 @@
             this.panel_LotList.Controls.Add(this.label_LotTitle);
             this.panel_LotList.Dock = System.Windows.Forms.DockStyle.Left;
             this.panel_LotList.Location = new System.Drawing.Point(0, 0);
-            this.panel_LotList.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.panel_LotList.Margin = new System.Windows.Forms.Padding(4);
             this.panel_LotList.Name = "panel_LotList";
             this.panel_LotList.Size = new System.Drawing.Size(267, 1049);
             this.panel_LotList.TabIndex = 2;
@@ -364,7 +364,7 @@
             this.treeView_Lots.FullRowSelect = true;
             this.treeView_Lots.HideSelection = false;
             this.treeView_Lots.Location = new System.Drawing.Point(0, 69);
-            this.treeView_Lots.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.treeView_Lots.Margin = new System.Windows.Forms.Padding(4);
             this.treeView_Lots.Name = "treeView_Lots";
             this.treeView_Lots.Size = new System.Drawing.Size(267, 980);
             this.treeView_Lots.TabIndex = 1;
@@ -376,9 +376,9 @@
             this.panel_SnSearch.Controls.Add(this.txt_SnFilter);
             this.panel_SnSearch.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel_SnSearch.Location = new System.Drawing.Point(0, 31);
-            this.panel_SnSearch.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.panel_SnSearch.Margin = new System.Windows.Forms.Padding(4);
             this.panel_SnSearch.Name = "panel_SnSearch";
-            this.panel_SnSearch.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.panel_SnSearch.Padding = new System.Windows.Forms.Padding(4);
             this.panel_SnSearch.Size = new System.Drawing.Size(267, 38);
             this.panel_SnSearch.TabIndex = 2;
             // 
@@ -391,7 +391,7 @@
             this.btn_SnSearch.Font = new System.Drawing.Font("微软雅黑", 9F);
             this.btn_SnSearch.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.btn_SnSearch.Location = new System.Drawing.Point(212, 4);
-            this.btn_SnSearch.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btn_SnSearch.Margin = new System.Windows.Forms.Padding(4);
             this.btn_SnSearch.Name = "btn_SnSearch";
             this.btn_SnSearch.Size = new System.Drawing.Size(51, 30);
             this.btn_SnSearch.TabIndex = 1;
@@ -406,7 +406,7 @@
             this.txt_SnFilter.Font = new System.Drawing.Font("微软雅黑", 9F);
             this.txt_SnFilter.ForeColor = System.Drawing.Color.White;
             this.txt_SnFilter.Location = new System.Drawing.Point(4, 4);
-            this.txt_SnFilter.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.txt_SnFilter.Margin = new System.Windows.Forms.Padding(4);
             this.txt_SnFilter.Name = "txt_SnFilter";
             this.txt_SnFilter.Size = new System.Drawing.Size(259, 27);
             this.txt_SnFilter.TabIndex = 0;
@@ -429,10 +429,10 @@
             // 
             this.tabPage_Details.Controls.Add(this.defectDetailControl1);
             this.tabPage_Details.Location = new System.Drawing.Point(4, 25);
-            this.tabPage_Details.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.tabPage_Details.Margin = new System.Windows.Forms.Padding(5);
             this.tabPage_Details.Name = "tabPage_Details";
-            this.tabPage_Details.Padding = new System.Windows.Forms.Padding(5, 5, 5, 5);
-            this.tabPage_Details.Size = new System.Drawing.Size(1425, 1059);
+            this.tabPage_Details.Padding = new System.Windows.Forms.Padding(5);
+            this.tabPage_Details.Size = new System.Drawing.Size(1546, 1059);
             this.tabPage_Details.TabIndex = 1;
             this.tabPage_Details.Text = "缺陷详情";
             this.tabPage_Details.UseVisualStyleBackColor = true;
@@ -444,17 +444,17 @@
             this.defectDetailControl1.Location = new System.Drawing.Point(5, 5);
             this.defectDetailControl1.Margin = new System.Windows.Forms.Padding(7, 6, 7, 6);
             this.defectDetailControl1.Name = "defectDetailControl1";
-            this.defectDetailControl1.Size = new System.Drawing.Size(1415, 1049);
+            this.defectDetailControl1.Size = new System.Drawing.Size(1536, 1049);
             this.defectDetailControl1.TabIndex = 0;
             // 
             // tabPage_ValidationTest
             // 
             this.tabPage_ValidationTest.Controls.Add(this.validationTestResultControl1);
             this.tabPage_ValidationTest.Location = new System.Drawing.Point(4, 25);
-            this.tabPage_ValidationTest.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.tabPage_ValidationTest.Margin = new System.Windows.Forms.Padding(5);
             this.tabPage_ValidationTest.Name = "tabPage_ValidationTest";
-            this.tabPage_ValidationTest.Padding = new System.Windows.Forms.Padding(5, 5, 5, 5);
-            this.tabPage_ValidationTest.Size = new System.Drawing.Size(1425, 1059);
+            this.tabPage_ValidationTest.Padding = new System.Windows.Forms.Padding(5);
+            this.tabPage_ValidationTest.Size = new System.Drawing.Size(1546, 1059);
             this.tabPage_ValidationTest.TabIndex = 2;
             this.tabPage_ValidationTest.Text = "模型一致性测试";
             this.tabPage_ValidationTest.UseVisualStyleBackColor = true;
@@ -465,9 +465,9 @@
             this.validationTestResultControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.validationTestResultControl1.Font = new System.Drawing.Font("微软雅黑", 9F);
             this.validationTestResultControl1.Location = new System.Drawing.Point(5, 5);
-            this.validationTestResultControl1.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.validationTestResultControl1.Margin = new System.Windows.Forms.Padding(5);
             this.validationTestResultControl1.Name = "validationTestResultControl1";
-            this.validationTestResultControl1.Size = new System.Drawing.Size(1415, 1049);
+            this.validationTestResultControl1.Size = new System.Drawing.Size(1536, 1049);
             this.validationTestResultControl1.TabIndex = 0;
             // 
             // contextMenuStrip_Lot
@@ -496,7 +496,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.panel_Main);
-            this.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.Margin = new System.Windows.Forms.Padding(5);
             this.Name = "AIReviewControl";
             this.Size = new System.Drawing.Size(1924, 1088);
             this.panel_Main.ResumeLayout(false);

@@ -17,6 +17,8 @@ namespace DeepSightAI
 
         private void InitializeComponent()
         {
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.splitContainer_Main = new System.Windows.Forms.SplitContainer();
             this.pictureBox_Image = new System.Windows.Forms.PictureBox();
             this.panel_ImageToolbar = new System.Windows.Forms.Panel();
@@ -127,22 +129,18 @@ namespace DeepSightAI
             this.dataGridView_Info.BackgroundColor = System.Drawing.Color.FromArgb(37, 37, 38);
             this.dataGridView_Info.GridColor = System.Drawing.Color.FromArgb(60, 60, 65);
             this.dataGridView_Info.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dataGridView_Info.ColumnHeadersDefaultCellStyle = new System.Windows.Forms.DataGridViewCellStyle
-            {
-                BackColor = System.Drawing.Color.FromArgb(45, 45, 48),
-                ForeColor = System.Drawing.Color.FromArgb(200, 200, 200),
-                Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold),
-                SelectionBackColor = System.Drawing.Color.FromArgb(45, 45, 48),
-                SelectionForeColor = System.Drawing.Color.FromArgb(200, 200, 200),
-            };
-            this.dataGridView_Info.DefaultCellStyle = new System.Windows.Forms.DataGridViewCellStyle
-            {
-                BackColor = System.Drawing.Color.FromArgb(37, 37, 38),
-                ForeColor = System.Drawing.Color.FromArgb(220, 220, 220),
-                SelectionBackColor = System.Drawing.Color.FromArgb(51, 51, 52),
-                SelectionForeColor = System.Drawing.Color.FromArgb(220, 220, 220),
-                Font = new System.Drawing.Font("微软雅黑", 9F),
-            };
+            dataGridViewCellStyle1.BackColor = System.Drawing.Color.FromArgb(45, 45, 48);
+            dataGridViewCellStyle1.ForeColor = System.Drawing.Color.FromArgb(200, 200, 200);
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold);
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.Color.FromArgb(45, 45, 48);
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.Color.FromArgb(200, 200, 200);
+            this.dataGridView_Info.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle2.BackColor = System.Drawing.Color.FromArgb(37, 37, 38);
+            dataGridViewCellStyle2.ForeColor = System.Drawing.Color.FromArgb(220, 220, 220);
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.Color.FromArgb(51, 51, 52);
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.Color.FromArgb(220, 220, 220);
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("微软雅黑", 9F);
+            this.dataGridView_Info.DefaultCellStyle = dataGridViewCellStyle2;
             this.dataGridView_Info.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView_Info.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] { this.Column_Property, this.Column_Value });
             this.dataGridView_Info.EnableHeadersVisualStyles = false;

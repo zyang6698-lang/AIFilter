@@ -33,14 +33,12 @@ namespace DeepSightWorkLib.Services
             ImageLoaderService imageLoaderService,
             QueueManager queueManager,
             SolutionConfig solutionConfig,
-            AVIConfig aviConfig,
-            string minioIP,
-            string minioPort)
+            AVIConfig aviConfig)
         {
             _databaseHelper = databaseHelper ?? throw new ArgumentNullException(nameof(databaseHelper));
             _imageLoaderService = imageLoaderService ?? throw new ArgumentNullException(nameof(imageLoaderService));
             _queueManager = queueManager ?? throw new ArgumentNullException(nameof(queueManager));
-            _vbModelBuilder = new VBModelBuilder(solutionConfig, minioIP, minioPort);
+            _vbModelBuilder = new VBModelBuilder(solutionConfig);
         }
 
         #region 统一任务创建接口

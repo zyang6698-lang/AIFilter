@@ -24,8 +24,6 @@ namespace DeepSightModel.Configuration
             {
                 ProjectName = DefaultValues.ProjectName,
                 LogDay = DefaultValues.LogDay,
-                endpoint_address = DefaultValues.MinioIP,
-                MinioPort = DefaultValues.MinioPort,
                 MaxDefectCount = DefaultValues.MaxDefectCount,
                 AgentShutdownTimeout = DefaultValues.AgentShutdownTimeout,
                 WelcomeTitle = DefaultValues.WelcomeTitle,

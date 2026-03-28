@@ -247,9 +247,6 @@ namespace DeepSightWorkLib
         {
             this.IsStart = false;
 
-            // 初始化Minio客户端连接
-            MinioService.BuildClient(SysConfig.endpoint_address, SysConfig.MinioPort);
-
             var httpInstance = HttpService as HttpClass ?? new HttpClass();
             _resultWriterService = new ResultWriterService(httpInstance, _queueManager.ProcessingSnSet);
 
@@ -260,9 +257,7 @@ namespace DeepSightWorkLib
                 _imageLoaderService,
                 _queueManager,
                 SolConfig,
-                AviConfig,
-                SysConfig.endpoint_address,
-                SysConfig.MinioPort);
+                AviConfig);
 
             // 将验证测试服务注入到后处理服务
             _postProcessService.SetValidationTestService(_validationTestService);
