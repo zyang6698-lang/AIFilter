@@ -104,32 +104,40 @@ namespace DeepSightWorkLib.Services
 
                 if (code == "200")
                 {
-                    List<DetectInfo> avi_HeatInfo = new List<DetectInfo>();
+                    List<DetectInfo> defects = new List<DetectInfo>();
 
                     // 构建 HeatPoint 点信息
                     for (int i = 0; i < obj.Data.InferWholeData.InferResults.Count; i++)
                     {
-                        DetectInfo heatInfo = new DetectInfo();
+                        DetectInfo defect = new DetectInfo();
                         if (vBModel.ImageKeys[i]!=null)
                         {
-                            heatInfo.ImagePath = vBModel.ImageKeys[i];
+                            defect.ImagePath = vBModel.ImageKeys[i];
+                        }
+                        if (vBModel.ImageKeys_Temp[i]!=null)
+                        {
+                            defect.TempImagePath=vBModel.ImageKeys_Temp[i]; 
+                        }
+                        if (vBModel.ImageKeys_Gerber[i]!=null)
+                        {
+                            defect.GerberImagePath = vBModel.ImageKeys_Gerber[i];
                         }
                         var imgRoi = obj.Data.InferWholeData.InferResults[i].ImgRoi;
                         if (imgRoi != null && imgRoi.Count >= 4)
                         {
-                            heatInfo.OriginRoiX = imgRoi[0];
-                            heatInfo.OriginRoiY = imgRoi[1];
-                            heatInfo.OriginWidth = imgRoi[2];
-                            heatInfo.OriginHeight = imgRoi[3];
+                            defect.OriginRoiX = imgRoi[0];
+                            defect.OriginRoiY = imgRoi[1];
+                            defect.OriginWidth = imgRoi[2];
+                            defect.OriginHeight = imgRoi[3];
                         }
 
                         if (obj.Data.InferWholeData.InferResults[i].Infer_Result == "OK")
                         {
-                            heatInfo.AIStatus = 1;
+                            defect.AIStatus = 1;
                         }
                         else
                         {
-                            heatInfo.AIStatus = 2;
+                            defect.AIStatus = 2;
 
                             for (int j = 0; j < obj.Data.InferWholeData.InferResults[i].InferDetails.Location.Count; j++)
                             {
@@ -139,39 +147,39 @@ namespace DeepSightWorkLib.Services
                                 int subH = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].Height);
                                 int subW = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].Width);
 
-                                heatInfo.DefectName = sub_defectName;
-                                heatInfo.RoiX = subX;
-                                heatInfo.RoiY = subY;
-                                heatInfo.Width = subW;
-                                heatInfo.Height = subH;
+                                defect.DefectName = sub_defectName;
+                                defect.RoiX = subX;
+                                defect.RoiY = subY;
+                                defect.Width = subW;
+                                defect.Height = subH;
 
-                                heatInfo.DrawInfo =JsonConvert.SerializeObject( obj.Data.InferWholeData.InferResults[i].InferDetails.DrawInfoList);
+                                defect.DrawInfo =JsonConvert.SerializeObject( obj.Data.InferWholeData.InferResults[i].InferDetails.DrawInfoList);
                                 
                                 if (sub_defectName == "AU10" || sub_defectName == "CU10" || sub_defectName == "CU41"
                                     || sub_defectName == "HO01" || sub_defectName == "SM10")
                                 {
-                                    heatInfo.DefectShape = "dot";
+                                    defect.DefectShape = "dot";
                                 }
                                 else
                                 {
-                                    heatInfo.DefectShape = "line";
+                                    defect.DefectShape = "line";
                                 }
 
                             }
                         }
 
                         // 重点缺陷标记 & 自动发现（根据料号对应的 profile）
-                        if (heatInfo.AIStatus == 2 && !string.IsNullOrEmpty(heatInfo.DefectName))
+                        if (defect.AIStatus == 2 && !string.IsNullOrEmpty(defect.DefectName))
                         {
                             var profileName = KeyDefectConfigManager.Instance.GetProfileNameForProduct(panelInfo.ProductSerial);
-                            KeyDefectConfigManager.Instance.AutoDiscoverDefect(heatInfo.DefectName, profileName);
-                            if (KeyDefectConfigManager.Instance.IsKeyDefect(heatInfo.DefectName, profileName))
+                            KeyDefectConfigManager.Instance.AutoDiscoverDefect(defect.DefectName, profileName);
+                            if (KeyDefectConfigManager.Instance.IsKeyDefect(defect.DefectName, profileName))
                             {
-                                heatInfo.IsKeyDefect = true;
+                                defect.IsKeyDefect = true;
                             }
                         }
 
-                        avi_HeatInfo.Add(heatInfo);
+                        defects.Add(defect);
                     }
 
                     // 追加直报缺陷（AIStatus=3，跳过了AI推理）
@@ -183,18 +191,18 @@ namespace DeepSightWorkLib.Services
                             {
                                 AIStatus = 3
                             };
-                            avi_HeatInfo.Add(directReportInfo);
+                            defects.Add(directReportInfo);
                         }
                         LogTextHelper.Info($"SN:{vBModel.SN} 追加 {vBModel.DirectReportDefectIndices.Count} 个直报缺陷到后处理结果");
                     }
 
                     // 保存数据到数据库
-                    int aviState = avi_HeatInfo.Count == 0 ? 1 : 2;
-                    int aiState = avi_HeatInfo.Any(h => h.AIStatus == 3) ? 3 : avi_HeatInfo.Any(h => h.AIStatus == 2) ? 2 : 1;
-                    _savePanelSideAction(panelInfo, avi_HeatInfo, aviState, aiState);
+                    int aviState = defects.Count == 0 ? 1 : 2;
+                    int aiState = defects.Any(h => h.AIStatus == 3) ? 3 : defects.Any(h => h.AIStatus == 2) ? 2 : 1;
+                    _savePanelSideAction(panelInfo, defects, aviState, aiState);
 
                     // 重点缺陷报警检查
-                    int keyDefectInThisSide = avi_HeatInfo.Count(h => h.IsKeyDefect);
+                    int keyDefectInThisSide = defects.Count(h => h.IsKeyDefect);
                     if (keyDefectInThisSide > 0)
                     {
                         CheckKeyDefectAlarm(vBModel.SN);

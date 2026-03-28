@@ -16,7 +16,7 @@ namespace DeepSightAI
     /// </summary>
     public partial class DefectImageItemControl : UserControl
     {
-        private DetectInfo _heatPoint;
+        private DetectInfo _point;
         private bool _isSelected;
         private Image _rawOriginalImage;
 
@@ -51,10 +51,10 @@ namespace DeepSightAI
         /// </summary>
         public DetectInfo HeatPoint
         {
-            get => _heatPoint;
+            get => _point;
             set
             {
-                _heatPoint = value;
+                _point = value;
                 LoadData();
             }
         }
@@ -102,18 +102,18 @@ namespace DeepSightAI
 
         private void Button_Run_Click(object sender, EventArgs e)
         {
-            if (_heatPoint != null)
+            if (_point != null)
             {
-                RunTestRequested?.Invoke(this, new SingleImageTestEventArgs { HeatPoint = _heatPoint });
+                RunTestRequested?.Invoke(this, new SingleImageTestEventArgs { HeatPoint = _point });
             }
         }
 
         private void PictureBox_DoubleClick(object sender, EventArgs e)
         {
-            if (_heatPoint == null) return;
+            if (_point == null) return;
 
             using (var form = new FrDefectImageDetail(
-                _heatPoint,
+                _point,
                 _rawOriginalImage,
                 pictureBox_TemplateImage.Image,
                 pictureBox_OriginalImage.Image))
@@ -127,7 +127,7 @@ namespace DeepSightAI
         /// </summary>
         private void LoadData()
         {
-            if (_heatPoint == null)
+            if (_point == null)
             {
                 label_SN.Text = "";
                 label_Status.Text = "";
@@ -139,7 +139,7 @@ namespace DeepSightAI
             }
 
             // 第一行：SN信息
-            label_SN.Text = !string.IsNullOrEmpty(_heatPoint.DisplaySN) ? _heatPoint.DisplaySN : "";
+            label_SN.Text = !string.IsNullOrEmpty(_point.DisplaySN) ? _point.DisplaySN : "";
 
             // 第四行：状态信息
             UpdateStatusLabel();
@@ -193,48 +193,25 @@ namespace DeepSightAI
             pictureBox_OriginalImage.Image?.Dispose();
             pictureBox_OriginalImage.Image = null;
 
-            if (string.IsNullOrEmpty(_heatPoint.ImagePath))
+            if (string.IsNullOrEmpty(_point.ImagePath))
                 return;
 
             try
             {
-                var bmp = LoadImageFromMinio(_heatPoint.ImagePath);
+                var bmp = LoadImageFromMinio(_point.ImagePath);
                 if (bmp != null)
                 {
                     _rawOriginalImage?.Dispose();
                     _rawOriginalImage = bmp;
-                    pictureBox_OriginalImage.Image = ImageHelper.DrawDefectBoxOnImage(bmp, _heatPoint);
+                    pictureBox_OriginalImage.Image = ImageHelper.DrawDefectBoxOnImage(bmp, _point);
                 }
             }
             catch (Exception ex)
             {
-                LogTextHelper.Error($"加载图片失败: {_heatPoint.ImagePath}, {ex.Message}");
+                LogTextHelper.Error($"加载图片失败: {_point.ImagePath}, {ex.Message}");
             }
         }
 
-        /// <summary>
-        /// 从缺陷图Minio路径派生模板图路径（在扩展名前加[E]）
-        /// </summary>
-        private string BuildTemplateMinioPath(string defectMinioPath)
-        {
-            if (string.IsNullOrEmpty(defectMinioPath)) return null;
-
-            // 格式: IP:objectKey，先分离IP和objectKey
-            int colonIndex = defectMinioPath.IndexOf(':');
-            if (colonIndex < 0) return null;
-
-            string ip = defectMinioPath.Substring(0, colonIndex);
-            string objectKey = defectMinioPath.Substring(colonIndex + 1);
-
-            // 在扩展名前添加[E]
-            int lastDotIndex = objectKey.LastIndexOf('.');
-            if (lastDotIndex > 0)
-                objectKey = objectKey.Substring(0, lastDotIndex) + "[E]" + objectKey.Substring(lastDotIndex);
-            else
-                objectKey = objectKey + "[E]";
-
-            return $"{ip}:{objectKey}";
-        }
 
         /// <summary>
         /// 加载模板图（通过Minio加载，路径从缺陷图路径派生）
@@ -244,18 +221,18 @@ namespace DeepSightAI
             pictureBox_TemplateImage.Image?.Dispose();
             pictureBox_TemplateImage.Image = null;
 
-            if (string.IsNullOrEmpty(_heatPoint.ImagePath))
+            if (string.IsNullOrEmpty(_point.ImagePath))
                 return;
 
             try
             {
-                string templatePath = BuildTemplateMinioPath(_heatPoint.ImagePath);
+                string templatePath = _point.TempImagePath;
                 if (string.IsNullOrEmpty(templatePath)) return;
 
                 var bmp = LoadImageFromMinio(templatePath);
                 if (bmp != null)
                 {
-                    pictureBox_TemplateImage.Image = ImageHelper.DrawDefectBoxOnImage(bmp, _heatPoint);
+                    pictureBox_TemplateImage.Image = ImageHelper.DrawDefectBoxOnImage(bmp, _point);
                     bmp.Dispose();
                 }
             }
@@ -270,15 +247,15 @@ namespace DeepSightAI
         /// </summary>
         public void UpdateStatusLabel()
         {
-            if (_heatPoint == null) return;
+            if (_point == null) return;
 
             if (IsHomeMode)
             {
-                label_Status.Text = $"AI: {GetStatusText(_heatPoint.AIStatus)}";
+                label_Status.Text = $"AI: {GetStatusText(_point.AIStatus)}";
             }
             else
             {
-                label_Status.Text = $"AI: {GetStatusText(_heatPoint.AIStatus)}  |  VVS: {GetStatusText(_heatPoint.VVSStatus)}";
+                label_Status.Text = $"AI: {GetStatusText(_point.AIStatus)}  |  VVS: {GetStatusText(_point.VVSStatus)}";
             }
         }
 
@@ -298,9 +275,9 @@ namespace DeepSightAI
             else
             {
                 // 未选中状态：根据VVS状态显示边框颜色
-                if (_heatPoint != null)
+                if (_point != null)
                 {
-                    switch (_heatPoint.VVSStatus)
+                    switch (_point.VVSStatus)
                     {
                         case 1: // OK
                             borderColor = Color.Green;
@@ -374,7 +351,7 @@ namespace DeepSightAI
         public void SetDisplayData(string headerText, Bitmap originalImage, Bitmap rawOriginalImage,
             Bitmap templateImage, string statusText, DetectInfo detectInfo = null)
         {
-            _heatPoint = detectInfo;
+            _point = detectInfo;
 
             // 标题
             label_SN.Text = headerText ?? "";
@@ -415,7 +392,7 @@ namespace DeepSightAI
         /// </summary>
         public void ClearDisplay()
         {
-            _heatPoint = null;
+            _point = null;
             label_SN.Text = "";
             label_Status.Text = "";
 

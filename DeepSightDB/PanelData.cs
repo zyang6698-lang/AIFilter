@@ -22,6 +22,8 @@ namespace DeepSightDB
         public int OriginWidth { get; set; }
         public int OriginHeight { get; set; }
         public string ImagePath { get; set; }
+        public string TempImagePath { get; set; }
+        public string GerberImagePath {  get; set; }
 
         public string DrawInfo { get; set; }
         // 分阶段状态：0 未运行 / 1 OK / 2 NG / 3 异常
