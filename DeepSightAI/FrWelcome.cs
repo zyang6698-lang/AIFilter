@@ -91,5 +91,20 @@ namespace DeepSightAI
         {
             Machine.Init();
         }
+
+        /// <summary>
+        /// 在欢迎界面上展示启动错误详情，展开窗体并保持界面可交互，不弹窗、不强制结束进程。
+        /// </summary>
+        /// <param name="errorDetail">需要展示的错误描述，支持多行</param>
+        internal void ShowError(string errorDetail)
+        {
+            lbl_step.Text = "  ✖  启动出错，请查看以下错误信息";
+            lbl_step.ForeColor = Color.OrangeRed;
+            bar_step.Value = 0;
+            lbl_error.Text = errorDetail;
+            lbl_error.Visible = true;
+            Height = 470;
+            Application.DoEvents();
+        }
     }
 }

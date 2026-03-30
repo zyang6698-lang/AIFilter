@@ -34,6 +34,7 @@
             this.bar_step = new System.Windows.Forms.ProgressBar();
             this.btn_exit = new System.Windows.Forms.Button();
             this.lbl_title = new System.Windows.Forms.Label();
+            this.lbl_error = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // lbl_version
@@ -89,9 +90,22 @@
             this.btn_exit.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             this.btn_exit.UseVisualStyleBackColor = false;
             this.btn_exit.Click += new System.EventHandler(this.btn_exit_Click);
-            // 
+            //
+            // lbl_error
+            //
+            this.lbl_error.AutoSize = false;
+            this.lbl_error.BackColor = System.Drawing.Color.Transparent;
+            this.lbl_error.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lbl_error.ForeColor = System.Drawing.Color.OrangeRed;
+            this.lbl_error.Location = new System.Drawing.Point(10, 362);
+            this.lbl_error.Name = "lbl_error";
+            this.lbl_error.Size = new System.Drawing.Size(591, 95);
+            this.lbl_error.TabIndex = 12;
+            this.lbl_error.Text = "";
+            this.lbl_error.Visible = false;
+            //
             // lbl_title
-            // 
+            //
             this.lbl_title.BackColor = System.Drawing.Color.Transparent;
             this.lbl_title.Font = new System.Drawing.Font("微软雅黑", 36F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.lbl_title.ForeColor = System.Drawing.Color.White;
@@ -109,6 +123,7 @@
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(10)))), ((int)(((byte)(57)))), ((int)(((byte)(103)))));
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.ClientSize = new System.Drawing.Size(611, 360);
+            this.Controls.Add(this.lbl_error);
             this.Controls.Add(this.lbl_title);
             this.Controls.Add(this.btn_exit);
             this.Controls.Add(this.lbl_step);
@@ -137,5 +152,6 @@
         internal System.Windows.Forms.ProgressBar bar_step;
         private System.Windows.Forms.Button btn_exit;
         internal System.Windows.Forms.Label lbl_title;
+        internal System.Windows.Forms.Label lbl_error;
     }
 }

@@ -9,8 +9,6 @@ using System.Windows.Forms;
 using DeepSightWorkLib;
 using DeepSightModel;
 using DeepSightModel.Configuration;
-using System.Drawing;
-using System.Diagnostics;
 
 namespace DeepSightAI
 {
@@ -72,28 +70,18 @@ namespace DeepSightAI
                 UpdateStep(20, "程序初始化中...", true);
                 if (!config_class.Read(out sysConfig))
                 {
-                    FrWelcome.Instance.lbl_step.Text = "                  启动出错";
-                    FrWelcome.Instance.lbl_step.ForeColor = Color.Red;
-                    FrWelcome.Instance.Height = 356;
-
-                    MessageBox.Show("\r\n启动出错,读取常规配置文件异常！", "异常", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-                    Process process = Process.GetCurrentProcess();
-                    process.Kill();
-                    process.Dispose();
+                    FrWelcome.Instance.ShowError(
+                        "读取常规配置文件失败！\r\n" +
+                        "配置文件路径：configs\\general.config.json\r\n" +
+                        "请检查文件是否存在、JSON 格式是否正确。");
                     return;
                 }
                 if (!sol_class.Read(out solconfig))
                 {
-                    FrWelcome.Instance.lbl_step.Text = "                  启动出错";
-                    FrWelcome.Instance.lbl_step.ForeColor = Color.Red;
-                    FrWelcome.Instance.Height = 356;
-
-                    MessageBox.Show("\r\n启动出错,读取AISolution配置文件异常！", "异常", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-                    Process process = Process.GetCurrentProcess();
-                    process.Kill();
-                    process.Dispose();
+                    FrWelcome.Instance.ShowError(
+                        "读取 AI 方案配置文件失败！\r\n" +
+                        "配置文件路径：configs\\aisolution.config.json\r\n" +
+                        "请检查文件是否存在、JSON 格式是否正确。");
                     return;
                 }
                 // 尝试读取 Agent 配置（可能不存在）
@@ -154,8 +142,9 @@ namespace DeepSightAI
             }
             catch (Exception ex)
             {
-                LogTextHelper.Error("Error", ex);
-                throw;
+                LogTextHelper.Error("启动异常", ex);
+                FrWelcome.Instance.ShowError(
+                    $"启动时发生未知错误：\r\n{ex.Message}\r\n\r\n详细信息已写入日志，请联系技术支持。");
             }
 
         }
