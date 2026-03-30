@@ -37,6 +37,27 @@ namespace DeepSightModel.Configuration
 
         #endregion
 
+        #region 快捷键默认配置
+
+        /// <summary>标记VVS_OK的默认快捷键</summary>
+        public const string ShortcutVvsOk = "D1";
+        /// <summary>标记VVS_NG的默认快捷键</summary>
+        public const string ShortcutVvsNg = "D2";
+        /// <summary>标记VVS未设置的默认快捷键</summary>
+        public const string ShortcutVvsNotSet = "D3";
+        /// <summary>切换到下一行的默认快捷键</summary>
+        public const string ShortcutNextRow = "Tab";
+        /// <summary>下一张图片的默认快捷键</summary>
+        public const string ShortcutNextImage = "Down";
+        /// <summary>上一张图片的默认快捷键</summary>
+        public const string ShortcutPrevImage = "Up";
+        /// <summary>下一页的默认快捷键</summary>
+        public const string ShortcutNextPage = "Right";
+        /// <summary>上一页的默认快捷键</summary>
+        public const string ShortcutPrevPage = "Left";
+
+        #endregion
+
         #region Minio 配置
 
         /// <summary>

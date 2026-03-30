@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -18,10 +19,10 @@ using static DeepSightDB.AnalyticsHelper;
 
 namespace DeepSightAI
 {
-    public partial class AnalyticsControl : UserControl
+    public partial class ToolboxControl : UserControl
     {
         ConcurrentQueue<EmployeeReport> dataQueues = new ConcurrentQueue<EmployeeReport>();
-        public AnalyticsControl()
+        public ToolboxControl()
         {
             InitializeComponent();
         }
@@ -287,6 +288,137 @@ namespace DeepSightAI
                 }
             }
             return null;
+        }
+        #endregion
+
+        #region 导出今日日志功能
+        private async void btnExportLogs_Click(object sender, EventArgs e)
+        {
+            btnExportLogs.Enabled = false;
+            UpdateProgress(0, "开始导出今日日志...");
+
+            try
+            {
+                string today = DateTime.Now.ToString("yyyyMMdd");
+                string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                string logFolder = Path.Combine(baseDir, "Log");
+                string configLogFolder = Path.Combine(baseDir, "人员操作配置记录");
+
+                // 导出目标文件夹
+                string exportDir = Path.Combine(baseDir, "LogExport");
+                if (!Directory.Exists(exportDir))
+                    Directory.CreateDirectory(exportDir);
+
+                string zipFileName = $"Logs_{today}_{DateTime.Now:HHmmss}.zip";
+                string zipFilePath = Path.Combine(exportDir, zipFileName);
+
+                int fileCount = await Task.Run(() =>
+                {
+                    // 收集今日的日志文件
+                    var filesToZip = new List<(string fullPath, string entryName)>();
+
+                    // 1. 从 Log 文件夹收集今日文件（Serilog 按小时滚动，文件名含日期）
+                    if (Directory.Exists(logFolder))
+                    {
+                        var logFiles = Directory.GetFiles(logFolder, "*.*", SearchOption.AllDirectories)
+                            .Where(f =>
+                            {
+                                var fileName = Path.GetFileName(f);
+                                return fileName.Contains(today) ||
+                                       fileName.Contains(DateTime.Now.ToString("yyyy-MM-dd")) ||
+                                       fileName.Contains(DateTime.Now.ToString("yyyyMMdd"));
+                            })
+                            .ToList();
+
+                        // 如果按文件名没找到，按最后写入时间筛选
+                        if (logFiles.Count == 0)
+                        {
+                            logFiles = Directory.GetFiles(logFolder, "*.*", SearchOption.AllDirectories)
+                                .Where(f => File.GetLastWriteTime(f).Date == DateTime.Today)
+                                .ToList();
+                        }
+
+                        foreach (var file in logFiles)
+                        {
+                            string relative = GetRelativePath(logFolder, file);
+                            filesToZip.Add((file, Path.Combine("Log", relative)));
+                        }
+                    }
+
+                    // 2. 从人员操作配置记录文件夹收集今日文件
+                    if (Directory.Exists(configLogFolder))
+                    {
+                        var configFiles = Directory.GetFiles(configLogFolder, "*.*", SearchOption.AllDirectories)
+                            .Where(f =>
+                            {
+                                var fileName = Path.GetFileName(f);
+                                return fileName.Contains(today) ||
+                                       fileName.Contains(DateTime.Now.ToString("yyyy-MM-dd")) ||
+                                       File.GetLastWriteTime(f).Date == DateTime.Today;
+                            })
+                            .ToList();
+
+                        foreach (var file in configFiles)
+                        {
+                            string relative = GetRelativePath(configLogFolder, file);
+                            filesToZip.Add((file, Path.Combine("人员操作配置记录", relative)));
+                        }
+                    }
+
+                    if (filesToZip.Count == 0)
+                        return 0;
+
+                    // 创建 zip 文件
+                    using (var zip = ZipFile.Open(zipFilePath, ZipArchiveMode.Create))
+                    {
+                        foreach (var (fullPath, entryName) in filesToZip)
+                        {
+                            try
+                            {
+                                // 使用 FileShare.ReadWrite 读取可能被占用的日志文件
+                                using (var sourceStream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                                {
+                                    var entry = zip.CreateEntry(entryName, CompressionLevel.Optimal);
+                                    using (var entryStream = entry.Open())
+                                    {
+                                        sourceStream.CopyTo(entryStream);
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                LogTextHelper.Error($"添加日志文件到压缩包失败: {fullPath} -> {ex.Message}");
+                            }
+                        }
+                    }
+
+                    return filesToZip.Count;
+                });
+
+                if (fileCount == 0)
+                {
+                    UpdateProgress(0, "未找到今日的日志文件");
+                    MessageBox.Show("未找到今日的日志文件。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                UpdateProgress(100, $"导出完成！共 {fileCount} 个文件 -> {zipFileName}");
+                MessageBox.Show($"今日日志导出完成！\n共 {fileCount} 个文件\n保存至: {zipFilePath}",
+                    "完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                // 打开导出文件夹并选中 zip 文件
+                Process.Start("explorer.exe", $"/select,\"{zipFilePath}\"");
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error("导出日志失败", ex);
+                UpdateProgress(0, $"导出失败: {ex.Message}");
+                MessageBox.Show($"导出日志失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                btnExportLogs.Enabled = true;
+            }
         }
         #endregion
 

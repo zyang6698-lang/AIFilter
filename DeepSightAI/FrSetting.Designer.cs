@@ -33,6 +33,7 @@
             this.table_show = new System.Windows.Forms.TableLayoutPanel();
             this.pnl_window = new System.Windows.Forms.Panel();
             this.panel3 = new System.Windows.Forms.Panel();
+            this.panel9 = new System.Windows.Forms.Panel();
             this.panel8 = new System.Windows.Forms.Panel();
             this.panel7 = new System.Windows.Forms.Panel();
             this.panel6 = new System.Windows.Forms.Panel();
@@ -100,6 +101,7 @@
             // 
             this.pnl_window.AutoScroll = true;
             this.pnl_window.AutoScrollMinSize = new System.Drawing.Size(0, 300);
+            this.pnl_window.Controls.Add(this.panel9);
             this.pnl_window.Controls.Add(this.panel3);
             this.pnl_window.Controls.Add(this.panel8);
             this.pnl_window.Controls.Add(this.panel7);
@@ -114,9 +116,16 @@
             this.pnl_window.Name = "pnl_window";
             this.pnl_window.Size = new System.Drawing.Size(696, 541);
             this.pnl_window.TabIndex = 0;
-            // 
+            //
+            // panel9
+            //
+            this.panel9.Location = new System.Drawing.Point(16, 496);
+            this.panel9.Name = "panel9";
+            this.panel9.Size = new System.Drawing.Size(671, 400);
+            this.panel9.TabIndex = 8;
+            //
             // panel3
-            // 
+            //
             this.panel3.Location = new System.Drawing.Point(16, 116);
             this.panel3.Name = "panel3";
             this.panel3.Size = new System.Drawing.Size(671, 42);
@@ -233,6 +242,7 @@
         private System.Windows.Forms.Panel panel7;
         private System.Windows.Forms.Panel panel8;
         private System.Windows.Forms.Panel panel3;
+        private System.Windows.Forms.Panel panel9;
         private System.Windows.Forms.Panel panel2;
     }
 }

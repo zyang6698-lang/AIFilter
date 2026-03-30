@@ -61,9 +61,12 @@
             this.defectDetailControl1 = new DeepSightAI.DefectDetailControl();
             this.tabPage_ValidationTest = new System.Windows.Forms.TabPage();
             this.validationTestResultControl1 = new DeepSightAI.ValidationTestResultControl();
+            this.tabPage_ConsistencyDashboard = new System.Windows.Forms.TabPage();
+            this.consistencyTestDashboard1 = new DeepSightAI.ConsistencyTestDashboard();
             this.contextMenuStrip_Lot = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripMenuItem_RunTest = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem_SecondaryInference = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem_AddToDataset = new System.Windows.Forms.ToolStripMenuItem();
             this.panel_Main.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer_Main)).BeginInit();
             this.splitContainer_Main.Panel1.SuspendLayout();
@@ -79,6 +82,7 @@
             this.panel_SnSearch.SuspendLayout();
             this.tabPage_Details.SuspendLayout();
             this.tabPage_ValidationTest.SuspendLayout();
+            this.tabPage_ConsistencyDashboard.SuspendLayout();
             this.contextMenuStrip_Lot.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -176,6 +180,7 @@
             this.tabControl_Main.Controls.Add(this.tabPage_Grid);
             this.tabControl_Main.Controls.Add(this.tabPage_Details);
             this.tabControl_Main.Controls.Add(this.tabPage_ValidationTest);
+            this.tabControl_Main.Controls.Add(this.tabPage_ConsistencyDashboard);
             this.tabControl_Main.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl_Main.Location = new System.Drawing.Point(0, 0);
             this.tabControl_Main.Margin = new System.Windows.Forms.Padding(5);
@@ -469,15 +474,39 @@
             this.validationTestResultControl1.Name = "validationTestResultControl1";
             this.validationTestResultControl1.Size = new System.Drawing.Size(1536, 1049);
             this.validationTestResultControl1.TabIndex = 0;
-            // 
+            //
+            // tabPage_ConsistencyDashboard
+            //
+            this.tabPage_ConsistencyDashboard.Controls.Add(this.consistencyTestDashboard1);
+            this.tabPage_ConsistencyDashboard.Location = new System.Drawing.Point(4, 25);
+            this.tabPage_ConsistencyDashboard.Margin = new System.Windows.Forms.Padding(5);
+            this.tabPage_ConsistencyDashboard.Name = "tabPage_ConsistencyDashboard";
+            this.tabPage_ConsistencyDashboard.Padding = new System.Windows.Forms.Padding(5);
+            this.tabPage_ConsistencyDashboard.Size = new System.Drawing.Size(1546, 1059);
+            this.tabPage_ConsistencyDashboard.TabIndex = 3;
+            this.tabPage_ConsistencyDashboard.Text = "一致性测试看板";
+            this.tabPage_ConsistencyDashboard.UseVisualStyleBackColor = true;
+            //
+            // consistencyTestDashboard1
+            //
+            this.consistencyTestDashboard1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(30)))));
+            this.consistencyTestDashboard1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.consistencyTestDashboard1.Font = new System.Drawing.Font("微软雅黑", 9F);
+            this.consistencyTestDashboard1.Location = new System.Drawing.Point(5, 5);
+            this.consistencyTestDashboard1.Margin = new System.Windows.Forms.Padding(5);
+            this.consistencyTestDashboard1.Name = "consistencyTestDashboard1";
+            this.consistencyTestDashboard1.Size = new System.Drawing.Size(1536, 1049);
+            this.consistencyTestDashboard1.TabIndex = 0;
+            //
             // contextMenuStrip_Lot
             // 
             this.contextMenuStrip_Lot.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.contextMenuStrip_Lot.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItem_AddToDataset,
             this.toolStripMenuItem_RunTest,
             this.toolStripMenuItem_SecondaryInference});
             this.contextMenuStrip_Lot.Name = "contextMenuStrip_Lot";
-            this.contextMenuStrip_Lot.Size = new System.Drawing.Size(214, 52);
+            this.contextMenuStrip_Lot.Size = new System.Drawing.Size(260, 76);
             // 
             // toolStripMenuItem_RunTest
             // 
@@ -488,9 +517,15 @@
             // toolStripMenuItem_SecondaryInference
             // 
             this.toolStripMenuItem_SecondaryInference.Name = "toolStripMenuItem_SecondaryInference";
-            this.toolStripMenuItem_SecondaryInference.Size = new System.Drawing.Size(213, 24);
+            this.toolStripMenuItem_SecondaryInference.Size = new System.Drawing.Size(259, 24);
             this.toolStripMenuItem_SecondaryInference.Text = "运行二次推理";
-            // 
+            //
+            // toolStripMenuItem_AddToDataset
+            //
+            this.toolStripMenuItem_AddToDataset.Name = "toolStripMenuItem_AddToDataset";
+            this.toolStripMenuItem_AddToDataset.Size = new System.Drawing.Size(259, 24);
+            this.toolStripMenuItem_AddToDataset.Text = "添加到一致性测试数据集";
+            //
             // AIReviewControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
@@ -516,6 +551,7 @@
             this.panel_SnSearch.PerformLayout();
             this.tabPage_Details.ResumeLayout(false);
             this.tabPage_ValidationTest.ResumeLayout(false);
+            this.tabPage_ConsistencyDashboard.ResumeLayout(false);
             this.contextMenuStrip_Lot.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -554,8 +590,11 @@
         private System.Windows.Forms.Label label_ReviewDetail;
         private System.Windows.Forms.TabPage tabPage_ValidationTest;
         private ValidationTestResultControl validationTestResultControl1;
+        private System.Windows.Forms.TabPage tabPage_ConsistencyDashboard;
+        private ConsistencyTestDashboard consistencyTestDashboard1;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip_Lot;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem_RunTest;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem_SecondaryInference;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem_AddToDataset;
     }
 }

@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.tabPage9 = new System.Windows.Forms.TabPage();
-            this.analyticsControl1 = new DeepSightAI.AnalyticsControl();
+            this.analyticsControl1 = new DeepSightAI.ToolboxControl();
             this.tabPage7 = new System.Windows.Forms.TabPage();
             this.heatMapControl21 = new DeepSightAI.HeatMapControl2();
             this.tabPage10 = new System.Windows.Forms.TabPage();
@@ -48,7 +48,7 @@
             this.tabPage9.Name = "tabPage9";
             this.tabPage9.Size = new System.Drawing.Size(1373, 792);
             this.tabPage9.TabIndex = 5;
-            this.tabPage9.Text = "Debug功能";
+            this.tabPage9.Text = "工具箱";
             this.tabPage9.UseVisualStyleBackColor = true;
             // 
             // analyticsControl1
@@ -138,7 +138,7 @@
         #endregion
         private System.Windows.Forms.DataGridViewTextBoxColumn sn;
         private System.Windows.Forms.TabPage tabPage9;
-        private AnalyticsControl analyticsControl1;
+        private ToolboxControl analyticsControl1;
         private System.Windows.Forms.TabPage tabPage7;
         private HeatMapControl2 heatMapControl21;
         private System.Windows.Forms.TabPage tabPage10;

@@ -20,6 +20,7 @@ namespace DeepSightAI
             treeNode3 = new System.Windows.Forms.TreeNode("机台配置");
             treeNode4 = new System.Windows.Forms.TreeNode("数据库配置");
             treeNode5 = new System.Windows.Forms.TreeNode("重点缺陷管理");
+            treeNode6 = new System.Windows.Forms.TreeNode("快捷键配置");
 
             treeNode1.Name = "节点0";
             treeNode1.Text = "常规配置";
@@ -31,6 +32,8 @@ namespace DeepSightAI
             treeNode4.Text = "数据库配置";
             treeNode5.Name = "节点4";
             treeNode5.Text = "重点缺陷管理";
+            treeNode6.Name = "节点5";
+            treeNode6.Text = "快捷键配置";
 
             this.tvw_setting.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
             treeNode1,
@@ -38,6 +41,7 @@ namespace DeepSightAI
             treeNode3,
             treeNode4,
             treeNode5,
+            treeNode6,
             });
 
             Load += FrSetting_Load;
@@ -85,6 +89,7 @@ namespace DeepSightAI
         System.Windows.Forms.TreeNode treeNode3;
         System.Windows.Forms.TreeNode treeNode4;
         System.Windows.Forms.TreeNode treeNode5;
+        System.Windows.Forms.TreeNode treeNode6;
         public void Language(int language)
         {
             if (language == 1)
@@ -96,6 +101,7 @@ namespace DeepSightAI
                 this.treeNode3.Text = "机台配置";
                 this.treeNode4.Text = "数据库配置";
                 this.treeNode5.Text = "重点缺陷管理";
+                this.treeNode6.Text = "快捷键配置";
             }
             else
             {
@@ -105,6 +111,7 @@ namespace DeepSightAI
                 this.treeNode3.Text = "AI";
                 this.treeNode4.Text = "Database";
                 this.treeNode5.Text = "Key Defect";
+                this.treeNode6.Text = "Shortcuts";
             }
         }
 
@@ -155,6 +162,13 @@ namespace DeepSightAI
                 FrKeyDefectConfig.Instance.Dock = DockStyle.Fill;
                 FrKeyDefectConfig.Instance.Show();
 
+                //// 快捷键配置
+                panel9.Controls.Clear();
+                FrShortcutConfig.Instance.TopLevel = false;
+                FrShortcutConfig.Instance.Parent = panel9;
+                FrShortcutConfig.Instance.Dock = DockStyle.Fill;
+                FrShortcutConfig.Instance.Show();
+
             }
             catch (Exception ex)
             {
@@ -186,6 +200,7 @@ namespace DeepSightAI
                         panel6.Visible = false;
                         panel7.Visible = false;
                         panel8.Visible = false;
+                        panel9.Visible = false;
 
                         break;
 
@@ -200,6 +215,7 @@ namespace DeepSightAI
                         panel6.Visible = false;
                         panel7.Visible = false;
                         panel8.Visible = false;
+                        panel9.Visible = false;
 
                         break;
 
@@ -214,6 +230,7 @@ namespace DeepSightAI
                         panel6.Visible = false;
                         panel7.Visible = false;
                         panel8.Visible = false;
+                        panel9.Visible = false;
 
                         break;
 
@@ -228,6 +245,7 @@ namespace DeepSightAI
                         panel6.Visible = false;
                         panel7.Visible = false;
                         panel8.Visible = false;
+                        panel9.Visible = false;
 
                         break;
 
@@ -243,6 +261,23 @@ namespace DeepSightAI
                         panel6.Visible = false;
                         panel7.Visible = false;
                         panel8.Visible = false;
+                        panel9.Visible = false;
+
+                        break;
+
+                    case "快捷键配置":
+                    case "Shortcuts":
+                        panel9.Dock = DockStyle.Fill;
+
+                        panel1.Visible = false;
+                        panel2.Visible = false;
+                        panel3.Visible = false;
+                        panel4.Visible = false;
+                        panel5.Visible = false;
+                        panel6.Visible = false;
+                        panel7.Visible = false;
+                        panel8.Visible = false;
+                        panel9.Visible = true;
 
                         break;
                 }
@@ -323,6 +358,19 @@ namespace DeepSightAI
                     else
                     {
                         MessageBox.Show("重点缺陷配置保存失败", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+                if (tvw_setting.SelectedNode.Text == "快捷键配置" || tvw_setting.SelectedNode.Text == "Shortcuts")
+                {
+                    FrShortcutConfig.Instance.SaveToConfig();
+                    if (Machine.config_class.Save(Machine.sysConfig))
+                    {
+                        Machine.master.SysConfig = Machine.sysConfig;
+                        MessageBox.Show("快捷键配置保存成功", "保存成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show("快捷键配置保存失败", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
             }

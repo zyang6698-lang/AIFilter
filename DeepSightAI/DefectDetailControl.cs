@@ -217,48 +217,77 @@ namespace DeepSightAI
             }
         }
 
+        /// <summary>
+        /// 将配置中的快捷键字符串解析为Keys枚举值
+        /// </summary>
+        private static Keys ParseShortcutKey(string keyName)
+        {
+            if (string.IsNullOrEmpty(keyName)) return Keys.None;
+            if (Enum.TryParse(keyName, true, out Keys result))
+                return result;
+            return Keys.None;
+        }
+
+        /// <summary>
+        /// 判断按下的键是否匹配配置的快捷键（同时匹配数字键和小键盘数字键）
+        /// </summary>
+        private static bool MatchShortcutKey(Keys keyData, string configKeyName)
+        {
+            Keys configKey = ParseShortcutKey(configKeyName);
+            if (configKey == Keys.None) return false;
+            if (keyData == configKey) return true;
+            // D0-D9 同时匹配 NumPad0-NumPad9
+            if (configKeyName != null && configKeyName.Length == 2 && configKeyName.StartsWith("D") && char.IsDigit(configKeyName[1]))
+            {
+                Keys numPadKey = ParseShortcutKey("NumPad" + configKeyName[1]);
+                if (keyData == numPadKey) return true;
+            }
+            return false;
+        }
+
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            if (keyData == Keys.D1 || keyData == Keys.NumPad1)
+            var cfg = Machine.sysConfig;
+
+            if (cfg != null && MatchShortcutKey(keyData, cfg.ShortcutVvsOk))
             {
                 TagImage("VVS_OK", false);
                 SelectNextImage();
                 return true;
             }
-            else if (keyData == Keys.D2 || keyData == Keys.NumPad2)
+            else if (cfg != null && MatchShortcutKey(keyData, cfg.ShortcutVvsNg))
             {
                 TagImage("VVS_NG", false);
                 SelectNextImage();
                 return true;
             }
-            else if (keyData == Keys.D3 || keyData == Keys.NumPad3)
+            else if (cfg != null && MatchShortcutKey(keyData, cfg.ShortcutVvsNotSet))
             {
-                // 按键3：设置为未设置状态
                 TagImage("VVS_NotSet", false);
                 SelectNextImage();
                 return true;
             }
-            else if (keyData == Keys.Tab)
+            else if (cfg != null && MatchShortcutKey(keyData, cfg.ShortcutNextRow))
             {
                 // 触发事件，通知父控件切换到下一行
                 SelectNextRowRequested?.Invoke(this, EventArgs.Empty);
                 return true;
             }
-            else if (keyData == Keys.Down)
+            else if (cfg != null && MatchShortcutKey(keyData, cfg.ShortcutNextImage))
             {
-                // 下键：下一张图片
+                // 下一张图片
                 SelectNextImage();
                 return true;
             }
-            else if (keyData == Keys.Up)
+            else if (cfg != null && MatchShortcutKey(keyData, cfg.ShortcutPrevImage))
             {
-                // 上键：上一张图片
+                // 上一张图片
                 SelectPreviousImage();
                 return true;
             }
-            else if (keyData == Keys.Right)
+            else if (cfg != null && MatchShortcutKey(keyData, cfg.ShortcutNextPage))
             {
-                // 右键：下一页
+                // 下一页
                 if (_currentPage < _totalPages)
                 {
                     _currentPage++;
@@ -266,9 +295,9 @@ namespace DeepSightAI
                 }
                 return true;
             }
-            else if (keyData == Keys.Left)
+            else if (cfg != null && MatchShortcutKey(keyData, cfg.ShortcutPrevPage))
             {
-                // 左键：上一页
+                // 上一页
                 if (_currentPage > 1)
                 {
                     _currentPage--;

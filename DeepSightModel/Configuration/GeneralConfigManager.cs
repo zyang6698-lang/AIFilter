@@ -27,7 +27,15 @@ namespace DeepSightModel.Configuration
                 MaxDefectCount = DefaultValues.MaxDefectCount,
                 AgentShutdownTimeout = DefaultValues.AgentShutdownTimeout,
                 WelcomeTitle = DefaultValues.WelcomeTitle,
-                WelcomeFontSize = DefaultValues.WelcomeFontSize
+                WelcomeFontSize = DefaultValues.WelcomeFontSize,
+                ShortcutVvsOk = DefaultValues.ShortcutVvsOk,
+                ShortcutVvsNg = DefaultValues.ShortcutVvsNg,
+                ShortcutVvsNotSet = DefaultValues.ShortcutVvsNotSet,
+                ShortcutNextRow = DefaultValues.ShortcutNextRow,
+                ShortcutNextImage = DefaultValues.ShortcutNextImage,
+                ShortcutPrevImage = DefaultValues.ShortcutPrevImage,
+                ShortcutNextPage = DefaultValues.ShortcutNextPage,
+                ShortcutPrevPage = DefaultValues.ShortcutPrevPage
             };
         }
 

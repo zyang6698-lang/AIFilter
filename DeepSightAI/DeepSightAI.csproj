@@ -273,7 +273,10 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Windows.Forms.DataVisualization" />
     <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
@@ -289,6 +292,15 @@
     </Compile>
     <Compile Include="AnalyticsControl.Designer.cs">
       <DependentUpon>AnalyticsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AddToDatasetDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ConsistencyTestDashboard.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ConsistencyTestDashboard.Designer.cs">
+      <DependentUpon>ConsistencyTestDashboard.cs</DependentUpon>
     </Compile>
     <Compile Include="ArrayConfigDialog.cs">
       <SubType>Form</SubType>
@@ -398,6 +410,12 @@
     <Compile Include="SettingPages\FrKeyDefectConfig.Designer.cs">
       <DependentUpon>FrKeyDefectConfig.cs</DependentUpon>
     </Compile>
+    <Compile Include="SettingPages\FrShortcutConfig.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingPages\FrShortcutConfig.Designer.cs">
+      <DependentUpon>FrShortcutConfig.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingPages\MachineStatusCard.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -464,6 +482,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingPages\FrKeyDefectConfig.resx">
       <DependentUpon>FrKeyDefectConfig.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingPages\FrShortcutConfig.resx">
+      <DependentUpon>FrShortcutConfig.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ValidationTestResultControl.resx">
       <DependentUpon>ValidationTestResultControl.cs</DependentUpon>

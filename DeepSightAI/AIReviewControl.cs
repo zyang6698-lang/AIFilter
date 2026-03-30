@@ -96,6 +96,7 @@ namespace DeepSightAI
             // 订阅右键菜单事件
             toolStripMenuItem_RunTest.Click += ToolStripMenuItem_RunTest_Click;
             toolStripMenuItem_SecondaryInference.Click += ToolStripMenuItem_SecondaryInference_Click;
+            toolStripMenuItem_AddToDataset.Click += ToolStripMenuItem_AddToDataset_Click;
 
             // 订阅页面切换事件 - 页面跳转时自动保存
             tabControl_Main.SelectedIndexChanged += TabControl_Main_SelectedIndexChanged;
@@ -1263,6 +1264,54 @@ namespace DeepSightAI
             {
                 this.Enabled = true;
                 label_LotTitle.Text = $"Lot: {lotNumber}";
+            }
+        }
+
+        /// <summary>
+        /// 添加到一致性测试数据集菜单项点击事件
+        /// </summary>
+        private void ToolStripMenuItem_AddToDataset_Click(object sender, EventArgs e)
+        {
+            var selectedNode = treeView_Lots.SelectedNode;
+            if (selectedNode == null || selectedNode.Level != 0)
+            {
+                MessageBox.Show("请先选择一个Lot节点。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string lotNumber = selectedNode.Name;
+
+            if (!_lotGroups.TryGetValue(lotNumber, out var lotItems) || lotItems.Count == 0)
+            {
+                MessageBox.Show($"Lot {lotNumber} 中没有数据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                var dataStore = new ConsistencyTestDataStore();
+                var datasets = dataStore.LoadDatasets();
+
+                using (var dialog = new AddToDatasetDialog(datasets, lotNumber, lotItems))
+                {
+                    if (dialog.ShowDialog(this.FindForm()) == DialogResult.OK)
+                    {
+                        // 保存更新后的数据集
+                        dataStore.SaveDataset(dialog.SelectedDataset);
+                        // 刷新看板
+                        consistencyTestDashboard1?.LoadDatasets();
+                        MessageBox.Show(
+                            $"已将 Lot: {lotNumber} ({lotItems.Count} 条记录) 添加到数据集 \"{dialog.SelectedDataset.Name}\"。",
+                            "添加成功",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"添加到数据集失败: {ex}");
+                MessageBox.Show($"添加到数据集失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

@@ -1,13 +1,13 @@
 ﻿namespace DeepSightAI
 {
-    partial class AnalyticsControl
+    partial class ToolboxControl
     {
-        /// <summary> 
+        /// <summary>
         /// 必需的设计器变量。
         /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary> 
+        /// <summary>
         /// 清理所有正在使用的资源。
         /// </summary>
         /// <param name="disposing">如果应释放托管资源，为 true；否则为 false。</param>
@@ -22,140 +22,234 @@
 
         #region 组件设计器生成的代码
 
-        /// <summary> 
+        /// <summary>
         /// 设计器支持所需的方法 - 不要修改
         /// 使用代码编辑器修改此方法的内容。
         /// </summary>
         private void InitializeComponent()
         {
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.btnClearDatabase = new DeepSightAI.StyledButton();
-            this.btnZipPic = new DeepSightAI.StyledButton();
-            this.lblImportStatus = new System.Windows.Forms.Label();
-            this.progressBarImport = new System.Windows.Forms.ProgressBar();
-            this.btnTest = new DeepSightAI.StyledButton();
+            this.mainTableLayout = new System.Windows.Forms.TableLayoutPanel();
+            this.grpDataTools = new System.Windows.Forms.GroupBox();
+            this.flowDataTools = new System.Windows.Forms.FlowLayoutPanel();
             this.btnReadEmployeeData = new DeepSightAI.StyledButton();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
-            this.splitContainer1.Panel1.SuspendLayout();
-            this.splitContainer1.SuspendLayout();
+            this.btnTest = new DeepSightAI.StyledButton();
+            this.btnClearDatabase = new DeepSightAI.StyledButton();
+            this.grpFileTools = new System.Windows.Forms.GroupBox();
+            this.flowFileTools = new System.Windows.Forms.FlowLayoutPanel();
+            this.btnZipPic = new DeepSightAI.StyledButton();
+            this.btnExportLogs = new DeepSightAI.StyledButton();
+            this.grpStatus = new System.Windows.Forms.GroupBox();
+            this.tableStatus = new System.Windows.Forms.TableLayoutPanel();
+            this.progressBarImport = new System.Windows.Forms.ProgressBar();
+            this.lblImportStatus = new System.Windows.Forms.Label();
+            this.mainTableLayout.SuspendLayout();
+            this.grpDataTools.SuspendLayout();
+            this.flowDataTools.SuspendLayout();
+            this.grpFileTools.SuspendLayout();
+            this.flowFileTools.SuspendLayout();
+            this.grpStatus.SuspendLayout();
+            this.tableStatus.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // splitContainer1
-            // 
-            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer1.Name = "splitContainer1";
-            // 
-            // splitContainer1.Panel1
-            // 
-            this.splitContainer1.Panel1.Controls.Add(this.btnClearDatabase);
-            this.splitContainer1.Panel1.Controls.Add(this.btnZipPic);
-            this.splitContainer1.Panel1.Controls.Add(this.lblImportStatus);
-            this.splitContainer1.Panel1.Controls.Add(this.progressBarImport);
-            this.splitContainer1.Panel1.Controls.Add(this.btnTest);
-            this.splitContainer1.Panel1.Controls.Add(this.btnReadEmployeeData);
-            this.splitContainer1.Size = new System.Drawing.Size(726, 493);
-            this.splitContainer1.SplitterDistance = 202;
-            this.splitContainer1.TabIndex = 120;
-            // 
-            // btnClearDatabase
-            // 
-            this.btnClearDatabase.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
-            this.btnClearDatabase.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnClearDatabase.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnClearDatabase.Font = new System.Drawing.Font("微软雅黑", 9F);
-            this.btnClearDatabase.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.btnClearDatabase.Location = new System.Drawing.Point(46, 272);
-            this.btnClearDatabase.Name = "btnClearDatabase";
-            this.btnClearDatabase.Size = new System.Drawing.Size(110, 33);
-            this.btnClearDatabase.TabIndex = 126;
-            this.btnClearDatabase.Text = "清空数据库";
-            this.btnClearDatabase.UseVisualStyleBackColor = false;
-            this.btnClearDatabase.Click += new System.EventHandler(this.btnClearDatabase_Click);
-            // 
-            // btnZipPic
-            // 
-            this.btnZipPic.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
-            this.btnZipPic.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnZipPic.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnZipPic.Font = new System.Drawing.Font("微软雅黑", 9F);
-            this.btnZipPic.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.btnZipPic.Location = new System.Drawing.Point(46, 218);
-            this.btnZipPic.Name = "btnZipPic";
-            this.btnZipPic.Size = new System.Drawing.Size(110, 33);
-            this.btnZipPic.TabIndex = 125;
-            this.btnZipPic.Text = "图片压缩";
-            this.btnZipPic.UseVisualStyleBackColor = false;
-            this.btnZipPic.Click += new System.EventHandler(this.btnZipPic_Click);
-            // 
-            // lblImportStatus
-            // 
-            this.lblImportStatus.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.lblImportStatus.Location = new System.Drawing.Point(16, 414);
-            this.lblImportStatus.Name = "lblImportStatus";
-            this.lblImportStatus.Size = new System.Drawing.Size(174, 20);
-            this.lblImportStatus.TabIndex = 124;
-            this.lblImportStatus.Text = "就绪";
-            // 
-            // progressBarImport
-            // 
-            this.progressBarImport.Location = new System.Drawing.Point(16, 384);
-            this.progressBarImport.Name = "progressBarImport";
-            this.progressBarImport.Size = new System.Drawing.Size(174, 23);
-            this.progressBarImport.TabIndex = 123;
-            // 
-            // btnTest
-            // 
-            this.btnTest.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
-            this.btnTest.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnTest.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnTest.Font = new System.Drawing.Font("微软雅黑", 9F);
-            this.btnTest.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.btnTest.Location = new System.Drawing.Point(46, 161);
-            this.btnTest.Name = "btnTest";
-            this.btnTest.Size = new System.Drawing.Size(110, 33);
-            this.btnTest.TabIndex = 121;
-            this.btnTest.Text = "导入CSV数据";
-            this.btnTest.UseVisualStyleBackColor = false;
-            this.btnTest.Click += new System.EventHandler(this.btnTest_Click);
-            // 
+            //
+            // mainTableLayout
+            //
+            this.mainTableLayout.ColumnCount = 1;
+            this.mainTableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.mainTableLayout.Controls.Add(this.grpDataTools, 0, 0);
+            this.mainTableLayout.Controls.Add(this.grpFileTools, 0, 1);
+            this.mainTableLayout.Controls.Add(this.grpStatus, 0, 2);
+            this.mainTableLayout.Dock = System.Windows.Forms.DockStyle.Top;
+            this.mainTableLayout.Location = new System.Drawing.Point(12, 12);
+            this.mainTableLayout.Name = "mainTableLayout";
+            this.mainTableLayout.Padding = new System.Windows.Forms.Padding(4);
+            this.mainTableLayout.RowCount = 3;
+            this.mainTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
+            this.mainTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
+            this.mainTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
+            this.mainTableLayout.Size = new System.Drawing.Size(400, 380);
+            this.mainTableLayout.TabIndex = 0;
+            //
+            // grpDataTools
+            //
+            this.grpDataTools.Controls.Add(this.flowDataTools);
+            this.grpDataTools.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.grpDataTools.Font = new System.Drawing.Font("微软雅黑", 9.5F, System.Drawing.FontStyle.Bold);
+            this.grpDataTools.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(180)))), ((int)(((byte)(200)))), ((int)(((byte)(210)))));
+            this.grpDataTools.Location = new System.Drawing.Point(7, 7);
+            this.grpDataTools.Name = "grpDataTools";
+            this.grpDataTools.Padding = new System.Windows.Forms.Padding(10, 6, 10, 6);
+            this.grpDataTools.Size = new System.Drawing.Size(386, 100);
+            this.grpDataTools.TabIndex = 0;
+            this.grpDataTools.TabStop = false;
+            this.grpDataTools.Text = "📊 数据工具";
+            //
+            // flowDataTools
+            //
+            this.flowDataTools.Controls.Add(this.btnReadEmployeeData);
+            this.flowDataTools.Controls.Add(this.btnTest);
+            this.flowDataTools.Controls.Add(this.btnClearDatabase);
+            this.flowDataTools.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.flowDataTools.Location = new System.Drawing.Point(10, 24);
+            this.flowDataTools.Name = "flowDataTools";
+            this.flowDataTools.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
+            this.flowDataTools.Size = new System.Drawing.Size(366, 70);
+            this.flowDataTools.TabIndex = 0;
+            //
             // btnReadEmployeeData
-            // 
-            this.btnReadEmployeeData.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
-            this.btnReadEmployeeData.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnReadEmployeeData.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnReadEmployeeData.Font = new System.Drawing.Font("微软雅黑", 9F);
-            this.btnReadEmployeeData.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.btnReadEmployeeData.Location = new System.Drawing.Point(46, 104);
+            //
+            this.btnReadEmployeeData.Margin = new System.Windows.Forms.Padding(4);
             this.btnReadEmployeeData.Name = "btnReadEmployeeData";
-            this.btnReadEmployeeData.Size = new System.Drawing.Size(110, 33);
-            this.btnReadEmployeeData.TabIndex = 120;
+            this.btnReadEmployeeData.Size = new System.Drawing.Size(130, 36);
+            this.btnReadEmployeeData.TabIndex = 0;
             this.btnReadEmployeeData.Text = "读取员工数据";
-            this.btnReadEmployeeData.UseVisualStyleBackColor = false;
             this.btnReadEmployeeData.Click += new System.EventHandler(this.btnReadEmployeeData_Click);
-            // 
-            // AnalyticsControl
-            // 
+            //
+            // btnTest
+            //
+            this.btnTest.Margin = new System.Windows.Forms.Padding(4);
+            this.btnTest.Name = "btnTest";
+            this.btnTest.Size = new System.Drawing.Size(130, 36);
+            this.btnTest.TabIndex = 1;
+            this.btnTest.Text = "导入CSV数据";
+            this.btnTest.Click += new System.EventHandler(this.btnTest_Click);
+            //
+            // btnClearDatabase
+            //
+            this.btnClearDatabase.Margin = new System.Windows.Forms.Padding(4);
+            this.btnClearDatabase.Name = "btnClearDatabase";
+            this.btnClearDatabase.Size = new System.Drawing.Size(130, 36);
+            this.btnClearDatabase.TabIndex = 2;
+            this.btnClearDatabase.Text = "清空数据库";
+            this.btnClearDatabase.Click += new System.EventHandler(this.btnClearDatabase_Click);
+            //
+            // grpFileTools
+            //
+            this.grpFileTools.Controls.Add(this.flowFileTools);
+            this.grpFileTools.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.grpFileTools.Font = new System.Drawing.Font("微软雅黑", 9.5F, System.Drawing.FontStyle.Bold);
+            this.grpFileTools.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(180)))), ((int)(((byte)(200)))), ((int)(((byte)(210)))));
+            this.grpFileTools.Location = new System.Drawing.Point(7, 113);
+            this.grpFileTools.Name = "grpFileTools";
+            this.grpFileTools.Padding = new System.Windows.Forms.Padding(10, 6, 10, 6);
+            this.grpFileTools.Size = new System.Drawing.Size(386, 100);
+            this.grpFileTools.TabIndex = 1;
+            this.grpFileTools.TabStop = false;
+            this.grpFileTools.Text = "📁 文件工具";
+            //
+            // flowFileTools
+            //
+            this.flowFileTools.Controls.Add(this.btnZipPic);
+            this.flowFileTools.Controls.Add(this.btnExportLogs);
+            this.flowFileTools.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.flowFileTools.Location = new System.Drawing.Point(10, 24);
+            this.flowFileTools.Name = "flowFileTools";
+            this.flowFileTools.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
+            this.flowFileTools.Size = new System.Drawing.Size(366, 70);
+            this.flowFileTools.TabIndex = 0;
+            //
+            // btnZipPic
+            //
+            this.btnZipPic.Margin = new System.Windows.Forms.Padding(4);
+            this.btnZipPic.Name = "btnZipPic";
+            this.btnZipPic.Size = new System.Drawing.Size(130, 36);
+            this.btnZipPic.TabIndex = 0;
+            this.btnZipPic.Text = "图片压缩";
+            this.btnZipPic.Click += new System.EventHandler(this.btnZipPic_Click);
+            //
+            // btnExportLogs
+            //
+            this.btnExportLogs.Margin = new System.Windows.Forms.Padding(4);
+            this.btnExportLogs.Name = "btnExportLogs";
+            this.btnExportLogs.Size = new System.Drawing.Size(130, 36);
+            this.btnExportLogs.TabIndex = 1;
+            this.btnExportLogs.Text = "导出今日日志";
+            this.btnExportLogs.Click += new System.EventHandler(this.btnExportLogs_Click);
+            //
+            // grpStatus
+            //
+            this.grpStatus.Controls.Add(this.tableStatus);
+            this.grpStatus.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.grpStatus.Font = new System.Drawing.Font("微软雅黑", 9.5F, System.Drawing.FontStyle.Bold);
+            this.grpStatus.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(180)))), ((int)(((byte)(200)))), ((int)(((byte)(210)))));
+            this.grpStatus.Location = new System.Drawing.Point(7, 219);
+            this.grpStatus.Name = "grpStatus";
+            this.grpStatus.Padding = new System.Windows.Forms.Padding(10, 6, 10, 10);
+            this.grpStatus.Size = new System.Drawing.Size(386, 100);
+            this.grpStatus.TabIndex = 2;
+            this.grpStatus.TabStop = false;
+            this.grpStatus.Text = "⏳ 状态";
+            //
+            // tableStatus
+            //
+            this.tableStatus.ColumnCount = 1;
+            this.tableStatus.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableStatus.Controls.Add(this.progressBarImport, 0, 0);
+            this.tableStatus.Controls.Add(this.lblImportStatus, 0, 1);
+            this.tableStatus.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableStatus.Location = new System.Drawing.Point(10, 24);
+            this.tableStatus.Name = "tableStatus";
+            this.tableStatus.RowCount = 2;
+            this.tableStatus.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
+            this.tableStatus.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
+            this.tableStatus.Size = new System.Drawing.Size(366, 66);
+            this.tableStatus.TabIndex = 0;
+            //
+            // progressBarImport
+            //
+            this.progressBarImport.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.progressBarImport.Location = new System.Drawing.Point(3, 3);
+            this.progressBarImport.Name = "progressBarImport";
+            this.progressBarImport.Size = new System.Drawing.Size(360, 24);
+            this.progressBarImport.TabIndex = 0;
+            //
+            // lblImportStatus
+            //
+            this.lblImportStatus.AutoSize = true;
+            this.lblImportStatus.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblImportStatus.Font = new System.Drawing.Font("微软雅黑", 9F);
+            this.lblImportStatus.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.lblImportStatus.Location = new System.Drawing.Point(3, 30);
+            this.lblImportStatus.Name = "lblImportStatus";
+            this.lblImportStatus.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
+            this.lblImportStatus.Size = new System.Drawing.Size(360, 24);
+            this.lblImportStatus.TabIndex = 1;
+            this.lblImportStatus.Text = "就绪";
+            //
+            // ToolboxControl
+            //
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.Controls.Add(this.splitContainer1);
-            this.Name = "AnalyticsControl";
+            this.Controls.Add(this.mainTableLayout);
+            this.Name = "ToolboxControl";
+            this.Padding = new System.Windows.Forms.Padding(12);
             this.Size = new System.Drawing.Size(726, 493);
-            this.splitContainer1.Panel1.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
-            this.splitContainer1.ResumeLayout(false);
+            this.mainTableLayout.ResumeLayout(false);
+            this.grpDataTools.ResumeLayout(false);
+            this.flowDataTools.ResumeLayout(false);
+            this.grpFileTools.ResumeLayout(false);
+            this.flowFileTools.ResumeLayout(false);
+            this.grpStatus.ResumeLayout(false);
+            this.tableStatus.ResumeLayout(false);
+            this.tableStatus.PerformLayout();
             this.ResumeLayout(false);
 
         }
 
         #endregion
-        private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.TableLayoutPanel mainTableLayout;
+        private System.Windows.Forms.GroupBox grpDataTools;
+        private System.Windows.Forms.FlowLayoutPanel flowDataTools;
         private DeepSightAI.StyledButton btnReadEmployeeData;
         private DeepSightAI.StyledButton btnTest;
+        private DeepSightAI.StyledButton btnClearDatabase;
+        private System.Windows.Forms.GroupBox grpFileTools;
+        private System.Windows.Forms.FlowLayoutPanel flowFileTools;
+        private DeepSightAI.StyledButton btnZipPic;
+        private DeepSightAI.StyledButton btnExportLogs;
+        private System.Windows.Forms.GroupBox grpStatus;
+        private System.Windows.Forms.TableLayoutPanel tableStatus;
         private System.Windows.Forms.ProgressBar progressBarImport;
         private System.Windows.Forms.Label lblImportStatus;
-        private DeepSightAI.StyledButton btnZipPic;
-        private DeepSightAI.StyledButton btnClearDatabase;
     }
 }

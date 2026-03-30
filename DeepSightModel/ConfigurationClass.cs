@@ -42,6 +42,50 @@ namespace DeepSightModel
         /// </summary>
         public float WelcomeFontSize { get; set; } = 36f;
 
+        #region 快捷键配置（存储 System.Windows.Forms.Keys 枚举的字符串名称）
+
+        /// <summary>
+        /// 标记VVS_OK的快捷键
+        /// </summary>
+        public string ShortcutVvsOk { get; set; } = "D1";
+
+        /// <summary>
+        /// 标记VVS_NG的快捷键
+        /// </summary>
+        public string ShortcutVvsNg { get; set; } = "D2";
+
+        /// <summary>
+        /// 标记VVS未设置的快捷键
+        /// </summary>
+        public string ShortcutVvsNotSet { get; set; } = "D3";
+
+        /// <summary>
+        /// 切换到下一行的快捷键
+        /// </summary>
+        public string ShortcutNextRow { get; set; } = "Tab";
+
+        /// <summary>
+        /// 下一张图片的快捷键
+        /// </summary>
+        public string ShortcutNextImage { get; set; } = "Down";
+
+        /// <summary>
+        /// 上一张图片的快捷键
+        /// </summary>
+        public string ShortcutPrevImage { get; set; } = "Up";
+
+        /// <summary>
+        /// 下一页的快捷键
+        /// </summary>
+        public string ShortcutNextPage { get; set; } = "Right";
+
+        /// <summary>
+        /// 上一页的快捷键
+        /// </summary>
+        public string ShortcutPrevPage { get; set; } = "Left";
+
+        #endregion
+
         public ConfigurationClass()
         {
 
@@ -79,7 +123,15 @@ namespace DeepSightModel
                     MaxDefectCount = DefaultValues.MaxDefectCount,
                     AgentShutdownTimeout = DefaultValues.AgentShutdownTimeout,
                     WelcomeTitle = DefaultValues.WelcomeTitle,
-                    WelcomeFontSize = DefaultValues.WelcomeFontSize
+                    WelcomeFontSize = DefaultValues.WelcomeFontSize,
+                    ShortcutVvsOk = DefaultValues.ShortcutVvsOk,
+                    ShortcutVvsNg = DefaultValues.ShortcutVvsNg,
+                    ShortcutVvsNotSet = DefaultValues.ShortcutVvsNotSet,
+                    ShortcutNextRow = DefaultValues.ShortcutNextRow,
+                    ShortcutNextImage = DefaultValues.ShortcutNextImage,
+                    ShortcutPrevImage = DefaultValues.ShortcutPrevImage,
+                    ShortcutNextPage = DefaultValues.ShortcutNextPage,
+                    ShortcutPrevPage = DefaultValues.ShortcutPrevPage
                 };
                 return Save(config);
             }
