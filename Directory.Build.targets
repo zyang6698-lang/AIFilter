@@ -1,18 +1,27 @@
 <!--
   Directory.Build.targets - 自动从 Git Tag 获取版本号
-  
+
   放在解决方案根目录，MSBuild 会自动发现并应用到所有子项目。
-  每次构建时自动运行 UpdateVersion.ps1 脚本，Build 位 = tag 之后的 commit 数。
-  
+  Build 位 = tag 之后的 commit 数（自动计算）。
+
   工作流程:
-    1. git tag v1.2.0        (打标签)
-    2. 在 VS 中构建           (自动更新版本号)
-    3. 或手动: .\scripts\UpdateVersion.ps1
+    [日常开发] 正常 Debug build，版本号保持 AssemblyInfo.cs 现有值，不会被自动修改。
+    [发版]     手动执行脚本打 tag，然后 Release build 时版本号自动同步：
+               .\scripts\UpdateVersion.ps1 -Bump Patch   # 1.1.1 → 1.1.2 并打 tag v1.1.2
+               .\scripts\UpdateVersion.ps1 -Bump Minor   # 1.1.x → 1.2.0 并打 tag v1.2.0
+               .\scripts\UpdateVersion.ps1 -Bump Major   # 1.x.x → 2.0.0 并打 tag v2.0.0
+               git push origin v1.1.2
+
+  说明:
+    - Debug 构建不自动更新版本号，避免 AssemblyInfo.cs 产生脏改动污染 git 历史。
+    - Release 构建自动读取最新 tag 并同步版本号（适合 CI 或本地打包）。
+    - 可通过 -p:UpdateVersionFromGit=true 强制在 Debug 下也更新，
+      或 -p:UpdateVersionFromGit=false 禁用 Release 自动更新。
 -->
 <Project>
-  <Target Name="UpdateVersionFromGitTag" 
+  <Target Name="UpdateVersionFromGitTag"
           BeforeTargets="BeforeBuild"
-          Condition="'$(UpdateVersionFromGit)' != 'false'">
+          Condition="'$(UpdateVersionFromGit)' == 'true' Or ('$(Configuration)' == 'Release' And '$(UpdateVersionFromGit)' != 'false')">
     <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(SolutionDir)scripts\UpdateVersion.ps1&quot;"
           WorkingDirectory="$(SolutionDir)"
           IgnoreExitCode="true"

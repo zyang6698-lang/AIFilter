@@ -413,7 +413,13 @@ namespace DeepSightAI
 
         private void LoadDefectsPage(int page)
         {
+            // Dispose all existing child controls to release Win32 window handles before clearing
+            var oldControls = new System.Windows.Forms.Control[flowLayoutPanel_DefectImages.Controls.Count];
+            flowLayoutPanel_DefectImages.Controls.CopyTo(oldControls, 0);
             flowLayoutPanel_DefectImages.Controls.Clear();
+            foreach (var ctrl in oldControls)
+                ctrl.Dispose();
+
             _selectedIndex = -1;
 
             if (_filteredHeatPoints.Count == 0)
@@ -548,7 +554,12 @@ namespace DeepSightAI
 
         public void ClearDetails()
         {
+            // Dispose all existing child controls to release Win32 window handles before clearing
+            var oldControls = new System.Windows.Forms.Control[flowLayoutPanel_DefectImages.Controls.Count];
+            flowLayoutPanel_DefectImages.Controls.CopyTo(oldControls, 0);
             flowLayoutPanel_DefectImages.Controls.Clear();
+            foreach (var ctrl in oldControls)
+                ctrl.Dispose();
             label_DetailTitle.Text = "-";
             _selectedIndex = -1;
             _allHeatPoints?.Clear();
