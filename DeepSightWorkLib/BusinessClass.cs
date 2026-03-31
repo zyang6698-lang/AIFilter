@@ -49,7 +49,6 @@ namespace DeepSightWorkLib
 
         #region 私有字段 - 业务服务
 
-        private ImageDisplayService ImageDisplay { get; set; }
         private AviReaderService _aviReaderService;
         private ImageLoaderService _imageLoaderService;
         private DefectProcessor _defectProcessor;
@@ -135,21 +134,6 @@ namespace DeepSightWorkLib
         }
 
         /// <summary>
-        /// 是否显示检测框（同步到 ImageDisplayService）
-        /// </summary>
-        public bool IsShowBox
-        {
-            get => ImageDisplay?.IsShowBox ?? false;
-            set
-            {
-                if (ImageDisplay != null)
-                {
-                    ImageDisplay.IsShowBox = value;
-                }
-            }
-        }
-
-        /// <summary>
         /// 是否允许处理
         /// </summary>
         public bool IsAllow { get; set; } = true;
@@ -216,7 +200,6 @@ namespace DeepSightWorkLib
 
             // 需要具体的 MinioClass 实例来创建 ImageDisplayService
             var minioInstance = minioService as MinioClass ?? new MinioClass();
-            ImageDisplay = new ImageDisplayService(minioInstance);
 
             // 数据库初始化
             if (databaseService == null)
@@ -288,24 +271,6 @@ namespace DeepSightWorkLib
             LogTextHelper.Info("BusinessClass 初始化完成，所有线程已启动");
         }
 
-        /// <summary>
-        /// 设置显示窗口列表（委托给 ImageDisplayService）
-        /// </summary>
-        public void SetHWindow(List<CvDisplay> displaysList)
-        {
-            ImageDisplay.SetDisplayList(displaysList);
-        }
-
-        #region 兼容性方法（已弃用）
-        /// <summary>
-        /// 显示图片（委托给 ImageDisplayService）
-        /// </summary>
-        public void ShowImage(string path, int index, string result = "", Roi defectRoi = null)
-        {
-            ImageDisplay.ShowImage(path, index, result, defectRoi);
-        }
-
-        #endregion
 
         #endregion
 

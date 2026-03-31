@@ -291,7 +291,6 @@ namespace DeepSightAI
             timer.Elapsed += Timer_Elapsed;
             timer.Interval = 1000;
             timer.Start();
-            Machine.master.IsShowBox = this.btn_showBox.Checked;
             string filePath = Assembly.GetExecutingAssembly().Location;
             DateTime lastWriteTime = File.GetLastWriteTime(filePath);
             this.lbl_title.Text = "AI过滤软件 ~ " + lastWriteTime.ToString("MMdd");
@@ -1056,10 +1055,6 @@ namespace DeepSightAI
 
         #endregion 状态栏-运行时间-当前时间
 
-        private void toolStripMenuItem2_Click(object sender, EventArgs e)
-        {
-            Machine.master.IsShowBox = btn_showBox.Checked;
-        }
 
         private void btnModelB_Click(object sender, EventArgs e)
         {

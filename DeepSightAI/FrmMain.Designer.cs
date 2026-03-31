@@ -62,8 +62,6 @@ namespace DeepSightAI
             this.panel9 = new System.Windows.Forms.Panel();
             this.btnModel = new System.Windows.Forms.Button();
             this.panel8 = new System.Windows.Forms.Panel();
-            this.btnTest = new System.Windows.Forms.ToolStripDropDownButton();
-            this.btn_showBox = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripDropDownButton1 = new System.Windows.Forms.ToolStripDropDownButton();
             this.btnModelB = new System.Windows.Forms.ToolStripMenuItem();
             this.btnModelC = new System.Windows.Forms.ToolStripMenuItem();
@@ -502,26 +500,6 @@ namespace DeepSightAI
             this.panel8.Size = new System.Drawing.Size(770, 57);
             this.panel8.TabIndex = 24;
             // 
-            // btnTest
-            // 
-            this.btnTest.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.btn_showBox});
-            this.btnTest.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.btnTest.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnTest.Name = "btnTest";
-            this.btnTest.Size = new System.Drawing.Size(53, 24);
-            this.btnTest.Text = "调试";
-            // 
-            // btn_showBox
-            // 
-            this.btn_showBox.Checked = true;
-            this.btn_showBox.CheckOnClick = true;
-            this.btn_showBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.btn_showBox.Name = "btn_showBox";
-            this.btn_showBox.Size = new System.Drawing.Size(197, 26);
-            this.btn_showBox.Text = "是否显示缺陷框";
-            this.btn_showBox.Click += new System.EventHandler(this.toolStripMenuItem2_Click);
-            // 
             // toolStripDropDownButton1
             // 
             this.toolStripDropDownButton1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -563,7 +541,6 @@ namespace DeepSightAI
             this.toolStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip.ImageScalingSize = new System.Drawing.Size(30, 30);
             this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.btnTest,
             this.toolStripDropDownButton1,
             this.btnRunVB,
             this.btnClear,
@@ -776,8 +753,6 @@ namespace DeepSightAI
         private System.Windows.Forms.PictureBox btnAlarm;
         public System.Windows.Forms.PictureBox btnTool;
         public System.Windows.Forms.Button btnModel;
-        public System.Windows.Forms.ToolStripDropDownButton btnTest;
-        private System.Windows.Forms.ToolStripMenuItem btn_showBox;
         public System.Windows.Forms.ToolStripDropDownButton toolStripDropDownButton1;
         private System.Windows.Forms.ToolStripMenuItem btnModelB;
         private System.Windows.Forms.ToolStripMenuItem btnModelC;
