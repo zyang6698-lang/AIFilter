@@ -154,6 +154,18 @@ namespace DeepSightModel
         /// </summary>
         public int OriginalNgCount { get; set; }
         /// <summary>
+        /// 推理前状态为OK(1)的点数
+        /// </summary>
+        public int OriginalOkCount { get; set; }
+        /// <summary>
+        /// 推理前状态为异常/直报(3)的点数
+        /// </summary>
+        public int OriginalBypassCount { get; set; }
+        /// <summary>
+        /// 推理前状态为未检测(0)的点数
+        /// </summary>
+        public int OriginalUndetectedCount { get; set; }
+        /// <summary>
         /// 推理后仍为NG的点数
         /// </summary>
         public int FinalNgCount { get; set; }
@@ -161,6 +173,18 @@ namespace DeepSightModel
         /// 推理后变为OK的点数
         /// </summary>
         public int ChangedToOkCount { get; set; }
+        /// <summary>
+        /// 推理后状态为OK(1)的点数
+        /// </summary>
+        public int FinalOkCount { get; set; }
+        /// <summary>
+        /// 推理后状态为异常/直报(3)的点数
+        /// </summary>
+        public int FinalBypassCount { get; set; }
+        /// <summary>
+        /// 推理后状态为未检测(0)的点数
+        /// </summary>
+        public int FinalUndetectedCount { get; set; }
         /// <summary>
         /// 各点的详细结果
         /// </summary>
@@ -185,9 +209,9 @@ namespace DeepSightModel
         /// </summary>
         public int NewAIStatus { get; set; }
         /// <summary>
-        /// 是否发生变化（从NG变为OK）
+        /// 是否发生变化（新状态与原始状态不同）
         /// </summary>
-        public bool IsChanged => OriginalAIStatus == 2 && NewAIStatus == 1;
+        public bool IsChanged => OriginalAIStatus != NewAIStatus;
     }
 
     /// <summary>

@@ -93,6 +93,9 @@ namespace DeepSightAI
             btn_SnSearch.Click += Btn_SnSearch_Click;
             txt_SnFilter.KeyDown += Txt_SnFilter_KeyDown;
 
+            // 订阅复选框变化事件
+            chk_OnlyAviNg.CheckedChanged += (s, ev) => QueryControl_FilterChanged(s, ev);
+
             // 订阅右键菜单事件
             toolStripMenuItem_RunTest.Click += ToolStripMenuItem_RunTest_Click;
             toolStripMenuItem_SecondaryInference.Click += ToolStripMenuItem_SecondaryInference_Click;
@@ -153,7 +156,8 @@ namespace DeepSightAI
                 _currentSelectedLot = null;
 
                 // 收集所有数据，同时统计指标
-                foreach (var panel in QueryControl.GetQueryResult())
+                var panels = QueryControl.GetQueryResult();
+                foreach (var panel in panels)
                 {
                     if (panel.Sides == null) continue;
                     string lotNumber = panel.LotNumber ?? "未知Lot";
@@ -190,12 +194,23 @@ namespace DeepSightAI
                         else
                         {
                             panelAllAviOk = false;
-                            if (side.AiState == 1)
-                                stat.AiOkPcsCount++;
-                            else
+                            switch (side.AiState)
                             {
-                                stat.AiNgPcsCount++;
-                                panelAllAiPass = false;
+                                case 1:
+                                    stat.AiOkPcsCount++;
+                                    break;
+                                case 2:
+                                    stat.AiNgPcsCount++;
+                                    panelAllAiPass = false;
+                                    break;
+                                case 3:
+                                    stat.AiExceptionPcsCount++;
+                                    panelAllAiPass = false;
+                                    break;
+                                default:
+                                    stat.AiUninspectedPcsCount++;
+                                    panelAllAiPass = false;
+                                    break;
                             }
                         }
 
@@ -205,10 +220,12 @@ namespace DeepSightAI
                             stat.TotalPointCount += side.DetectPoints.Count;
                             stat.AiOkPointCount += side.DetectPoints.Count(p => p.AIStatus == 1);
                             stat.AiNgPointCount += side.DetectPoints.Count(p => p.AIStatus == 2);
+                            stat.AiExceptionPointCount += side.DetectPoints.Count(p => p.AIStatus == 3);
+                            stat.AiUninspectedPointCount += side.DetectPoints.Count(p => p.AIStatus == 0);
                         }
 
-                        // 只有 AVI NG 的数据才加入复判列表
-                        if (side.AviState != 1)
+                        // 根据复选框决定是否仅加入 AVI NG 数据
+                        if (!chk_OnlyAviNg.Checked || side.AviState != 1)
                         {
                             _allDefectItems.Add(CreateDefectReviewItem(panel, side));
                         }
@@ -291,6 +308,7 @@ namespace DeepSightAI
                         if (side == null) continue;
 
                         // PCS级别统计
+                        stat.TotalPcsCount++;
                         if (side.AviState == 1)
                         {
                             stat.AviOkPcsCount++;
@@ -298,12 +316,23 @@ namespace DeepSightAI
                         else
                         {
                             panelAllAviOk = false;
-                            if (side.AiState == 1)
-                                stat.AiOkPcsCount++;
-                            else
+                            switch (side.AiState)
                             {
-                                stat.AiNgPcsCount++;
-                                panelAllAiPass = false;
+                                case 1:
+                                    stat.AiOkPcsCount++;
+                                    break;
+                                case 2:
+                                    stat.AiNgPcsCount++;
+                                    panelAllAiPass = false;
+                                    break;
+                                case 3:
+                                    stat.AiExceptionPcsCount++;
+                                    panelAllAiPass = false;
+                                    break;
+                                default:
+                                    stat.AiUninspectedPcsCount++;
+                                    panelAllAiPass = false;
+                                    break;
                             }
                         }
 
@@ -313,10 +342,12 @@ namespace DeepSightAI
                             stat.TotalPointCount += side.DetectPoints.Count;
                             stat.AiOkPointCount += side.DetectPoints.Count(p => p.AIStatus == 1);
                             stat.AiNgPointCount += side.DetectPoints.Count(p => p.AIStatus == 2);
+                            stat.AiExceptionPointCount += side.DetectPoints.Count(p => p.AIStatus == 3);
+                            stat.AiUninspectedPointCount += side.DetectPoints.Count(p => p.AIStatus == 0);
                         }
 
-                        // 只有 AVI NG 的数据才加入复判列表
-                        if (side.AviState != 1)
+                        // 根据复选框决定是否仅加入 AVI NG 数据
+                        if (!chk_OnlyAviNg.Checked || side.AviState != 1)
                         {
                             _allDefectItems.Add(CreateDefectReviewItem(panel, side));
                         }
@@ -594,7 +625,7 @@ namespace DeepSightAI
         /// <summary>
         /// 根据缺陷点查找其所属的DefectReviewItem
         /// </summary>
-        private DefectReviewItem FindSourceItemForHeatPoint(DeepSightDB.DetectInfo heatPoint)
+        private DefectReviewItem FindSourceItemForHeatPoint(DetectInfo heatPoint)
         {
             // 先在当前显示的列表中查找
             foreach (var item in _defectItems)
@@ -1337,11 +1368,11 @@ namespace DeepSightAI
 
             // 统计 AI NG 的数量
             int ngCount = lotItems.Count(i => i.AiStatus == "NG");
-            if (ngCount == 0)
-            {
-                MessageBox.Show($"Lot {lotNumber} 中没有 AI NG 的数据，无需二次推理。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
+            //if (ngCount == 0)
+            //{
+            //    MessageBox.Show($"Lot {lotNumber} 中没有 AI NG 的数据，无需二次推理。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            //    return;
+            //}
 
             // 确认对话框
             var result = MessageBox.Show(
@@ -1445,8 +1476,10 @@ namespace DeepSightAI
                 MachineId = panel.MachineId,
                 ProductSerial = panel.ProductSerial,
                 Side = sideData.Side,
-                AviStatus = sideData.AviState == 1 ? "OK" : "NG",
-                AiStatus = sideData.AiState == 1 ? "OK" : "NG",
+                AviStatus = GetStatusTextStatic(sideData.AviState),
+                AiStatus = GetStatusTextStatic(sideData.AiState),
+                OriginalAviState = sideData.AviState,
+                OriginalAiState = sideData.AiState,
                 ManualStatus = sideData.VvsState == 0 ? "未判定" : sideData.VvsState == 1 ? "OK" : "NG",
                 DefectCount = sideData.DetectPoints?.Count ?? 0,
                 DefectName = defectNameStr,
@@ -1469,6 +1502,16 @@ namespace DeepSightAI
                 case 3: return "异常";
                 default: return status.ToString();
             }
+        }
+
+        private static bool IsAiOkStatus(int status)
+        {
+            return status == 1;
+        }
+
+        private static bool IsAiNgStatus(int status)
+        {
+            return status == 2;
         }
 
 
@@ -1498,7 +1541,8 @@ namespace DeepSightAI
                 if (item.LotNumber != _currentReviewLot) continue;
                 if (item.HeatPoints == null) continue;
 
-                bool isAiOkPcs = item.AiStatus == "OK";
+                bool isAiOkPcs = IsAiOkStatus(item.OriginalAiState);
+                bool isAiNgPcs = IsAiNgStatus(item.OriginalAiState);
 
                 // 报点级别交叉统计
                 foreach (var hp in item.HeatPoints)
@@ -1507,11 +1551,12 @@ namespace DeepSightAI
                     else if (hp.VVSStatus == 1) _vvsOkCount++;
                     else if (hp.VVSStatus == 2) _vvsNgCount++;
 
-                    bool isAiOkPoint = hp.AIStatus == 1;
+                    bool isAiOkPoint = IsAiOkStatus(hp.AIStatus);
+                    bool isAiNgPoint = IsAiNgStatus(hp.AIStatus);
                     if (isAiOkPoint && hp.VVSStatus == 1) _aiOkVvsOkPointCount++;
                     else if (isAiOkPoint && hp.VVSStatus == 2) _aiOkVvsNgPointCount++;
-                    else if (!isAiOkPoint && hp.VVSStatus == 1) _aiNgVvsOkPointCount++;
-                    else if (!isAiOkPoint && hp.VVSStatus == 2) _aiNgVvsNgPointCount++;
+                    else if (isAiNgPoint && hp.VVSStatus == 1) _aiNgVvsOkPointCount++;
+                    else if (isAiNgPoint && hp.VVSStatus == 2) _aiNgVvsNgPointCount++;
                 }
 
                 // PCS级别交叉统计（需要有VVS结果的PCS才计入）
@@ -1521,8 +1566,8 @@ namespace DeepSightAI
                     bool pcsVvsOk = item.HeatPoints.All(hp => hp.VVSStatus == 0 || hp.VVSStatus == 1);
                     if (isAiOkPcs && pcsVvsOk) _aiOkVvsOkPcsCount++;
                     else if (isAiOkPcs && !pcsVvsOk) _aiOkVvsNgPcsCount++;
-                    else if (!isAiOkPcs && pcsVvsOk) _aiNgVvsOkPcsCount++;
-                    else if (!isAiOkPcs && !pcsVvsOk) _aiNgVvsNgPcsCount++;
+                    else if (isAiNgPcs && pcsVvsOk) _aiNgVvsOkPcsCount++;
+                    else if (isAiNgPcs && !pcsVvsOk) _aiNgVvsNgPcsCount++;
                 }
             }
         }
@@ -1554,6 +1599,8 @@ namespace DeepSightAI
             int totalPoints = stat.TotalPointCount;
             int aiOkPoints = stat.AiOkPointCount;
             int aiNgPoints = stat.AiNgPointCount;
+            int aiExceptionPoints = stat.AiExceptionPointCount;
+            int aiUninspectedPoints = stat.AiUninspectedPointCount;
 
             sb.AppendLine($"总报点数: {totalPoints}");
             sb.AppendLine($"  AI-OK报点数: {aiOkPoints}");
@@ -1562,6 +1609,8 @@ namespace DeepSightAI
             sb.AppendLine($"  AI-NG报点数: {aiNgPoints}");
             sb.AppendLine($"    AI-NG&人工OK: {_aiNgVvsOkPointCount}");
             sb.AppendLine($"    AI-NG&人工NG: {_aiNgVvsNgPointCount}");
+            sb.AppendLine($"  AI-异常报点数: {aiExceptionPoints}");
+            sb.AppendLine($"  AI-未检测报点数: {aiUninspectedPoints}");
             sb.AppendLine($"  AI过滤率: {FormatPercent(aiOkPoints, totalPoints)}");
             sb.AppendLine($"  AI漏失率: {FormatPercent(_aiOkVvsNgPointCount, totalPoints)}");
             sb.AppendLine($"  AI准确率: {FormatPercent(_aiOkVvsOkPointCount + _aiNgVvsNgPointCount, totalPoints)}");
@@ -1572,6 +1621,8 @@ namespace DeepSightAI
             int aviOkPcs = stat.AviOkPcsCount;
             int aiOkPcs = stat.AiOkPcsCount;
             int aiNgPcs = stat.AiNgPcsCount;
+            int aiExceptionPcs = stat.AiExceptionPcsCount;
+            int aiUninspectedPcs = stat.AiUninspectedPcsCount;
 
             sb.AppendLine($"总PCS数: {totalPcs}");
             sb.AppendLine($"  AI-OK PCS数: {aiOkPcs}");
@@ -1580,6 +1631,8 @@ namespace DeepSightAI
             sb.AppendLine($"  AI-NG PCS数: {aiNgPcs}");
             sb.AppendLine($"    AI-NG&人工OK: {_aiNgVvsOkPcsCount}");
             sb.AppendLine($"    AI-NG&人工NG: {_aiNgVvsNgPcsCount}");
+            sb.AppendLine($"  AI-异常 PCS数: {aiExceptionPcs}");
+            sb.AppendLine($"  AI-未检测 PCS数: {aiUninspectedPcs}");
             sb.AppendLine($"  AI PCS过滤率: {FormatPercent(aiOkPcs, totalPcs)}");
             sb.AppendLine($"  AI PCS通过率: {FormatPercent(aviOkPcs + aiOkPcs, totalPcs)}");
             sb.AppendLine($"  AI PCS漏失率: {FormatPercent(_aiOkVvsNgPcsCount, totalPcs)}");
@@ -1626,9 +1679,9 @@ namespace DeepSightAI
                         if (item.ManualStatus == "OK") finalState = 1;
                         else if (item.ManualStatus == "NG") finalState = 2;
 
-                        // 计算各阶段状态
-                        int aviState = item.AviStatus == "OK" ? 1 : 2;
-                        int aiState = item.AiStatus == "OK" ? 1 : 2;
+                        // 使用原始状态码回写，避免丢失 0(未检测)/3(异常) 等状态
+                        int aviState = item.OriginalAviState;
+                        int aiState = item.OriginalAiState;
 
                         // 计算 VVS 状态：基于 HeatPoints 中的 VVSStatus
                         int vvsState = 0;
@@ -1711,6 +1764,17 @@ namespace DeepSightAI
         public List<DetectInfo> HeatPoints { get; set; }
         [Browsable(false)]
         public bool IsModified { get; set; }
+
+        /// <summary>
+        /// 原始 AVI 状态码（0=未检测, 1=OK, 2=NG, 3=异常），用于保存时回写准确值
+        /// </summary>
+        [Browsable(false)]
+        public int OriginalAviState { get; set; }
+        /// <summary>
+        /// 原始 AI 状态码（0=未检测, 1=OK, 2=NG, 3=异常），用于保存时回写准确值
+        /// </summary>
+        [Browsable(false)]
+        public int OriginalAiState { get; set; }
     }
 
     /// <summary>
@@ -1732,11 +1796,15 @@ namespace DeepSightAI
         public int AviOkPcsCount { get; set; }         // AVI-OK PCS数
         public int AiOkPcsCount { get; set; }          // AI-OK PCS数（AVI-NG中AI判OK）
         public int AiNgPcsCount { get; set; }          // AI-NG PCS数（AVI-NG中AI判NG）
+        public int AiExceptionPcsCount { get; set; }   // AI-异常 PCS数
+        public int AiUninspectedPcsCount { get; set; } // AI-未检测 PCS数
 
         // 报点级别
         public int TotalPointCount { get; set; }       // 总报点数
         public int AiOkPointCount { get; set; }        // AI-OK报点数
         public int AiNgPointCount { get; set; }        // AI-NG报点数
+        public int AiExceptionPointCount { get; set; } // AI-异常报点数
+        public int AiUninspectedPointCount { get; set; } // AI-未检测报点数
     }
 
     #endregion

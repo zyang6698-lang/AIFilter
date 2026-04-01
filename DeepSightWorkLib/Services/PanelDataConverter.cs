@@ -245,7 +245,7 @@ namespace DeepSightWorkLib.Services
                 }
 
                 // 创建推理图片组
-                var group = CreateInferImageGroup(panelInfo, context, isSwitch, defect);
+                var group = CreateInferImageGroup(panelInfo, isSwitch, defect);
 
                 // 添加图片信息
                 AddDefectImages(context, defect, group);
@@ -263,7 +263,6 @@ namespace DeepSightWorkLib.Services
         /// </summary>
         private InferImageGroup CreateInferImageGroup(
             RootPanelInfo panelInfo,
-            PanelConvertContext context,
             bool isSwitch,
             DefectInfo defect)
         {

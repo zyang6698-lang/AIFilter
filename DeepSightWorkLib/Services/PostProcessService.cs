@@ -64,14 +64,40 @@ namespace DeepSightWorkLib.Services
                 {
                     if (vBModel.Mats == null || vBModel.Mats.Count == 0)
                     {
-                        _savePanelSideAction(panelInfo, new List<DetectInfo>(), 1, 1);
-                        LogTextHelper.Info($"跳过处理(无图片): SN={vBModel.SN}");
+                        // 即使无图片也保存所有缺陷的图片路径（包含直报缺陷）
+                        var allDefects = BuildAllDefectsWithPaths(vBModel);
+
+                        // 区分：有直报缺陷时不能按整面OK保存
+                        bool hasDirectReport = vBModel.DirectReportFlags != null && vBModel.DirectReportFlags.Any(f => f);
+                        int skipAviState, skipAiState;
+                        if (allDefects.Count == 0)
+                        {
+                            // 真的没有缺陷
+                            skipAviState = 1;
+                            skipAiState = 1;
+                        }
+                        else if (hasDirectReport)
+                        {
+                            // 有直报缺陷：AVI=NG, AI=异常/直报
+                            skipAviState = 2;
+                            skipAiState = 3;
+                        }
+                        else
+                        {
+                            // 有缺陷但无直报、无图片（异常情况）
+                            skipAviState = 2;
+                            skipAiState = 3;
+                        }
+
+                        _savePanelSideAction(panelInfo, allDefects, skipAviState, skipAiState);
+                        LogTextHelper.Info($"跳过处理(无图片): SN={vBModel.SN}, 保存缺陷路径数={allDefects.Count}, AviState={skipAviState}, AiState={skipAiState}");
                     }
                     else if (vBModel.Mats.Count > _sysConfig.MaxDefectCount)
                     {
-                        var imageKeys = vBModel.ImageKeys.Select(t => new DetectInfo() { ImagePath = t, AIStatus = 3 }).ToList();
-                        _savePanelSideAction(panelInfo, imageKeys, 2, 3);
-                        LogTextHelper.Info($"跳过处理(图片超限): SN={vBModel.SN}");
+                        var allDefects = BuildAllDefectsWithPaths(vBModel);
+                        foreach (var d in allDefects) d.AIStatus = 3;
+                        _savePanelSideAction(panelInfo, allDefects, 2, 3);
+                        LogTextHelper.Info($"跳过处理(图片超限): SN={vBModel.SN}, 保存缺陷路径数={allDefects.Count}");
                     }
                     return;
                 }
@@ -102,27 +128,41 @@ namespace DeepSightWorkLib.Services
                 string code = obj.Code.ToString();
                 string message = obj.Message.ToString();
 
+                // 从 AllDefectXxxKeys 构建完整的缺陷列表（包含直报缺陷，图片路径完整）
+                List<DetectInfo> defects = BuildAllDefectsWithPaths(vBModel);
+                int directReportCount = vBModel.DirectReportFlags?.Count(f => f) ?? 0;
+                int inferableCount = defects.Count - directReportCount;
+
+                int aviState = defects.Count == 0 ? 1 : 2;
+                int aiState = 3;
+
                 if (code == "200")
                 {
-                    List<DetectInfo> defects = new List<DetectInfo>();
+                    var inferResults = obj.Data.InferWholeData.InferResults;
+                    int inferIdx = 0; // AI推理结果的索引（仅对应非直报缺陷）
 
-                    // 构建 HeatPoint 点信息
-                    for (int i = 0; i < obj.Data.InferWholeData.InferResults.Count; i++)
+                    for (int i = 0; i < defects.Count; i++)
                     {
-                        DetectInfo defect = new DetectInfo();
-                        if (vBModel.ImageKeys[i]!=null)
+                        var defect = defects[i];
+
+                        // 直报缺陷：已在 BuildAllDefectsWithPaths 中标记 AIStatus=3，跳过
+                        bool isDirectReport = vBModel.DirectReportFlags != null
+                            && i < vBModel.DirectReportFlags.Count
+                            && vBModel.DirectReportFlags[i];
+                        if (isDirectReport) continue;
+
+                        // 非直报缺陷：映射 AI 推理结果
+                        if (inferIdx >= inferResults.Count)
                         {
-                            defect.ImagePath = vBModel.ImageKeys[i];
+                            // AI返回结果不够，剩余非直报缺陷标记为未知
+                            defect.AIStatus = 3;
+                            inferIdx++;
+                            continue;
                         }
-                        if (vBModel.ImageKeys_Temp[i]!=null)
-                        {
-                            defect.TempImagePath=vBModel.ImageKeys_Temp[i]; 
-                        }
-                        if (vBModel.ImageKeys_Gerber[i]!=null)
-                        {
-                            defect.GerberImagePath = vBModel.ImageKeys_Gerber[i];
-                        }
-                        var imgRoi = obj.Data.InferWholeData.InferResults[i].ImgRoi;
+
+                        var inferResult = inferResults[inferIdx];
+
+                        var imgRoi = inferResult.ImgRoi;
                         if (imgRoi != null && imgRoi.Count >= 4)
                         {
                             defect.OriginRoiX = imgRoi[0];
@@ -131,7 +171,7 @@ namespace DeepSightWorkLib.Services
                             defect.OriginHeight = imgRoi[3];
                         }
 
-                        if (obj.Data.InferWholeData.InferResults[i].Infer_Result == "OK")
+                        if (inferResult.Infer_Result == "OK")
                         {
                             defect.AIStatus = 1;
                         }
@@ -139,13 +179,13 @@ namespace DeepSightWorkLib.Services
                         {
                             defect.AIStatus = 2;
 
-                            for (int j = 0; j < obj.Data.InferWholeData.InferResults[i].InferDetails.Location.Count; j++)
+                            for (int j = 0; j < inferResult.InferDetails.Location.Count; j++)
                             {
-                                string sub_defectName = obj.Data.InferWholeData.InferResults[i].Defect_name;
-                                int subX = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].X);
-                                int subY = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].Y);
-                                int subH = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].Height);
-                                int subW = Convert.ToInt32(obj.Data.InferWholeData.InferResults[i].InferDetails.Location[j].Width);
+                                string sub_defectName = inferResult.Defect_name;
+                                int subX = Convert.ToInt32(inferResult.InferDetails.Location[j].X);
+                                int subY = Convert.ToInt32(inferResult.InferDetails.Location[j].Y);
+                                int subH = Convert.ToInt32(inferResult.InferDetails.Location[j].Height);
+                                int subW = Convert.ToInt32(inferResult.InferDetails.Location[j].Width);
 
                                 defect.DefectName = sub_defectName;
                                 defect.RoiX = subX;
@@ -153,8 +193,8 @@ namespace DeepSightWorkLib.Services
                                 defect.Width = subW;
                                 defect.Height = subH;
 
-                                defect.DrawInfo =JsonConvert.SerializeObject( obj.Data.InferWholeData.InferResults[i].InferDetails.DrawInfoList);
-                                
+                                defect.DrawInfo = JsonConvert.SerializeObject(inferResult.InferDetails.DrawInfoList);
+
                                 if (sub_defectName == "AU10" || sub_defectName == "CU10" || sub_defectName == "CU41"
                                     || sub_defectName == "HO01" || sub_defectName == "SM10")
                                 {
@@ -164,7 +204,6 @@ namespace DeepSightWorkLib.Services
                                 {
                                     defect.DefectShape = "line";
                                 }
-
                             }
                         }
 
@@ -179,55 +218,46 @@ namespace DeepSightWorkLib.Services
                             }
                         }
 
-                        defects.Add(defect);
+                        inferIdx++;
                     }
 
-                    // 追加直报缺陷（AIStatus=3，跳过了AI推理）
-                    if (vBModel.DirectReportDefectIndices != null && vBModel.DirectReportDefectIndices.Count > 0)
-                    {
-                        for (int i = 0; i < vBModel.DirectReportDefectIndices.Count; i++)
-                        {
-                            var directReportInfo = new DetectInfo
-                            {
-                                AIStatus = 3
-                            };
-                            defects.Add(directReportInfo);
-                        }
-                        LogTextHelper.Info($"SN:{vBModel.SN} 追加 {vBModel.DirectReportDefectIndices.Count} 个直报缺陷到后处理结果");
-                    }
+                    aiState = defects.Any(h => h.AIStatus == 3) ? 3 : defects.Any(h => h.AIStatus == 2) ? 2 : 1;
 
-                    // 保存数据到数据库
-                    int aviState = defects.Count == 0 ? 1 : 2;
-                    int aiState = defects.Any(h => h.AIStatus == 3) ? 3 : defects.Any(h => h.AIStatus == 2) ? 2 : 1;
-                    _savePanelSideAction(panelInfo, defects, aviState, aiState);
-
-                    // 重点缺陷报警检查
                     int keyDefectInThisSide = defects.Count(h => h.IsKeyDefect);
                     if (keyDefectInThisSide > 0)
                     {
                         CheckKeyDefectAlarm(vBModel.SN);
                     }
 
-                    LogTextHelper.Info($"处理完成: SN={vBModel.SN}, Side={panelInfo.SideIndex}, AviState={aviState}, AiState={aiState}, KeyDefects={keyDefectInThisSide}");
+                    LogTextHelper.Info($"处理完成: SN={vBModel.SN}, Side={panelInfo.SideIndex}, " +
+                        $"总缺陷={defects.Count}, 直报={directReportCount}, AI推理={inferableCount}, " +
+                        $"AviState={aviState}, AiState={aiState}, KeyDefects={keyDefectInThisSide}");
                 }
                 else if (code == "600")
                 {
-                    // 无缺陷但可能有直报缺陷
-                    var directReportList = new List<DetectInfo>();
-                    if (vBModel.DirectReportDefectIndices != null && vBModel.DirectReportDefectIndices.Count > 0)
+                    // AI无缺陷（code=600），但直报缺陷依然需要保存
+                    for (int i = 0; i < defects.Count; i++)
                     {
-                        for (int i = 0; i < vBModel.DirectReportDefectIndices.Count; i++)
+                        var defect = defects[i];
+                        bool isDirectReport = vBModel.DirectReportFlags != null
+                            && i < vBModel.DirectReportFlags.Count
+                            && vBModel.DirectReportFlags[i];
+                        if (!isDirectReport)
                         {
-                            directReportList.Add(new DetectInfo { AIStatus = 3 });
+                            defect.AIStatus = 1;
                         }
-                        int aviState600 = 2;
-                        int aiState600 = 3;
-                        _savePanelSideAction(panelInfo, directReportList, aviState600, aiState600);
-                        LogTextHelper.Info($"处理完成(AI无缺陷,有{directReportList.Count}个直报): SN={vBModel.SN}, Side={panelInfo.SideIndex}");
+                    }
+
+                    if (directReportCount > 0)
+                    {
+                        aviState = 2;
+                        aiState = 3;
+                        LogTextHelper.Info($"处理完成(AI无缺陷,有{directReportCount}个直报): SN={vBModel.SN}, Side={panelInfo.SideIndex}");
                     }
                     else
                     {
-                        _savePanelSideAction(panelInfo, new List<DetectInfo>(), 1, 1);
+                        aviState = 1;
+                        aiState = 1;
                         LogTextHelper.Info($"处理完成(无缺陷): SN={vBModel.SN}, Side={panelInfo.SideIndex}");
                     }
                 }
@@ -235,12 +265,76 @@ namespace DeepSightWorkLib.Services
                 {
                     LogTextHelper.Warn($"算法处理失败 for Side {panelInfo.SideIndex}，错误码: {code}，错误信息：{message}");
                 }
+
+                // 不论什么情况都保存（所有缺陷包含完整图片路径）
+                _savePanelSideAction(panelInfo, defects, aviState, aiState);
+
             }
             catch (Exception ex)
             {
                 LogTextHelper.Error($"处理异常: SN={vBModel.SN}, 错误={ex}");
             }
         }
+
+        /// <summary>
+        /// 根据 AllDefectXxxKeys 构建包含所有缺陷（含直报）的 DetectInfo 列表，
+        /// 直报缺陷预设 AIStatus=3，非直报缺陷 AIStatus 默认为 0（后续由推理结果填充）。
+        /// </summary>
+        private List<DetectInfo> BuildAllDefectsWithPaths(VBModel vBModel)
+        {
+            var defects = new List<DetectInfo>();
+
+            // 优先使用全量路径列表（包含直报缺陷）
+            var allImageKeys = vBModel.AllDefectImageKeys;
+            var allGerberKeys = vBModel.AllDefectGerberKeys;
+            var allTempKeys = vBModel.AllDefectTempKeys;
+            var flags = vBModel.DirectReportFlags;
+            var allDefectCodes = vBModel.AllDefectCodes;
+
+            if (allImageKeys != null && allImageKeys.Count > 0)
+            {
+                for (int i = 0; i < allImageKeys.Count; i++)
+                {
+                    bool isDirectReport = flags != null && i < flags.Count && flags[i];
+                    DetectInfo defect = null;
+                    if (vBModel.OriginalDetectInfos != null
+                        && vBModel.OriginalDetectInfos.TryGetValue(i, out var originalDetectInfo)
+                        && originalDetectInfo != null)
+                    {
+                        defect = originalDetectInfo.Clone();
+                    }
+
+                    defect = defect ?? new DetectInfo();
+                    defect.ImagePath = allImageKeys.ElementAtOrDefault(i) ?? defect.ImagePath ?? "";
+                    defect.GerberImagePath = allGerberKeys?.ElementAtOrDefault(i) ?? defect.GerberImagePath ?? "";
+                    defect.TempImagePath = allTempKeys?.ElementAtOrDefault(i) ?? defect.TempImagePath ?? "";
+                    defect.DefectName = !string.IsNullOrWhiteSpace(defect.DefectName)
+                        ? defect.DefectName
+                        : allDefectCodes?.ElementAtOrDefault(i) ?? "";
+                    defect.AIStatus = isDirectReport ? 3 : 0;
+                    defects.Add(defect);
+                }
+            }
+            else
+            {
+                // 兼容旧数据：如果 AllDefectImageKeys 为空，回退到 ImageKeys（不含直报）
+                if (vBModel.ImageKeys != null)
+                {
+                    for (int i = 0; i < vBModel.ImageKeys.Count; i++)
+                    {
+                        defects.Add(new DetectInfo
+                        {
+                            ImagePath = vBModel.ImageKeys.ElementAtOrDefault(i) ?? "",
+                            GerberImagePath = vBModel.ImageKeys_Gerber?.ElementAtOrDefault(i) ?? "",
+                            TempImagePath = vBModel.ImageKeys_Temp?.ElementAtOrDefault(i) ?? ""
+                        });
+                    }
+                }
+            }
+
+            return defects;
+        }
+
 
         /// <summary>
         /// 处理验证测试的推理结果

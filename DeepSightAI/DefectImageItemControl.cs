@@ -1,4 +1,5 @@
 using DeepSightDB;
+using DeepSightModel;
 using DeepSightDisplay;
 using DeepSightTool;
 using OpenCvSharp;

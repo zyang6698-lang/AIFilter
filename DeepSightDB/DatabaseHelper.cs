@@ -1,4 +1,5 @@
 ﻿using DeepSightDB.Interfaces;
+using DeepSightModel;
 using DeepSightTool;
 using Newtonsoft.Json;
 using System;

@@ -108,6 +108,7 @@
     <Compile Include="ValidationTestModel.cs" />
     <Compile Include="VBInfo.cs" />
     <Compile Include="SnDebugInfo.cs" />
+    <Compile Include="PanelData.cs" />
     <Compile Include="VBModel.cs" />
     <Compile Include="VBOutInfo.cs" />
   </ItemGroup>

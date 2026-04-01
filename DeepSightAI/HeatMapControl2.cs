@@ -1,5 +1,6 @@
 ﻿//#define TEST_ENV
 using DeepSightDB;
+using DeepSightModel;
 using DeepSightDisplay;
 using DeepSightDisplay.HeatMap;
 using DeepSightTool;

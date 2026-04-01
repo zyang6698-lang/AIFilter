@@ -120,20 +120,24 @@ namespace DeepSightAI
             int progress = (int)_currentTask.Progress;
             progressBar_Test.Value = Math.Min(progress, 100);
 
-            string progressText = $"处理进度: {progress}% ({_currentTask.ProcessedRecords}/{_currentTask.TotalRecords})";
+            string progressText = BuildProgressText();
             if (_currentTask.EnqueuedRecords != _currentTask.ProcessedRecords)
             {
                 progressText += $" | 入队: {_currentTask.EnqueuedRecords}";
             }
             label_Progress.Text = progressText;
 
-            // 更新统计信息 - 二次推理显示OK/NG变化
+            // 更新统计信息 - 二次推理显示四种AI状态
             int total = _currentTask.SecondaryResults.Count;
+            int totalOk = _currentTask.SecondaryResults.Sum(r => r.FinalOkCount);
+            int totalNg = _currentTask.SecondaryResults.Sum(r => r.FinalNgCount);
+            int totalBypass = _currentTask.SecondaryResults.Sum(r => r.FinalBypassCount);
+            int totalUndetected = _currentTask.SecondaryResults.Sum(r => r.FinalUndetectedCount);
             int changedToOk = _currentTask.SecondaryResults.Sum(r => r.ChangedToOkCount);
-            int stillNg = _currentTask.SecondaryResults.Sum(r => r.FinalNgCount);
 
-            string summaryText = $"总处理数: {total} | OK面: {_currentTask.OkRecords} | NG面: {_currentTask.NgRecords} | " +
-                $"变为OK点数: {changedToOk} | 仍为NG点数: {stillNg}";
+            string summaryText = $"总处理面数: {total} | " +
+                $"OK: {totalOk} | NG: {totalNg} | 异常: {totalBypass} | 未检测: {totalUndetected} | " +
+                $"NG→OK: {changedToOk}";
 
             label_Summary.Text = summaryText;
         }
@@ -148,27 +152,61 @@ namespace DeepSightAI
             _allResults.Clear();
             foreach (var result in _currentTask.SecondaryResults)
             {
-                // 二次推理：显示原NG数->最终NG数的变化
+                // 原判定：显示推理前四种AI状态
+                string originalText = BuildStatusText(result.OriginalOkCount, result.OriginalNgCount, result.OriginalBypassCount, result.OriginalUndetectedCount);
+                // 新判定：显示推理后四种AI状态
+                string newText = BuildStatusText(result.FinalOkCount, result.FinalNgCount, result.FinalBypassCount, result.FinalUndetectedCount);
+
+                // 变化描述
+                string changeText;
+                if (result.ChangedToOkCount > 0)
+                {
+                    var changes = new List<string>();
+                    changes.Add($"NG→OK: {result.ChangedToOkCount}");
+                    int totalChanged = result.PointResults.Count(p => p.IsChanged);
+                    if (totalChanged > result.ChangedToOkCount)
+                        changes.Add($"其他变化: {totalChanged - result.ChangedToOkCount}");
+                    changeText = string.Join(", ", changes);
+                }
+                else
+                {
+                    int totalChanged = result.PointResults.Count(p => p.IsChanged);
+                    changeText = totalChanged > 0 ? $"变化: {totalChanged}" : "无变化";
+                }
+
                 _allResults.Add(new SideTestResultDisplay
                 {
                     SerialNumber = result.SerialNumber,
                     Side = result.Side,
                     DataSourceText = "二次推理",
                     HasVVSData = false,
-                    OriginalResult = $"NG: {result.OriginalNgCount}",
-                    NewResult = $"NG: {result.FinalNgCount}",
-                    IsConsistent = result.ChangedToOkCount > 0 ? $"↓ 减少 {result.ChangedToOkCount}" : "无变化",
-                    DefectCount = result.OriginalNgCount,
-                    ConsistentCount = result.ChangedToOkCount, // 复用字段：变为OK的数量
-                    InconsistentCount = result.FinalNgCount,   // 复用字段：仍为NG的数量
-                    MissCount = 0,
-                    OverKillCount = 0,
-                    IsConsistentBool = result.ChangedToOkCount > 0, // 有变化视为"一致"（绿色显示）
+                    OriginalResult = originalText,
+                    NewResult = newText,
+                    IsConsistent = changeText,
+                    DefectCount = result.OriginalNgCount + result.OriginalOkCount + result.OriginalBypassCount + result.OriginalUndetectedCount,
+                    ConsistentCount = result.FinalOkCount,
+                    InconsistentCount = result.FinalNgCount,
+                    MissCount = result.FinalBypassCount,
+                    OverKillCount = result.FinalUndetectedCount,
+                    IsConsistentBool = result.ChangedToOkCount > 0,
                     Details = null
                 });
             }
 
             ApplyFilter();
+        }
+
+        /// <summary>
+        /// 构建四种AI状态的显示文本，仅显示数量大于0的状态
+        /// </summary>
+        private string BuildStatusText(int okCount, int ngCount, int bypassCount, int undetectedCount)
+        {
+            var parts = new List<string>();
+            if (okCount > 0) parts.Add($"OK:{okCount}");
+            if (ngCount > 0) parts.Add($"NG:{ngCount}");
+            if (bypassCount > 0) parts.Add($"异常:{bypassCount}");
+            if (undetectedCount > 0) parts.Add($"未检测:{undetectedCount}");
+            return parts.Count > 0 ? string.Join(" | ", parts) : "无缺陷点";
         }
 
         #endregion
@@ -317,7 +355,7 @@ namespace DeepSightAI
             progressBar_Test.Value = Math.Min(progress, 100);
 
             // 显示入队进度和处理进度
-            string progressText = $"处理进度: {progress}% ({_currentTask.ProcessedRecords}/{_currentTask.TotalRecords})";
+            string progressText = BuildProgressText();
             if (_currentTask.EnqueuedRecords != _currentTask.ProcessedRecords)
             {
                 // 如果入队数和处理数不同，额外显示入队进度
@@ -346,6 +384,35 @@ namespace DeepSightAI
             }
 
             label_Summary.Text = summaryText;
+        }
+
+        private string BuildProgressText()
+        {
+            if (_currentTask == null)
+            {
+                return string.Empty;
+            }
+
+            int progress = (int)_currentTask.Progress;
+            return $"处理进度: {progress}% (处理:{_currentTask.ProcessedRecords} / 跳过:{_currentTask.SkippedRecords} / 错误:{_currentTask.ErrorRecords} / 总数:{_currentTask.TotalRecords})";
+        }
+
+        private static string GetStatusText(int status)
+        {
+            switch (status)
+            {
+                case 0: return "未检测";
+                case 1: return "OK";
+                case 2: return "NG";
+                case 3: return "异常";
+                default: return status.ToString();
+            }
+        }
+
+        private static string GetStatusText(int status, string source)
+        {
+            var statusText = GetStatusText(status);
+            return string.IsNullOrWhiteSpace(source) ? statusText : $"{statusText}({source})";
         }
 
         private void ApplyFilter()
@@ -439,13 +506,13 @@ namespace DeepSightAI
                 string orig;
                 if (defect.DataSource == OriginalDataSourceType.VVS)
                 {
-                    orig = defect.OriginalVVSStatus == 1 ? "OK(VVS)" : "NG(VVS)";
+                    orig = GetStatusText(defect.OriginalVVSStatus, "VVS");
                 }
                 else
                 {
-                    orig = defect.OriginalAIStatus == 1 ? "OK(AI)" : "NG(AI)";
+                    orig = GetStatusText(defect.OriginalAIStatus, "AI");
                 }
-                string newR = defect.NewAIStatus == 1 ? "OK" : "NG";
+                string newR = GetStatusText(defect.NewAIStatus, "AI");
                 string status = defect.IsConsistent ? "✓" : "✗";
 
                 // 标记漏失和误报

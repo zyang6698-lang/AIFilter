@@ -163,6 +163,7 @@ namespace DeepSightAI
             this.lblPageInfo.Name = "lblPageInfo";
             this.lblPageInfo.Size = new System.Drawing.Size(121, 17);
             this.lblPageInfo.Text = "第 1 页 / 共 1 页";
+            this.lblPageInfo.Visible = false;
             // 
             // solutionAndflow
             // 
@@ -515,7 +516,7 @@ namespace DeepSightAI
             // 
             this.btnModelB.CheckOnClick = true;
             this.btnModelB.Name = "btnModelB";
-            this.btnModelB.Size = new System.Drawing.Size(224, 26);
+            this.btnModelB.Size = new System.Drawing.Size(158, 26);
             this.btnModelB.Text = "Gerber图";
             this.btnModelB.Click += new System.EventHandler(this.btnModelB_Click);
             // 
@@ -525,7 +526,7 @@ namespace DeepSightAI
             this.btnModelC.CheckOnClick = true;
             this.btnModelC.CheckState = System.Windows.Forms.CheckState.Checked;
             this.btnModelC.Name = "btnModelC";
-            this.btnModelC.Size = new System.Drawing.Size(224, 26);
+            this.btnModelC.Size = new System.Drawing.Size(158, 26);
             this.btnModelC.Text = "Temp图";
             this.btnModelC.Click += new System.EventHandler(this.btnModelC_Click);
             // 

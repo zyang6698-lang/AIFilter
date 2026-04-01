@@ -23,7 +23,7 @@ namespace DeepSightWorkLib.Services
         }
 
         /// <summary>
-        /// 构建推理用的 VBModel
+        /// 构建推理用的 VBModel（根据配置跳过直报缺陷）
         /// </summary>
         public VBModel Build(VBModelBuildContext context)
         {
@@ -35,7 +35,14 @@ namespace DeepSightWorkLib.Services
             var pcsIndexList = new List<int>();
             var originalAIResults = new Dictionary<int, int>();
             var originalVVSResults = new Dictionary<int, int>();
-            var originalDetectInfos = new Dictionary<int, object>();
+            var originalDetectInfos = new Dictionary<int, DetectInfo>();
+            var directReportFlags = new List<bool>();
+
+            // 全量路径（包含直报），用于后续保存完整缺陷信息
+            var allDefectImageKeys = new List<string>();
+            var allDefectGerberKeys = new List<string>();
+            var allDefectTempKeys = new List<string>();
+            var allDefectCodes = new List<string>();
 
             // 检查是否有VVS数据
             bool hasVVSData = context.Side?.VvsState > 0 || context.DefectPoints.Any(d => d.VVSStatus > 0);
@@ -43,20 +50,44 @@ namespace DeepSightWorkLib.Services
             for (int i = 0; i < context.DefectPoints.Count; i++)
             {
                 var defect = context.DefectPoints[i];
-                if (string.IsNullOrEmpty(defect.ImagePath)) continue;
+                string aviDefectCode = !string.IsNullOrWhiteSpace(defect.DefectName)
+                    ? defect.DefectName
+                    : defect.DefectType ?? "";
+
+                var defectClone = defect.Clone();
+                defectClone.DefectName = aviDefectCode;
+                originalDetectInfos[i] = defectClone;
+
+                // 记录全量路径和缺陷名（验证流中 DefectName 即为原始 AVI 报码）
+                allDefectImageKeys.Add(defect.ImagePath ?? "");
+                allDefectGerberKeys.Add(defect.GerberImagePath ?? "");
+                allDefectTempKeys.Add(defect.TempImagePath ?? "");
+                allDefectCodes.Add(aviDefectCode);
+
+                // 根据配置判断是否为直报缺陷（与主流程一致）
+                bool isDirectReport = KeyDefectConfigManager.Instance.IsDirectReportByProduct(
+                    aviDefectCode, context.ProductSerial);
+                directReportFlags.Add(isDirectReport);
+
+                if (isDirectReport || string.IsNullOrEmpty(defect.ImagePath))
+                    continue;
 
                 imageKeys.Add(defect.ImagePath);
                 defectIndexList.Add(i);
                 pcsIndexList.Add(i);
-                originalAIResults[i] = defect.AIStatus;
-                originalVVSResults[i] = defect.VVSStatus;
-                originalDetectInfos[i] = defect;
+                originalAIResults[i] = defectClone.AIStatus;
+                originalVVSResults[i] = defectClone.VVSStatus;
             }
 
-            if (imageKeys.Count == 0) return null;
-
-            // 构建 VBInfo
-            var vbInfo = BuildVBInfo(context, imageKeys);
+            // 全部直报或无有效图片时，仍返回 VBModel（ImageKeys 为空），
+            // 由调用方区分"全部直报跳过"和"真无数据"
+            RootVBInfo vbInfo = null;
+            if (imageKeys.Count > 0)
+            {
+                // 构建非直报缺陷子列表，用于 VBInfo 构建
+                var filteredDefects = defectIndexList.Select(idx => context.DefectPoints[idx]).ToList();
+                vbInfo = BuildVBInfo(context, imageKeys, filteredDefects);
+            }
 
             return new VBModel
             {
@@ -73,7 +104,12 @@ namespace DeepSightWorkLib.Services
                 OriginalVVSResults = originalVVSResults,
                 HasVVSData = hasVVSData,
                 OriginalDetectInfos = originalDetectInfos,
-                TestTaskId = context.TaskId
+                TestTaskId = context.TaskId,
+                AllDefectImageKeys = allDefectImageKeys,
+                AllDefectGerberKeys = allDefectGerberKeys,
+                AllDefectTempKeys = allDefectTempKeys,
+                DirectReportFlags = directReportFlags,
+                AllDefectCodes = allDefectCodes
             };
         }
 
@@ -91,7 +127,7 @@ namespace DeepSightWorkLib.Services
         /// <summary>
         /// 构建 VBInfo
         /// </summary>
-        private RootVBInfo BuildVBInfo(VBModelBuildContext context, List<string> imageKeys)
+        private RootVBInfo BuildVBInfo(VBModelBuildContext context, List<string> imageKeys, List<DetectInfo> filteredDefects)
         {
             // 从配置中查找料号对应的方案和流程
             var solutionFlow = _solutionConfig?.solus?.FirstOrDefault(o => o.ProductSerial == context.ProductSerial)
@@ -139,10 +175,10 @@ namespace DeepSightWorkLib.Services
             // 构造模板图片路径
             string tempImgPath = BuildTemplateImagePath(context.ProductSerial, context.MachineId, context.SideName);
 
-            // 添加图片信息
-            for (int i = 0; i < imageKeys.Count && i < context.DefectPoints.Count; i++)
+            // 添加图片信息（filteredDefects 与 imageKeys 一一对应，均已排除直报缺陷）
+            for (int i = 0; i < imageKeys.Count && i < filteredDefects.Count; i++)
             {
-                var defect = context.DefectPoints[i];
+                var defect = filteredDefects[i];
                 var group = BuildImageGroup(defect, tempImgPath, context);
                 vbInfo.paramsData.InferWholeData.ImageData.DataValue.InferImageGroup.Add(group);
             }
@@ -200,7 +236,7 @@ namespace DeepSightWorkLib.Services
                     Side = context.SideName
                 },
                 ImgROI = new List<int> { roiX, roiY, roiW, roiH },
-                DefectCode = defect.DefectType ?? "",
+                DefectCode = defect.DefectName ?? defect.DefectType ?? "",
                 TempImgPath = tempImgPath,
                 inspectDetails = new InspectDetails { InferRois = new List<InferRoi>() }
             };
@@ -258,29 +294,6 @@ namespace DeepSightWorkLib.Services
             return fullPath;
         }
 
-        /// <summary>
-        /// 加载测试用图片
-        /// </summary>
-        public List<Mat> LoadImages(List<DetectInfo> defects)
-        {
-            var mats = new List<Mat>();
-            foreach (var defect in defects)
-            {
-                if (string.IsNullOrEmpty(defect.ImagePath)) continue;
-
-                try
-                {
-                    var mat = Cv2.ImRead(defect.ImagePath);
-                    if (mat != null && !mat.Empty())
-                        mats.Add(mat);
-                }
-                catch (Exception ex)
-                {
-                    DeepSightTool.LogTextHelper.Warn($"加载测试图片失败: {defect.ImagePath}, {ex.Message}");
-                }
-            }
-            return mats;
-        }
     }
 
     /// <summary>

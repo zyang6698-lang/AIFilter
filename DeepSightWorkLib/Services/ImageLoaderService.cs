@@ -76,97 +76,29 @@ namespace DeepSightWorkLib.Services
         }
 
         /// <summary>
-        /// 从面板信息构建 Minio 图片键列表（endpoint:objectKey 格式）
-        /// 此方法集中了原来 BusinessClass.GetAllMinioImageKeys 中的逻辑
+        /// 构建所有缺陷（包含直报）的三类图片路径、直报标记列表和 AVI 原始报码。
+        /// 返回的五个列表索引对齐：AllImageKeys[i]、AllGerberKeys[i]、AllTempKeys[i]、DirectReportFlags[i]、AllDefectCodes[i] 对应同一个缺陷。
         /// </summary>
-        public List<string> GetAllMinioImageKeys(RootPanelInfoWithIP info)
+        public (List<string> AllImageKeys, List<string> AllGerberKeys, List<string> AllTempKeys, List<bool> DirectReportFlags, List<string> AllDefectCodes)
+            GetAllImageKeysWithDirectReportFlags(RootPanelInfoWithIP info)
         {
-            var results = new List<string>();
+            var allImageKeys = new List<string>();
+            var allGerberKeys = new List<string>();
+            var allTempKeys = new List<string>();
+            var flags = new List<bool>();
+            var allDefectCodes = new List<string>();
+
             try
             {
                 if (info == null || info.RootInfo == null || string.IsNullOrWhiteSpace(info.IP))
                 {
-                    LogTextHelper.Warn("GetAllMinioImageKeys: 参数为空或 IP 缺失！");
-                    return results;
+                    LogTextHelper.Warn("GetAllImageKeysWithDirectReportFlags: 参数为空或 IP 缺失！");
+                    return (allImageKeys, allGerberKeys, allTempKeys, flags, allDefectCodes);
                 }
 
                 var panel = info.RootInfo;
-
-
                 if (panel.PcsInfo == null || panel.PcsInfo.Count == 0)
-                {
-                    LogTextHelper.Info($"GetAllMinioImageKeys: PcsInfo 为空。SN={panel.SerialNumber}");
-                    return results;
-                }
-
-                foreach (var kvp in panel.PcsInfo)
-                {
-                    var pcs = kvp.Value;
-                    if (pcs == null || pcs.DefectInfo == null || pcs.DefectInfo.Count == 0)
-                    {
-                        continue;
-                    }
-
-                    for (int j = 0; j < pcs.DefectInfo.Count; j++)
-                    {
-                        var defect = pcs.DefectInfo[j];
-                        if (defect == null)
-                            continue;
-
-                        // 跳过直报缺陷的图片加载（根据料号对应的 profile）
-                        if (KeyDefectConfigManager.Instance.IsDirectReportByProduct(defect.DefectCode, panel.ProductSerial))
-                            continue;
-
-                        AddImages(defect.DefectVrsImages, info.IP, info.Head, results);
-                       // AddImages(defect.DefectVrsOkImages,info.IP, info.Head, results) ;
-                       // AddImages(defect.DefectVrsGerberImages, info.IP, info.Head, results);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error("GetAllMinioImageKeys 异常：" + ex);
-            }
-
-            return results;
-        }
-
-        /// <summary>
-        /// 从面板信息构建 Gerber 图片键列表（endpoint:objectKey 格式）
-        /// </summary>
-        public List<string> GetAllMinioGerberImageKeys(RootPanelInfoWithIP info)
-        {
-            return GetImageKeysByType(info, defect => defect.DefectVrsGerberImages, "GetAllMinioGerberImageKeys");
-        }
-
-        /// <summary>
-        /// 从面板信息构建 Template 图片键列表（endpoint:objectKey 格式）
-        /// </summary>
-        public List<string> GetAllMinioTemplateImageKeys(RootPanelInfoWithIP info)
-        {
-            return GetImageKeysByType(info, defect => defect.DefectVrsOkImages, "GetAllMinioTemplateImageKeys");
-        }
-
-        /// <summary>
-        /// 通用方法：按类型提取图片键列表
-        /// </summary>
-        private List<string> GetImageKeysByType(RootPanelInfoWithIP info, Func<DefectInfo, List<string>> imageSelector, string methodName)
-        {
-            var results = new List<string>();
-            try
-            {
-                if (info == null || info.RootInfo == null || string.IsNullOrWhiteSpace(info.IP))
-                {
-                    LogTextHelper.Warn($"{methodName}: 参数为空或 IP 缺失！");
-                    return results;
-                }
-
-                var panel = info.RootInfo;
-
-                if (panel.PcsInfo == null || panel.PcsInfo.Count == 0)
-                {
-                    return results;
-                }
+                    return (allImageKeys, allGerberKeys, allTempKeys, flags, allDefectCodes);
 
                 foreach (var kvp in panel.PcsInfo)
                 {
@@ -179,17 +111,66 @@ namespace DeepSightWorkLib.Services
                         var defect = pcs.DefectInfo[j];
                         if (defect == null) continue;
 
-                        var images = imageSelector(defect);
-                        AddImages(images, info.IP, info.Head, results);
+                        bool isDirectReport = KeyDefectConfigManager.Instance
+                            .IsDirectReportByProduct(defect.DefectCode, panel.ProductSerial);
+
+                        // VRS 图片路径（如果有多张取第一张，与 AddImages 逻辑保持一致）
+                        string imgKey = BuildFirstImageKey(defect.DefectVrsImages, info.IP, info.Head);
+                        string gerberKey = BuildFirstImageKey(defect.DefectVrsGerberImages, info.IP, info.Head);
+                        string tempKey = BuildFirstImageKey(defect.DefectVrsOkImages, info.IP, info.Head);
+
+                        allImageKeys.Add(imgKey);
+                        allGerberKeys.Add(gerberKey);
+                        allTempKeys.Add(tempKey);
+                        flags.Add(isDirectReport);
+                        allDefectCodes.Add(defect.DefectCode ?? "");
                     }
                 }
             }
             catch (Exception ex)
             {
-                LogTextHelper.Error($"{methodName} 异常：" + ex);
+                LogTextHelper.Error("GetAllImageKeysWithDirectReportFlags 异常：" + ex);
             }
 
-            return results;
+            return (allImageKeys, allGerberKeys, allTempKeys, flags, allDefectCodes);
+        }
+
+        /// <summary>
+        /// 从全量列表 + 直报标记中派生出仅非直报缺陷的过滤列表
+        /// </summary>
+        public static (List<string> ImageKeys, List<string> GerberKeys, List<string> TempKeys) DeriveFilteredKeys(
+            List<string> allImageKeys, List<string> allGerberKeys, List<string> allTempKeys, List<bool> directReportFlags)
+        {
+            var imageKeys = new List<string>();
+            var gerberKeys = new List<string>();
+            var tempKeys = new List<string>();
+
+            if (allImageKeys == null || allImageKeys.Count == 0)
+                return (imageKeys, gerberKeys, tempKeys);
+
+            for (int i = 0; i < allImageKeys.Count; i++)
+            {
+                bool isDirectReport = directReportFlags != null && i < directReportFlags.Count && directReportFlags[i];
+                if (isDirectReport) continue;
+
+                imageKeys.Add(allImageKeys[i]);
+                gerberKeys.Add(allGerberKeys != null && i < allGerberKeys.Count ? allGerberKeys[i] : "");
+                tempKeys.Add(allTempKeys != null && i < allTempKeys.Count ? allTempKeys[i] : "");
+            }
+
+            return (imageKeys, gerberKeys, tempKeys);
+        }
+
+        /// <summary>
+        /// 构建第一张图片的 endpoint:objectKey 路径，无图则返回空字符串
+        /// </summary>
+        private static string BuildFirstImageKey(List<string> images, string endpoint, string prefix)
+        {
+            if (images == null || images.Count == 0) return "";
+            var rel = images[0];
+            if (string.IsNullOrWhiteSpace(rel)) return "";
+            var normalizedRel = rel.Replace('\\', '/').TrimStart('/');
+            return $"{endpoint}:{prefix}/{normalizedRel}";
         }
 
         private static void AddImages(List<string> images, string endpoint, string prefix, List<string> output)

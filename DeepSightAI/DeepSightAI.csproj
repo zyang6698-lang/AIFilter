@@ -596,7 +596,7 @@
       <Name>DeepSightTool</Name>
     </ProjectReference>
     <ProjectReference Include="..\DeepSightWorkLib\DeepSightWorkLib.csproj">
-      <Project>{6EFBAB85-5D86-4709-9465-5AD59EDF9722}</Project>
+      <Project>{6efbab85-5d86-4709-9465-5ad59edf9722}</Project>
       <Name>DeepSightWorkLib</Name>
     </ProjectReference>
   </ItemGroup>

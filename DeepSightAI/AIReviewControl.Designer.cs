@@ -53,6 +53,7 @@
             this.splitter_LotGrid = new System.Windows.Forms.Splitter();
             this.panel_LotList = new System.Windows.Forms.Panel();
             this.treeView_Lots = new System.Windows.Forms.TreeView();
+            this.chk_OnlyAviNg = new System.Windows.Forms.CheckBox();
             this.panel_SnSearch = new System.Windows.Forms.Panel();
             this.btn_SnSearch = new DeepSightAI.StyledButton();
             this.txt_SnFilter = new System.Windows.Forms.TextBox();
@@ -64,9 +65,9 @@
             this.tabPage_ConsistencyDashboard = new System.Windows.Forms.TabPage();
             this.consistencyTestDashboard1 = new DeepSightAI.ConsistencyTestDashboard();
             this.contextMenuStrip_Lot = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.toolStripMenuItem_AddToDataset = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem_RunTest = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem_SecondaryInference = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem_AddToDataset = new System.Windows.Forms.ToolStripMenuItem();
             this.panel_Main.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer_Main)).BeginInit();
             this.splitContainer_Main.Panel1.SuspendLayout();
@@ -350,6 +351,7 @@
             // panel_LotList
             // 
             this.panel_LotList.Controls.Add(this.treeView_Lots);
+            this.panel_LotList.Controls.Add(this.chk_OnlyAviNg);
             this.panel_LotList.Controls.Add(this.panel_SnSearch);
             this.panel_LotList.Controls.Add(this.label_LotTitle);
             this.panel_LotList.Dock = System.Windows.Forms.DockStyle.Left;
@@ -368,11 +370,25 @@
             this.treeView_Lots.ForeColor = System.Drawing.Color.White;
             this.treeView_Lots.FullRowSelect = true;
             this.treeView_Lots.HideSelection = false;
-            this.treeView_Lots.Location = new System.Drawing.Point(0, 69);
+            this.treeView_Lots.Location = new System.Drawing.Point(0, 97);
             this.treeView_Lots.Margin = new System.Windows.Forms.Padding(4);
             this.treeView_Lots.Name = "treeView_Lots";
-            this.treeView_Lots.Size = new System.Drawing.Size(267, 980);
+            this.treeView_Lots.Size = new System.Drawing.Size(267, 952);
             this.treeView_Lots.TabIndex = 1;
+            // 
+            // chk_OnlyAviNg
+            // 
+            this.chk_OnlyAviNg.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(35)))), ((int)(((byte)(35)))), ((int)(((byte)(38)))));
+            this.chk_OnlyAviNg.Dock = System.Windows.Forms.DockStyle.Top;
+            this.chk_OnlyAviNg.Font = new System.Drawing.Font("微软雅黑", 9F);
+            this.chk_OnlyAviNg.ForeColor = System.Drawing.Color.White;
+            this.chk_OnlyAviNg.Location = new System.Drawing.Point(0, 69);
+            this.chk_OnlyAviNg.Name = "chk_OnlyAviNg";
+            this.chk_OnlyAviNg.Padding = new System.Windows.Forms.Padding(6, 2, 0, 2);
+            this.chk_OnlyAviNg.Size = new System.Drawing.Size(267, 28);
+            this.chk_OnlyAviNg.TabIndex = 3;
+            this.chk_OnlyAviNg.Text = "仅显示 AVI NG 数据";
+            this.chk_OnlyAviNg.UseVisualStyleBackColor = false;
             // 
             // panel_SnSearch
             // 
@@ -474,9 +490,9 @@
             this.validationTestResultControl1.Name = "validationTestResultControl1";
             this.validationTestResultControl1.Size = new System.Drawing.Size(1536, 1049);
             this.validationTestResultControl1.TabIndex = 0;
-            //
+            // 
             // tabPage_ConsistencyDashboard
-            //
+            // 
             this.tabPage_ConsistencyDashboard.Controls.Add(this.consistencyTestDashboard1);
             this.tabPage_ConsistencyDashboard.Location = new System.Drawing.Point(4, 25);
             this.tabPage_ConsistencyDashboard.Margin = new System.Windows.Forms.Padding(5);
@@ -486,18 +502,19 @@
             this.tabPage_ConsistencyDashboard.TabIndex = 3;
             this.tabPage_ConsistencyDashboard.Text = "一致性测试看板";
             this.tabPage_ConsistencyDashboard.UseVisualStyleBackColor = true;
-            //
+            // 
             // consistencyTestDashboard1
-            //
+            // 
             this.consistencyTestDashboard1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(30)))));
             this.consistencyTestDashboard1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.consistencyTestDashboard1.Font = new System.Drawing.Font("微软雅黑", 9F);
+            this.consistencyTestDashboard1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.consistencyTestDashboard1.Location = new System.Drawing.Point(5, 5);
             this.consistencyTestDashboard1.Margin = new System.Windows.Forms.Padding(5);
             this.consistencyTestDashboard1.Name = "consistencyTestDashboard1";
             this.consistencyTestDashboard1.Size = new System.Drawing.Size(1536, 1049);
             this.consistencyTestDashboard1.TabIndex = 0;
-            //
+            // 
             // contextMenuStrip_Lot
             // 
             this.contextMenuStrip_Lot.ImageScalingSize = new System.Drawing.Size(20, 20);
@@ -506,26 +523,26 @@
             this.toolStripMenuItem_RunTest,
             this.toolStripMenuItem_SecondaryInference});
             this.contextMenuStrip_Lot.Name = "contextMenuStrip_Lot";
-            this.contextMenuStrip_Lot.Size = new System.Drawing.Size(260, 76);
+            this.contextMenuStrip_Lot.Size = new System.Drawing.Size(244, 76);
+            // 
+            // toolStripMenuItem_AddToDataset
+            // 
+            this.toolStripMenuItem_AddToDataset.Name = "toolStripMenuItem_AddToDataset";
+            this.toolStripMenuItem_AddToDataset.Size = new System.Drawing.Size(243, 24);
+            this.toolStripMenuItem_AddToDataset.Text = "添加到一致性测试数据集";
             // 
             // toolStripMenuItem_RunTest
             // 
             this.toolStripMenuItem_RunTest.Name = "toolStripMenuItem_RunTest";
-            this.toolStripMenuItem_RunTest.Size = new System.Drawing.Size(213, 24);
+            this.toolStripMenuItem_RunTest.Size = new System.Drawing.Size(243, 24);
             this.toolStripMenuItem_RunTest.Text = "运行模型一致性测试";
             // 
             // toolStripMenuItem_SecondaryInference
             // 
             this.toolStripMenuItem_SecondaryInference.Name = "toolStripMenuItem_SecondaryInference";
-            this.toolStripMenuItem_SecondaryInference.Size = new System.Drawing.Size(259, 24);
+            this.toolStripMenuItem_SecondaryInference.Size = new System.Drawing.Size(243, 24);
             this.toolStripMenuItem_SecondaryInference.Text = "运行二次推理";
-            //
-            // toolStripMenuItem_AddToDataset
-            //
-            this.toolStripMenuItem_AddToDataset.Name = "toolStripMenuItem_AddToDataset";
-            this.toolStripMenuItem_AddToDataset.Size = new System.Drawing.Size(259, 24);
-            this.toolStripMenuItem_AddToDataset.Text = "添加到一致性测试数据集";
-            //
+            // 
             // AIReviewControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
@@ -596,5 +613,6 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem_RunTest;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem_SecondaryInference;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem_AddToDataset;
+        private System.Windows.Forms.CheckBox chk_OnlyAviNg;
     }
 }

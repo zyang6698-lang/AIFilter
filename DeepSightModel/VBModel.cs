@@ -35,6 +35,34 @@ namespace DeepSightModel
         /// </summary>
         public List<int> DirectReportPcsIndices { get; set; } = new List<int>();
 
+        #region 全量图片路径（包含直报缺陷，用于后处理保存）
+        /// <summary>
+        /// 所有缺陷的 VRS 图片路径（包含直报缺陷，与 DirectReportFlags 索引对齐）
+        /// </summary>
+        public List<string> AllDefectImageKeys { get; set; }
+
+        /// <summary>
+        /// 所有缺陷的 Gerber 图片路径（包含直报缺陷，与 DirectReportFlags 索引对齐）
+        /// </summary>
+        public List<string> AllDefectGerberKeys { get; set; }
+
+        /// <summary>
+        /// 所有缺陷的 Template 图片路径（包含直报缺陷，与 DirectReportFlags 索引对齐）
+        /// </summary>
+        public List<string> AllDefectTempKeys { get; set; }
+
+        /// <summary>
+        /// 每个缺陷是否为直报缺陷的标记列表（与 AllDefectXxxKeys 索引对齐，true=直报）
+        /// </summary>
+        public List<bool> DirectReportFlags { get; set; }
+
+        /// <summary>
+        /// 所有缺陷的 AVI 原始报码（DefectCode），与 AllDefectXxxKeys 索引对齐，
+        /// 用于后处理时填充 DetectInfo.DefectName，确保直报缺陷落库信息完整。
+        /// </summary>
+        public List<string> AllDefectCodes { get; set; }
+        #endregion
+
         #region 源数据库追踪（多DB回写支持）
         /// <summary>
         /// 数据来源的 LevelDB 服务器 URL（IP:Port），用于回写时定位目标服务器
@@ -81,7 +109,7 @@ namespace DeepSightModel
         /// <summary>
         /// 原始缺陷索引到DetectInfo的映射（用于二次推理更新数据库）
         /// </summary>
-        public Dictionary<int, object> OriginalDetectInfos { get; set; }
+        public Dictionary<int, DetectInfo> OriginalDetectInfos { get; set; }
 
         // 兼容属性 - 基于 InferenceMode 计算
         public bool IsSingleImageTest => InferenceMode == InferenceMode.SingleImageTest;

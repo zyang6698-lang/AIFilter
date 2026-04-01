@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Linq;
 using DeepSightDB;
+using DeepSightModel;
 using DeepSightTool;
 using Newtonsoft.Json;
 

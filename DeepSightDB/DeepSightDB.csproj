@@ -20,6 +20,7 @@
   <!-- Project Reference -->
   <ItemGroup>
     <ProjectReference Include="..\DeepSightTool\DeepSightTool.csproj" />
+    <ProjectReference Include="..\DeepSightModel\DeepSightModel.csproj" />
   </ItemGroup>
 
 </Project>

@@ -74,6 +74,10 @@ namespace DeepSightModel
         public int EnqueuedRecords { get; set; }
         public int ProcessedRecords { get; set; }
         public int ErrorRecords { get; set; }
+        /// <summary>
+        /// 跳过的记录数（如：所有缺陷均为直报，无需推理）
+        /// </summary>
+        public int SkippedRecords { get; set; }
 
         // 一致性测试专用统计
         public int ConsistentRecords { get; set; }
@@ -88,8 +92,11 @@ namespace DeepSightModel
 
         // 计算属性
         public double EnqueueProgress => TotalRecords > 0 ? (double)EnqueuedRecords / TotalRecords * 100 : 0;
-        public double Progress => TotalRecords > 0 ? (double)ProcessedRecords / TotalRecords * 100 : 0;
-        public bool IsReallyCompleted => EnqueuedRecords > 0 && ProcessedRecords >= EnqueuedRecords;
+        public double Progress => TotalRecords > 0
+            ? (double)(ProcessedRecords + SkippedRecords + ErrorRecords) / TotalRecords * 100
+            : 0;
+        public bool IsReallyCompleted => TotalRecords > 0
+            && (ProcessedRecords + SkippedRecords + ErrorRecords) >= TotalRecords;
         public double OverallConsistencyRate => ProcessedRecords > 0 ? (double)ConsistentRecords / ProcessedRecords * 100 : 0;
 
         public InferenceTaskState State { get; set; } = InferenceTaskState.Created;

@@ -1,5 +1,6 @@
 using DeepSightDB;
 using DeepSightModel;
+using DeepSightModel.Configuration;
 using DeepSightTool;
 using OpenCvSharp;
 using System;
@@ -162,7 +163,14 @@ namespace DeepSightWorkLib.Services
                     await ProcessRecordAsync(task, record);
                 }
 
-                LogTextHelper.Info($"{GetModeName(task.Mode)}任务 {task.TaskId} 入队完成: 总数={task.TotalRecords}, 已入队={task.EnqueuedRecords}, 错误={task.ErrorRecords}");
+                LogTextHelper.Info($"{GetModeName(task.Mode)}任务 {task.TaskId} 入队完成: 总数={task.TotalRecords}, 已入队={task.EnqueuedRecords}, 跳过(直报)={task.SkippedRecords}, 错误={task.ErrorRecords}");
+
+                if (task.State == InferenceTaskState.Running && task.IsReallyCompleted)
+                {
+                    task.State = InferenceTaskState.Completed;
+                    task.EndTime = DateTime.Now;
+                    LogTextHelper.Info($"{GetModeName(task.Mode)}任务 {task.TaskId} 已完成: 已处理={task.ProcessedRecords}, 跳过={task.SkippedRecords}, 错误={task.ErrorRecords}");
+                }
             }
             catch (Exception ex)
             {
@@ -202,17 +210,11 @@ namespace DeepSightWorkLib.Services
 
                     // 根据模式筛选缺陷点
                     List<DetectInfo> defectPoints;
-                    if (task.Mode == InferenceMode.SecondaryInference)
-                    {
-                        // 二次推理：只选择AI状态为NG的点
-                        defectPoints = side.DetectPoints.Where(p => p.AIStatus == 2).ToList();
-                    }
-                    else
-                    {
-                        // 一致性测试：选择所有已完成AI推理的点
-                        if (side.AiState <= 0) continue;
-                        defectPoints = side.DetectPoints;
-                    }
+
+                    //选择所有已完成AI推理的点
+                    if (side.AiState <= 0) continue;
+                    defectPoints = side.DetectPoints;
+
 
                     if (defectPoints.Count > 0)
                     {
@@ -222,7 +224,7 @@ namespace DeepSightWorkLib.Services
                     }
                 }
             }
-
+        
             return results;
         }
 
@@ -255,8 +257,9 @@ namespace DeepSightWorkLib.Services
 
                 var vbModel = _vbModelBuilder.Build(context);
 
-                if (vbModel == null || vbModel.ImageKeys == null || vbModel.ImageKeys.Count == 0)
+                if (vbModel == null)
                 {
+                    // 真无数据（DefectPoints 为空）
                     task.ErrorRecords++;
                     if (task.Mode == InferenceMode.ConsistencyTest)
                     {
@@ -266,12 +269,54 @@ namespace DeepSightWorkLib.Services
                     return;
                 }
 
-                // 加载图片
-                vbModel.Mats = _vbModelBuilder.LoadImages(defectPoints);
+                if (vbModel.ImageKeys == null || vbModel.ImageKeys.Count == 0)
+                {
+                    // 区分"全部直报跳过"和"真无有效图片"
+                    bool allDirectReport = vbModel.DirectReportFlags != null && vbModel.DirectReportFlags.Any(f => f);
+                    if (allDirectReport)
+                    {
+                        // 该面所有缺陷均为直报，业务上跳过推理，不计为错误
+                        task.SkippedRecords++;
+                        if (task.Mode == InferenceMode.ConsistencyTest)
+                        {
+                            await UpdateTestStateAsync(panel.SerialNumber, side.Side, ValidationTestState.NotTested);
+                        }
+                        LogTextHelper.Info($"{GetModeName(task.Mode)}记录 {panel.SerialNumber}_{side.Side} 所有缺陷均为直报，跳过推理");
+                    }
+                    else
+                    {
+                        // 真正的无有效图片（图片路径为空等异常）
+                        task.ErrorRecords++;
+                        if (task.Mode == InferenceMode.ConsistencyTest)
+                        {
+                            await UpdateTestStateAsync(panel.SerialNumber, side.Side, ValidationTestState.TestError);
+                        }
+                        LogTextHelper.Warn($"{GetModeName(task.Mode)}记录 {panel.SerialNumber}_{side.Side} 无有效图片");
+                    }
+                    return;
+                }
+
+                // 加载图片（仅非直报缺陷，与 ImageKeys 对齐，根据配置判断直报）
+                var nonDirectReportDefects = defectPoints
+                    .Where(d => !KeyDefectConfigManager.Instance.IsDirectReportByProduct(d.DefectName, panel.ProductSerial))
+                    .ToList();
+
+                // 使用 ImageLoaderService 从 MinIO 加载缺陷图和模板图
+                var defectImagePaths = nonDirectReportDefects
+                    .Select(d => d.ImagePath)
+                    .Where(p => !string.IsNullOrEmpty(p))
+                    .ToList();
+                var tempImagePaths = nonDirectReportDefects
+                    .Select(d => d.TempImagePath)
+                    .Where(p => !string.IsNullOrEmpty(p))
+                    .ToList();
+
+                vbModel.Mats = _imageLoaderService.LoadImages(defectImagePaths);
+                vbModel.Mats_Temp = _imageLoaderService.LoadImages(tempImagePaths);
 
                 // 入队到推理队列
                 _queueManager.AviQueue.Enqueue(vbModel);
-                LogTextHelper.Info($"{GetModeName(task.Mode)}任务入队: {panel.SerialNumber}_{side.Side}, 缺陷数: {defectPoints.Count}");
+                LogTextHelper.Info($"{GetModeName(task.Mode)}任务入队: {panel.SerialNumber}_{side.Side}, 总缺陷数: {defectPoints.Count}, 推理缺陷数: {nonDirectReportDefects.Count}");
 
                 task.EnqueuedRecords++;
             }
@@ -300,6 +345,53 @@ namespace DeepSightWorkLib.Services
             catch (Exception ex)
             {
                 LogTextHelper.Error($"更新测试状态失败: {serialNumber}_{side}, {ex.Message}");
+            }
+        }
+
+        private static int ParseInferenceStatus(string inferResult)
+        {
+            if (!int.TryParse(inferResult, out int parsed))
+            {
+                return 0;
+            }
+
+            switch (parsed)
+            {
+                case 0: return 1;
+                case 1: return 2;
+                case 2: return 3;
+                default: return 3;
+            }
+        }
+
+        private static int AggregateSideStatus(IEnumerable<int> statuses)
+        {
+            if (statuses == null)
+            {
+                return 0;
+            }
+
+            var statusList = statuses.ToList();
+            if (statusList.Count == 0)
+            {
+                return 0;
+            }
+
+            if (statusList.Any(s => s == 3)) return 3;
+            if (statusList.Any(s => s == 2)) return 2;
+            if (statusList.Any(s => s == 1)) return 1;
+            return 0;
+        }
+
+        private static string GetStatusText(int status)
+        {
+            switch (status)
+            {
+                case 0: return "未检测";
+                case 1: return "OK";
+                case 2: return "NG";
+                case 3: return "异常";
+                default: return status.ToString();
             }
         }
 
@@ -373,7 +465,7 @@ namespace DeepSightWorkLib.Services
             {
                 SerialNumber = vbModel.SN,
                 Side = vbModel.Side,
-                TotalDefects = vbModel.OriginalAIResults?.Count ?? 0,
+                TotalDefects = vbModel.DefectIndex?.Count ?? 0,
                 DataSource = vbModel.HasVVSData ? OriginalDataSourceType.VVS : OriginalDataSourceType.AI
             };
 
@@ -386,11 +478,11 @@ namespace DeepSightWorkLib.Services
                 return result;
             }
 
-            bool hasOriginalNG = false;
-            bool hasNewNG = false;
+            var originalStatuses = new List<int>();
+            var newStatuses = new List<int>();
 
             // 比对每个缺陷的结果
-            for (int i = 0; i < Math.Min(vbModel.DefectIndex.Count, inferResults.Count); i++)
+            for (int i = 0; i < (vbModel.DefectIndex?.Count ?? 0); i++)
             {
                 var defectIdx = vbModel.DefectIndex[i];
                 var originalAIStatus = vbModel.OriginalAIResults.ContainsKey(defectIdx)
@@ -398,19 +490,12 @@ namespace DeepSightWorkLib.Services
                 var originalVVSStatus = vbModel.OriginalVVSResults != null && vbModel.OriginalVVSResults.ContainsKey(defectIdx)
                     ? vbModel.OriginalVVSResults[defectIdx] : 0;
 
-                // 新结果: "0"=OK, "1"=NG, "2"=ByPass
-                int newStatus = 0;
-                if (int.TryParse(inferResults[i], out int parsed))
-                {
-                    newStatus = parsed == 0 ? 1 : 2;  // 转换为 AIStatus 格式: 1=OK, 2=NG
-                }
+                int newStatus = i < inferResults.Count ? ParseInferenceStatus(inferResults[i]) : 3;
 
                 // 确定用于比对的原始状态（优先使用VVS）
                 int effectiveOriginalStatus = vbModel.HasVVSData && originalVVSStatus > 0 ? originalVVSStatus : originalAIStatus;
-
-                // 判断面级别是否有NG (Status: 1=OK, 2=NG)
-                if (effectiveOriginalStatus == 2) hasOriginalNG = true;
-                if (newStatus == 2) hasNewNG = true;
+                originalStatuses.Add(effectiveOriginalStatus);
+                newStatuses.Add(newStatus);
 
                 var defectResult = new DefectTestResult
                 {
@@ -436,9 +521,8 @@ namespace DeepSightWorkLib.Services
                     result.OverKillCount++;
             }
 
-            // 设置面级别判定结果 (任一缺陷为NG则面为NG)
-            result.OriginalSideResult = hasOriginalNG ? "NG" : "OK";
-            result.NewSideResult = hasNewNG ? "NG" : "OK";
+            result.OriginalSideResult = GetStatusText(AggregateSideStatus(originalStatuses));
+            result.NewSideResult = GetStatusText(AggregateSideStatus(newStatuses));
 
             // 判定整体状态
             result.State = result.InconsistentCount == 0
@@ -557,33 +641,46 @@ namespace DeepSightWorkLib.Services
                 {
                     SerialNumber = vbModel.SN,
                     Side = vbModel.Side,
-                    InferenceTime = DateTime.Now,
-                    OriginalNgCount = vbModel.DefectIndex?.Count ?? 0
+                    InferenceTime = DateTime.Now
                 };
 
                 // 获取原始 DetectInfo 列表用于更新
                 var updatedDetectInfos = new List<DetectInfo>();
                 int changedToOkCount = 0;
+                int finalOkCount = 0;
+                int finalNgCount = 0;
+                int finalBypassCount = 0;
+                int finalUndetectedCount = 0;
+                int originalOkCount = 0;
+                int originalNgCount = 0;
+                int originalBypassCount = 0;
+                int originalUndetectedCount = 0;
 
                 if (vbModel.OriginalDetectInfos != null && inferResults != null)
                 {
                     for (int i = 0; i < Math.Min(vbModel.DefectIndex.Count, inferResults.Count); i++)
                     {
                         var defectIdx = vbModel.DefectIndex[i];
-                        if (vbModel.OriginalDetectInfos.TryGetValue(defectIdx, out var detectInfoObj) && detectInfoObj is DetectInfo detectInfo)
+                        if (vbModel.OriginalDetectInfos.TryGetValue(defectIdx, out var detectInfo) && detectInfo != null)
                         {
                             var originalStatus = detectInfo.AIStatus;
-                            // 解析新的推理结果: "0" = OK(1), "1" = NG(2)
-                            int newStatus = 0;
-                            if (int.TryParse(inferResults[i], out int parsed))
+                            int newStatus = ParseInferenceStatus(inferResults[i]);
+
+                            // 统计原始四种状态
+                            switch (originalStatus)
                             {
-                                newStatus = parsed == 0 ? 1 : 2;
+                                case 0: originalUndetectedCount++; break;
+                                case 1: originalOkCount++; break;
+                                case 2: originalNgCount++; break;
+                                case 3: originalBypassCount++; break;
+                                default: originalBypassCount++; break;
                             }
 
                             // 记录点结果
                             sideResult.PointResults.Add(new SecondaryInferencePointResult
                             {
                                 DefectIndex = defectIdx,
+                                ImagePath = detectInfo.ImagePath,
                                 OriginalAIStatus = originalStatus,
                                 NewAIStatus = newStatus
                             });
@@ -592,7 +689,17 @@ namespace DeepSightWorkLib.Services
                             detectInfo.AIStatus = newStatus;
                             updatedDetectInfos.Add(detectInfo);
 
-                            // 统计变化
+                            // 统计四种状态
+                            switch (newStatus)
+                            {
+                                case 0: finalUndetectedCount++; break;
+                                case 1: finalOkCount++; break;
+                                case 2: finalNgCount++; break;
+                                case 3: finalBypassCount++; break;
+                                default: finalBypassCount++; break;
+                            }
+
+                            // 统计从NG变为OK的数量
                             if (originalStatus == 2 && newStatus == 1)
                             {
                                 changedToOkCount++;
@@ -602,6 +709,14 @@ namespace DeepSightWorkLib.Services
                 }
 
                 sideResult.ChangedToOkCount = changedToOkCount;
+                sideResult.OriginalNgCount = originalNgCount;
+                sideResult.OriginalOkCount = originalOkCount;
+                sideResult.OriginalBypassCount = originalBypassCount;
+                sideResult.OriginalUndetectedCount = originalUndetectedCount;
+                sideResult.FinalOkCount = finalOkCount;
+                sideResult.FinalNgCount = finalNgCount;
+                sideResult.FinalBypassCount = finalBypassCount;
+                sideResult.FinalUndetectedCount = finalUndetectedCount;
                 sideResult.State = SecondaryInferenceResultState.Completed;
 
                 // 更新数据库
@@ -668,10 +783,7 @@ namespace DeepSightWorkLib.Services
                 int newStatus = 0;
                 if (inferResults != null && inferResults.Count > 0)
                 {
-                    if (int.TryParse(inferResults[0], out int parsed))
-                    {
-                        newStatus = parsed == 0 ? 1 : 2;
-                    }
+                    newStatus = ParseInferenceStatus(inferResults[0]);
                 }
 
                 var result = new SingleImageTestResult
