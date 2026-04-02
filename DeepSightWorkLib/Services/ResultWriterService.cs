@@ -21,19 +21,51 @@ namespace DeepSightWorkLib.Services
             _processingSnSet = processingSnSet ?? throw new ArgumentNullException(nameof(processingSnSet));
         }
 
-        public bool ReturnAVI(Tuple<List<AIDetailResultItem>, RootAIResult> info)
+        public bool ReturnAVIVRS( RootAIResult aiResult)
         {
             try
             {
-                var aiDetailResults= info.Item1;
-                var aiResult = info.Item2;
+                bool vrsSuccess = false;
+                bool aviSuccess = false;
 
-                // 优先使用 RootAIResult 中携带的目标 URL，退回到默认 _url
-                var targetUrl = !string.IsNullOrEmpty(aiResult?.TargetUrl) ? aiResult.TargetUrl :"";
-                TaskStatusSender.SendWritingResults(aiResult.SN, aiResult.Side);
-                LogTextHelper.Info($"SN:{aiResult.SN} Side:{aiResult.Side} 回写到 URL:{targetUrl}, DB:{aiResult?.DbName}");
-                if (_httpDb.HttpPostMethod(targetUrl, aiResult, 1, out string result))
+                // === 1. 发送 VRS 数据 ===
+                var vrsTargetUrl = !string.IsNullOrEmpty(aiResult?.VRSTargetUrl)
+                    ? aiResult.VRSTargetUrl
+                    : (!string.IsNullOrEmpty(aiResult?.TargetUrl) ? aiResult.TargetUrl : "");
+
+                if (aiResult.AIDetailResultItems != null && aiResult.AIDetailResultItems.Count > 0
+                    && !string.IsNullOrEmpty(aiResult.VRSDbName))
                 {
+                    var vrsDbInfo = new RootDbInfo
+                    {
+                        uniqueKey = Guid.NewGuid().ToString(),
+                        db_name = aiResult.VRSDbName,
+                        operation = "put",
+                        op_mode = "all_ow",
+                        key = $"{aiResult.SN}_{aiResult.Side}",
+                        value = JsonConvert.SerializeObject(aiResult.AIDetailResultItems),
+                    };
+
+                    LogTextHelper.Info($"SN:{aiResult.SN} Side:{aiResult.Side} 回写VRS到 URL:{vrsTargetUrl}, DB:{aiResult.VRSDbName}");
+                    if (_httpDb.HttpPostMethod(vrsTargetUrl, vrsDbInfo, 1, out string vrsResult))
+                    {
+                        vrsSuccess = true;
+                        LogTextHelper.Info($"SN:{aiResult.SN} Side:{aiResult.Side} VRS回写成功");
+                    }
+                    else
+                    {
+                        LogTextHelper.Warn($"SN:{aiResult.SN} Side:{aiResult.Side} VRS回写失败");
+                    }
+                }
+
+                // === 2. 发送 AVI 数据 ===
+                var aviTargetUrl = !string.IsNullOrEmpty(aiResult?.TargetUrl) ? aiResult.TargetUrl : "";
+
+                TaskStatusSender.SendWritingResults(aiResult.SN, aiResult.Side);
+                LogTextHelper.Info($"SN:{aiResult.SN} Side:{aiResult.Side} 回写AVI到 URL:{aviTargetUrl}, DB:{aiResult?.AVIDbName}");
+                if (_httpDb.HttpPostMethod(aviTargetUrl, aiResult, 1, out string result))
+                {
+                    aviSuccess = true;
                     TaskStatusSender.SendCompleted(aiResult.SN, aiResult.Side);
 
                     string snKey = $"{aiResult.SN}_{aiResult.Side}";
@@ -46,36 +78,19 @@ namespace DeepSightWorkLib.Services
                     {
                         LogTextHelper.Warn($"SN:{aiResult.SN} Side:{aiResult.Side} 未在处理集合中找到，可能已被清理或未正确添加");
                     }
-
-                    return true;
                 }
-                return false;
+                else
+                {
+                    LogTextHelper.Warn($"SN:{aiResult.SN} Side:{aiResult.Side} AVI回写失败");
+                }
+
+                return aviSuccess;
             }
             catch (Exception ex)
             {
                 LogTextHelper.Error(ex.ToString());
                 return false;
             }
-        }
-        // TODO 完善VRS接口
-        public bool ReturnVRS(List<AIDetailResultItem> aIDetailResultItems)
-        {
-            var targetUrl = "";
-            var data = JsonConvert.SerializeObject(aIDetailResultItems);
-            //var data = new RootAIResult
-            //{
-            //    DbName = "ai_detail_results_tovrs",
-            //    Operation = "put",
-            //    OpMode = "all_ow",
-            //    Key = $"{sn}_{side}",
-            //    Value = JsonConvert.SerializeObject(aIDetailResultItems),
-            //};
-            if (_httpDb.HttpPostMethod(targetUrl, data, 1, out string result))
-            {
-
-                return true;
-            }
-            return false;
         }
     }
 }

@@ -36,6 +36,12 @@ namespace DeepSightModel
         public string WriteBackDbName { get; set; } = "filter_time_to_airesults";
 
         /// <summary>
+        /// VRS回写目标数据库名称（写入VRS详细结果时使用的db_name）
+        /// </summary>
+        [JsonProperty("vrs_write_back_db_name")]
+        public string VRSWriteBackDbName { get; set; } = "ai_detail_results_tovrs";
+
+        /// <summary>
         /// 是否启用该数据库
         /// </summary>
         [JsonProperty("is_enabled")]

@@ -17,11 +17,11 @@ namespace DeepSightWorkLib.Services
     public class DefectProcessor
     {
         private readonly DefectClass _defect;
-        private readonly ConcurrentQueue<Tuple<List< AIDetailResultItem>, RootAIResult>> _aiResultQueue;
+        private readonly ConcurrentQueue< RootAIResult> _aiResultQueue;
         private readonly ConcurrentQueue<InferenceResultModel> _inferencePostProcessQueue;
 
         public DefectProcessor(DefectClass defect,
-            ConcurrentQueue<Tuple<List<AIDetailResultItem>, RootAIResult>> aiResultQueue,
+            ConcurrentQueue< RootAIResult> aiResultQueue,
             ConcurrentQueue<InferenceResultModel> inferencePostProcessQueue)
         {
             _defect = defect ?? throw new ArgumentNullException(nameof(defect));
@@ -177,19 +177,24 @@ namespace DeepSightWorkLib.Services
             var writeBackDbName = !string.IsNullOrEmpty(info.SourceWriteBackDbName)
                 ? info.SourceWriteBackDbName
                 : "filter_time_to_airesults";
+            var vrsWriteBackDbName = !string.IsNullOrEmpty(info.SourceVRSWriteBackDbName)
+                ? info.SourceVRSWriteBackDbName
+                : "ai_detail_results_tovrs";
             var targetUrl = info.SourceDbUrl; // 可能为 null，ResultWriterService 会使用默认 URL
 
             RootAIResult data = new RootAIResult
             {
                 SN=info.SN,
                 Side=info.Side,
-                DbName = writeBackDbName,
+                AVIDbName = writeBackDbName,
                 Operation = "put",
                 OpMode = info.Side == "A" ? "all_ow" : "ap",
                 Key = info.Key,
                 TargetUrl = targetUrl,
+                VRSTargetUrl = targetUrl, // VRS默认与AVI使用同一个LevelDB服务器
+                VRSDbName = vrsWriteBackDbName
             };
-            LogTextHelper.Info($"SN:{info.SN} Side:{info.Side} 回写目标DB:{writeBackDbName}, URL:{targetUrl}");
+            LogTextHelper.Info($"SN:{info.SN} Side:{info.Side} 回写AVI DB:{writeBackDbName}, VRS DB:{vrsWriteBackDbName}, URL:{targetUrl}");
 
             List<AIDetailResultItem> aIDetailResults=new List<AIDetailResultItem>();
             List<ResultInfo> results = new List<ResultInfo>();
@@ -251,11 +256,10 @@ namespace DeepSightWorkLib.Services
 
             JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
             data.Value = JsonConvert.SerializeObject(writeBackData, Formatting.None, jsonSetting);
+            data.AIDetailResultItems = aIDetailResults;
 
 
-
-            var dbTub = Tuple.Create(aIDetailResults, data);
-            _aiResultQueue.Enqueue(dbTub);
+            _aiResultQueue.Enqueue(data);
         }
     }
 }

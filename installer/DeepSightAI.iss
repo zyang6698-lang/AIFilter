@@ -10,7 +10,7 @@
 ; ============================================================================
 
 #define MyAppName "DeepSightAI"
-#define MyAppVersion "1.1.2.0"
+#define MyAppVersion "1.1.2.1"
 #define MyAppPublisher "上海深视信息有限公司科技"
 #define MyAppExeName "DeepSightAI.exe"
 #define MyAppCopyright "Copyright © 2025 上海深视信息有限公司科技"
@@ -97,7 +97,8 @@ Source: "{#BinDir}\*.dll.config"; DestDir: "{app}"; Flags: ignoreversion skipifs
 ; ============================================================================
 ; configs 目录 - 配置文件 (升级时不覆盖)
 ; ============================================================================
-Source: "{#BinDir}\configs\*"; DestDir: "{app}\configs"; Flags: onlyifdoesntexist recursesubdirs
+Source: "{#BinDir}\configs\*"; DestDir: "{app}\configs"; Flags: onlyifdoesntexist recursesubdirs; \
+  Excludes: "machines.config.json"
 
 ; ============================================================================
 ; 数据库文件 (仅首次安装, 升级时保留用户数据)
@@ -109,7 +110,8 @@ Source: "{#BinDir}\dsai_models.db"; DestDir: "{app}"; Flags: onlyifdoesntexist
 ; 子目录 - 递归打包
 ; ============================================================================
 Source: "{#BinDir}\algoconfigs\*"; DestDir: "{app}\algoconfigs"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#BinDir}\ATS_Agent_EXE\*"; DestDir: "{app}\ATS_Agent_EXE"; Flags: ignoreversion recursesubdirs createallsubdirs
+; ATS_Agent_EXE 目录不再打包，各站点单独部署
+; Source: "{#BinDir}\ATS_Agent_EXE\*"; DestDir: "{app}\ATS_Agent_EXE"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#BinDir}\Deepsight\*"; DestDir: "{app}\Deepsight"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#BinDir}\dll\*"; DestDir: "{app}\dll"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#BinDir}\models\*"; DestDir: "{app}\models"; Flags: ignoreversion recursesubdirs createallsubdirs

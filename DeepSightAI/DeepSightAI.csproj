@@ -477,6 +477,9 @@
     <EmbeddedResource Include="AIReviewControl.resx">
       <DependentUpon>AIReviewControl.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ConsistencyTestDashboard.resx">
+      <DependentUpon>ConsistencyTestDashboard.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FrSearch.resx">
       <DependentUpon>FrSearch.cs</DependentUpon>
     </EmbeddedResource>
@@ -580,11 +583,11 @@
       <Name>DeepSightDB</Name>
     </ProjectReference>
     <ProjectReference Include="..\DeepSightDisplay\DeepSightDisplay.csproj">
-      <Project>{EE46E3D1-CB3C-4D66-B6EC-317C8FFEF9D6}</Project>
+      <Project>{ee46e3d1-cb3c-4d66-b6ec-317c8ffef9d6}</Project>
       <Name>DeepSightDisplay</Name>
     </ProjectReference>
     <ProjectReference Include="..\DeepSightEvent\DeepSightEvent.csproj">
-      <Project>{A9B6C0CB-ADC2-4F0B-B786-AF1A8B752040}</Project>
+      <Project>{a9b6c0cb-adc2-4f0b-b786-af1a8b752040}</Project>
       <Name>DeepSightEvent</Name>
     </ProjectReference>
     <ProjectReference Include="..\DeepSightModel\DeepSightModel.csproj">
@@ -592,7 +595,7 @@
       <Name>DeepSightModel</Name>
     </ProjectReference>
     <ProjectReference Include="..\DeepSightTool\DeepSightTool.csproj">
-      <Project>{57CA0C29-06A8-4ACC-B6EB-7BF1BF6CF1B3}</Project>
+      <Project>{57ca0c29-06a8-4acc-b6eb-7bf1bf6cf1b3}</Project>
       <Name>DeepSightTool</Name>
     </ProjectReference>
     <ProjectReference Include="..\DeepSightWorkLib\DeepSightWorkLib.csproj">

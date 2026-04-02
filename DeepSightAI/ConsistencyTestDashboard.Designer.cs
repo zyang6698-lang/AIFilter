@@ -20,7 +20,7 @@ namespace DeepSightAI
             this.splitContainer_Main = new System.Windows.Forms.SplitContainer();
             this.panel_Left = new System.Windows.Forms.Panel();
             this.listBox_Datasets = new System.Windows.Forms.ListBox();
-            this.panel_DatasetButtons = new System.Windows.Forms.FlowLayoutPanel();
+            this.panel_DatasetButtons = new System.Windows.Forms.TableLayoutPanel();
             this.btn_RefreshDatasets = new DeepSightAI.StyledButton();
             this.btn_DeleteDataset = new DeepSightAI.StyledButton();
             this.btn_StartTest = new DeepSightAI.StyledButton();
@@ -51,6 +51,7 @@ namespace DeepSightAI
             this.splitContainer_Right.SuspendLayout();
             this.panel_RoundsTop.SuspendLayout();
             this.panel_TestProgress.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown_Rounds)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView_Rounds)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.chart_Trend)).BeginInit();
             this.panel_ChartBottom.SuspendLayout();
@@ -104,52 +105,59 @@ namespace DeepSightAI
             // panel_DatasetButtons
             //
             this.panel_DatasetButtons.BackColor = System.Drawing.Color.FromArgb(35, 35, 38);
-            this.panel_DatasetButtons.Controls.Add(this.btn_RefreshDatasets);
-            this.panel_DatasetButtons.Controls.Add(this.btn_DeleteDataset);
-            this.panel_DatasetButtons.Controls.Add(this.btn_StartTest);
-            this.panel_DatasetButtons.Controls.Add(this.label_Rounds);
-            this.panel_DatasetButtons.Controls.Add(this.numericUpDown_Rounds);
+            this.panel_DatasetButtons.ColumnCount = 3;
+            this.panel_DatasetButtons.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33F));
+            this.panel_DatasetButtons.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 34F));
+            this.panel_DatasetButtons.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33F));
+            this.panel_DatasetButtons.RowCount = 2;
+            this.panel_DatasetButtons.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
+            this.panel_DatasetButtons.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
+            this.panel_DatasetButtons.Controls.Add(this.btn_RefreshDatasets, 0, 0);
+            this.panel_DatasetButtons.Controls.Add(this.btn_DeleteDataset, 1, 0);
+            this.panel_DatasetButtons.Controls.Add(this.btn_StartTest, 0, 1);
+            this.panel_DatasetButtons.Controls.Add(this.label_Rounds, 1, 1);
+            this.panel_DatasetButtons.Controls.Add(this.numericUpDown_Rounds, 2, 1);
             this.panel_DatasetButtons.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panel_DatasetButtons.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
-            this.panel_DatasetButtons.Height = 40;
+            this.panel_DatasetButtons.Height = 75;
             this.panel_DatasetButtons.Name = "panel_DatasetButtons";
-            this.panel_DatasetButtons.Padding = new System.Windows.Forms.Padding(5, 5, 0, 0);
+            this.panel_DatasetButtons.Padding = new System.Windows.Forms.Padding(3, 3, 3, 0);
             //
             // btn_RefreshDatasets
             //
+            this.btn_RefreshDatasets.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btn_RefreshDatasets.Name = "btn_RefreshDatasets";
-            this.btn_RefreshDatasets.Size = new System.Drawing.Size(60, 30);
             this.btn_RefreshDatasets.Text = "刷新";
             //
             // btn_DeleteDataset
             //
+            this.btn_DeleteDataset.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btn_DeleteDataset.Name = "btn_DeleteDataset";
-            this.btn_DeleteDataset.Size = new System.Drawing.Size(60, 30);
             this.btn_DeleteDataset.Text = "删除";
             //
             // btn_StartTest
             //
+            this.btn_StartTest.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btn_StartTest.Name = "btn_StartTest";
-            this.btn_StartTest.Size = new System.Drawing.Size(80, 30);
             this.btn_StartTest.Text = "开始测试";
             //
             // label_Rounds
             //
+            this.label_Rounds.Dock = System.Windows.Forms.DockStyle.Fill;
             this.label_Rounds.ForeColor = System.Drawing.Color.FromArgb(200, 200, 200);
             this.label_Rounds.Name = "label_Rounds";
-            this.label_Rounds.Size = new System.Drawing.Size(35, 30);
             this.label_Rounds.Text = "轮次:";
-            this.label_Rounds.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.label_Rounds.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             //
             // numericUpDown_Rounds
             //
+            this.numericUpDown_Rounds.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.numericUpDown_Rounds.BackColor = System.Drawing.Color.FromArgb(45, 45, 48);
             this.numericUpDown_Rounds.ForeColor = System.Drawing.Color.White;
             this.numericUpDown_Rounds.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
             this.numericUpDown_Rounds.Maximum = new decimal(new int[] { 100, 0, 0, 0 });
             this.numericUpDown_Rounds.Value = new decimal(new int[] { 1, 0, 0, 0 });
             this.numericUpDown_Rounds.Name = "numericUpDown_Rounds";
-            this.numericUpDown_Rounds.Size = new System.Drawing.Size(45, 23);
+            this.numericUpDown_Rounds.Size = new System.Drawing.Size(50, 23);
             //
             // panel_Right
             //
@@ -225,24 +233,21 @@ namespace DeepSightAI
             this.dataGridView_Rounds.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dataGridView_Rounds.BackgroundColor = System.Drawing.Color.FromArgb(45, 45, 48);
             this.dataGridView_Rounds.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dataGridView_Rounds.ColumnHeadersDefaultCellStyle = new System.Windows.Forms.DataGridViewCellStyle
-            {
-                BackColor = System.Drawing.Color.FromArgb(0, 64, 82),
-                ForeColor = System.Drawing.Color.White,
-                Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold)
-            };
-            this.dataGridView_Rounds.DefaultCellStyle = new System.Windows.Forms.DataGridViewCellStyle
-            {
-                BackColor = System.Drawing.Color.FromArgb(45, 45, 48),
-                ForeColor = System.Drawing.Color.White,
-                SelectionBackColor = System.Drawing.Color.FromArgb(0, 122, 204),
-                SelectionForeColor = System.Drawing.Color.White
-            };
-            this.dataGridView_Rounds.AlternatingRowsDefaultCellStyle = new System.Windows.Forms.DataGridViewCellStyle
-            {
-                BackColor = System.Drawing.Color.FromArgb(55, 55, 58),
-                ForeColor = System.Drawing.Color.White
-            };
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            dataGridViewCellStyle1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.Color.White;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold);
+            this.dataGridView_Rounds.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            dataGridViewCellStyle2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.Color.White;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(122)))), ((int)(((byte)(204)))));
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.Color.White;
+            this.dataGridView_Rounds.DefaultCellStyle = dataGridViewCellStyle2;
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            dataGridViewCellStyle3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(55)))), ((int)(((byte)(58)))));
+            dataGridViewCellStyle3.ForeColor = System.Drawing.Color.White;
+            this.dataGridView_Rounds.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle3;
             this.dataGridView_Rounds.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView_Rounds.EnableHeadersVisualStyles = false;
             this.dataGridView_Rounds.GridColor = System.Drawing.Color.FromArgb(60, 60, 60);
@@ -300,6 +305,7 @@ namespace DeepSightAI
             this.panel_RoundsTop.ResumeLayout(false);
             this.panel_TestProgress.ResumeLayout(false);
             this.panel_TestProgress.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown_Rounds)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView_Rounds)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.chart_Trend)).EndInit();
             this.panel_ChartBottom.ResumeLayout(false);
@@ -312,7 +318,7 @@ namespace DeepSightAI
         private System.Windows.Forms.Panel panel_Left;
         private System.Windows.Forms.Label label_DatasetTitle;
         private System.Windows.Forms.ListBox listBox_Datasets;
-        private System.Windows.Forms.FlowLayoutPanel panel_DatasetButtons;
+        private System.Windows.Forms.TableLayoutPanel panel_DatasetButtons;
         private DeepSightAI.StyledButton btn_RefreshDatasets;
         private DeepSightAI.StyledButton btn_DeleteDataset;
         private DeepSightAI.StyledButton btn_StartTest;

@@ -36,6 +36,7 @@ namespace DeepSightAI.SettingPages
             this.colIP = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colPort = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colWriteBackDbName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colVRSWriteBackDbName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colConnectionStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTestConnection = new System.Windows.Forms.DataGridViewButtonColumn();
             this.colIsEnabled = new System.Windows.Forms.DataGridViewCheckBoxColumn();
@@ -122,6 +123,7 @@ namespace DeepSightAI.SettingPages
             this.colIP,
             this.colPort,
             this.colWriteBackDbName,
+            this.colVRSWriteBackDbName,
             this.colConnectionStatus,
             this.colTestConnection,
             this.colIsEnabled,
@@ -172,6 +174,12 @@ namespace DeepSightAI.SettingPages
             this.colWriteBackDbName.HeaderText = "回写DB名称";
             this.colWriteBackDbName.Name = "colWriteBackDbName";
             this.colWriteBackDbName.Width = 150;
+            //
+            // colVRSWriteBackDbName
+            //
+            this.colVRSWriteBackDbName.HeaderText = "VRS回写DB名称";
+            this.colVRSWriteBackDbName.Name = "colVRSWriteBackDbName";
+            this.colVRSWriteBackDbName.Width = 150;
             //
             // colConnectionStatus
             //
@@ -265,6 +273,7 @@ namespace DeepSightAI.SettingPages
         private System.Windows.Forms.DataGridViewTextBoxColumn colIP;
         private System.Windows.Forms.DataGridViewTextBoxColumn colPort;
         private System.Windows.Forms.DataGridViewTextBoxColumn colWriteBackDbName;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colVRSWriteBackDbName;
         private System.Windows.Forms.DataGridViewTextBoxColumn colConnectionStatus;
         private System.Windows.Forms.DataGridViewButtonColumn colTestConnection;
         private System.Windows.Forms.DataGridViewCheckBoxColumn colIsEnabled;

@@ -28,8 +28,8 @@ namespace DeepSightWorkLib.Services
         /// <summary>
         /// AI 结果回写队列 (Key, SN, Side, RootAIResult)
         /// </summary>
-        public ConcurrentQueue<Tuple<List<AIDetailResultItem>, RootAIResult>> AIResultQueue { get; } 
-            = new ConcurrentQueue<Tuple<List<AIDetailResultItem>, RootAIResult>>();
+        public ConcurrentQueue< RootAIResult> AIResultQueue { get; } 
+            = new ConcurrentQueue<RootAIResult>();
 
         /// <summary>
         /// 推理后处理队列
@@ -141,7 +141,7 @@ namespace DeepSightWorkLib.Services
             // 从 AIResultQueue 中过滤移除
             removedCount += DrainAndFilter(AIResultQueue, item =>
             {
-                return item?.Item2.SN == sn;
+                return item?.SN == sn;
             });
 
             // 从 PostProcessQueue 中过滤移除
@@ -231,7 +231,7 @@ namespace DeepSightWorkLib.Services
             // 清空 AIResultQueue
             while (AIResultQueue.TryDequeue(out var info))
             {
-                if (!string.IsNullOrEmpty(info?.Item2.SN)) clearedSnSet.Add(info.Item2.SN);
+                if (!string.IsNullOrEmpty(info?.SN)) clearedSnSet.Add(info.SN);
                 aiResultCount++;
             }
 

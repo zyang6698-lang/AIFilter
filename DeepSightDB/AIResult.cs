@@ -11,8 +11,9 @@ namespace DeepSightDB
     public class RootAIResult
     {
         public string SN { get; set; }
-        public string Side {  get; set; }
-        public string DbName { get; set; }
+        public string Side { get; set; }
+        [JsonProperty("DbName")]
+        public string AVIDbName { get; set; }
 
         public string Operation { get; set; }
 
@@ -22,10 +23,23 @@ namespace DeepSightDB
 
         public string Value { get; set; }
 
+        [JsonIgnore]
+        public string VRSDbName { get; set; }
+
+        [JsonIgnore]
+        public List<AIDetailResultItem> AIDetailResultItems { get; set; }
+
         /// <summary>
         /// 回写目标 LevelDB 服务器 URL（不参与JSON序列化，仅用于路由回写请求）
         /// </summary>
+        [JsonIgnore]
         public string TargetUrl { get; set; }
+
+        /// <summary>
+        /// VRS 回写目标 LevelDB 服务器 URL（不参与JSON序列化，仅用于路由回写请求）
+        /// </summary>
+        [JsonIgnore]
+        public string VRSTargetUrl { get; set; }
     }
 
     public class WriteBackData

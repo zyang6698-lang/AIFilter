@@ -396,13 +396,13 @@ namespace DeepSightWorkLib
             {
                 try
                 {
-                    _resultWriterService?.ReturnAVI(info);
+                    _resultWriterService?.ReturnAVIVRS(info);
                     return true;
                 }
                 catch (Exception ex)
                 {
                     LogTextHelper.Error($"结果回写异常：{ex}");
-                    HandleProductError(info?.Item2.SN, null, "结果回写", ex.Message);
+                    HandleProductError(info?.SN, null, "结果回写", ex.Message);
                 }
             }
             return false;
@@ -502,7 +502,8 @@ namespace DeepSightWorkLib
         /// </summary>
         /// <param name="writeBackDbName">回写目标数据库名称</param>
         /// <param name="dbUrl">源数据库服务器 URL</param>
-        public void ReadJsonByMinio(string ip, string port, string key, string head, string sn, string side, string path, string writeBackDbName, string dbUrl)
+        /// <param name="vrsWriteBackDbName">VRS回写目标数据库名称</param>
+        public void ReadJsonByMinio(string ip, string port, string key, string head, string sn, string side, string path, string writeBackDbName, string dbUrl, string vrsWriteBackDbName)
         {
             try
             {
@@ -575,6 +576,7 @@ namespace DeepSightWorkLib
                     AllDefectCodes = allKeysResult.AllDefectCodes,
                     SourceDbUrl = dbUrl,
                     SourceWriteBackDbName = writeBackDbName,
+                    SourceVRSWriteBackDbName = vrsWriteBackDbName,
                     DirectReportDefectIndices = convertResult.DirectReportDefectIndices,
                     DirectReportPcsIndices = convertResult.DirectReportPcsIndices
                 };

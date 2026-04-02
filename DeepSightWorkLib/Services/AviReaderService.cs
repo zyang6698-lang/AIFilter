@@ -24,8 +24,8 @@ namespace DeepSightWorkLib.Services
         private const string FixedTimeFormat = "yyyyMMddHHmmssfff";
         private readonly ConcurrentDictionary<string, DateTime> _processingSnSet;
         // delegate to call ReadJsonByMinio implemented elsewhere (BusinessClass)
-        // 参数：minioIp, minioPort, key, head, sn, side, path, writeBackDbName, dbUrl
-        private readonly Action<string, string, string, string, string, string, string, string, string> _readJsonByMinio;
+        // 参数：minioIp, minioPort, key, head, sn, side, path, writeBackDbName, dbUrl, vrsWriteBackDbName
+        private readonly Action<string, string, string, string, string, string, string, string, string, string> _readJsonByMinio;
 
         /// <summary>
         /// 每个数据库的 fetchTime（key 为 DbName，value 为上次获取的时间）
@@ -33,7 +33,7 @@ namespace DeepSightWorkLib.Services
         private readonly ConcurrentDictionary<string, DateTime> _fetchTimeByDb = new ConcurrentDictionary<string, DateTime>();
 
         // Updated constructor to accept delegate for ReadJsonByMinio (with source DB info)
-        public AviReaderService(HttpClass httpDb, ConcurrentDictionary<string, DateTime> processingSnSet, Action<string, string, string, string, string, string, string, string, string> readJsonByMinio)
+        public AviReaderService(HttpClass httpDb, ConcurrentDictionary<string, DateTime> processingSnSet, Action<string, string, string, string, string, string, string, string, string, string> readJsonByMinio)
         {
             _httpDb = httpDb ?? throw new ArgumentNullException(nameof(httpDb));
             _processingSnSet = processingSnSet ?? throw new ArgumentNullException(nameof(processingSnSet));
@@ -326,6 +326,7 @@ namespace DeepSightWorkLib.Services
                     LogTextHelper.Info($"SN:{serialNumber} Side:{side} 解析Minio路径完成");
                     // call injected ReadJsonByMinio delegate (含源DB回写信息)
                     var writeBackDbName = config.WriteBackDbName ?? "filter_time_to_airesults";
+                    var vrsWriteBackDbName = config.VRSWriteBackDbName ?? "ai_detail_results_tovrs";
                     var dbUrl = config.Url ?? "";
                     // 存储原始LevelDB JSON到调试缓存
                     var debugInfo = SnDebugInfoCache.GetOrCreate(serialNumber, side);
@@ -333,8 +334,8 @@ namespace DeepSightWorkLib.Services
                     debugInfo.SourceDbName = config.DbName;
                     debugInfo.SourceDbUrl = config.Url;
 
-                    _readJsonByMinio(minioIp, minioPort, dataItem.Key, result, serialNumber, side, path, writeBackDbName, dbUrl);
-                    LogTextHelper.Info($"SN:{serialNumber} Side:{side} 通过Minio读取Json完成, 回写DB:{writeBackDbName}, URL:{dbUrl}");
+                    _readJsonByMinio(minioIp, minioPort, dataItem.Key, result, serialNumber, side, path, writeBackDbName, dbUrl, vrsWriteBackDbName);
+                    LogTextHelper.Info($"SN:{serialNumber} Side:{side} 通过Minio读取Json完成, 回写DB:{writeBackDbName}, VRS回写DB:{vrsWriteBackDbName}, URL:{dbUrl}");
                 }
                 catch (Exception ex)
                 {

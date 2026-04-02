@@ -666,7 +666,7 @@ namespace DeepSightAI
                     Bitmap templateImage = null;
                     if (exportTemplate)
                     {
-                        string templatePath = BuildTemplateMinioPath(hp.ImagePath);
+                        string templatePath = hp.TempImagePath;
                         if (!string.IsNullOrEmpty(templatePath))
                         {
                             templateImage = LoadImageFromMinioPath(templatePath);
@@ -725,27 +725,6 @@ namespace DeepSightAI
             }
         }
 
-        /// <summary>
-        /// 从缺陷图Minio路径派生模板图路径（在扩展名前加[E]）
-        /// </summary>
-        private string BuildTemplateMinioPath(string defectMinioPath)
-        {
-            if (string.IsNullOrEmpty(defectMinioPath)) return null;
-
-            int colonIndex = defectMinioPath.IndexOf(':');
-            if (colonIndex < 0) return null;
-
-            string ip = defectMinioPath.Substring(0, colonIndex);
-            string objectKey = defectMinioPath.Substring(colonIndex + 1);
-
-            int lastDotIndex = objectKey.LastIndexOf('.');
-            if (lastDotIndex > 0)
-                objectKey = objectKey.Substring(0, lastDotIndex) + "[E]" + objectKey.Substring(lastDotIndex);
-            else
-                objectKey = objectKey + "[E]";
-
-            return $"{ip}:{objectKey}";
-        }
 
         /// <summary>
         /// 从Minio路径构建导出文件名

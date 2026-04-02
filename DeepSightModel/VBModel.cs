@@ -73,6 +73,11 @@ namespace DeepSightModel
         /// 回写目标数据库名称（对应 LevelDbConfig.WriteBackDbName）
         /// </summary>
         public string SourceWriteBackDbName { get; set; }
+
+        /// <summary>
+        /// VRS回写目标数据库名称（对应 LevelDbConfig.VRSWriteBackDbName）
+        /// </summary>
+        public string SourceVRSWriteBackDbName { get; set; }
         #endregion
 
         #region 推理测试相关属性
