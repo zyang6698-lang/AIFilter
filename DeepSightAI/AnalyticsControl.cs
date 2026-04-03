@@ -1,7 +1,10 @@
-﻿using DeepSightDB;
+﻿using DeepSightCommunication;
+using DeepSightDB;
 using DeepSightModel;
+using DeepSightModel.Configuration;
 using DeepSightTool;
 using DeepSightWorkLib;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -13,6 +16,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using static DeepSightDB.AnalyticsHelper;
@@ -418,6 +422,184 @@ namespace DeepSightAI
             finally
             {
                 btnExportLogs.Enabled = true;
+            }
+        }
+        #endregion
+
+        #region 生成推理请求功能
+        private async void btnGenerateInference_Click(object sender, EventArgs e)
+        {
+            // 1. 选择文件夹
+            string folderPath;
+            using (var folderDialog = new FolderBrowserDialog())
+            {
+                folderDialog.Description = "请选择包含 panel.json 文件的根目录";
+                if (folderDialog.ShowDialog() != DialogResult.OK) return;
+                folderPath = folderDialog.SelectedPath;
+            }
+
+            // 2. 获取 LevelDB 配置
+            var dbConfigs = LevelDbConfigManager.Instance.Databases
+                .Where(db => db.IsEnabled && db.DbName == "ai_merged_results")
+                .ToList();
+            if (dbConfigs.Count == 0)
+            {
+                MessageBox.Show("未找到已启用的 ai_merged_results 数据库配置，请先在设置中配置 LevelDB。",
+                    "配置缺失", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            btnGenerateInference.Enabled = false;
+            UpdateProgress(0, "正在扫描 panel.json 文件...");
+
+            try
+            {
+                // 3. 扫描所有 panel.json 文件
+                var panelFiles = await Task.Run(() =>
+                    Directory.EnumerateFiles(folderPath, "*-panel.json", SearchOption.AllDirectories).ToList());
+
+                if (panelFiles.Count == 0)
+                {
+                    UpdateProgress(0, "未找到 panel.json 文件");
+                    MessageBox.Show("所选目录下未找到任何 *-panel.json 文件。", "提示",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                UpdateProgress(10, $"找到 {panelFiles.Count} 个 panel.json 文件，正在解析...");
+
+                // 4. 解析并按 SN 分组
+                var snGroups = new Dictionary<string, Dictionary<string, string>>(); // SN -> { "A" -> path, "B" -> path }
+                int parsed = 0;
+                foreach (var file in panelFiles)
+                {
+                    try
+                    {
+                        string json = File.ReadAllText(file);
+                        var panelInfo = JsonConvert.DeserializeObject<RootPanelInfo>(json);
+                        if (panelInfo == null || string.IsNullOrEmpty(panelInfo.SerialNumber)) continue;
+
+                        string sn = panelInfo.SerialNumber;
+                        string side = panelInfo.SideIndex?.ToUpper() ?? "";
+                        // SideIndex 可能是 "A"/"B" 或 "0"/"1" 等，统一处理
+                        if (side == "0") side = "A";
+                        else if (side == "1") side = "B";
+
+                        if (side != "A" && side != "B") continue;
+
+                        if (!snGroups.ContainsKey(sn))
+                            snGroups[sn] = new Dictionary<string, string>();
+
+                        snGroups[sn][side] = file;
+                    }
+                    catch (Exception ex)
+                    {
+                        LogTextHelper.Warn($"解析 panel.json 失败: {file}, 错误: {ex.Message}");
+                    }
+                    parsed++;
+                    UpdateProgress(10 + (int)(parsed * 30.0 / panelFiles.Count),
+                        $"解析文件 ({parsed}/{panelFiles.Count})...");
+                }
+
+                // 5. 筛选至少具有 A 面或 B 面的 SN
+                var validEntries = snGroups
+                    .Where(kv => kv.Value.ContainsKey("A") || kv.Value.ContainsKey("B"))
+                    .ToList();
+
+                if (validEntries.Count == 0)
+                {
+                    UpdateProgress(0, "未找到有效的SN数据");
+                    MessageBox.Show("未找到有效的 SN 数据。", "提示",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                int bothCount = validEntries.Count(kv => kv.Value.ContainsKey("A") && kv.Value.ContainsKey("B"));
+                int onlyA = validEntries.Count(kv => kv.Value.ContainsKey("A") && !kv.Value.ContainsKey("B"));
+                int onlyB = validEntries.Count(kv => !kv.Value.ContainsKey("A") && kv.Value.ContainsKey("B"));
+                UpdateProgress(45, $"找到 {validEntries.Count} 个有效 SN（AB:{bothCount} 仅A:{onlyA} 仅B:{onlyB}），开始发送请求...");
+
+                // 6. 逐个发送推理请求
+                var httpClient = new HttpClass();
+                var minioPort = MinioSettings.Instance.DefaultPort;
+                int sent = 0, success = 0, failed = 0;
+
+                foreach (var entry in validEntries)
+                {
+                    string sn = entry.Key;
+                    bool hasA = entry.Value.ContainsKey("A");
+                    bool hasB = entry.Value.ContainsKey("B");
+
+                    // 对每个启用的 LevelDB 配置都发送
+                    foreach (var dbConfig in dbConfigs)
+                    {
+                        try
+                        {
+                            // 构建 results_info 列表，只包含存在的面
+                            var resultsInfo = new List<object>();
+                            if (hasA)
+                                resultsInfo.Add(new { side = "A", minio_ip = dbConfig.MinioIpA, minio_port = minioPort, result_path = entry.Value["A"] });
+                            if (hasB)
+                                resultsInfo.Add(new { side = "B", minio_ip = dbConfig.MinioIpB, minio_port = minioPort, result_path = entry.Value["B"] });
+
+                            var valueObj = new
+                            {
+                                serial_number = sn,
+                                results_info = resultsInfo
+                            };
+                            string valueStr = JsonConvert.SerializeObject(valueObj);
+
+                            // 构建 LevelDB 请求
+                            string timeKey = DateTime.Now.ToString("yyyyMMddHHmmssfff");
+                            var dbInfo = new RootDbInfo
+                            {
+                                uniqueKey = Guid.NewGuid().ToString(),
+                                db_name = "ai_merged_results",
+                                operation = "put",
+                                op_mode = "all_ow",
+                                key = timeKey,
+                                value = valueStr
+                            };
+
+                            if (httpClient.HttpPostMethod(dbConfig.Url, dbInfo, 1, out string result))
+                            {
+                                success++;
+                                LogTextHelper.Info($"推理请求发送成功: SN={sn}, DB={dbConfig.DisplayName}");
+                            }
+                            else
+                            {
+                                failed++;
+                                LogTextHelper.Warn($"推理请求发送失败: SN={sn}, DB={dbConfig.DisplayName}");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            failed++;
+                            LogTextHelper.Error($"推理请求发送异常: SN={sn}, 错误: {ex.Message}");
+                        }
+
+                        // 请求间隔，避免过快
+                        await Task.Delay(500);
+                    }
+
+                    sent++;
+                    UpdateProgress(45 + (int)(sent * 50.0 / validEntries.Count),
+                        $"发送请求 ({sent}/{validEntries.Count})，成功:{success} 失败:{failed}");
+                }
+
+                UpdateProgress(100, $"完成！共 {validEntries.Count} 个SN，成功:{success} 失败:{failed}");
+                MessageBox.Show($"推理请求发送完成！\n共 {validEntries.Count} 个 SN（AB:{bothCount} 仅A:{onlyA} 仅B:{onlyB}）\n成功: {success}\n失败: {failed}",
+                    "完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error("生成推理请求失败", ex);
+                UpdateProgress(0, $"失败: {ex.Message}");
+                MessageBox.Show($"生成推理请求失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                btnGenerateInference.Enabled = true;
             }
         }
         #endregion

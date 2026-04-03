@@ -529,7 +529,7 @@ namespace DeepSightAI
         /// </summary>
         private void CleanupExcessRows()
         {
-            const int MAX_ROWS = 27;
+            const int MAX_ROWS = 50;
             var dgv = FrHome.Instance.dataGridViewData;
 
             if (dgv.Rows.Count > MAX_ROWS)

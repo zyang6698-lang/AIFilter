@@ -309,6 +309,14 @@ namespace DeepSightWorkLib
 
                     loadModel.Model.Mats = _imageLoaderService.LoadImages(loadModel.Model.ImageKeys);
                     loadModel.Model.Mats_Temp = _imageLoaderService.LoadImages(loadModel.Model.ImageKeys_Temp);
+
+                    // 当temp图为空时，使用Gerber图替代temp图，和原图一起送去推理
+                    if (loadModel.Model.Mats_Temp == null || loadModel.Model.Mats_Temp.Count == 0)
+                    {
+                        LogTextHelper.Info($"SN:{loadModel.Model.SN} Temp图为空，使用Gerber图替代");
+                        loadModel.Model.Mats_Temp = _imageLoaderService.LoadImages(loadModel.Model.ImageKeys_Gerber);
+                    }
+
                     LogImageLoadResult(loadModel);
 
                     _queueManager.AviQueue.Enqueue(loadModel.Model);

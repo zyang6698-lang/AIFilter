@@ -34,6 +34,7 @@
             this.btnReadEmployeeData = new DeepSightAI.StyledButton();
             this.btnTest = new DeepSightAI.StyledButton();
             this.btnClearDatabase = new DeepSightAI.StyledButton();
+            this.btnGenerateInference = new DeepSightAI.StyledButton();
             this.grpFileTools = new System.Windows.Forms.GroupBox();
             this.flowFileTools = new System.Windows.Forms.FlowLayoutPanel();
             this.btnZipPic = new DeepSightAI.StyledButton();
@@ -88,6 +89,7 @@
             this.flowDataTools.Controls.Add(this.btnReadEmployeeData);
             this.flowDataTools.Controls.Add(this.btnTest);
             this.flowDataTools.Controls.Add(this.btnClearDatabase);
+            this.flowDataTools.Controls.Add(this.btnGenerateInference);
             this.flowDataTools.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowDataTools.Location = new System.Drawing.Point(10, 24);
             this.flowDataTools.Name = "flowDataTools";
@@ -121,6 +123,15 @@
             this.btnClearDatabase.TabIndex = 2;
             this.btnClearDatabase.Text = "清空数据库";
             this.btnClearDatabase.Click += new System.EventHandler(this.btnClearDatabase_Click);
+            //
+            // btnGenerateInference
+            //
+            this.btnGenerateInference.Margin = new System.Windows.Forms.Padding(4);
+            this.btnGenerateInference.Name = "btnGenerateInference";
+            this.btnGenerateInference.Size = new System.Drawing.Size(130, 36);
+            this.btnGenerateInference.TabIndex = 3;
+            this.btnGenerateInference.Text = "生成推理请求";
+            this.btnGenerateInference.Click += new System.EventHandler(this.btnGenerateInference_Click);
             //
             // grpFileTools
             //
@@ -243,6 +254,7 @@
         private DeepSightAI.StyledButton btnReadEmployeeData;
         private DeepSightAI.StyledButton btnTest;
         private DeepSightAI.StyledButton btnClearDatabase;
+        private DeepSightAI.StyledButton btnGenerateInference;
         private System.Windows.Forms.GroupBox grpFileTools;
         private System.Windows.Forms.FlowLayoutPanel flowFileTools;
         private DeepSightAI.StyledButton btnZipPic;
