@@ -1078,6 +1078,25 @@ namespace DeepSightAI
             Machine.master.IsStart = false;
             Machine.master.ClearAllProcessingQueues();
             FrHome.Instance.ClearAllImages();
+
+            // 清空任务队列 DataGridView 行及相关缓存
+            try
+            {
+                var dgv = FrHome.Instance.dataGridViewData;
+                if (dgv.InvokeRequired)
+                    dgv.BeginInvoke(new MethodInvoker(() => dgv.Rows.Clear()));
+                else
+                    dgv.Rows.Clear();
+
+                FrHome.Instance.dic_Infos.Clear();
+                FrHome.Instance.dic_Results.Clear();
+                FrHome.Instance.dic_DetectRois.Clear();
+                FrHome.Instance.dic_DetectInfos.Clear();
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"重置清空任务队列异常: {ex.Message}");
+            }
         }
         private async void btnModel_Click(object sender, EventArgs e)
         {

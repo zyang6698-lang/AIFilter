@@ -143,6 +143,23 @@ namespace DeepSightWorkLib.Services
 
             try
             {
+                // 前置检查：如果响应为错误结果（如 err_key_found），直接跳过，避免反序列化异常
+                try
+                {
+                    var preCheck = JObject.Parse(jsonInfo);
+                    var resultToken = preCheck["result"];
+                    if (resultToken != null && resultToken.Type == JTokenType.String)
+                    {
+                        var resultStr = resultToken.Value<string>();
+                        if (!string.IsNullOrEmpty(resultStr) && resultStr.StartsWith("err"))
+                        {
+                            LogTextHelper.Warn($"LevelDB返回错误响应: {resultStr}，跳过处理");
+                            return;
+                        }
+                    }
+                }
+                catch { /* 预检失败不影响后续正常解析 */ }
+
                 var settings = new JsonSerializerSettings
                 {
                     NullValueHandling = NullValueHandling.Ignore,
