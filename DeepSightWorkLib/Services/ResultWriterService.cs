@@ -25,7 +25,6 @@ namespace DeepSightWorkLib.Services
         {
             try
             {
-                bool vrsSuccess = false;
                 bool aviSuccess = false;
 
                 // === 1. 发送 VRS 数据 ===
@@ -46,10 +45,17 @@ namespace DeepSightWorkLib.Services
                         value = JsonConvert.SerializeObject(aiResult.AIDetailResultItems),
                     };
 
+                    // 存储VRS回写JSON到调试缓存
+                    try
+                    {
+                        var vrsDebugInfo = SnDebugInfoCache.GetOrCreate(aiResult.SN, aiResult.Side);
+                        vrsDebugInfo.VrsWriteBackJson = JsonConvert.SerializeObject(vrsDbInfo, Formatting.Indented);
+                    }
+                    catch { /* 调试信息存储失败不影响业务 */ }
+
                     LogTextHelper.Info($"SN:{aiResult.SN} Side:{aiResult.Side} 回写VRS到 URL:{vrsTargetUrl}, DB:{aiResult.VRSDbName}");
                     if (_httpDb.HttpPostMethod(vrsTargetUrl, vrsDbInfo, 1, out string vrsResult))
                     {
-                        vrsSuccess = true;
                         LogTextHelper.Info($"SN:{aiResult.SN} Side:{aiResult.Side} VRS回写成功");
                     }
                     else
@@ -60,6 +66,14 @@ namespace DeepSightWorkLib.Services
 
                 // === 2. 发送 AVI 数据 ===
                 var aviTargetUrl = !string.IsNullOrEmpty(aiResult?.TargetUrl) ? aiResult.TargetUrl : "";
+
+                // 存储AVI回写JSON到调试缓存
+                try
+                {
+                    var aviDebugInfo = SnDebugInfoCache.GetOrCreate(aiResult.SN, aiResult.Side);
+                    aviDebugInfo.AviWriteBackJson = JsonConvert.SerializeObject(aiResult, Formatting.Indented);
+                }
+                catch { /* 调试信息存储失败不影响业务 */ }
 
                 TaskStatusSender.SendWritingResults(aiResult.SN, aiResult.Side);
                 LogTextHelper.Info($"SN:{aiResult.SN} Side:{aiResult.Side} 回写AVI到 URL:{aviTargetUrl}, DB:{aiResult?.AVIDbName}");

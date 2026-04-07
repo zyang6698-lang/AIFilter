@@ -927,9 +927,9 @@ namespace DeepSightWorkLib
         #region 推理结果处理相关
 
         /// <summary>
-        /// 清空所有正在处理的队列（当 IsStart 设置为 false 时调用）
+        /// 清空所有正在处理的队列（重置软件或暂停时调用）
         /// </summary>
-        private void ClearAllProcessingQueues()
+        public void ClearAllProcessingQueues()
         {
             try
             {

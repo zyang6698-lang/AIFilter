@@ -59,6 +59,8 @@ namespace DeepSightAI
                 SetTreeViewPlaceholder(tvPanelInfoJson, "暂无数据");
                 SetTreeViewPlaceholder(tvVbInferenceJson, "暂无数据");
                 SetTreeViewPlaceholder(tvInferenceReturnJson, "暂无数据");
+                SetTreeViewPlaceholder(tvAviWriteBackJson, "暂无数据");
+                SetTreeViewPlaceholder(tvVrsWriteBackJson, "暂无数据");
                 txtOtherInfo.Text = "暂无数据";
                 return;
             }
@@ -77,6 +79,12 @@ namespace DeepSightAI
 
                 // 推理返回JSON
                 LoadSideJsonToTreeView(tvInferenceReturnJson, debugInfo.InferenceReturnJson);
+
+                // 回写AVI JSON
+                LoadJsonToTreeView(tvAviWriteBackJson, tabAviWriteBack, debugInfo.AviWriteBackJson);
+
+                // 回写VRS JSON
+                LoadJsonToTreeView(tvVrsWriteBackJson, tabVrsWriteBack, debugInfo.VrsWriteBackJson);
 
                 // Other info
                 sbOther.AppendLine($"SN:              {debugInfo.SerialNumber}");

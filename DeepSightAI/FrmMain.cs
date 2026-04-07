@@ -1076,6 +1076,7 @@ namespace DeepSightAI
         private void btnClear_Click(object sender, EventArgs e)
         {
             Machine.master.IsStart = false;
+            Machine.master.ClearAllProcessingQueues();
             FrHome.Instance.ClearAllImages();
         }
         private async void btnModel_Click(object sender, EventArgs e)

@@ -143,7 +143,7 @@ namespace DeepSightWorkLib.Services
             // 处理 PCS 信息
             ProcessPcsInfo(panelInfo, context, solutionInfo.IsSwitch, vBInfo, defectList, pcsList,
                 directReportDefectList, directReportPcsList);
-
+           
             // 设置 Minio 信息
             SetMinioInfo(vBInfo, context.MinioIP, context.MinioPort);
 
@@ -194,17 +194,13 @@ namespace DeepSightWorkLib.Services
             List<int> directReportDefectList,
             List<int> directReportPcsList)
         {
-            for (int i = 0; i < panelInfo.PcsInfo.Count; i++)
+            foreach (var item in panelInfo.PcsInfo)
             {
-                var pcsKey = (i + 1).ToString();
-
-                if (panelInfo.PcsInfo.TryGetValue(pcsKey, out PcsInfo pcsInfo))
-                {
-                    LogTextHelper.Info($"SN:{panelInfo.SerialNumber}_{panelInfo.SideIndex}面报点数据为:{pcsInfo.DefectInfo.Count}");
-                    ProcessDefects(panelInfo, context, isSwitch, pcsInfo, i, vBInfo, defectList, pcsList,
-                        directReportDefectList, directReportPcsList);
-                }
+                LogTextHelper.Info($"SN:{panelInfo.SerialNumber}_{panelInfo.SideIndex}面报点数据为:{item.Value.DefectInfo.Count}");
+                ProcessDefects(panelInfo, context, isSwitch, item.Value,  vBInfo, defectList, pcsList,
+                    directReportDefectList, directReportPcsList);
             }
+
         }
 
         /// <summary>
@@ -215,7 +211,6 @@ namespace DeepSightWorkLib.Services
             PanelConvertContext context,
             bool isSwitch,
             PcsInfo pcsInfo,
-            int pcsIndex,
             RootVBInfo vBInfo,
             List<int> defectList,
             List<int> pcsList,

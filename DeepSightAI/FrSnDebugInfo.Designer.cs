@@ -26,6 +26,10 @@ namespace DeepSightAI
             this.tvVbInferenceJson = new System.Windows.Forms.TreeView();
             this.tabInferReturn = new System.Windows.Forms.TabPage();
             this.tvInferenceReturnJson = new System.Windows.Forms.TreeView();
+            this.tabAviWriteBack = new System.Windows.Forms.TabPage();
+            this.tvAviWriteBackJson = new System.Windows.Forms.TreeView();
+            this.tabVrsWriteBack = new System.Windows.Forms.TabPage();
+            this.tvVrsWriteBackJson = new System.Windows.Forms.TreeView();
             this.tabOther = new System.Windows.Forms.TabPage();
             this.txtOtherInfo = new System.Windows.Forms.RichTextBox();
             this.btnPanel = new System.Windows.Forms.Panel();
@@ -41,6 +45,8 @@ namespace DeepSightAI
             this.tabPanelInfo.SuspendLayout();
             this.tabVbJson.SuspendLayout();
             this.tabInferReturn.SuspendLayout();
+            this.tabAviWriteBack.SuspendLayout();
+            this.tabVrsWriteBack.SuspendLayout();
             this.tabOther.SuspendLayout();
             this.btnPanel.SuspendLayout();
             this.searchPanel.SuspendLayout();
@@ -60,6 +66,8 @@ namespace DeepSightAI
                 this.tabPanelInfo,
                 this.tabVbJson,
                 this.tabInferReturn,
+                this.tabAviWriteBack,
+                this.tabVrsWriteBack,
                 this.tabOther});
             this.tabControl.SelectedIndexChanged += new System.EventHandler(this.TabControl_SelectedIndexChanged);
             //
@@ -155,13 +163,59 @@ namespace DeepSightAI
             this.tvInferenceReturnJson.FullRowSelect = true;
             this.tvInferenceReturnJson.ItemHeight = 24;
             //
+            // tabAviWriteBack
+            //
+            this.tabAviWriteBack.Controls.Add(this.tvAviWriteBackJson);
+            this.tabAviWriteBack.Location = new System.Drawing.Point(4, 34);
+            this.tabAviWriteBack.Name = "tabAviWriteBack";
+            this.tabAviWriteBack.Size = new System.Drawing.Size(1176, 777);
+            this.tabAviWriteBack.TabIndex = 5;
+            this.tabAviWriteBack.Text = "回写AVI JSON";
+            //
+            // tvAviWriteBackJson
+            //
+            this.tvAviWriteBackJson.BackColor = System.Drawing.Color.FromArgb(20, 35, 45);
+            this.tvAviWriteBackJson.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tvAviWriteBackJson.Font = new System.Drawing.Font("Consolas", 11F);
+            this.tvAviWriteBackJson.ForeColor = System.Drawing.Color.FromArgb(200, 220, 240);
+            this.tvAviWriteBackJson.Location = new System.Drawing.Point(0, 0);
+            this.tvAviWriteBackJson.Name = "tvAviWriteBackJson";
+            this.tvAviWriteBackJson.Size = new System.Drawing.Size(1176, 777);
+            this.tvAviWriteBackJson.TabIndex = 0;
+            this.tvAviWriteBackJson.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.tvAviWriteBackJson.FullRowSelect = true;
+            this.tvAviWriteBackJson.ItemHeight = 24;
+            //
+            // tabVrsWriteBack
+            //
+            this.tabVrsWriteBack.Controls.Add(this.tvVrsWriteBackJson);
+            this.tabVrsWriteBack.Location = new System.Drawing.Point(4, 34);
+            this.tabVrsWriteBack.Name = "tabVrsWriteBack";
+            this.tabVrsWriteBack.Size = new System.Drawing.Size(1176, 777);
+            this.tabVrsWriteBack.TabIndex = 6;
+            this.tabVrsWriteBack.Text = "回写VRS JSON";
+            //
+            // tvVrsWriteBackJson
+            //
+            this.tvVrsWriteBackJson.BackColor = System.Drawing.Color.FromArgb(20, 35, 45);
+            this.tvVrsWriteBackJson.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tvVrsWriteBackJson.Font = new System.Drawing.Font("Consolas", 11F);
+            this.tvVrsWriteBackJson.ForeColor = System.Drawing.Color.FromArgb(200, 220, 240);
+            this.tvVrsWriteBackJson.Location = new System.Drawing.Point(0, 0);
+            this.tvVrsWriteBackJson.Name = "tvVrsWriteBackJson";
+            this.tvVrsWriteBackJson.Size = new System.Drawing.Size(1176, 777);
+            this.tvVrsWriteBackJson.TabIndex = 0;
+            this.tvVrsWriteBackJson.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.tvVrsWriteBackJson.FullRowSelect = true;
+            this.tvVrsWriteBackJson.ItemHeight = 24;
+            //
             // tabOther
             //
             this.tabOther.Controls.Add(this.txtOtherInfo);
             this.tabOther.Location = new System.Drawing.Point(4, 34);
             this.tabOther.Name = "tabOther";
             this.tabOther.Size = new System.Drawing.Size(1176, 777);
-            this.tabOther.TabIndex = 4;
+            this.tabOther.TabIndex = 7;
             this.tabOther.Text = "其他信息";
             //
             // txtOtherInfo
@@ -304,6 +358,8 @@ namespace DeepSightAI
             this.tabPanelInfo.ResumeLayout(false);
             this.tabVbJson.ResumeLayout(false);
             this.tabInferReturn.ResumeLayout(false);
+            this.tabAviWriteBack.ResumeLayout(false);
+            this.tabVrsWriteBack.ResumeLayout(false);
             this.tabOther.ResumeLayout(false);
             this.btnPanel.ResumeLayout(false);
             this.searchPanel.ResumeLayout(false);
@@ -322,6 +378,10 @@ namespace DeepSightAI
         private System.Windows.Forms.TreeView tvVbInferenceJson;
         private System.Windows.Forms.TabPage tabInferReturn;
         private System.Windows.Forms.TreeView tvInferenceReturnJson;
+        private System.Windows.Forms.TabPage tabAviWriteBack;
+        private System.Windows.Forms.TreeView tvAviWriteBackJson;
+        private System.Windows.Forms.TabPage tabVrsWriteBack;
+        private System.Windows.Forms.TreeView tvVrsWriteBackJson;
         private System.Windows.Forms.TabPage tabOther;
         private System.Windows.Forms.RichTextBox txtOtherInfo;
         private System.Windows.Forms.Panel btnPanel;

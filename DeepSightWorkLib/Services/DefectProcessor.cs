@@ -213,11 +213,11 @@ namespace DeepSightWorkLib.Services
 
                 aIDetailResults.Add(new AIDetailResultItem()
                 {
-                    Index = i,
-                    PcsIndex=i,
+                    Index = info.DefectIndex[i],
+                    PcsIndex = info.PcsIndex[i],
                     AiLabel = msg[i] == "0" ? "OK" : "NG",
                     AiClsType="",
-                    AiFlag="Standard",
+                    AiFlag="Experiment",//or stable
                     InferDetail=new Dictionary<string, object>(),
 
                 });
@@ -237,8 +237,8 @@ namespace DeepSightWorkLib.Services
 
                     aIDetailResults.Add(new AIDetailResultItem()
                     {
-                        Index = info.DefectIndex.Count + i,
-                        PcsIndex = info.DefectIndex.Count + i,
+                        Index = info.DefectIndex[i] ,
+                        PcsIndex = info.PcsIndex[i],
                         AiLabel = "NG",
                         AiClsType = "",
                         AiFlag = "DirectReport",

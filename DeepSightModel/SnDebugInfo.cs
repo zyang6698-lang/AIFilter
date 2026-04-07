@@ -107,6 +107,16 @@ namespace DeepSightModel
         /// 判断过程摘要（检出缺陷码、异常等）
         /// </summary>
         public string JudgmentSummary { get; set; }
+
+        /// <summary>
+        /// 回写AVI的JSON（发送给LevelDB的完整请求体）
+        /// </summary>
+        public string AviWriteBackJson { get; set; }
+
+        /// <summary>
+        /// 回写VRS的JSON（发送给LevelDB的完整请求体）
+        /// </summary>
+        public string VrsWriteBackJson { get; set; }
     }
 
     /// <summary>
