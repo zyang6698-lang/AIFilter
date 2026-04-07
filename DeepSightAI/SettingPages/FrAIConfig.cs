@@ -180,7 +180,7 @@ namespace DeepSightAI.SettingPages
 
         }
         /// <summary>
-        /// 绑定数据 - 将平铺的SolutionAndFlow按流程组合分组显示
+        /// 绑定数据 - 直接从 Pipelines 层级模型读取
         /// </summary>
         private void InitMethod()
         {
@@ -197,36 +197,31 @@ namespace DeepSightAI.SettingPages
                     .ToDictionary(g => g.Key, g => g.First().CopyCutMode)
                     ?? new Dictionary<string, string>();
 
-                if (Machine.solconfig != null && Machine.solconfig.solus != null)
+                if (Machine.solconfig?.Pipelines != null)
                 {
-                    // 按(Asolution, Aflow, Bsolution, Bflow, IsSwitch)分组
-                    var groups = Machine.solconfig.solus
-                        .GroupBy(s => new { s.Asolution, s.Aflow, s.Bsolution, s.Bflow, s.IsSwitch })
-                        .ToList();
-
-                    int configIndex = 1;
-                    foreach (var group in groups)
+                    foreach (var pipeline in Machine.solconfig.Pipelines)
                     {
                         var config = new PipelineConfig
                         {
-                            ConfigName = $"配置{configIndex++}",
-                            ASolution = group.Key.Asolution ?? "",
-                            AFlow = group.Key.Aflow ?? "",
-                            BSolution = group.Key.Bsolution ?? "",
-                            BFlow = group.Key.Bflow ?? "",
-                            IsSwitch = group.Key.IsSwitch,
-                            Products = group.Select(s => new ProductEntry
-                            {
-                                ProductSerial = s.ProductSerial ?? "",
-                                Mode = modeDict.TryGetValue(s.ProductSerial ?? "", out var m) ? m : PicOptMode.by_machine.ToString(),
-                                KeyDefectProfile = KeyDefectConfigManager.Instance.GetProfileNameForProduct(s.ProductSerial ?? "")
-                            }).ToList()
+                            ConfigName = pipeline.Name ?? PipelineFlowConfig.DefaultName,
+                            ASolution = pipeline.Asolution ?? "",
+                            AFlow = pipeline.Aflow ?? "",
+                            BSolution = pipeline.Bsolution ?? "",
+                            BFlow = pipeline.Bflow ?? "",
+                            IsSwitch = pipeline.IsSwitch,
+                            Products = (pipeline.ProductSerials ?? new List<string>())
+                                .Select(ps => new ProductEntry
+                                {
+                                    ProductSerial = ps ?? "",
+                                    Mode = modeDict.TryGetValue(ps ?? "", out var m) ? m : PicOptMode.by_machine.ToString(),
+                                    KeyDefectProfile = KeyDefectConfigManager.Instance.GetProfileNameForProduct(ps ?? "")
+                                }).ToList()
                         };
                         _pipelineConfigs.Add(config);
                     }
                 }
 
-                // 如果没有任何配置，添加一个默认配置
+                // 如果没有任何配置，添加一个 DEFAULT 配置
                 if (_pipelineConfigs.Count == 0)
                 {
                     var defaultSolution = dic_solutionAndFlow.Keys.FirstOrDefault() ?? "DefaultSolution";
@@ -235,7 +230,7 @@ namespace DeepSightAI.SettingPages
 
                     _pipelineConfigs.Add(new PipelineConfig
                     {
-                        ConfigName = "配置1",
+                        ConfigName = PipelineFlowConfig.DefaultName,
                         ASolution = defaultSolution,
                         AFlow = defaultFlow,
                         BSolution = defaultSolution,
@@ -408,7 +403,7 @@ namespace DeepSightAI.SettingPages
         #region 保存功能
 
         /// <summary>
-        /// 保存配置 - 将分组数据展平为原始格式
+        /// 保存配置 - 直接保存为 Pipelines 层级格式
         /// </summary>
         public bool SaveParam()
         {
@@ -418,10 +413,10 @@ namespace DeepSightAI.SettingPages
                 // 先同步右侧表格数据到当前选中的配置
                 SyncProductsToCurrentConfig();
 
-                // 展平为 SolutionConfig 格式
+                // 构建新格式 SolutionConfig
                 SolutionConfig solConfig = new SolutionConfig
                 {
-                    solus = new List<SolutionAndFlow>(),
+                    Pipelines = new List<PipelineFlowConfig>(),
                     PartNumberImagesLoc = Machine.solconfig?.PartNumberImagesLoc
                 };
 
@@ -429,18 +424,19 @@ namespace DeepSightAI.SettingPages
 
                 foreach (var config in _pipelineConfigs)
                 {
+                    solConfig.Pipelines.Add(new PipelineFlowConfig
+                    {
+                        Name = config.ConfigName,
+                        Asolution = config.ASolution,
+                        Aflow = config.AFlow,
+                        Bsolution = config.BSolution,
+                        Bflow = config.BFlow,
+                        IsSwitch = config.IsSwitch,
+                        ProductSerials = config.Products.Select(p => p.ProductSerial).ToList()
+                    });
+
                     foreach (var product in config.Products)
                     {
-                        solConfig.solus.Add(new SolutionAndFlow
-                        {
-                            ProductSerial = product.ProductSerial,
-                            Asolution = config.ASolution,
-                            Aflow = config.AFlow,
-                            Bsolution = config.BSolution,
-                            Bflow = config.BFlow,
-                            IsSwitch = config.IsSwitch
-                        });
-
                         newProductConfig.Products.Add(new ProductModeItem
                         {
                             Name = product.ProductSerial,

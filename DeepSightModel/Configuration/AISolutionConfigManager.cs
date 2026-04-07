@@ -23,16 +23,17 @@ namespace DeepSightModel.Configuration
         {
             return new SolutionConfig
             {
-                solus = new List<SolutionAndFlow>
+                Pipelines = new List<PipelineFlowConfig>
                 {
-                    new SolutionAndFlow
+                    new PipelineFlowConfig
                     {
-                        ProductSerial = "A123",
-                        Asolution = "0317",
-                        Aflow = "flow1",
-                        Bsolution = "0317",
-                        Bflow = "flow1",
-                        IsSwitch = false
+                        Name = PipelineFlowConfig.DefaultName,
+                        Asolution = "",
+                        Aflow = "",
+                        Bsolution = "",
+                        Bflow = "",
+                        IsSwitch = false,
+                        ProductSerials = new List<string>()
                     }
                 },
                 PartNumberImagesLoc = @"D:\ATS_AI_INSTALL\TemplateImages"
@@ -40,68 +41,34 @@ namespace DeepSightModel.Configuration
         }
 
         /// <summary>
-        /// 尝试从旧版 XML 配置迁移
+        /// 读取配置（支持旧格式自动迁移）
         /// </summary>
-        protected override void TryMigrateLegacyConfig()
+        public override bool Read(out SolutionConfig config)
         {
-            // 如果新配置已存在，无需迁移
-            if (File.Exists(ConfigPath))
+            if (base.Read(out config))
             {
-                return;
-            }
-
-            // 尝试从旧版 XML 配置迁移
-            var legacyPaths = new[]
-            {
-                ConfigPaths.LegacyAISolutionConfigPath,  // configs/aisolution.config.xml
-                Path.Combine(ConfigPaths.LegacyAISolutionDirectory, "config.xml")  // AISolutionAndFlow/config.xml
-            };
-
-            foreach (var legacyPath in legacyPaths)
-            {
-                if (File.Exists(legacyPath))
+                // 旧格式迁移
+                if ((config.Pipelines == null || config.Pipelines.Count == 0) && config.solus != null && config.solus.Count > 0)
                 {
-                    try
-                    {
-                        var config = ReadXmlConfig(legacyPath);
-                        if (config != null)
-                        {
-                            Save(config);
-                            LogTextHelper.Info($"成功从旧版 AI 方案配置迁移: {legacyPath} -> {ConfigPath}");
-                            return;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        LogTextHelper.Error($"迁移旧版 AI 方案配置失败: {legacyPath}", ex);
-                    }
+                    config.MigrateFromLegacy();
+                    Save(config);
                 }
+                config.EnsureDefaultPipeline();
+                return true;
             }
+            return false;
         }
 
         /// <summary>
-        /// 读取旧版 XML 配置
-        /// </summary>
-        private SolutionConfig ReadXmlConfig(string path)
-        {
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
-            {
-                var xs = new XmlSerializer(typeof(SolutionConfig));
-                return (SolutionConfig)xs.Deserialize(stream);
-            }
-        }
-
-        /// <summary>
-        /// 根据料号获取方案配置
+        /// 根据料号获取所属的算法流程配置
         /// </summary>
         /// <param name="productSerial">料号</param>
-        /// <returns>方案配置，未找到返回 null</returns>
-        public SolutionAndFlow GetSolutionByProduct(string productSerial)
+        /// <returns>流程配置，未找到返回 null</returns>
+        public PipelineFlowConfig GetPipelineByProduct(string productSerial)
         {
-            if (Read(out var config) && config?.solus != null)
+            if (Read(out var config))
             {
-                return config.solus.Find(s => 
-                    string.Equals(s.ProductSerial, productSerial, StringComparison.OrdinalIgnoreCase));
+                return config.FindPipelineByProduct(productSerial);
             }
             return null;
         }

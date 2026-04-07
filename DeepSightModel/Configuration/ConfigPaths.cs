@@ -65,16 +65,6 @@ namespace DeepSightModel.Configuration
         /// </summary>
         public const string KeyDefectMappingFileName = "keydefect_mapping.config.json";
 
-        /// <summary>
-        /// 旧版常规配置文件名 (XML)
-        /// </summary>
-        public const string LegacyGeneralConfigFileName = "general.config.xml";
-
-        /// <summary>
-        /// 旧版 AI 方案配置文件名 (XML)
-        /// </summary>
-        public const string LegacyAISolutionConfigFileName = "aisolution.config.xml";
-
         #endregion
 
         #region 完整路径属性
@@ -113,16 +103,6 @@ namespace DeepSightModel.Configuration
         /// 料号与缺陷配置映射文件完整路径
         /// </summary>
         public static string KeyDefectMappingPath => Path.Combine(ConfigDirectory, KeyDefectMappingFileName);
-
-        /// <summary>
-        /// 旧版常规配置完整路径 (XML)
-        /// </summary>
-        public static string LegacyGeneralConfigPath => Path.Combine(ConfigDirectory, LegacyGeneralConfigFileName);
-
-        /// <summary>
-        /// 旧版 AI 方案配置完整路径 (XML)
-        /// </summary>
-        public static string LegacyAISolutionConfigPath => Path.Combine(ConfigDirectory, LegacyAISolutionConfigFileName);
 
         #endregion
 

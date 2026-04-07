@@ -60,65 +60,56 @@ namespace DeepSightWorkLib.Services
         #region 私有方法
 
         /// <summary>
-        /// 解析方案配置（料号未配置时自动基于 DEFAULT 新增并保存）
+        /// 解析方案配置（料号未配置时自动归入 DEFAULT 流程并保存）
         /// </summary>
         private (string Solution, string Flow, bool IsSwitch) ResolveSolution(
             RootPanelInfo panelInfo, PanelConvertContext context)
         {
             var solConfig = context.SolutionConfig;
 
-            var solutionFlow = solConfig?.solus?.FirstOrDefault(o => o.ProductSerial == panelInfo.ProductSerial);
+            // 查找料号所属的算法流程配置
+            var pipeline = solConfig?.FindPipelineByProduct(panelInfo.ProductSerial);
 
-            if (solutionFlow == null)
+            if (pipeline == null)
             {
-                // 料号未配置，基于 DEFAULT 自动新增
-                solutionFlow = AutoAddProductSerial(panelInfo.ProductSerial, context);
+                // 料号未配置，自动归入 DEFAULT 流程
+                pipeline = AutoAddProductSerial(panelInfo.ProductSerial, context);
             }
 
             string solution, flow;
             (solution, flow) = panelInfo.SideIndex == "A"
-                ? (solutionFlow.Asolution, solutionFlow.Aflow)
-                : (solutionFlow.Bsolution, solutionFlow.Bflow);
+                ? (pipeline.Asolution, pipeline.Aflow)
+                : (pipeline.Bsolution, pipeline.Bflow);
 
-            LogTextHelper.Info($"当前产品:{panelInfo.SerialNumber},{panelInfo.SideIndex}面,所属料号:{panelInfo.ProductSerial},方案:{solution},flow:{flow}");
-            return (solution, flow, solutionFlow.IsSwitch);
+            LogTextHelper.Info($"当前产品:{panelInfo.SerialNumber},{panelInfo.SideIndex}面,所属料号:{panelInfo.ProductSerial},流程:{pipeline.Name},方案:{solution},flow:{flow}");
+            return (solution, flow, pipeline.IsSwitch);
         }
 
         /// <summary>
-        /// 自动基于 DEFAULT 配置新增料号，添加到内存配置并持久化保存
+        /// 将未配置的料号自动添加到 DEFAULT 流程下，并持久化保存
         /// </summary>
-        private SolutionAndFlow AutoAddProductSerial(string productSerial, PanelConvertContext context)
+        private PipelineFlowConfig AutoAddProductSerial(string productSerial, PanelConvertContext context)
         {
             var solConfig = context.SolutionConfig;
 
             lock (_solutionLock)
             {
                 // 双重检查：可能其他线程已经添加
-                var existing = solConfig?.solus?.FirstOrDefault(o => o.ProductSerial == productSerial);
+                var existing = solConfig?.FindPipelineByProduct(productSerial);
                 if (existing != null) return existing;
 
-                var defaultFlow = solConfig?.solus?.FirstOrDefault(o =>
-                    o.ProductSerial?.ToUpper() == "DEFAULT");
-
-                if (defaultFlow == null)
+                var defaultPipeline = solConfig?.GetDefaultPipeline();
+                if (defaultPipeline == null)
                 {
                     throw new Exception("找不到 DEFAULT 的算法流程配置，无法自动新增料号");
                 }
 
-                var newFlow = new SolutionAndFlow
-                {
-                    ProductSerial = productSerial,
-                    Asolution = defaultFlow.Asolution,
-                    Aflow = defaultFlow.Aflow,
-                    Bsolution = defaultFlow.Bsolution,
-                    Bflow = defaultFlow.Bflow,
-                    IsSwitch = defaultFlow.IsSwitch,
-                };
+                if (defaultPipeline.ProductSerials == null)
+                    defaultPipeline.ProductSerials = new List<string>();
 
-                if (solConfig.solus == null) solConfig.solus = new List<SolutionAndFlow>();
-                solConfig.solus.Add(newFlow);
+                defaultPipeline.ProductSerials.Add(productSerial);
 
-                LogTextHelper.Info($"料号 {productSerial} 未配置，已基于 DEFAULT 自动新增并采用默认算法流程");
+                LogTextHelper.Info($"料号 {productSerial} 未配置，已自动归入 DEFAULT 流程");
 
                 // 持久化保存
                 try
@@ -131,7 +122,7 @@ namespace DeepSightWorkLib.Services
                     LogTextHelper.Error($"保存料号 {productSerial} 配置失败: {ex.Message}");
                 }
 
-                return newFlow;
+                return defaultPipeline;
             }
         }
 

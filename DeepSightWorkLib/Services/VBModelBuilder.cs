@@ -129,12 +129,12 @@ namespace DeepSightWorkLib.Services
         /// </summary>
         private RootVBInfo BuildVBInfo(VBModelBuildContext context, List<string> imageKeys, List<DetectInfo> filteredDefects)
         {
-            // 从配置中查找料号对应的方案和流程
-            var solutionFlow = _solutionConfig?.solus?.FirstOrDefault(o => o.ProductSerial == context.ProductSerial)
-                ?? _solutionConfig?.solus?.FirstOrDefault(o => o.ProductSerial?.ToUpper() == "DEFAULT");
+            // 从配置中查找料号所属的算法流程，找不到则使用 DEFAULT
+            var pipeline = _solutionConfig?.FindPipelineByProduct(context.ProductSerial)
+                ?? _solutionConfig?.GetDefaultPipeline();
 
-            string solution = context.SideName == "A" ? (solutionFlow?.Asolution ?? "default") : (solutionFlow?.Bsolution ?? "default");
-            string flow = context.SideName == "A" ? (solutionFlow?.Aflow ?? "1") : (solutionFlow?.Bflow ?? "1");
+            string solution = context.SideName == "A" ? (pipeline?.Asolution ?? "default") : (pipeline?.Bsolution ?? "default");
+            string flow = context.SideName == "A" ? (pipeline?.Aflow ?? "1") : (pipeline?.Bflow ?? "1");
 
             var vbInfo = new RootVBInfo
             {
