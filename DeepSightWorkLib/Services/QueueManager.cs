@@ -1,7 +1,6 @@
 using DeepSightDB;
 using DeepSightModel;
 using DeepSightTool;
-using OpenCvSharp;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -127,14 +126,14 @@ namespace DeepSightWorkLib.Services
             // 从 AviQueue 中过滤移除
             removedCount += DrainAndFilter(AviQueue, item =>
             {
-                if (item?.SN == sn) { DisposeMats(item.Mats); return true; }
+                if (item?.SN == sn) { item.Dispose(); return true; }
                 return false;
             });
 
             // 从 ImageLoadQueue 中过滤移除
             removedCount += DrainAndFilter(ImageLoadQueue, item =>
             {
-                if (item?.Model?.SN == sn) { DisposeMats(item.Model.Mats); return true; }
+                if (item?.Model?.SN == sn) { item.Model.Dispose(); return true; }
                 return false;
             });
 
@@ -212,7 +211,7 @@ namespace DeepSightWorkLib.Services
                 if (vbModel != null)
                 {
                     if (!string.IsNullOrEmpty(vbModel.SN)) clearedSnSet.Add(vbModel.SN);
-                    DisposeMats(vbModel.Mats);
+                    vbModel.Dispose();
                 }
                 aviCount++;
             }
@@ -223,7 +222,7 @@ namespace DeepSightWorkLib.Services
                 if (loadModel?.Model != null)
                 {
                     if (!string.IsNullOrEmpty(loadModel.Model.SN)) clearedSnSet.Add(loadModel.Model.SN);
-                    DisposeMats(loadModel.Model.Mats);
+                    loadModel.Model.Dispose();
                 }
                 imageLoadCount++;
             }
@@ -280,19 +279,6 @@ namespace DeepSightWorkLib.Services
             }
 
             return expiredKeys.Count;
-        }
-
-        /// <summary>
-        /// 释放 Mat 列表资源
-        /// </summary>
-        private void DisposeMats(List<Mat> mats)
-        {
-            if (mats == null) return;
-            foreach (var mat in mats)
-            {
-                mat?.Dispose();
-            }
-            mats.Clear();
         }
 
         #endregion

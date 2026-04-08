@@ -122,6 +122,14 @@ namespace DeepSightWorkLib
                     return;
                 }
 
+                // 检查是否有已释放的 Mat 对象（防御性检查）
+                int disposedCount = mats.Count(m => m == null || m.IsDisposed);
+                int disposedTmpCount = mats_Tmp.Count(m => m == null || m.IsDisposed);
+                if (disposedCount > 0 || disposedTmpCount > 0)
+                {
+                    LogTextHelper.Warn($"DefectMethodWithImages2: 检测到已释放的Mat对象! mats中{disposedCount}/{mats.Count}个, mats_Tmp中{disposedTmpCount}/{mats_Tmp.Count}个");
+                }
+
                 JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
                 string jsonStr = JsonConvert.SerializeObject(info, Formatting.None, jsonSetting);
 

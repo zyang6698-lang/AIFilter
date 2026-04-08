@@ -389,7 +389,7 @@ namespace DeepSightWorkLib
                     {
                         TaskStatusSender.SendAICompleted(info?.SN, info?.Side, elapsedMs);
                     }
-                    CleanupMats(info?.Mats);
+                    info?.Dispose();
                 }
             }
             return false;
@@ -466,18 +466,6 @@ namespace DeepSightWorkLib
 
         #region 辅助方法
 
-        /// <summary>
-        /// 清理 Mat 资源
-        /// </summary>
-        private void CleanupMats(List<Mat> mats)
-        {
-            if (mats == null) return;
-            foreach (var mat in mats)
-            {
-                mat?.Dispose();
-            }
-            mats.Clear();
-        }
 
         /// <summary>
         /// 记录图片加载结果

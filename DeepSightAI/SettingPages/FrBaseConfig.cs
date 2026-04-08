@@ -1,9 +1,6 @@
 ﻿using DeepSightTool;
 using System;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace DeepSightAI.SettingPages
@@ -76,15 +73,6 @@ namespace DeepSightAI.SettingPages
             this.txt_GetInferResultTimeout.Text = Machine.aviconfig.GetInferResultTimeout.ToString();
             this.txt_WelcomeTitle.Text = Machine.sysConfig.WelcomeTitle ?? "Deepsight AI";
             this.txt_WelcomeFontSize.Text = Machine.sysConfig.WelcomeFontSize.ToString();
-        }
-        // 获取相对路径（.NET Framework 无 Path.GetRelativePath）
-        private static string GetRelativePath(string basePath, string fullPath)
-        {
-            if (!basePath.EndsWith(Path.DirectorySeparatorChar.ToString()))
-                basePath += Path.DirectorySeparatorChar;
-            if (fullPath.StartsWith(basePath, StringComparison.OrdinalIgnoreCase))
-                return fullPath.Substring(basePath.Length);
-            return fullPath; // fallback
         }
 
  

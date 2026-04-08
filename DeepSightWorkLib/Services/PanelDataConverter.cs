@@ -68,14 +68,8 @@ namespace DeepSightWorkLib.Services
             var solConfig = context.SolutionConfig;
 
             // 查找料号所属的算法流程配置
-            var pipeline = solConfig?.FindPipelineByProduct(panelInfo.ProductSerial);
-
-            if (pipeline == null)
-            {
-                // 料号未配置，自动归入 DEFAULT 流程
-                pipeline = AutoAddProductSerial(panelInfo.ProductSerial, context);
-            }
-
+            // 料号未配置，自动归入 DEFAULT 流程
+            var pipeline = (solConfig?.FindPipelineByProduct(panelInfo.ProductSerial)) ?? AutoAddProductSerial(panelInfo.ProductSerial, context);
             string solution, flow;
             (solution, flow) = panelInfo.SideIndex == "A"
                 ? (pipeline.Asolution, pipeline.Aflow)
@@ -98,12 +92,7 @@ namespace DeepSightWorkLib.Services
                 var existing = solConfig?.FindPipelineByProduct(productSerial);
                 if (existing != null) return existing;
 
-                var defaultPipeline = solConfig?.GetDefaultPipeline();
-                if (defaultPipeline == null)
-                {
-                    throw new Exception("找不到 DEFAULT 的算法流程配置，无法自动新增料号");
-                }
-
+                var defaultPipeline = (solConfig?.GetDefaultPipeline()) ?? throw new Exception("找不到 DEFAULT 的算法流程配置，无法自动新增料号");
                 if (defaultPipeline.ProductSerials == null)
                     defaultPipeline.ProductSerials = new List<string>();
 
@@ -194,54 +183,38 @@ namespace DeepSightWorkLib.Services
             List<int> directReportDefectList,
             List<int> directReportPcsList)
         {
+            int defectCount = 0;
             foreach (var item in panelInfo.PcsInfo)
             {
-                LogTextHelper.Info($"SN:{panelInfo.SerialNumber}_{panelInfo.SideIndex}面报点数据为:{item.Value.DefectInfo.Count}");
-                ProcessDefects(panelInfo, context, isSwitch, item.Value,  vBInfo, defectList, pcsList,
-                    directReportDefectList, directReportPcsList);
-            }
-
-        }
-
-        /// <summary>
-        /// 处理缺陷信息
-        /// </summary>
-        private void ProcessDefects(
-            RootPanelInfo panelInfo,
-            PanelConvertContext context,
-            bool isSwitch,
-            PcsInfo pcsInfo,
-            RootVBInfo vBInfo,
-            List<int> defectList,
-            List<int> pcsList,
-            List<int> directReportDefectList,
-            List<int> directReportPcsList)
-        {
-            for (int j = 0; j < pcsInfo.DefectInfo.Count; j++)
-            {
-                var defect = pcsInfo.DefectInfo[j];
-
-                // 检查是否为直报缺陷（根据料号对应的 profile）
-                if (KeyDefectConfigManager.Instance.IsDirectReportByProduct(defect.DefectCode, panelInfo.ProductSerial))
+                for (int j = 0; j < item.Value.DefectInfo.Count; j++)
                 {
-                    directReportDefectList.Add(j);
-                    directReportPcsList.Add(defect.PcsIndex);
-                    LogTextHelper.Info($"SN:{panelInfo.SerialNumber} 缺陷 {defect.DefectCode} (Pcs:{defect.PcsIndex}, Defect:{j}) 标记为直报，跳过AI推理");
-                    continue;
+                    defectCount++;
+                    var defect = item.Value.DefectInfo[j];
+
+                    // 检查是否为直报缺陷（根据料号对应的 profile）
+                    if (KeyDefectConfigManager.Instance.IsDirectReportByProduct(defect.DefectCode, panelInfo.ProductSerial))
+                    {
+                        directReportDefectList.Add(j);
+                        directReportPcsList.Add(defect.PcsIndex);
+                        LogTextHelper.Info($"SN:{panelInfo.SerialNumber} 缺陷 {defect.DefectCode} (Pcs:{defect.PcsIndex}, Defect:{j}) 标记为直报，跳过AI推理");
+                        continue;
+                    }
+
+                    // 创建推理图片组
+                    var group = CreateInferImageGroup(panelInfo, isSwitch, defect);
+
+                    // 添加图片信息
+                    AddDefectImages(context, defect, group);
+
+                    vBInfo.paramsData.InferWholeData.ImageData.DataValue.InferImageGroup.Add(group);
+                    group.inspectDetails = new InspectDetails { InferRois = new List<InferRoi>() };
+
+                    defectList.Add(j);
+                    pcsList.Add(defect.PcsIndex);
                 }
-
-                // 创建推理图片组
-                var group = CreateInferImageGroup(panelInfo, isSwitch, defect);
-
-                // 添加图片信息
-                AddDefectImages(context, defect, group);
-
-                vBInfo.paramsData.InferWholeData.ImageData.DataValue.InferImageGroup.Add(group);
-                group.inspectDetails = new InspectDetails { InferRois = new List<InferRoi>() };
-
-                defectList.Add(j);
-                pcsList.Add(defect.PcsIndex);
             }
+            LogTextHelper.Info($"SN:{panelInfo.SerialNumber}_{panelInfo.SideIndex}面报点数据为:{defectCount}");
+
         }
 
         /// <summary>

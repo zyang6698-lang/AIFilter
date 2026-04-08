@@ -17,7 +17,6 @@ namespace DeepSightAI
     public partial class FrAlarm : Form
     {
 
-        private string logFilePath = null;
         public FrAlarm()
         {
             InitializeComponent();
@@ -37,19 +36,6 @@ namespace DeepSightAI
                 {
                     this.dataGridViewData.Rows.Add(new List<string> { DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), message }.ToArray());
                 }));
-                string ImageDir = string.Format("{0}\\{1}", Application.StartupPath + "\\ExceptionLog", DateTime.Now.ToString("yyyy-MM-dd"));
-                if (!Directory.Exists(ImageDir))
-                {
-                    Directory.CreateDirectory(ImageDir);
-                }
-                logFilePath = Path.Combine(ImageDir, "exception_log.csv");
-                var logEntry = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}";
-                using (StreamWriter Writer = new StreamWriter(logFilePath, true, Encoding.Default))
-                {
-                    //数据
-                    string str = $"{logEntry}," + message;
-                    Writer.WriteLine(str);
-                }
             }
             catch (Exception ex)
             {

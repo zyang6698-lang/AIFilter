@@ -10,7 +10,7 @@
 ; ============================================================================
 
 #define MyAppName "DeepSightAI"
-#define MyAppVersion "1.1.2.5"
+#define MyAppVersion "1.1.2.6"
 #define MyAppPublisher "上海深视信息有限公司科技"
 #define MyAppExeName "DeepSightAI.exe"
 #define MyAppCopyright "Copyright © 2025 上海深视信息有限公司科技"
@@ -75,14 +75,10 @@ Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: 
 Source: "{#BinDir}\*.exe"; DestDir: "{app}"; Flags: ignoreversion; \
   Excludes: "unittest_*.exe,algotest.exe,crprober.exe,CrashSender1403.exe"
 ; 对大型 DLL 使用 solidbreak 避免 out of memory
-; 如有其他超大 DLL 也可单独列出并加 solidbreak
 Source: "{#BinDir}\*.dll"; DestDir: "{app}"; Flags: ignoreversion solidbreak
-Source: "{#BinDir}\*.pdb"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#BinDir}\*.xml"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#BinDir}\*.lib"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#BinDir}\*.pdb"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
+Source: "{#BinDir}\*.xml"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
 Source: "{#BinDir}\*.ini"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
-Source: "{#BinDir}\*.json"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
-Source: "{#BinDir}\*.bmp"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
 Source: "{#BinDir}\*.txt"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
 
 ; CrashRpt 相关
@@ -97,27 +93,41 @@ Source: "{#BinDir}\*.dll.config"; DestDir: "{app}"; Flags: ignoreversion skipifs
 ; ============================================================================
 ; configs 目录 - 配置文件 (升级时不覆盖)
 ; ============================================================================
-Source: "{#BinDir}\configs\*"; DestDir: "{app}\configs"; Flags: onlyifdoesntexist recursesubdirs; \
+Source: "{#BinDir}\configs\*"; DestDir: "{app}\configs"; Flags: onlyifdoesntexist uninsneveruninstall recursesubdirs; \
   Excludes: "machines.config.json"
 
 ; ============================================================================
 ; 数据库文件 (仅首次安装, 升级时保留用户数据)
 ; ============================================================================
-Source: "{#BinDir}\deepsight.db"; DestDir: "{app}"; Flags: onlyifdoesntexist skipifsourcedoesntexist
-Source: "{#BinDir}\dsai_models.db"; DestDir: "{app}"; Flags: onlyifdoesntexist
+Source: "{#BinDir}\dsai_models.db"; DestDir: "{app}"; Flags: onlyifdoesntexist skipifsourcedoesntexist
 
 ; ============================================================================
 ; 子目录 - 递归打包
 ; ============================================================================
+; --- 应用核心目录 ---
 Source: "{#BinDir}\algoconfigs\*"; DestDir: "{app}\algoconfigs"; Flags: ignoreversion recursesubdirs createallsubdirs
-; ATS_Agent_EXE 目录不再打包，各站点单独部署
-; Source: "{#BinDir}\ATS_Agent_EXE\*"; DestDir: "{app}\ATS_Agent_EXE"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#BinDir}\Deepsight\*"; DestDir: "{app}\Deepsight"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#BinDir}\dll\*"; DestDir: "{app}\dll"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#BinDir}\models\*"; DestDir: "{app}\models"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#BinDir}\ocr_model\*"; DestDir: "{app}\ocr_model"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#BinDir}\plugins\*"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#BinDir}\solution\*"; DestDir: "{app}\solution"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#BinDir}\VisionBuilder\*"; DestDir: "{app}\VisionBuilder"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#BinDir}\TemplateImage\*"; DestDir: "{app}\TemplateImage"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#BinDir}\tl\*"; DestDir: "{app}\tl"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+; --- 原生运行时 ---
+Source: "{#BinDir}\x64\*"; DestDir: "{app}\x64"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#BinDir}\Python27\*"; DestDir: "{app}\Python27"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+
+; --- Qt 运行时依赖目录 ---
+Source: "{#BinDir}\bearer\*"; DestDir: "{app}\bearer"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+Source: "{#BinDir}\iconengines\*"; DestDir: "{app}\iconengines"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+Source: "{#BinDir}\imageformats\*"; DestDir: "{app}\imageformats"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+Source: "{#BinDir}\platforms\*"; DestDir: "{app}\platforms"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+Source: "{#BinDir}\printsupport\*"; DestDir: "{app}\printsupport"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+Source: "{#BinDir}\sqldrivers\*"; DestDir: "{app}\sqldrivers"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+Source: "{#BinDir}\styles\*"; DestDir: "{app}\styles"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+Source: "{#BinDir}\translations\*"; DestDir: "{app}\translations"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
 
 ; ============================================================================
 ; PostgreSQL 安装包 (打包到临时目录, 安装后自动删除)
@@ -132,8 +142,11 @@ Source: "postgresql-18.1-1-windows-x64.exe"; DestDir: "{tmp}"; Flags: nocompress
 [Dirs]
 Name: "{app}"; Permissions: users-full
 Name: "{app}\Log"; Permissions: users-full
+Name: "{app}\Logs"; Permissions: users-full
 Name: "{app}\runlogs"; Permissions: users-full
 Name: "{app}\userlogs"; Permissions: users-full
+Name: "{app}\LogExport"; Permissions: users-full
+Name: "{app}\ExceptionLog"; Permissions: users-full
 Name: "{app}\models"; Permissions: users-full
 Name: "{app}\configs"; Permissions: users-full
 
@@ -150,10 +163,13 @@ Filename: "{app}\{#MyAppExeName}"; Description: "启动 {#MyAppName}"; Flags: no
 ; 注意: PostgreSQL 的安装在 [Code] 的 CurStepChanged 中处理, 不在此处
 
 [UninstallDelete]
-; 卸载时清理日志文件
+; 卸载时清理日志和运行时生成的目录
 Type: filesandordirs; Name: "{app}\Log"
+Type: filesandordirs; Name: "{app}\Logs"
 Type: filesandordirs; Name: "{app}\runlogs"
 Type: filesandordirs; Name: "{app}\userlogs"
+Type: filesandordirs; Name: "{app}\LogExport"
+Type: filesandordirs; Name: "{app}\ExceptionLog"
 
 [Code]
 // ============================================================================
@@ -296,4 +312,6 @@ begin
   // 等待进程退出
   Sleep(1000);
 end;
+
+
 

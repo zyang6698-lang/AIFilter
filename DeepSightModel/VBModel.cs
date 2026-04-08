@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace DeepSightModel
 {
-    public class VBModel
+    public class VBModel : IDisposable
     {
         public string Key { get; set; }
         public string SN { get; set; }
@@ -120,6 +120,34 @@ namespace DeepSightModel
         public bool IsSingleImageTest => InferenceMode == InferenceMode.SingleImageTest;
         public bool IsSecondaryInference => InferenceMode == InferenceMode.SecondaryInference;
         public bool IsConsistencyTest => InferenceMode == InferenceMode.ConsistencyTest;
+        #endregion
+
+        #region IDisposable
+
+        /// <summary>
+        /// 释放所有 Mat 资源（Mats 和 Mats_Temp）
+        /// </summary>
+        public void Dispose()
+        {
+            DisposeMats(Mats);
+            Mats = null;
+            DisposeMats(Mats_Temp);
+            Mats_Temp = null;
+        }
+
+        private static void DisposeMats(List<Mat> mats)
+        {
+            if (mats == null) return;
+            foreach (var mat in mats)
+            {
+                if (mat != null && !mat.IsDisposed)
+                {
+                    mat.Dispose();
+                }
+            }
+            mats.Clear();
+        }
+
         #endregion
     }
 

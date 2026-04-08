@@ -21,9 +21,13 @@ namespace DeepSightWorkLib
         /// <returns>图片数据信息结构</returns>
         public static ImageDataInfo MatToImageDataInfo(Mat mat)
         {
-            if (mat == null || mat.IsDisposed || mat.Empty())
+            bool isNull = mat == null;
+            bool isDisposed = !isNull && mat.IsDisposed;
+            bool isEmpty = !isNull && !isDisposed && mat.Empty();
+
+            if (isNull || isDisposed || isEmpty)
             {
-                LogTextHelper.Warn($"MatToImageDataInfo: Mat无效 - null={mat == null}, disposed={mat?.IsDisposed}, empty={mat?.Empty()}");
+                LogTextHelper.Warn($"MatToImageDataInfo: Mat无效 - null={isNull}, disposed={isDisposed}, empty={isEmpty}");
                 return new ImageDataInfo
                 {
                     Data = IntPtr.Zero,
