@@ -59,7 +59,7 @@
             this.tableLayoutPanel1.Controls.Add(this.txt_WelcomeFontSize, 1, 4);
             this.tableLayoutPanel1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            //
+            // 
             // label21
             // 
             resources.ApplyResources(this.label21, "label21");

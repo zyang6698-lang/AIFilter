@@ -399,8 +399,32 @@ namespace DeepSightDB
                 return;
             }
 
-            try { SaveStateInternal(_currentDate); } catch { /* ignore */ }
+            try { SaveStateInternal(_currentDate); }
+            catch (Exception ex) { LogTextHelper.Error($"[BoardStatCache] SaveStateInternal 失败: {ex.Message}"); }
             _pendingSaveCount = 0;
+        }
+
+        /// <summary>
+        /// 强制将当前缓存数据写入 XML 文件（停止作业或释放资源时调用）
+        /// </summary>
+        public static void Flush()
+        {
+            lock (SyncRoot)
+            {
+                if (_pendingSaveCount > 0)
+                {
+                    try
+                    {
+                        SaveStateInternal(_currentDate);
+                        LogTextHelper.Info($"[BoardStatCache] Flush 完成，已保存 {PanelEntries.Count} 条面板数据");
+                    }
+                    catch (Exception ex)
+                    {
+                        LogTextHelper.Error($"[BoardStatCache] Flush 失败: {ex.Message}");
+                    }
+                    _pendingSaveCount = 0;
+                }
+            }
         }
 
         private static void LoadStateInternal(DateTime date)

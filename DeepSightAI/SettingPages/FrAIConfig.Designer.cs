@@ -33,7 +33,8 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.panelLeftContent = new System.Windows.Forms.Panel();
             this.dgvPipeline = new System.Windows.Forms.DataGridView();
             this.colConfigName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colASolution = new System.Windows.Forms.DataGridViewComboBoxColumn();
@@ -47,6 +48,7 @@
             this.btnDeleteConfig = new DeepSightAI.StyledButton();
             this.btnAddConfig = new DeepSightAI.StyledButton();
             this.lblLeftTitle = new System.Windows.Forms.Label();
+            this.panelRightContent = new System.Windows.Forms.Panel();
             this.dgvProducts = new System.Windows.Forms.DataGridView();
             this.colIndex = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colProductSerial = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -58,36 +60,31 @@
             this.btnAddProduct = new DeepSightAI.StyledButton();
             this.lblRightTitle = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
-            this.splitContainer1.Panel1.SuspendLayout();
-            this.splitContainer1.Panel2.SuspendLayout();
-            this.splitContainer1.SuspendLayout();
+            this.tableLayoutPanel1.SuspendLayout();
+            this.panelLeftContent.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvPipeline)).BeginInit();
             this.panelLeftHeader.SuspendLayout();
+            this.panelRightContent.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvProducts)).BeginInit();
             this.panelRightHeader.SuspendLayout();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
-            // splitContainer1
+            // tableLayoutPanel1
             // 
-            this.splitContainer1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(76)))), ((int)(((byte)(80)))));
-            resources.ApplyResources(this.splitContainer1, "splitContainer1");
-            this.splitContainer1.Name = "splitContainer1";
+            this.tableLayoutPanel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(76)))), ((int)(((byte)(80)))));
+            resources.ApplyResources(this.tableLayoutPanel1, "tableLayoutPanel1");
+            this.tableLayoutPanel1.Controls.Add(this.panelLeftContent, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.panelRightContent, 1, 0);
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             // 
-            // splitContainer1.Panel1
+            // panelLeftContent
             // 
-            this.splitContainer1.Panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.splitContainer1.Panel1.Controls.Add(this.dgvPipeline);
-            this.splitContainer1.Panel1.Controls.Add(this.panelLeftHeader);
-            resources.ApplyResources(this.splitContainer1.Panel1, "splitContainer1.Panel1");
-            // 
-            // splitContainer1.Panel2
-            // 
-            this.splitContainer1.Panel2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.splitContainer1.Panel2.Controls.Add(this.dgvProducts);
-            this.splitContainer1.Panel2.Controls.Add(this.panelRightHeader);
-            resources.ApplyResources(this.splitContainer1.Panel2, "splitContainer1.Panel2");
+            this.panelLeftContent.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.panelLeftContent.Controls.Add(this.dgvPipeline);
+            this.panelLeftContent.Controls.Add(this.panelLeftHeader);
+            resources.ApplyResources(this.panelLeftContent, "panelLeftContent");
+            this.panelLeftContent.Name = "panelLeftContent";
             // 
             // dgvPipeline
             // 
@@ -217,6 +214,14 @@
             this.lblLeftTitle.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.lblLeftTitle.Name = "lblLeftTitle";
             // 
+            // panelRightContent
+            // 
+            this.panelRightContent.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.panelRightContent.Controls.Add(this.dgvProducts);
+            this.panelRightContent.Controls.Add(this.panelRightHeader);
+            resources.ApplyResources(this.panelRightContent, "panelRightContent");
+            this.panelRightContent.Name = "panelRightContent";
+            // 
             // dgvProducts
             // 
             this.dgvProducts.AllowUserToAddRows = false;
@@ -328,7 +333,7 @@
             // panel1
             // 
             this.panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(76)))), ((int)(((byte)(80)))));
-            this.panel1.Controls.Add(this.splitContainer1);
+            this.panel1.Controls.Add(this.tableLayoutPanel1);
             resources.ApplyResources(this.panel1, "panel1");
             this.panel1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.panel1.Name = "panel1";
@@ -342,13 +347,12 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Name = "FrAIConfig";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
-            this.splitContainer1.Panel1.ResumeLayout(false);
-            this.splitContainer1.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
-            this.splitContainer1.ResumeLayout(false);
+            this.tableLayoutPanel1.ResumeLayout(false);
+            this.panelLeftContent.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvPipeline)).EndInit();
             this.panelLeftHeader.ResumeLayout(false);
             this.panelLeftHeader.PerformLayout();
+            this.panelRightContent.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvProducts)).EndInit();
             this.panelRightHeader.ResumeLayout(false);
             this.panelRightHeader.PerformLayout();
@@ -361,7 +365,9 @@
 
         // 主容器
         private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private System.Windows.Forms.Panel panelLeftContent;
+        private System.Windows.Forms.Panel panelRightContent;
 
         // 左侧 - 算法配置区
         private System.Windows.Forms.Panel panelLeftHeader;

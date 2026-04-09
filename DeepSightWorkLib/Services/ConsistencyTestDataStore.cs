@@ -14,7 +14,7 @@ namespace DeepSightWorkLib.Services
     public class ConsistencyTestDataStore
     {
         private static readonly string RootDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "DeepSightAI", "ConsistencyTests");
 
         private static readonly string DatasetsFile = Path.Combine(RootDir, "datasets.json");

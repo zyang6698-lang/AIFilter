@@ -530,7 +530,7 @@ namespace DeepSightAI
             return result;
         }
         // 使用示例
-        public string appPath = System.AppDomain.CurrentDomain.BaseDirectory + "ATS_Agent_EXE";// @"D:\DSCode\DeepSightAI\Bin\ATS_Agent_EXE";
+        public string appPath = System.AppDomain.CurrentDomain.BaseDirectory + "ATS_Agent_EXE";
         public string appExe = "ATS_Agent.exe";
 
         private void FrSetting_Activated(object sender, EventArgs e)

@@ -125,144 +125,15 @@
     <value>3</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="label17.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="label17.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 17</value>
-  </data>
-  <data name="label17.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 0, 2, 0</value>
-  </data>
-  <data name="label17.Size" type="System.Drawing.Size, System.Drawing">
-    <value>196, 38</value>
-  </data>
-  <data name="label17.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label17.Text" xml:space="preserve">
-    <value>minioIP：</value>
-  </data>
-  <data name="label17.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
-    <value>MiddleRight</value>
-  </data>
-  <data name="&gt;&gt;label17.Name" xml:space="preserve">
-    <value>label17</value>
-  </data>
-  <data name="&gt;&gt;label17.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label17.Parent" xml:space="preserve">
-    <value>tableLayoutPanel1</value>
-  </data>
-  <data name="&gt;&gt;label17.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="txt_endpoint_address.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left, Right</value>
-  </data>
-  <data name="txt_endpoint_address.Location" type="System.Drawing.Point, System.Drawing">
-    <value>226, 24</value>
-  </data>
-  <data name="txt_endpoint_address.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 4, 3, 4</value>
-  </data>
-  <data name="txt_endpoint_address.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 23</value>
-  </data>
-  <data name="txt_endpoint_address.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="txt_endpoint_address.Text" xml:space="preserve">
-    <value>127.0.0.1</value>
-  </data>
-  <data name="&gt;&gt;txt_endpoint_address.Name" xml:space="preserve">
-    <value>txt_endpoint_address</value>
-  </data>
-  <data name="&gt;&gt;txt_endpoint_address.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;txt_endpoint_address.Parent" xml:space="preserve">
-    <value>tableLayoutPanel1</value>
-  </data>
-  <data name="&gt;&gt;txt_endpoint_address.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="label18.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="label18.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 55</value>
-  </data>
-  <data name="label18.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 0, 2, 0</value>
-  </data>
-  <data name="label18.Size" type="System.Drawing.Size, System.Drawing">
-    <value>196, 38</value>
-  </data>
-  <data name="label18.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="label18.Text" xml:space="preserve">
-    <value>minioPort：</value>
-  </data>
-  <data name="label18.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
-    <value>MiddleRight</value>
-  </data>
-  <data name="&gt;&gt;label18.Name" xml:space="preserve">
-    <value>label18</value>
-  </data>
-  <data name="&gt;&gt;label18.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label18.Parent" xml:space="preserve">
-    <value>tableLayoutPanel1</value>
-  </data>
-  <data name="&gt;&gt;label18.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="txt_Minioport.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left, Right</value>
-  </data>
-  <data name="txt_Minioport.Location" type="System.Drawing.Point, System.Drawing">
-    <value>226, 62</value>
-  </data>
-  <data name="txt_Minioport.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 4, 3, 4</value>
-  </data>
-  <data name="txt_Minioport.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 23</value>
-  </data>
-  <data name="txt_Minioport.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="txt_Minioport.Text" xml:space="preserve">
-    <value>8008</value>
-  </data>
-  <data name="&gt;&gt;txt_Minioport.Name" xml:space="preserve">
-    <value>txt_Minioport</value>
-  </data>
-  <data name="&gt;&gt;txt_Minioport.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;txt_Minioport.Parent" xml:space="preserve">
-    <value>tableLayoutPanel1</value>
-  </data>
-  <data name="&gt;&gt;txt_Minioport.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
   <data name="label21.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="label21.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 93</value>
-  </data>
-  <data name="label21.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 0, 2, 0</value>
+    <value>33, 20</value>
   </data>
   <data name="label21.Size" type="System.Drawing.Size, System.Drawing">
-    <value>196, 38</value>
+    <value>251, 45</value>
   </data>
   <data name="label21.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -283,19 +154,19 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;label21.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>0</value>
   </data>
   <data name="txt_MaxDefectCount.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left, Right</value>
   </data>
   <data name="txt_MaxDefectCount.Location" type="System.Drawing.Point, System.Drawing">
-    <value>226, 100</value>
+    <value>291, 29</value>
   </data>
   <data name="txt_MaxDefectCount.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 4, 3, 4</value>
+    <value>4, 5, 4, 5</value>
   </data>
   <data name="txt_MaxDefectCount.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 23</value>
+    <value>249, 27</value>
   </data>
   <data name="txt_MaxDefectCount.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -313,19 +184,16 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;txt_MaxDefectCount.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>1</value>
   </data>
   <data name="label22.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
   <data name="label22.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 131</value>
-  </data>
-  <data name="label22.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 0, 2, 0</value>
+    <value>33, 65</value>
   </data>
   <data name="label22.Size" type="System.Drawing.Size, System.Drawing">
-    <value>196, 38</value>
+    <value>251, 45</value>
   </data>
   <data name="label22.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -346,19 +214,19 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;label22.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>2</value>
   </data>
   <data name="txt_AgentShutdownTimeout.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left, Right</value>
   </data>
   <data name="txt_AgentShutdownTimeout.Location" type="System.Drawing.Point, System.Drawing">
-    <value>226, 138</value>
+    <value>291, 74</value>
   </data>
   <data name="txt_AgentShutdownTimeout.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 4, 3, 4</value>
+    <value>4, 5, 4, 5</value>
   </data>
   <data name="txt_AgentShutdownTimeout.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 23</value>
+    <value>249, 27</value>
   </data>
   <data name="txt_AgentShutdownTimeout.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
@@ -376,19 +244,16 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;txt_AgentShutdownTimeout.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>3</value>
   </data>
   <data name="label23.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
   <data name="label23.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 169</value>
-  </data>
-  <data name="label23.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 0, 2, 0</value>
+    <value>33, 110</value>
   </data>
   <data name="label23.Size" type="System.Drawing.Size, System.Drawing">
-    <value>196, 38</value>
+    <value>251, 45</value>
   </data>
   <data name="label23.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -409,19 +274,19 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;label23.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>4</value>
   </data>
   <data name="txt_GetInferResultTimeout.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left, Right</value>
   </data>
   <data name="txt_GetInferResultTimeout.Location" type="System.Drawing.Point, System.Drawing">
-    <value>226, 176</value>
+    <value>291, 119</value>
   </data>
   <data name="txt_GetInferResultTimeout.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 4, 3, 4</value>
+    <value>4, 5, 4, 5</value>
   </data>
   <data name="txt_GetInferResultTimeout.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 23</value>
+    <value>249, 27</value>
   </data>
   <data name="txt_GetInferResultTimeout.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -439,19 +304,16 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;txt_GetInferResultTimeout.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>5</value>
   </data>
   <data name="label24.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
   <data name="label24.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 207</value>
-  </data>
-  <data name="label24.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 0, 2, 0</value>
+    <value>33, 155</value>
   </data>
   <data name="label24.Size" type="System.Drawing.Size, System.Drawing">
-    <value>196, 38</value>
+    <value>251, 45</value>
   </data>
   <data name="label24.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -472,19 +334,19 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;label24.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>6</value>
   </data>
   <data name="txt_WelcomeTitle.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left, Right</value>
   </data>
   <data name="txt_WelcomeTitle.Location" type="System.Drawing.Point, System.Drawing">
-    <value>226, 214</value>
+    <value>291, 164</value>
   </data>
   <data name="txt_WelcomeTitle.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 4, 3, 4</value>
+    <value>4, 5, 4, 5</value>
   </data>
   <data name="txt_WelcomeTitle.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 23</value>
+    <value>249, 27</value>
   </data>
   <data name="txt_WelcomeTitle.TabIndex" type="System.Int32, mscorlib">
     <value>11</value>
@@ -502,19 +364,16 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;txt_WelcomeTitle.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>7</value>
   </data>
   <data name="label25.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
   <data name="label25.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 245</value>
-  </data>
-  <data name="label25.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 0, 2, 0</value>
+    <value>33, 200</value>
   </data>
   <data name="label25.Size" type="System.Drawing.Size, System.Drawing">
-    <value>196, 38</value>
+    <value>251, 45</value>
   </data>
   <data name="label25.TabIndex" type="System.Int32, mscorlib">
     <value>12</value>
@@ -535,19 +394,19 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;label25.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>8</value>
   </data>
   <data name="txt_WelcomeFontSize.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left, Right</value>
   </data>
   <data name="txt_WelcomeFontSize.Location" type="System.Drawing.Point, System.Drawing">
-    <value>226, 252</value>
+    <value>291, 209</value>
   </data>
   <data name="txt_WelcomeFontSize.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 4, 3, 4</value>
+    <value>4, 5, 4, 5</value>
   </data>
   <data name="txt_WelcomeFontSize.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 23</value>
+    <value>249, 27</value>
   </data>
   <data name="txt_WelcomeFontSize.TabIndex" type="System.Int32, mscorlib">
     <value>13</value>
@@ -565,7 +424,7 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;txt_WelcomeFontSize.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>9</value>
   </data>
   <data name="tableLayoutPanel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -574,16 +433,16 @@
     <value>0, 0</value>
   </data>
   <data name="tableLayoutPanel1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 3, 2, 3</value>
+    <value>3, 4, 3, 4</value>
   </data>
   <data name="tableLayoutPanel1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>23, 17, 23, 0</value>
+    <value>30, 20, 30, 0</value>
   </data>
   <data name="tableLayoutPanel1.RowCount" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>6</value>
   </data>
   <data name="tableLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>843, 566</value>
+    <value>1084, 666</value>
   </data>
   <data name="tableLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -601,22 +460,22 @@
     <value>0</value>
   </data>
   <data name="tableLayoutPanel1.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="label17" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="txt_endpoint_address" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="label18" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="txt_Minioport" Row="1" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="label21" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="txt_MaxDefectCount" Row="2" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="label22" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="txt_AgentShutdownTimeout" Row="3" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="label23" Row="4" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="txt_GetInferResultTimeout" Row="4" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="label24" Row="5" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="txt_WelcomeTitle" Row="5" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="label25" Row="6" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="txt_WelcomeFontSize" Row="6" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Absolute,200,Absolute,200,AutoSize,0" /&gt;&lt;Rows Styles="Absolute,38,Absolute,38,Absolute,38,Absolute,38,Absolute,38,Absolute,38,Absolute,38,Percent,100" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="label21" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="txt_MaxDefectCount" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="label22" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="txt_AgentShutdownTimeout" Row="1" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="label23" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="txt_GetInferResultTimeout" Row="2" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="label24" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="txt_WelcomeTitle" Row="3" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="label25" Row="4" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="txt_WelcomeFontSize" Row="4" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Absolute,257,Absolute,257,AutoSize,0" /&gt;&lt;Rows Styles="Absolute,45,Absolute,45,Absolute,45,Absolute,45,Absolute,45,Percent,100,Absolute,20,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>7, 17</value>
+    <value>9, 20</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>843, 566</value>
+    <value>1084, 666</value>
   </data>
   <data name="$this.Font" type="System.Drawing.Font, System.Drawing">
     <value>微软雅黑, 9pt</value>
   </data>
   <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 4, 3, 4</value>
+    <value>4, 5, 4, 5</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterScreen</value>

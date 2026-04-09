@@ -129,6 +129,7 @@ namespace DeepSightWorkLib
                 if (previousValue&& !value)
                 {
                     FlushPendingPanelSideRecords();
+                    BoardStatCache.Flush();
                 }
             }
         }
@@ -851,6 +852,7 @@ namespace DeepSightWorkLib
 
                 // 刷新待写入的数据库记录
                 FlushPendingPanelSideRecords();
+                BoardStatCache.Flush();
 
                 // 清空所有队列并释放资源
                 _queueManager?.ClearAllQueues();

@@ -117,21 +117,13 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="splitContainer1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="splitContainer1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 8</value>
-  </data>
-  <data name="splitContainer1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 4, 3, 4</value>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="tableLayoutPanel1.ColumnCount" type="System.Int32, mscorlib">
+    <value>2</value>
   </data>
   <data name="colConfigName.HeaderText" xml:space="preserve">
     <value>配置名称</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="colConfigName.MinimumWidth" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
@@ -192,9 +184,11 @@
   <data name="colProductCount.Width" type="System.Int32, mscorlib">
     <value>60</value>
   </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="dgvPipeline.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="dgvPipeline.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 53</value>
   </data>
@@ -205,7 +199,7 @@
     <value>51</value>
   </data>
   <data name="dgvPipeline.Size" type="System.Drawing.Size, System.Drawing">
-    <value>624, 627</value>
+    <value>604, 702</value>
   </data>
   <data name="dgvPipeline.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -217,7 +211,7 @@
     <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;dgvPipeline.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
+    <value>panelLeftContent</value>
   </data>
   <data name="&gt;&gt;dgvPipeline.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -232,7 +226,7 @@
     <value>微软雅黑, 9pt</value>
   </data>
   <data name="btn_GetAgain.Location" type="System.Drawing.Point, System.Drawing">
-    <value>514, 11</value>
+    <value>494, 11</value>
   </data>
   <data name="btn_GetAgain.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 4, 3, 4</value>
@@ -250,7 +244,7 @@
     <value>btn_GetAgain</value>
   </data>
   <data name="&gt;&gt;btn_GetAgain.Type" xml:space="preserve">
-    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.2.7, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;btn_GetAgain.Parent" xml:space="preserve">
     <value>panelLeftHeader</value>
@@ -268,7 +262,7 @@
     <value>微软雅黑, 9pt</value>
   </data>
   <data name="btnDeleteConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>394, 11</value>
+    <value>374, 11</value>
   </data>
   <data name="btnDeleteConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 4, 3, 4</value>
@@ -286,7 +280,7 @@
     <value>btnDeleteConfig</value>
   </data>
   <data name="&gt;&gt;btnDeleteConfig.Type" xml:space="preserve">
-    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.2.7, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;btnDeleteConfig.Parent" xml:space="preserve">
     <value>panelLeftHeader</value>
@@ -304,7 +298,7 @@
     <value>微软雅黑, 9pt</value>
   </data>
   <data name="btnAddConfig.Location" type="System.Drawing.Point, System.Drawing">
-    <value>275, 11</value>
+    <value>255, 11</value>
   </data>
   <data name="btnAddConfig.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 4, 3, 4</value>
@@ -322,7 +316,7 @@
     <value>btnAddConfig</value>
   </data>
   <data name="&gt;&gt;btnAddConfig.Type" xml:space="preserve">
-    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.2.7, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;btnAddConfig.Parent" xml:space="preserve">
     <value>panelLeftHeader</value>
@@ -370,7 +364,7 @@
     <value>3, 4, 3, 4</value>
   </data>
   <data name="panelLeftHeader.Size" type="System.Drawing.Size, System.Drawing">
-    <value>624, 49</value>
+    <value>604, 49</value>
   </data>
   <data name="panelLeftHeader.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -382,24 +376,39 @@
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelLeftHeader.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
+    <value>panelLeftContent</value>
   </data>
   <data name="&gt;&gt;panelLeftHeader.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="splitContainer1.Panel1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="panelLeftContent.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="panelLeftContent.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="panelLeftContent.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 3, 0</value>
+  </data>
+  <data name="panelLeftContent.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 4, 4, 4</value>
   </data>
-  <data name="&gt;&gt;splitContainer1.Panel1.Name" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
+  <data name="panelLeftContent.Size" type="System.Drawing.Size, System.Drawing">
+    <value>612, 759</value>
   </data>
-  <data name="&gt;&gt;splitContainer1.Panel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="panelLeftContent.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
   </data>
-  <data name="&gt;&gt;splitContainer1.Panel1.Parent" xml:space="preserve">
-    <value>splitContainer1</value>
+  <data name="&gt;&gt;panelLeftContent.Name" xml:space="preserve">
+    <value>panelLeftContent</value>
   </data>
-  <data name="&gt;&gt;splitContainer1.Panel1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;panelLeftContent.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelLeftContent.Parent" xml:space="preserve">
+    <value>tableLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;panelLeftContent.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="colIndex.HeaderText" xml:space="preserve">
@@ -451,7 +460,7 @@
     <value>51</value>
   </data>
   <data name="dgvProducts.Size" type="System.Drawing.Size, System.Drawing">
-    <value>797, 627</value>
+    <value>605, 702</value>
   </data>
   <data name="dgvProducts.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -463,7 +472,7 @@
     <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;dgvProducts.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
+    <value>panelRightContent</value>
   </data>
   <data name="&gt;&gt;dgvProducts.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -478,7 +487,7 @@
     <value>微软雅黑, 9pt</value>
   </data>
   <data name="btnAutoAdd.Location" type="System.Drawing.Point, System.Drawing">
-    <value>689, 8</value>
+    <value>497, 8</value>
   </data>
   <data name="btnAutoAdd.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 4, 3, 4</value>
@@ -496,7 +505,7 @@
     <value>btnAutoAdd</value>
   </data>
   <data name="&gt;&gt;btnAutoAdd.Type" xml:space="preserve">
-    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.2.7, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;btnAutoAdd.Parent" xml:space="preserve">
     <value>panelRightHeader</value>
@@ -514,7 +523,7 @@
     <value>微软雅黑, 9pt</value>
   </data>
   <data name="btnDeleteProduct.Location" type="System.Drawing.Point, System.Drawing">
-    <value>563, 8</value>
+    <value>371, 8</value>
   </data>
   <data name="btnDeleteProduct.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 4, 3, 4</value>
@@ -532,7 +541,7 @@
     <value>btnDeleteProduct</value>
   </data>
   <data name="&gt;&gt;btnDeleteProduct.Type" xml:space="preserve">
-    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.2.7, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;btnDeleteProduct.Parent" xml:space="preserve">
     <value>panelRightHeader</value>
@@ -550,7 +559,7 @@
     <value>微软雅黑, 9pt</value>
   </data>
   <data name="btnAddProduct.Location" type="System.Drawing.Point, System.Drawing">
-    <value>437, 8</value>
+    <value>245, 8</value>
   </data>
   <data name="btnAddProduct.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 4, 3, 4</value>
@@ -568,7 +577,7 @@
     <value>btnAddProduct</value>
   </data>
   <data name="&gt;&gt;btnAddProduct.Type" xml:space="preserve">
-    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.2.7, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;btnAddProduct.Parent" xml:space="preserve">
     <value>panelRightHeader</value>
@@ -586,13 +595,13 @@
     <value>8, 14</value>
   </data>
   <data name="lblRightTitle.Size" type="System.Drawing.Size, System.Drawing">
-    <value>233, 24</value>
+    <value>65, 20</value>
   </data>
   <data name="lblRightTitle.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
   <data name="lblRightTitle.Text" xml:space="preserve">
-    <value>料号列表 (请先选择左侧配置)</value>
+    <value>料号列表</value>
   </data>
   <data name="&gt;&gt;lblRightTitle.Name" xml:space="preserve">
     <value>lblRightTitle</value>
@@ -616,7 +625,7 @@
     <value>3, 4, 3, 4</value>
   </data>
   <data name="panelRightHeader.Size" type="System.Drawing.Size, System.Drawing">
-    <value>797, 49</value>
+    <value>605, 49</value>
   </data>
   <data name="panelRightHeader.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -628,49 +637,73 @@
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelRightHeader.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
+    <value>panelRightContent</value>
   </data>
   <data name="&gt;&gt;panelRightHeader.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="splitContainer1.Panel2.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="panelRightContent.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="panelRightContent.Location" type="System.Drawing.Point, System.Drawing">
+    <value>618, 0</value>
+  </data>
+  <data name="panelRightContent.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 0, 0, 0</value>
+  </data>
+  <data name="panelRightContent.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 4, 4, 4</value>
   </data>
-  <data name="&gt;&gt;splitContainer1.Panel2.Name" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
+  <data name="panelRightContent.Size" type="System.Drawing.Size, System.Drawing">
+    <value>613, 759</value>
   </data>
-  <data name="&gt;&gt;splitContainer1.Panel2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Panel2.Parent" xml:space="preserve">
-    <value>splitContainer1</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Panel2.ZOrder" xml:space="preserve">
+  <data name="panelRightContent.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="splitContainer1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>1443, 684</value>
+  <data name="&gt;&gt;panelRightContent.Name" xml:space="preserve">
+    <value>panelRightContent</value>
   </data>
-  <data name="splitContainer1.SplitterDistance" type="System.Int32, mscorlib">
-    <value>632</value>
+  <data name="&gt;&gt;panelRightContent.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="splitContainer1.SplitterWidth" type="System.Int32, mscorlib">
-    <value>6</value>
+  <data name="&gt;&gt;panelRightContent.Parent" xml:space="preserve">
+    <value>tableLayoutPanel1</value>
   </data>
-  <data name="splitContainer1.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;panelRightContent.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="tableLayoutPanel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="tableLayoutPanel1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 8</value>
+  </data>
+  <data name="tableLayoutPanel1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 0, 0</value>
+  </data>
+  <data name="tableLayoutPanel1.RowCount" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="tableLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>1231, 759</value>
+  </data>
+  <data name="tableLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="&gt;&gt;splitContainer1.Name" xml:space="preserve">
-    <value>splitContainer1</value>
+  <data name="&gt;&gt;tableLayoutPanel1.Name" xml:space="preserve">
+    <value>tableLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;splitContainer1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;tableLayoutPanel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TableLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;splitContainer1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tableLayoutPanel1.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
-  <data name="&gt;&gt;splitContainer1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;tableLayoutPanel1.ZOrder" xml:space="preserve">
     <value>0</value>
+  </data>
+  <data name="tableLayoutPanel1.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="panelLeftContent" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="panelRightContent" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,50,Percent,50" /&gt;&lt;Rows Styles="Percent,100" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <data name="panel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -685,7 +718,7 @@
     <value>8, 8, 8, 8</value>
   </data>
   <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>1459, 700</value>
+    <value>1247, 775</value>
   </data>
   <data name="panel1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -709,7 +742,7 @@
     <value>9, 20</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>1459, 700</value>
+    <value>1247, 775</value>
   </data>
   <data name="$this.Font" type="System.Drawing.Font, System.Drawing">
     <value>微软雅黑, 9pt</value>
