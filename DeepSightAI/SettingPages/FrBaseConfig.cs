@@ -51,9 +51,9 @@ namespace DeepSightAI.SettingPages
                 {
                     Machine.sysConfig.AgentShutdownTimeout = agentShutdownTimeout;
                 }
-                if (int.TryParse(this.txt_GetInferResultTimeout.Text, out int getInferResultTimeout))
+                if (int.TryParse(this.txt_GetInferResultTimeout.Text, out int MaxWaitTime))
                 {
-                    Machine.aviconfig.GetInferResultTimeout = getInferResultTimeout;
+                    Machine.sysConfig.MaxWaitTime = MaxWaitTime;
                 }
                 Machine.sysConfig.WelcomeTitle = this.txt_WelcomeTitle.Text;
                 if (float.TryParse(this.txt_WelcomeFontSize.Text, out float welcomeFontSize))
@@ -70,7 +70,7 @@ namespace DeepSightAI.SettingPages
         {
             this.txt_MaxDefectCount.Text = Machine.sysConfig.MaxDefectCount.ToString();
             this.txt_AgentShutdownTimeout.Text = Machine.sysConfig.AgentShutdownTimeout.ToString();
-            this.txt_GetInferResultTimeout.Text = Machine.aviconfig.GetInferResultTimeout.ToString();
+            this.txt_GetInferResultTimeout.Text = Machine.sysConfig.MaxWaitTime.ToString();
             this.txt_WelcomeTitle.Text = Machine.sysConfig.WelcomeTitle ?? "Deepsight AI";
             this.txt_WelcomeFontSize.Text = Machine.sysConfig.WelcomeFontSize.ToString();
         }

@@ -97,7 +97,7 @@ namespace DeepSightModel.Configuration
         /// <summary>
         /// 最大等待时间（秒）
         /// </summary>
-        public const int MaxWaitTime = 5;
+        public const int MaxWaitTime = 10;
 
         #endregion
 

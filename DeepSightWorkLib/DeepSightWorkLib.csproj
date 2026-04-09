@@ -184,16 +184,20 @@
     <Compile Include="Interfaces\IPanelDataConverter.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\DeepSightCommunication\DeepSightCommunication.csproj">
       <Project>{ead54de2-ad92-4cfa-8f72-9f4f0fd9ddd2}</Project>
       <Name>DeepSightCommunication</Name>
     </ProjectReference>
     <ProjectReference Include="..\DeepSightDB\DeepSightDB.csproj">
-      <Project>{7E93DCAE-D40B-4019-A1E9-8F710072B16A}</Project>
+      <Project>{7e93dcae-d40b-4019-a1e9-8f710072b16a}</Project>
       <Name>DeepSightDB</Name>
     </ProjectReference>
     <ProjectReference Include="..\DeepSightDisplay\DeepSightDisplay.csproj">
-      <Project>{EE46E3D1-CB3C-4D66-B6EC-317C8FFEF9D6}</Project>
+      <Project>{ee46e3d1-cb3c-4d66-b6ec-317c8ffef9d6}</Project>
       <Name>DeepSightDisplay</Name>
     </ProjectReference>
     <ProjectReference Include="..\DeepSightEvent\DeepSightEvent.csproj">
@@ -208,10 +212,6 @@
       <Project>{57ca0c29-06a8-4acc-b6eb-7bf1bf6cf1b3}</Project>
       <Name>DeepSightTool</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

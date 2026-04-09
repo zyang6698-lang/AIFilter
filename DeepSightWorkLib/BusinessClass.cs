@@ -356,7 +356,7 @@ namespace DeepSightWorkLib
 
                     if (_defectProcessor.DefectMethod(info, SysConfig.MaxDefectCount,
                         out List<string> msg,
-                        AviConfig.GetInferResultTimeout))
+                        SysConfig.MaxWaitTime))
                     {
                         TaskStatusSender.SendAICompleted(info.SN, info.Side);
                         if (!info.IsValidationTest)

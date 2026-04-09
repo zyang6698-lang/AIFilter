@@ -237,7 +237,9 @@ namespace DeepSightModel
         [JsonProperty("active_or_passive")]
         public string ActiveOrPassive { get; set; }
     }
-
+    /// <summary>
+    /// 属于Agent的类，只用得到WatchPaths，其余用不到
+    /// </summary>
     public class AVIConfig
     {
         [JsonProperty("watch_path")]
