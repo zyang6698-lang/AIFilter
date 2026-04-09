@@ -86,6 +86,11 @@ namespace DeepSightModel
 
         #endregion
 
+        /// <summary>
+        /// 最大等待时间（秒）
+        /// </summary>
+        public int MaxWaitTime { get; set; } = DefaultValues.MaxWaitTime;
+
         public ConfigurationClass()
         {
 
@@ -237,8 +242,6 @@ namespace DeepSightModel
     {
         [JsonProperty("watch_path")]
         public List<WatchPathConfig> WatchPaths { get; set; } = new List<WatchPathConfig>();
-        [JsonProperty("max_wait_time")]
-        public int MaxWaitTime { get; set; }
         [JsonProperty("wait_flag")]
         public string WaitFlag { get; set; }
         [JsonProperty("finish_flag")]
@@ -301,7 +304,6 @@ namespace DeepSightModel
                             IsEnable = false,
                         }
                     },
-                    MaxWaitTime = DefaultValues.MaxWaitTime,
                     WaitFlag = DefaultValues.WaitFlag,
                     Finishflag = DefaultValues.FinishFlag,
                     AMinioConfig = DefaultValues.MinioConfig,
