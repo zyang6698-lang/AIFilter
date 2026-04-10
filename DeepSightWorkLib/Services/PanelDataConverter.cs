@@ -258,8 +258,6 @@ namespace DeepSightWorkLib.Services
             InferImageGroup group
             )
         {
-
-
             AddGroupInfo(defect.DefectVrsImages, "defect", context.Head, group);
             AddGroupInfo(defect.DefectVrsOkImages, "template", context.Head, group);
             AddGroupInfo(defect.DefectVrsGerberImages, "gerber", context.Head, group);

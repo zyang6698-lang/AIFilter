@@ -169,6 +169,7 @@
     <Compile Include="Interfaces\IDefectService.cs" />
     <Compile Include="ImageHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\AviProcessingContext.cs" />
     <Compile Include="Services\AviReaderService.cs" />
     <Compile Include="Services\DefectProcessor.cs" />
     <Compile Include="Services\ImageLoaderService.cs" />

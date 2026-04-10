@@ -315,22 +315,6 @@ namespace DeepSightWorkLib.Services
                     defects.Add(defect);
                 }
             }
-            else
-            {
-                // 兼容旧数据：如果 AllDefectImageKeys 为空，回退到 ImageKeys（不含直报）
-                if (vBModel.ImageKeys != null)
-                {
-                    for (int i = 0; i < vBModel.ImageKeys.Count; i++)
-                    {
-                        defects.Add(new DetectInfo
-                        {
-                            ImagePath = vBModel.ImageKeys.ElementAtOrDefault(i) ?? "",
-                            GerberImagePath = vBModel.ImageKeys_Gerber?.ElementAtOrDefault(i) ?? "",
-                            TempImagePath = vBModel.ImageKeys_Temp?.ElementAtOrDefault(i) ?? ""
-                        });
-                    }
-                }
-            }
 
             return defects;
         }

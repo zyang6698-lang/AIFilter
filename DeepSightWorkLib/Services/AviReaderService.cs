@@ -24,16 +24,14 @@ namespace DeepSightWorkLib.Services
         private const string FixedTimeFormat = "yyyyMMddHHmmssfff";
         private readonly ConcurrentDictionary<string, DateTime> _processingSnSet;
         // delegate to call ReadJsonByMinio implemented elsewhere (BusinessClass)
-        // 参数：minioIp, minioPort, key, head, sn, side, path, writeBackDbName, dbUrl, vrsWriteBackDbName
-        private readonly Action<string, string, string, string, string, string, string, string, string, string> _readJsonByMinio;
+        private readonly Action<AviProcessingContext> _readJsonByMinio;
 
         /// <summary>
         /// 每个数据库的 fetchTime（key 为 DbName，value 为上次获取的时间）
         /// </summary>
         private readonly ConcurrentDictionary<string, DateTime> _fetchTimeByDb = new ConcurrentDictionary<string, DateTime>();
 
-        // Updated constructor to accept delegate for ReadJsonByMinio (with source DB info)
-        public AviReaderService(HttpClass httpDb, ConcurrentDictionary<string, DateTime> processingSnSet, Action<string, string, string, string, string, string, string, string, string, string> readJsonByMinio)
+        public AviReaderService(HttpClass httpDb, ConcurrentDictionary<string, DateTime> processingSnSet, Action<AviProcessingContext> readJsonByMinio)
         {
             _httpDb = httpDb ?? throw new ArgumentNullException(nameof(httpDb));
             _processingSnSet = processingSnSet ?? throw new ArgumentNullException(nameof(processingSnSet));
@@ -351,7 +349,20 @@ namespace DeepSightWorkLib.Services
                     debugInfo.SourceDbName = config.DbName;
                     debugInfo.SourceDbUrl = config.Url;
 
-                    _readJsonByMinio(minioIp, minioPort, dataItem.Key, result, serialNumber, side, path, writeBackDbName, dbUrl, vrsWriteBackDbName);
+                    var processingContext = new AviProcessingContext
+                    {
+                        MinioIp = minioIp,
+                        MinioPort = minioPort,
+                        Key = dataItem.Key,
+                        Head = result,
+                        SerialNumber = serialNumber,
+                        Side = side,
+                        MinioPath = path,
+                        WriteBackDbName = writeBackDbName,
+                        DbUrl = dbUrl,
+                        VrsWriteBackDbName = vrsWriteBackDbName
+                    };
+                    _readJsonByMinio(processingContext);
                     LogTextHelper.Info($"SN:{serialNumber} Side:{side} 通过Minio读取Json完成, 回写DB:{writeBackDbName}, VRS回写DB:{vrsWriteBackDbName}, URL:{dbUrl}");
                 }
                 catch (Exception ex)

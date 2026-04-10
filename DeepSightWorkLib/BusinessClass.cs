@@ -497,11 +497,20 @@ namespace DeepSightWorkLib
         /// <summary>
         /// 通过Minio读取Json文件
         /// </summary>
-        /// <param name="writeBackDbName">回写目标数据库名称</param>
-        /// <param name="dbUrl">源数据库服务器 URL</param>
-        /// <param name="vrsWriteBackDbName">VRS回写目标数据库名称</param>
-        public void ReadJsonByMinio(string ip, string port, string key, string head, string sn, string side, string path, string writeBackDbName, string dbUrl, string vrsWriteBackDbName)
+        /// <param name="ctx">AVI 处理流程上下文，包含 MinIO 连接信息、SN、面别、回写数据库等参数</param>
+        public void ReadJsonByMinio(AviProcessingContext ctx)
         {
+            var ip = ctx.MinioIp;
+            var port = ctx.MinioPort;
+            var key = ctx.Key;
+            var head = ctx.Head;
+            var sn = ctx.SerialNumber;
+            var side = ctx.Side;
+            var path = ctx.MinioPath;
+            var writeBackDbName = ctx.WriteBackDbName;
+            var dbUrl = ctx.DbUrl;
+            var vrsWriteBackDbName = ctx.VrsWriteBackDbName;
+
             try
             {
                 TaskStatusSender.SendQueued(sn, side);
@@ -547,10 +556,10 @@ namespace DeepSightWorkLib
                 };
 
                 // 解耦：单次遍历获取全量图片路径 + 直报标记，再派生出加载用过滤列表
-                var allKeysResult = _imageLoaderService.GetAllImageKeysWithDirectReportFlags(rootobj);
-                var filteredKeys = ImageLoaderService.DeriveFilteredKeys(
-                    allKeysResult.AllImageKeys, allKeysResult.AllGerberKeys,
-                    allKeysResult.AllTempKeys, allKeysResult.DirectReportFlags);
+                var (AllImageKeys, AllGerberKeys, AllTempKeys, DirectReportFlags, AllDefectCodes) = _imageLoaderService.GetAllImageKeysWithDirectReportFlags(rootobj);
+                var (ImageKeys, GerberKeys, TempKeys) = ImageLoaderService.DeriveFilteredKeys(
+                    AllImageKeys, AllGerberKeys,
+                    AllTempKeys, DirectReportFlags);
 
                 //考虑用Model方式
                 VBModel model = new VBModel
@@ -563,14 +572,14 @@ namespace DeepSightWorkLib
                     VbInfo = convertResult.VBInfo,
                     minioPath = head,
                     panelInfo = obj,
-                    ImageKeys = filteredKeys.ImageKeys,
-                    ImageKeys_Gerber = filteredKeys.GerberKeys,
-                    ImageKeys_Temp = filteredKeys.TempKeys,
-                    AllDefectImageKeys = allKeysResult.AllImageKeys,
-                    AllDefectGerberKeys = allKeysResult.AllGerberKeys,
-                    AllDefectTempKeys = allKeysResult.AllTempKeys,
-                    DirectReportFlags = allKeysResult.DirectReportFlags,
-                    AllDefectCodes = allKeysResult.AllDefectCodes,
+                    ImageKeys = ImageKeys,
+                    ImageKeys_Gerber = GerberKeys,
+                    ImageKeys_Temp = TempKeys,
+                    AllDefectImageKeys = AllImageKeys,
+                    AllDefectGerberKeys = AllGerberKeys,
+                    AllDefectTempKeys = AllTempKeys,
+                    DirectReportFlags = DirectReportFlags,
+                    AllDefectCodes = AllDefectCodes,
                     SourceDbUrl = dbUrl,
                     SourceWriteBackDbName = writeBackDbName,
                     SourceVRSWriteBackDbName = vrsWriteBackDbName,
@@ -586,7 +595,7 @@ namespace DeepSightWorkLib
                     debugInfo.VbInferenceJson = JsonConvert.SerializeObject(convertResult.VBInfo, Formatting.Indented);
                     debugInfo.DefectCount = convertResult.DefectIndexList?.Count ?? 0;
                     debugInfo.PcsCount = convertResult.PcsIndexList?.Count ?? 0;
-                    debugInfo.ImageCount = filteredKeys.ImageKeys?.Count ?? 0;
+                    debugInfo.ImageCount = ImageKeys?.Count ?? 0;
                     debugInfo.MinioPath = head;
                     debugInfo.ProductSerial = obj.ProductSerial;
                     debugInfo.LotNumber = obj.LotId ?? obj.LotBatch;
@@ -630,7 +639,7 @@ namespace DeepSightWorkLib
                 };
                 _queueManager.ImageLoadQueue.Enqueue(loadModel);
 
-                LogTextHelper.Info($"{sn} {side} ReadJsonByMinio完成,入队列成功,待加载图片数量:{filteredKeys.ImageKeys.Count}");
+                LogTextHelper.Info($"{sn} {side} ReadJsonByMinio完成,入队列成功,待加载图片数量:{ImageKeys.Count}");
             }
             catch (Exception ex)
             {
