@@ -117,6 +117,33 @@ namespace DeepSightModel
         public int NewAIStatus { get; set; }
         public bool IsConsistent => OriginalAIStatus == NewAIStatus;
         public string ImagePath { get; set; }
+
+        // ---- 复判详情 ----
+
+        /// <summary>
+        /// 缺陷名称（算法识别）
+        /// </summary>
+        public string DefectName { get; set; }
+
+        /// <summary>
+        /// 缺陷代码
+        /// </summary>
+        public string DefectCode { get; set; }
+
+        /// <summary>
+        /// 缺陷面积
+        /// </summary>
+        public string DefectArea { get; set; }
+
+        /// <summary>
+        /// 判别依据 DrawInfo JSON（可在详情弹窗中展示）
+        /// </summary>
+        public string DrawInfo { get; set; }
+
+        /// <summary>
+        /// 复判详情摘要文本（从 DrawInfo 中提取的可读条件信息）
+        /// </summary>
+        public string InferDetailText { get; set; }
     }
 }
 

@@ -10,7 +10,7 @@
 ; ============================================================================
 
 #define MyAppName "DeepSightAI"
-#define MyAppVersion "1.1.3.1"
+#define MyAppVersion "1.1.3.2"
 #define MyAppPublisher "上海深视信息有限公司科技"
 #define MyAppExeName "DeepSightAI.exe"
 #define MyAppCopyright "Copyright © 2025 上海深视信息有限公司科技"
@@ -24,7 +24,7 @@ AppVersion={#MyAppVersion}
 AppVerName={#MyAppName} {#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 AppCopyright={#MyAppCopyright}
-DefaultDirName={autopf}\{#MyAppName}
+DefaultDirName=D:\{#MyAppName}
 DefaultGroupName={#MyAppName}
 ; 不允许用户更改开始菜单名称
 DisableProgramGroupPage=yes
@@ -203,6 +203,17 @@ begin
            '下载地址: https://dotnet.microsoft.com/download/dotnet-framework/net472',
            mbCriticalError, MB_OK);
     Result := False;
+  end;
+end;
+
+// 动态设置默认安装目录：优先 D:\DeepsightAI，D盘不存在则回退到 C:\DeepsightAI
+function NextButtonClick(CurPageID: Integer): Boolean;
+begin
+  Result := True;
+  if CurPageID = wpWelcome then
+  begin
+    if not DirExists('D:\') then
+      WizardForm.DirEdit.Text := 'C:\{#MyAppName}';
   end;
 end;
 

@@ -2,11 +2,13 @@ using DeepSightDB;
 using DeepSightModel;
 using DeepSightModel.Configuration;
 using DeepSightTool;
+using Newtonsoft.Json;
 using OpenCvSharp;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -577,19 +579,39 @@ namespace DeepSightWorkLib.Services
                 var vbModel = _vbModelBuilder.Build(context);
                 vbModel.OriginalAIResults = new Dictionary<int, int> { { 0, detectInfo.AIStatus } };
 
-                // 通过Minio加载图片
+                // 通过Minio加载缺陷图
                 var mat = _imageLoaderService.LoadMinioImage(detectInfo.ImagePath);
                 if (mat == null || mat.Empty())
                 {
                     return new SingleImageTestResult
                     {
                         Success = false,
-                        ErrorMessage = "加载图片失败",
+                        ErrorMessage = "加载缺陷图片失败",
                         ImagePath = detectInfo.ImagePath
                     };
                 }
 
                 vbModel.Mats = new List<Mat> { mat };
+
+                // 通过Minio加载模板图
+                if (!string.IsNullOrEmpty(detectInfo.TempImagePath))
+                {
+                    var tempMat = _imageLoaderService.LoadMinioImage(detectInfo.TempImagePath);
+                    if (tempMat == null || tempMat.Empty())
+                    {
+                        LogTextHelper.Warn($"单图测试加载模板图失败: {detectInfo.TempImagePath}，将使用空模板图列表");
+                        vbModel.Mats_Temp = new List<Mat>();
+                    }
+                    else
+                    {
+                        vbModel.Mats_Temp = new List<Mat> { tempMat };
+                    }
+                }
+                else
+                {
+                    LogTextHelper.Warn($"单图测试模板图路径为空");
+                    vbModel.Mats_Temp = new List<Mat>();
+                }
 
                 _queueManager.AviQueue.Enqueue(vbModel);
                 LogTextHelper.Info($"单图测试入队: {testKey}, 图片: {detectInfo.ImagePath}");
@@ -762,7 +784,7 @@ namespace DeepSightWorkLib.Services
         /// <summary>
         /// 处理单图测试的推理结果（供 PostProcessService 调用）
         /// </summary>
-        public void ProcessSingleImageTestResult(VBModel vbModel, List<string> inferResults)
+        public void ProcessSingleImageTestResult(VBModel vbModel, List<string> inferResults, string rawJsonResult = null)
         {
             if (!vbModel.IsSingleImageTest || string.IsNullOrEmpty(vbModel.TestTaskId))
                 return;
@@ -794,8 +816,11 @@ namespace DeepSightWorkLib.Services
                     ImagePath = vbModel.ImageKeys?.FirstOrDefault()
                 };
 
+                // 从原始 JSON 中提取复判详情
+                ExtractInferDetail(result, rawJsonResult);
+
                 tcs.TrySetResult(result);
-                LogTextHelper.Info($"单图测试完成: {testKey}, 原状态={originalStatus}, 新状态={newStatus}, 一致={result.IsConsistent}");
+                LogTextHelper.Info($"单图测试完成: {testKey}, 原状态={originalStatus}, 新状态={newStatus}, 一致={result.IsConsistent}, 缺陷名={result.DefectName ?? "-"}");
             }
             catch (Exception ex)
             {
@@ -806,6 +831,94 @@ namespace DeepSightWorkLib.Services
                     ErrorMessage = ex.Message
                 });
             }
+        }
+
+        /// <summary>
+        /// 从原始推理 JSON 中提取复判详情并填充到 SingleImageTestResult
+        /// </summary>
+        private static void ExtractInferDetail(SingleImageTestResult result, string rawJsonResult)
+        {
+            if (string.IsNullOrEmpty(rawJsonResult))
+                return;
+
+            try
+            {
+                var obj = JsonConvert.DeserializeObject<RootVBOutInfo>(rawJsonResult);
+                if (obj?.Code?.ToString() != "200" || obj.Data?.InferWholeData?.InferResults == null)
+                    return;
+
+                var inferResults = obj.Data.InferWholeData.InferResults;
+                if (inferResults.Count == 0)
+                    return;
+
+                var first = inferResults[0];
+                result.DefectName = first.Defect_name;
+                result.DefectCode = first.Defect_code;
+
+                if (first.InferDetails != null)
+                {
+                    result.DefectArea = first.InferDetails.DefectArea;
+
+                    // 序列化 DrawInfo 以便详情弹窗使用
+                    if (first.InferDetails.DrawInfoList != null)
+                    {
+                        result.DrawInfo = JsonConvert.SerializeObject(first.InferDetails.DrawInfoList);
+                    }
+
+                    // 构建可读的复判详情摘要
+                    result.InferDetailText = BuildInferDetailText(first);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Warn($"提取单图测试复判详情失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 从 InferResult 构建可读的复判详情文本
+        /// </summary>
+        private static string BuildInferDetailText(InferResult inferResult)
+        {
+            var sb = new StringBuilder();
+
+            if (!string.IsNullOrEmpty(inferResult.Defect_name))
+                sb.AppendLine($"缺陷名称: {inferResult.Defect_name}");
+
+            if (inferResult.InferDetails != null)
+            {
+                if (!string.IsNullOrEmpty(inferResult.InferDetails.DefectArea))
+                    sb.AppendLine($"缺陷面积: {inferResult.InferDetails.DefectArea}");
+
+                // 从 DrawInfo 提取判别条件
+                var drawInfoList = inferResult.InferDetails.DrawInfoList;
+                if (drawInfoList != null)
+                {
+                    foreach (var drawInfo in drawInfoList)
+                    {
+                        if (!string.IsNullOrEmpty(drawInfo.InspectName))
+                            sb.AppendLine($"检测项: {drawInfo.InspectName} ({drawInfo.InspectLabel})");
+
+                        if (drawInfo.Conditions != null)
+                        {
+                            foreach (var cond in drawInfo.Conditions)
+                            {
+                                string thresholdText = "";
+                                if (cond.Threshold != null)
+                                {
+                                    var parts = new List<string>();
+                                    if (cond.Threshold.Min.HasValue) parts.Add($"min={cond.Threshold.Min.Value}");
+                                    if (cond.Threshold.Max.HasValue) parts.Add($"max={cond.Threshold.Max.Value}");
+                                    thresholdText = string.Join(", ", parts);
+                                }
+                                sb.AppendLine($"  {cond.Name}: {cond.Value} {cond.Unit} [{thresholdText}]");
+                            }
+                        }
+                    }
+                }
+            }
+
+            return sb.Length > 0 ? sb.ToString().TrimEnd() : null;
         }
 
         #endregion

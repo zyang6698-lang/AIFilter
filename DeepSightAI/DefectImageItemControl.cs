@@ -96,7 +96,6 @@ namespace DeepSightAI
             pictureBox_TemplateImage.DoubleClick += PictureBox_DoubleClick;
 
             // 运行按钮
-            button_Run.Click += Button_Run_Click;
             button_Run.PreviewKeyDown += (s, e) => e.IsInputKey = false;
             _toolTip.SetToolTip(button_Run, "单图测试");
         }

@@ -592,11 +592,25 @@ namespace DeepSightAI
                     string newStatusText = GetAIStatusText(result.NewAIStatus);
                     string consistentText = result.IsConsistent ? "✓ 一致" : "✗ 不一致";
 
-                    MessageBox.Show(
-                        $"单图测试完成！\n\n" +
+                    string message = $"单图测试完成！\n\n" +
                         $"原始AI结果: {originalStatusText}\n" +
                         $"新AI结果: {newStatusText}\n" +
-                        $"比对结果: {consistentText}",
+                        $"比对结果: {consistentText}";
+
+                    // 追加复判详情
+                    if (!string.IsNullOrEmpty(result.InferDetailText))
+                    {
+                        message += $"\n\n--- 复判详情 ---\n{result.InferDetailText}";
+                    }
+                    else if (!string.IsNullOrEmpty(result.DefectName))
+                    {
+                        message += $"\n\n缺陷名称: {result.DefectName}";
+                        if (!string.IsNullOrEmpty(result.DefectArea))
+                            message += $"\n缺陷面积: {result.DefectArea}";
+                    }
+
+                    MessageBox.Show(
+                        message,
                         "单图测试结果",
                         MessageBoxButtons.OK,
                         result.IsConsistent ? MessageBoxIcon.Information : MessageBoxIcon.Warning);

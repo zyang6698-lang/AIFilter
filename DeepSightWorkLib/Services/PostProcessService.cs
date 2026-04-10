@@ -355,7 +355,7 @@ namespace DeepSightWorkLib.Services
                 // 根据任务类型调用不同的处理方法
                 if (vBModel.IsSingleImageTest)
                 {
-                    _validationTestService.ProcessSingleImageTestResult(vBModel, inferResults);
+                    _validationTestService.ProcessSingleImageTestResult(vBModel, inferResults, rawJsonResult);
                     LogTextHelper.Info($"单图测试结果处理完成: {vBModel.SN}");
                 }
                 else if (vBModel.IsSecondaryInference)

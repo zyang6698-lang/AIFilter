@@ -466,6 +466,9 @@
     <EmbeddedResource Include="ConsistencyTestDashboard.resx">
       <DependentUpon>ConsistencyTestDashboard.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="DefectImageItemControl.resx">
+      <DependentUpon>DefectImageItemControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FrSearch.resx">
       <DependentUpon>FrSearch.cs</DependentUpon>
     </EmbeddedResource>

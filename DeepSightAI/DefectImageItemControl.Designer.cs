@@ -51,9 +51,9 @@ namespace DeepSightAI
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox_TemplateImage)).BeginInit();
             this.panel_Status.SuspendLayout();
             this.SuspendLayout();
-            //
+            // 
             // panel_Header
-            //
+            // 
             this.panel_Header.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.panel_Header.Controls.Add(this.label_SN);
             this.panel_Header.Controls.Add(this.button_Run);
@@ -62,9 +62,9 @@ namespace DeepSightAI
             this.panel_Header.Name = "panel_Header";
             this.panel_Header.Size = new System.Drawing.Size(300, 28);
             this.panel_Header.TabIndex = 0;
-            //
+            // 
             // label_SN
-            //
+            // 
             this.label_SN.Dock = System.Windows.Forms.DockStyle.Fill;
             this.label_SN.Font = new System.Drawing.Font("微软雅黑", 8.5F);
             this.label_SN.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
@@ -73,11 +73,10 @@ namespace DeepSightAI
             this.label_SN.Padding = new System.Windows.Forms.Padding(5, 0, 0, 0);
             this.label_SN.Size = new System.Drawing.Size(272, 28);
             this.label_SN.TabIndex = 0;
-            this.label_SN.Text = "";
             this.label_SN.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            //
+            // 
             // button_Run
-            //
+            // 
             this.button_Run.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.button_Run.Cursor = System.Windows.Forms.Cursors.Hand;
             this.button_Run.Dock = System.Windows.Forms.DockStyle.Right;
@@ -92,9 +91,10 @@ namespace DeepSightAI
             this.button_Run.TabStop = false;
             this.button_Run.Text = "▶";
             this.button_Run.UseVisualStyleBackColor = false;
-            //
+            this.button_Run.Click += new System.EventHandler(this.Button_Run_Click);
+            // 
             // tableImages
-            //
+            // 
             this.tableImages.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.tableImages.ColumnCount = 1;
             this.tableImages.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
@@ -109,9 +109,9 @@ namespace DeepSightAI
             this.tableImages.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableImages.Size = new System.Drawing.Size(300, 400);
             this.tableImages.TabIndex = 4;
-            //
+            // 
             // pictureBox_OriginalImage
-            //
+            // 
             this.pictureBox_OriginalImage.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.pictureBox_OriginalImage.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pictureBox_OriginalImage.Location = new System.Drawing.Point(0, 0);
@@ -121,21 +121,21 @@ namespace DeepSightAI
             this.pictureBox_OriginalImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox_OriginalImage.TabIndex = 1;
             this.pictureBox_OriginalImage.TabStop = false;
-            //
+            // 
             // pictureBox_TemplateImage
-            //
+            // 
             this.pictureBox_TemplateImage.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.pictureBox_TemplateImage.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pictureBox_TemplateImage.Location = new System.Drawing.Point(0, 200);
+            this.pictureBox_TemplateImage.Location = new System.Drawing.Point(0, 201);
             this.pictureBox_TemplateImage.Margin = new System.Windows.Forms.Padding(0, 1, 0, 0);
             this.pictureBox_TemplateImage.Name = "pictureBox_TemplateImage";
             this.pictureBox_TemplateImage.Size = new System.Drawing.Size(300, 199);
             this.pictureBox_TemplateImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox_TemplateImage.TabIndex = 2;
             this.pictureBox_TemplateImage.TabStop = false;
-            //
+            // 
             // panel_Status
-            //
+            // 
             this.panel_Status.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.panel_Status.Controls.Add(this.label_Status);
             this.panel_Status.Dock = System.Windows.Forms.DockStyle.Bottom;
@@ -143,9 +143,9 @@ namespace DeepSightAI
             this.panel_Status.Name = "panel_Status";
             this.panel_Status.Size = new System.Drawing.Size(300, 40);
             this.panel_Status.TabIndex = 3;
-            //
+            // 
             // label_Status
-            //
+            // 
             this.label_Status.Dock = System.Windows.Forms.DockStyle.Fill;
             this.label_Status.Font = new System.Drawing.Font("微软雅黑", 9F);
             this.label_Status.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
@@ -154,19 +154,17 @@ namespace DeepSightAI
             this.label_Status.Padding = new System.Windows.Forms.Padding(5, 0, 5, 0);
             this.label_Status.Size = new System.Drawing.Size(300, 40);
             this.label_Status.TabIndex = 0;
-            this.label_Status.Text = "";
             this.label_Status.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            //
+            // 
             // DefectImageItemControl
-            //
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.Controls.Add(this.tableImages);
             this.Controls.Add(this.panel_Status);
             this.Controls.Add(this.panel_Header);
             this.Font = new System.Drawing.Font("微软雅黑", 9F);
-            this.Margin = new System.Windows.Forms.Padding(3);
             this.Name = "DefectImageItemControl";
             this.Size = new System.Drawing.Size(300, 468);
             this.panel_Header.ResumeLayout(false);
@@ -175,6 +173,7 @@ namespace DeepSightAI
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox_TemplateImage)).EndInit();
             this.panel_Status.ResumeLayout(false);
             this.ResumeLayout(false);
+
         }
 
         #endregion
