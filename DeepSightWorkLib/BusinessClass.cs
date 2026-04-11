@@ -9,12 +9,13 @@ using DeepSightModel.Configuration;
 using DeepSightTool;
 using DeepSightWorkLib.Interfaces;
 using DeepSightWorkLib.Services;
+using DeepSightWorkLib.Services.Pipeline;
+using DeepSightWorkLib.Services.Pipeline.Stages;
 using Newtonsoft.Json;
 using OpenCvSharp;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -86,9 +87,9 @@ namespace DeepSightWorkLib
         private volatile bool _isStart = false;
 
         /// <summary>
-        /// AI 检测耗时计时器
+        /// TPL Dataflow 处理 Pipeline
         /// </summary>
-        private Stopwatch AIStopwatch;
+        private ProcessingPipeline _pipeline;
 
         #endregion
 
@@ -218,14 +219,14 @@ namespace DeepSightWorkLib
             var defectInstance = defectService as DefectClass ?? new DefectClass();
 
             // 初始化拆分后的服务（使用 QueueManager 中的队列）
-            _aviReaderService = new AviReaderService(httpInstance, _queueManager.ProcessingSnSet, ReadJsonByMinio);
+            _aviReaderService = new AviReaderService(httpInstance, _queueManager.ProcessingSnSet, PostToPipeline);
             _imageLoaderService = new ImageLoaderService(minioInstance);
             _defectProcessor = new DefectProcessor(defectInstance, _queueManager.AIResultQueue, _queueManager.PostProcessQueue);
             _postProcessService = new PostProcessService( SysConfig, SavePanelSideToDatabase);
         }
 
         /// <summary>
-        /// 初始化工作线程
+        /// 初始化工作线程和 Pipeline
         /// </summary>
         public void InitWork()
         {
@@ -246,30 +247,140 @@ namespace DeepSightWorkLib
             // 将验证测试服务注入到后处理服务
             _postProcessService.SetValidationTestService(_validationTestService);
 
-            // 使用 WorkerThreadManager 管理线程
-            _workerManager.Start();
-            AIStopwatch = new Stopwatch();
+            // ---- 构建 TPL Dataflow Pipeline ----
+            InitPipeline();
 
-            // 注册各个工作线程（轮询间隔来自 DefaultValues 配置）
+            // 使用 WorkerThreadManager 管理仍需轮询的线程
+            _workerManager.Start();
+
+            // 仅保留 ReadAVI 轮询（作为 Pipeline 数据源）和缓存清理
             _workerManager.RegisterPollingWorker(() => WorkerReadAVI(),
                 new WorkerConfig { Name = "ReadAVI", PollIntervalMs = DefaultValues.ReadAviPollIntervalMs });
-
-            _workerManager.RegisterPollingWorker(() => WorkerImageLoad(),
-                new WorkerConfig { Name = "ImageLoad", PollIntervalMs = DefaultValues.ImageLoadPollIntervalMs });
-
-            _workerManager.RegisterPollingWorker(() => WorkerDefect(),
-                new WorkerConfig { Name = "Defect", PollIntervalMs = DefaultValues.DefectPollIntervalMs });
-
-            _workerManager.RegisterPollingWorker(() => WorkerReturnAVI(),
-                new WorkerConfig { Name = "ReturnAVI", PollIntervalMs = DefaultValues.ReturnAviPollIntervalMs });
-
-            _workerManager.RegisterPollingWorker(() => WorkerPostProcess(),
-                new WorkerConfig { Name = "PostProcess", PollIntervalMs = DefaultValues.PostProcessPollIntervalMs });
 
             _workerManager.RegisterPollingWorker(() => WorkerCleanupCache(),
                 new WorkerConfig { Name = "CleanupCache", PollIntervalMs = DefaultValues.CleanupCachePollIntervalMs, IsLongRunning = true });
 
-            LogTextHelper.Info("BusinessClass 初始化完成，所有线程已启动");
+            LogTextHelper.Info("BusinessClass 初始化完成，Pipeline 已启动");
+        }
+
+        /// <summary>
+        /// 初始化 TPL Dataflow Pipeline — 组装各阶段
+        /// </summary>
+        private void InitPipeline()
+        {
+            // 阶段1: JSON 解析
+            var jsonParseStage = new JsonParseStage(
+                MinioService,
+                _imageLoaderService,
+                _panelDataConverter,
+                () => new PanelConvertContext
+                {
+                    SolutionConfig = SolConfig,
+                    AviConfig = AviConfig,
+                    OnSolutionConfigChanged = SaveSolutionConfig
+                });
+
+            // 阶段2: 图片加载
+            var imageLoadStage = new ImageLoadStage(_imageLoaderService);
+
+            // 阶段3: 推理
+            var inferenceStage = new InferenceStage(
+                _defectProcessor,
+                () => SysConfig.MaxDefectCount,
+                () => SysConfig.MaxWaitTime);
+
+            // 阶段4a: 结果回写
+            var resultWriteStage = new ResultWriteStage(_resultWriterService);
+
+            // 阶段4b: 后处理
+            var postProcessStage = new PostProcessStage(_postProcessService);
+
+            // 组装 Pipeline
+            _pipeline = new ProcessingPipeline()
+                .WithJsonParseStage(jsonParseStage.Execute)
+                .WithImageLoadStage(imageLoadStage.Execute)
+                .WithInferenceStage(inferenceStage.Execute)
+                .WithResultWriteStage(resultWriteStage.Execute)
+                .WithPostProcessStage(postProcessStage.Execute)
+                .WithErrorHandler(HandlePipelineError)
+                .WithCompletionHandler(HandlePipelineCompleted);
+
+            _pipeline.Start(maxDegreeOfParallelism: 1);
+            LogTextHelper.Info("ProcessingPipeline 已初始化并启动");
+        }
+
+        /// <summary>
+        /// Pipeline 全局错误处理器
+        /// </summary>
+        private void HandlePipelineError(PipelineContext ctx)
+        {
+            try
+            {
+                string sn = ctx.SN;
+                string side = ctx.Side;
+                if (string.IsNullOrEmpty(sn)) return;
+
+                // 在 SnDebugInfo 中记录错误信息
+                string effectiveSide = string.IsNullOrEmpty(side) ? "A" : side;
+                var debugInfo = SnDebugInfoCache.GetOrCreate(sn, effectiveSide);
+                debugInfo.HasError = true;
+                debugInfo.ErrorStep = ctx.ErrorStage;
+                debugInfo.ErrorMessage = ctx.ErrorMessage;
+                debugInfo.ErrorTime = DateTime.Now;
+                debugInfo.JudgmentSummary = $"[异常] {ctx.ErrorStage}: {ctx.ErrorMessage}";
+
+                // 向 UI 发送失败状态
+                TaskStatusSender.SendFailed(sn, effectiveSide, $"[{ctx.ErrorStage}] {ctx.ErrorMessage}");
+
+                // 清除 ProcessingSnSet 标记
+                string snKey = $"{sn}_{effectiveSide}";
+                _queueManager.ProcessingSnSet.TryRemove(snKey, out _);
+
+                LogTextHelper.Error($"Pipeline 错误处理: SN={sn}, 阶段={ctx.ErrorStage}, 原因={ctx.ErrorMessage}");
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"HandlePipelineError 自身异常: {ex}");
+            }
+        }
+
+        /// <summary>
+        /// Pipeline 完成回调 — 所有下游阶段（ResultWrite + PostProcess）都完成后触发
+        /// 用于统计全流程耗时和清理 ProcessingSnSet
+        /// </summary>
+        private void HandlePipelineCompleted(PipelineContext ctx)
+        {
+            try
+            {
+                ctx.Stopwatch.Stop();
+                string sn = ctx.SN;
+                string side = ctx.Side;
+
+                LogTextHelper.Info($"SN:{sn} {side} Pipeline 全流程完成，总耗时: {ctx.Stopwatch.ElapsedMilliseconds}ms" +
+                    (ctx.InferenceElapsedMs > 0 ? $"（推理: {ctx.InferenceElapsedMs}ms）" : ""));
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Warn($"HandlePipelineCompleted 异常: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 向 Pipeline 投递一个 AviProcessingContext（作为 AviReaderService 回调）
+        /// </summary>
+        private void PostToPipeline(AviProcessingContext aviCtx)
+        {
+            var ctx = new PipelineContext { AviContext = aviCtx };
+
+            if (!_pipeline.Post(ctx, out string failureReason))
+            {
+                LogTextHelper.Error($"Pipeline 投递失败: SN={aviCtx.SerialNumber}, Side={aviCtx.Side}, 原因={failureReason}");
+                // 投递失败时清理 ProcessingSnSet 标记
+                string snKey = $"{aviCtx.SerialNumber}_{aviCtx.Side}";
+                _queueManager.ProcessingSnSet.TryRemove(snKey, out _);
+                // 通知 UI
+                TaskStatusSender.SendFailed(aviCtx.SerialNumber, aviCtx.Side, $"Pipeline投递失败: {failureReason}");
+            }
         }
 
 
@@ -297,152 +408,6 @@ namespace DeepSightWorkLib
         }
 
         /// <summary>
-        /// 图片加载工作单元
-        /// </summary>
-        private bool WorkerImageLoad()
-        {
-            if (_queueManager.ImageLoadQueue.TryDequeue(out ImageLoadModel loadModel))
-            {
-                try
-                {
-                    LogTextHelper.Info($"开始加载图片，SN:{loadModel.Model.SN}，数量：{loadModel.Model.ImageKeys.Count}");
-                    TaskStatusSender.SendLoadingImages(loadModel.Model.SN, loadModel.Model.Side);
-
-                    loadModel.Model.Mats = _imageLoaderService.LoadImages(loadModel.Model.ImageKeys);
-                    loadModel.Model.Mats_Temp = _imageLoaderService.LoadImages(loadModel.Model.ImageKeys_Temp);
-
-                    // 当temp图为空时，使用Gerber图替代temp图，和原图一起送去推理
-                    if (loadModel.Model.Mats_Temp == null || loadModel.Model.Mats_Temp.Count == 0)
-                    {
-                        LogTextHelper.Info($"SN:{loadModel.Model.SN} Temp图为空，使用Gerber图替代");
-                        loadModel.Model.Mats_Temp = _imageLoaderService.LoadImages(loadModel.Model.ImageKeys_Gerber);
-                    }
-
-                    LogImageLoadResult(loadModel);
-
-                    _queueManager.AviQueue.Enqueue(loadModel.Model);
-                    SystemEvent.SendPanelInfo(loadModel.Model.SN, loadModel.Model.Side, loadModel.RootPanelInfo);
-                    TaskStatusSender.SendImagesLoaded(loadModel.Model.SN, loadModel.Model.Side, loadModel.Model.Mats.Count);
-
-                    LogTextHelper.Info($"图片加载完成，SN:{loadModel.Model.SN}，实际加载:{loadModel.Model.Mats.Count}张");
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    LogTextHelper.Error($"图片加载异常，SN:{loadModel.Model?.SN}：{ex}");
-                    HandleProductError(loadModel.Model?.SN, loadModel.Model?.Side, "图片加载", ex.Message);
-                }
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// AI 检测工作单元
-        /// </summary>
-        private bool WorkerDefect()
-        {
-            // 检查队列是否有任务（先 Peek 而不是 Dequeue）
-            if (!_queueManager.AviQueue.TryPeek(out _))
-                return false;
-
-            if (_queueManager.AviQueue.TryDequeue(out VBModel info))
-            {
-                try
-                {
-                    // 验证测试任务使用不同的日志前缀
-                    string taskPrefix = info.IsValidationTest ? "[验证测试]" : "";
-                    TaskStatusSender.SendAIDetecting(info.SN, info.Side);
-                    AIStopwatch.Restart();
-
-                    if (_defectProcessor.DefectMethod(info, SysConfig.MaxDefectCount,
-                        out List<string> msg,
-                        SysConfig.MaxWaitTime))
-                    {
-                        TaskStatusSender.SendAICompleted(info.SN, info.Side);
-                        if (!info.IsValidationTest)
-                        {
-                            SystemEvent.SendResultInfo(info.SN, info.Side, msg);
-                        }
-                    }
-                    else
-                    {
-                        LogTextHelper.Error($"KEY:{info.Key} SN:{info.SN}检测失败！");
-                        TaskStatusSender.SendFailed(info.SN, info.Side, "检测失败");
-                    }
-
-                    // 验证测试任务不需要入队 AIResultQueue（不需要回写到LDB）
-                    if (!info.IsValidationTest)
-                    {
-                        _defectProcessor.EnqueueAIResult(info, msg);
-                    }
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    LogTextHelper.Error($"AI检测异常：{ex}");
-                    HandleProductError(info?.SN, info?.Side, "AI检测", ex.Message);
-                }
-                finally
-                {
-                    AIStopwatch.Stop();
-                    var elapsedMs = AIStopwatch.ElapsedMilliseconds;
-                    if (elapsedMs > 20)
-                    {
-                        TaskStatusSender.SendAICompleted(info?.SN, info?.Side, elapsedMs);
-                    }
-                    info?.Dispose();
-                }
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// 结果回写工作单元
-        /// </summary>
-        private bool WorkerReturnAVI()
-        {
-            if (_queueManager.AIResultQueue.TryDequeue(out var info))
-            {
-                try
-                {
-                    _resultWriterService?.ReturnAVIVRS(info);
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    LogTextHelper.Error($"结果回写异常：{ex}");
-                    HandleProductError(info?.SN, null, "结果回写", ex.Message);
-                }
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// 后处理工作单元
-        /// </summary>
-        private bool WorkerPostProcess()
-        {
-            // 检查队列是否有任务
-            if (!_queueManager.PostProcessQueue.TryPeek(out _))
-                return false;
-
-            if (_queueManager.PostProcessQueue.TryDequeue(out InferenceResultModel resultModel))
-            {
-                try
-                {
-                    _postProcessService.ProcessInferenceResult(resultModel);
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    LogTextHelper.Error($"后处理异常: SN={resultModel.VBModel?.SN}, 错误={ex}");
-                    HandleProductError(resultModel.VBModel?.SN, resultModel.VBModel?.Side, "后处理", ex.Message);
-                }
-            }
-            return false;
-        }
-
-        /// <summary>
         /// 缓存清理工作单元
         /// </summary>
         private bool WorkerCleanupCache()
@@ -461,191 +426,6 @@ namespace DeepSightWorkLib
                 LogTextHelper.Error($"清理缓存异常: {ex}");
             }
             return false; // 始终返回 false，保持定时轮询
-        }
-
-        #endregion
-
-        #region 辅助方法
-
-
-        /// <summary>
-        /// 记录图片加载结果
-        /// </summary>
-        private void LogImageLoadResult(ImageLoadModel loadModel)
-        {
-            int expectedCount = loadModel.Model.ImageKeys.Count;
-            int actualCount = loadModel.Model.Mats.Count;
-
-            if (expectedCount == 0)
-            {
-                LogTextHelper.Info($"SN:{loadModel.Model.SN} 无报点数据，无需加载图片");
-            }
-            else if (actualCount == 0)
-            {
-                LogTextHelper.Error($"图片加载失败，SN:{loadModel.Model.SN}，期望{expectedCount}张图片，实际加载0张！");
-            }
-            else if (actualCount < expectedCount)
-            {
-                LogTextHelper.Warn($"图片部分加载失败，SN:{loadModel.Model.SN}，期望{expectedCount}张，实际{actualCount}张");
-            }
-        }
-
-        #endregion
-
-        #region Minio 操作与数据转换
-
-        /// <summary>
-        /// 通过Minio读取Json文件
-        /// </summary>
-        /// <param name="ctx">AVI 处理流程上下文，包含 MinIO 连接信息、SN、面别、回写数据库等参数</param>
-        public void ReadJsonByMinio(AviProcessingContext ctx)
-        {
-            var ip = ctx.MinioIp;
-            var port = ctx.MinioPort;
-            var key = ctx.Key;
-            var head = ctx.Head;
-            var sn = ctx.SerialNumber;
-            var side = ctx.Side;
-            var path = ctx.MinioPath;
-            var writeBackDbName = ctx.WriteBackDbName;
-            var dbUrl = ctx.DbUrl;
-            var vrsWriteBackDbName = ctx.VrsWriteBackDbName;
-
-            try
-            {
-                TaskStatusSender.SendQueued(sn, side);
-                string json = MinioService.ReadJsonSync("deepiresults", path, ip);
-
-                if (string.IsNullOrWhiteSpace(json))
-                {
-                    string errMsg = $"SN={sn}, Side={side}: 从Minio读取的JSON为空，路径={path}, IP={ip}";
-                    LogTextHelper.Error(errMsg);
-                    HandleProductError(sn, side, "通过Minio读取Json文件", "读取的JSON内容为空");
-                    return;
-                }
-
-                var obj = JsonConvert.DeserializeObject<RootPanelInfo>(json);
-
-                if (obj == null)
-                {
-                    string errMsg = $"SN={sn}, Side={side}: JSON反序列化结果为null，路径={path}";
-                    LogTextHelper.Error(errMsg);
-                    HandleProductError(sn, side, "通过Minio读取Json文件", "JSON反序列化为RootPanelInfo失败，结果为null");
-                    return;
-                }
-
-                LogTextHelper.Info($"{sn} {side} 开始将json转为vbinfo");
-
-                // 使用 PanelDataConverter 进行转换
-                var context = new PanelConvertContext
-                {
-                    MinioIP = ip,
-                    MinioPort = port,
-                    Head = head,
-                    SolutionConfig = SolConfig,
-                    AviConfig = AviConfig,
-                    OnSolutionConfigChanged = SaveSolutionConfig,
-                };
-                var convertResult = _panelDataConverter.Convert(obj, context);
-
-                RootPanelInfoWithIP rootobj = new RootPanelInfoWithIP()
-                {
-                    IP = ip,
-                    Head=head,
-                    RootInfo = obj,
-                };
-
-                // 解耦：单次遍历获取全量图片路径 + 直报标记，再派生出加载用过滤列表
-                var (AllImageKeys, AllGerberKeys, AllTempKeys, DirectReportFlags, AllDefectCodes) = _imageLoaderService.GetAllImageKeysWithDirectReportFlags(rootobj);
-                var (ImageKeys, GerberKeys, TempKeys) = ImageLoaderService.DeriveFilteredKeys(
-                    AllImageKeys, AllGerberKeys,
-                    AllTempKeys, DirectReportFlags);
-
-                //考虑用Model方式
-                VBModel model = new VBModel
-                {
-                    Key = key,
-                    SN = sn,
-                    Side = side,
-                    DefectIndex = convertResult.DefectIndexList,
-                    PcsIndex = convertResult.PcsIndexList,
-                    VbInfo = convertResult.VBInfo,
-                    minioPath = head,
-                    panelInfo = obj,
-                    ImageKeys = ImageKeys,
-                    ImageKeys_Gerber = GerberKeys,
-                    ImageKeys_Temp = TempKeys,
-                    AllDefectImageKeys = AllImageKeys,
-                    AllDefectGerberKeys = AllGerberKeys,
-                    AllDefectTempKeys = AllTempKeys,
-                    DirectReportFlags = DirectReportFlags,
-                    AllDefectCodes = AllDefectCodes,
-                    SourceDbUrl = dbUrl,
-                    SourceWriteBackDbName = writeBackDbName,
-                    SourceVRSWriteBackDbName = vrsWriteBackDbName,
-                    DirectReportDefectIndices = convertResult.DirectReportDefectIndices,
-                    DirectReportPcsIndices = convertResult.DirectReportPcsIndices
-                };
-
-                // 存储调试信息到缓存
-                try
-                {
-                    var debugInfo = SnDebugInfoCache.GetOrCreate(sn, side);
-                    debugInfo.PanelInfoJson = json;
-                    debugInfo.VbInferenceJson = JsonConvert.SerializeObject(convertResult.VBInfo, Formatting.Indented);
-                    debugInfo.DefectCount = convertResult.DefectIndexList?.Count ?? 0;
-                    debugInfo.PcsCount = convertResult.PcsIndexList?.Count ?? 0;
-                    debugInfo.ImageCount = ImageKeys?.Count ?? 0;
-                    debugInfo.MinioPath = head;
-                    debugInfo.ProductSerial = obj.ProductSerial;
-                    debugInfo.LotNumber = obj.LotId ?? obj.LotBatch;
-
-                    // 构建判断过程摘要
-                    var defectCodes = new List<string>();
-                    if (obj.PcsInfo != null)
-                    {
-                        foreach (var pcs in obj.PcsInfo.Values)
-                        {
-                            if (pcs?.DefectInfo != null)
-                            {
-                                foreach (var d in pcs.DefectInfo)
-                                {
-                                    if (!string.IsNullOrEmpty(d.DefectCode))
-                                        defectCodes.Add(d.DefectCode);
-                                }
-                            }
-                        }
-                    }
-                    var summary = new System.Text.StringBuilder();
-                    if (defectCodes.Count > 0)
-                        summary.Append($"AVI报点{defectCodes.Count}个: {string.Join(",", defectCodes.Distinct())}");
-                    else
-                        summary.Append("AVI无报点");
-                    if (convertResult.DirectReportDefectIndices?.Count > 0)
-                        summary.Append($" | 直报{convertResult.DirectReportDefectIndices.Count}个");
-                    debugInfo.JudgmentSummary = summary.ToString();
-
-                    SnDebugInfoCache.Cleanup();
-                }
-                catch (Exception debugEx)
-                {
-                    LogTextHelper.Warn($"存储SN调试信息异常: {debugEx.Message}");
-                }
-
-                var loadModel = new ImageLoadModel
-                {
-                    Model = model,
-                    RootPanelInfo = rootobj
-                };
-                _queueManager.ImageLoadQueue.Enqueue(loadModel);
-
-                LogTextHelper.Info($"{sn} {side} ReadJsonByMinio完成,入队列成功,待加载图片数量:{ImageKeys.Count}");
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error("异常" + ex.ToString());
-                HandleProductError(sn, side, "通过Minio读取Json文件", ex.Message);
-            }
         }
 
         #endregion
@@ -822,7 +602,16 @@ namespace DeepSightWorkLib
             try
             {
                 var stats = _queueManager.GetStatistics();
-                LogTextHelper.Info($"处理统计 - {stats}, 数据库队列:{_databaseHelper.GetQueueLength()}");
+
+                // Pipeline 统计
+                string pipelineInfo = "";
+                if (_pipeline != null && _pipeline.IsRunning)
+                {
+                    var pipelineStats = _pipeline.GetStatistics();
+                    pipelineInfo = $", Pipeline: [{pipelineStats}]";
+                }
+
+                LogTextHelper.Info($"处理统计 - {stats}, 数据库队列:{_databaseHelper.GetQueueLength()}{pipelineInfo}");
 
                 // 告警：如果处理集合持续增长超过阈值
                 if (stats.ProcessingSnCount > 100)
@@ -856,6 +645,9 @@ namespace DeepSightWorkLib
         {
             try
             {
+                // 停止 Pipeline（等待在途数据处理完成）
+                _pipeline?.Dispose();
+
                 // 停止所有工作线程
                 _workerManager?.Stop();
 
@@ -880,49 +672,6 @@ namespace DeepSightWorkLib
 
         #endregion
 
-        #region 异常处理
-
-        /// <summary>
-        /// 统一的产品异常处理方法
-        /// 1. 从所有队列中移除该SN的数据
-        /// 2. 在SnDebugInfo中记录错误信息
-        /// 3. 向UI发送失败状态
-        /// </summary>
-        /// <param name="sn">产品序列号</param>
-        /// <param name="side">面别（A/B），可为null</param>
-        /// <param name="errorStep">出错步骤（如：图片加载、AI检测、结果回写、后处理）</param>
-        /// <param name="errorMessage">错误原因描述</param>
-        private void HandleProductError(string sn, string side, string errorStep, string errorMessage)
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(sn)) return;
-
-                // 1. 从所有队列中移除该SN的数据
-                int removedCount = _queueManager.RemoveSnFromAllQueues(sn);
-                LogTextHelper.Error($"产品异常处理: SN={sn}, 步骤={errorStep}, 原因={errorMessage}, 队列移除={removedCount}项");
-
-                // 2. 在SnDebugInfo中记录错误信息
-                string effectiveSide = string.IsNullOrEmpty(side) ? "A" : side;
-                var debugInfo = SnDebugInfoCache.GetOrCreate(sn, effectiveSide);
-                debugInfo.HasError = true;
-                debugInfo.ErrorStep = errorStep;
-                debugInfo.ErrorMessage = errorMessage;
-                debugInfo.ErrorTime = DateTime.Now;
-                // 更新判断摘要为错误信息
-                debugInfo.JudgmentSummary = $"[异常] {errorStep}: {errorMessage}";
-
-                // 3. 向UI发送失败状态（显示红色报错状态）
-                TaskStatusSender.SendFailed(sn, effectiveSide, $"[{errorStep}] {errorMessage}");
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error($"HandleProductError 自身异常: SN={sn}, {ex}");
-            }
-        }
-
-        #endregion
-
         #region 推理结果处理相关
 
         /// <summary>
@@ -933,6 +682,14 @@ namespace DeepSightWorkLib
             try
             {
                 LogTextHelper.Info("IsStart 设置为 false，开始清空所有处理队列...");
+
+                // 释放旧 Pipeline（等待在途数据处理完成后重新初始化）
+                if (_pipeline != null)
+                {
+                    _pipeline.Dispose();
+                    _pipeline = null;
+                    LogTextHelper.Info("Pipeline 已释放");
+                }
 
                 // 使用 QueueManager 清空所有队列
                 var clearedSnSet = _queueManager.ClearAllQueues();
@@ -947,6 +704,10 @@ namespace DeepSightWorkLib
                 {
                     LogTextHelper.Info($"已通知界面 {clearedSnSet.Count} 个SN被暂停移除：{string.Join(", ", clearedSnSet)}");
                 }
+
+                // 重新初始化并启动 Pipeline
+                InitPipeline();
+                LogTextHelper.Info("Pipeline 已重新初始化并启动");
             }
             catch (Exception ex)
             {
