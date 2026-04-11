@@ -48,3 +48,4 @@
 /.augment-guidelines
 /DeepSightWorkLib.Tests/obj
 /DeepSightWorkLib.Tests/bin/Debug/net472
+/DeepSightWorkLib.Tests/bin/Release/net472
