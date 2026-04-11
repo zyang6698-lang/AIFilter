@@ -16,6 +16,7 @@ namespace DeepSightModel
         public List<int> PcsIndex { get; set; }
         public List<Mat> Mats { get;set; }
         public List<Mat> Mats_Temp { get; set; }
+        public List<Mat> Mats_Gerber { get; set; }
         public List<string > ImageKeys { get; set; }
         public List<string > ImageKeys_Gerber { get; set; }
         public List<string > ImageKeys_Temp { get; set; }
@@ -133,6 +134,8 @@ namespace DeepSightModel
             Mats = null;
             DisposeMats(Mats_Temp);
             Mats_Temp = null;
+            DisposeMats(Mats_Gerber);
+            Mats_Gerber = null;
         }
 
         private static void DisposeMats(List<Mat> mats)

@@ -23,6 +23,7 @@ namespace DeepSightWorkLib.Services
         private readonly QueueManager _queueManager;
         private readonly VBModelBuilder _vbModelBuilder;
         private readonly ImageLoaderService _imageLoaderService;
+        private readonly Func<bool> _useGerberImageProvider;
 
         // 统一任务管理
         private readonly ConcurrentDictionary<string, InferenceTask> _activeTasks = new ConcurrentDictionary<string, InferenceTask>();
@@ -36,12 +37,14 @@ namespace DeepSightWorkLib.Services
             ImageLoaderService imageLoaderService,
             QueueManager queueManager,
             SolutionConfig solutionConfig,
-            AVIConfig aviConfig)
+            AVIConfig aviConfig,
+            Func<bool> useGerberImageProvider = null)
         {
             _databaseHelper = databaseHelper ?? throw new ArgumentNullException(nameof(databaseHelper));
             _imageLoaderService = imageLoaderService ?? throw new ArgumentNullException(nameof(imageLoaderService));
             _queueManager = queueManager ?? throw new ArgumentNullException(nameof(queueManager));
             _vbModelBuilder = new VBModelBuilder(solutionConfig);
+            _useGerberImageProvider = useGerberImageProvider ?? (() => false);
         }
 
         #region 统一任务创建接口
@@ -303,18 +306,34 @@ namespace DeepSightWorkLib.Services
                     .Where(d => !KeyDefectConfigManager.Instance.IsDirectReportByProduct(d.DefectName, panel.ProductSerial))
                     .ToList();
 
-                // 使用 ImageLoaderService 从 MinIO 加载缺陷图和模板图
+                // 使用 ImageLoaderService 从 MinIO 加载缺陷图和模板/Gerber图
                 var defectImagePaths = nonDirectReportDefects
                     .Select(d => d.ImagePath)
                     .Where(p => !string.IsNullOrEmpty(p))
                     .ToList();
-                var tempImagePaths = nonDirectReportDefects
-                    .Select(d => d.TempImagePath)
-                    .Where(p => !string.IsNullOrEmpty(p))
-                    .ToList();
 
                 vbModel.Mats = _imageLoaderService.LoadImages(defectImagePaths);
-                vbModel.Mats_Temp = _imageLoaderService.LoadImages(tempImagePaths);
+
+                bool useGerber = _useGerberImageProvider();
+                if (useGerber)
+                {
+                    // 使用 Gerber 图
+                    var gerberImagePaths = nonDirectReportDefects
+                        .Select(d => d.GerberImagePath)
+                        .Where(p => !string.IsNullOrEmpty(p))
+                        .ToList();
+                    vbModel.Mats_Gerber = _imageLoaderService.LoadImages(gerberImagePaths);
+                    vbModel.Mats_Temp = vbModel.Mats_Gerber;
+                }
+                else
+                {
+                    // 使用 Template 图（默认）
+                    var tempImagePaths = nonDirectReportDefects
+                        .Select(d => d.TempImagePath)
+                        .Where(p => !string.IsNullOrEmpty(p))
+                        .ToList();
+                    vbModel.Mats_Temp = _imageLoaderService.LoadImages(tempImagePaths);
+                }
 
                 // 入队到推理队列
                 _queueManager.AviQueue.Enqueue(vbModel);
@@ -593,23 +612,28 @@ namespace DeepSightWorkLib.Services
 
                 vbModel.Mats = new List<Mat> { mat };
 
-                // 通过Minio加载模板图
-                if (!string.IsNullOrEmpty(detectInfo.TempImagePath))
+                // 根据配置决定加载模板图还是Gerber图
+                bool useGerber = _useGerberImageProvider();
+                string refImagePath = useGerber ? detectInfo.GerberImagePath : detectInfo.TempImagePath;
+                string imageTypeName = useGerber ? "Gerber" : "模板";
+
+                if (!string.IsNullOrEmpty(refImagePath))
                 {
-                    var tempMat = _imageLoaderService.LoadMinioImage(detectInfo.TempImagePath);
-                    if (tempMat == null || tempMat.Empty())
+                    var refMat = _imageLoaderService.LoadMinioImage(refImagePath);
+                    if (refMat == null || refMat.Empty())
                     {
-                        LogTextHelper.Warn($"单图测试加载模板图失败: {detectInfo.TempImagePath}，将使用空模板图列表");
+                        LogTextHelper.Warn($"单图测试加载{imageTypeName}图失败: {refImagePath}，将使用空列表");
                         vbModel.Mats_Temp = new List<Mat>();
                     }
                     else
                     {
-                        vbModel.Mats_Temp = new List<Mat> { tempMat };
+                        vbModel.Mats_Temp = new List<Mat> { refMat };
+                        if (useGerber) vbModel.Mats_Gerber = new List<Mat> { refMat };
                     }
                 }
                 else
                 {
-                    LogTextHelper.Warn($"单图测试模板图路径为空");
+                    LogTextHelper.Warn($"单图测试{imageTypeName}图路径为空");
                     vbModel.Mats_Temp = new List<Mat>();
                 }
 

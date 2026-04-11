@@ -427,6 +427,15 @@ namespace DeepSightAI
         #endregion
 
         #region 生成推理请求功能
+
+        /// <summary>
+        /// 供外部调用的公共方法，触发生成推理请求
+        /// </summary>
+        public void TriggerGenerateInference()
+        {
+            btnGenerateInference_Click(this, EventArgs.Empty);
+        }
+
         private async void btnGenerateInference_Click(object sender, EventArgs e)
         {
             // 1. 选择文件夹

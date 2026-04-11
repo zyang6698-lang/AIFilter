@@ -69,6 +69,8 @@ namespace DeepSightAI
             this.toolStrip = new System.Windows.Forms.ToolStrip();
             this.btnRunVB = new System.Windows.Forms.ToolStripButton();
             this.btnClear = new System.Windows.Forms.ToolStripButton();
+            this.btnPipelineMonitor = new System.Windows.Forms.ToolStripButton();
+            this.btnMenuGenerateInference = new System.Windows.Forms.ToolStripButton();
             this.lbl_title = new System.Windows.Forms.Label();
             this.panel_r = new System.Windows.Forms.Panel();
             this.btnClose = new System.Windows.Forms.Button();
@@ -503,32 +505,12 @@ namespace DeepSightAI
             // 
             // toolStripDropDownButton1
             // 
-            this.toolStripDropDownButton1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.btnModelB,
-            this.btnModelC});
             this.toolStripDropDownButton1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.toolStripDropDownButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripDropDownButton1.Name = "toolStripDropDownButton1";
             this.toolStripDropDownButton1.Size = new System.Drawing.Size(83, 28);
             this.toolStripDropDownButton1.Text = "图片切换";
-            // 
-            // btnModelB
-            // 
-            this.btnModelB.CheckOnClick = true;
-            this.btnModelB.Name = "btnModelB";
-            this.btnModelB.Size = new System.Drawing.Size(158, 26);
-            this.btnModelB.Text = "Gerber图";
-            this.btnModelB.Click += new System.EventHandler(this.btnModelB_Click);
-            // 
-            // btnModelC
-            // 
-            this.btnModelC.Checked = true;
-            this.btnModelC.CheckOnClick = true;
-            this.btnModelC.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.btnModelC.Name = "btnModelC";
-            this.btnModelC.Size = new System.Drawing.Size(158, 26);
-            this.btnModelC.Text = "Temp图";
-            this.btnModelC.Click += new System.EventHandler(this.btnModelC_Click);
+            this.toolStripDropDownButton1.Visible = false;
             // 
             // toolStripButton1
             // 
@@ -545,6 +527,8 @@ namespace DeepSightAI
             this.toolStripDropDownButton1,
             this.btnRunVB,
             this.btnClear,
+            this.btnPipelineMonitor,
+            this.btnMenuGenerateInference,
             this.toolStripButton1});
             this.toolStrip.Location = new System.Drawing.Point(0, 48);
             this.toolStrip.Name = "toolStrip";
@@ -574,7 +558,25 @@ namespace DeepSightAI
             this.btnClear.Size = new System.Drawing.Size(73, 28);
             this.btnClear.Text = "重置软件";
             this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
-            // 
+            //
+            // btnPipelineMonitor
+            //
+            this.btnPipelineMonitor.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.btnPipelineMonitor.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(200)))), ((int)(((byte)(255)))));
+            this.btnPipelineMonitor.Name = "btnPipelineMonitor";
+            this.btnPipelineMonitor.Size = new System.Drawing.Size(95, 28);
+            this.btnPipelineMonitor.Text = "Pipeline监控";
+            this.btnPipelineMonitor.Click += new System.EventHandler(this.btnPipelineMonitor_Click);
+            //
+            // btnMenuGenerateInference
+            //
+            this.btnMenuGenerateInference.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.btnMenuGenerateInference.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.btnMenuGenerateInference.Name = "btnMenuGenerateInference";
+            this.btnMenuGenerateInference.Size = new System.Drawing.Size(106, 28);
+            this.btnMenuGenerateInference.Text = "生成推理请求";
+            this.btnMenuGenerateInference.Click += new System.EventHandler(this.btnMenuGenerateInference_Click);
+            //
             // lbl_title
             // 
             this.lbl_title.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -759,6 +761,8 @@ namespace DeepSightAI
         private System.Windows.Forms.ToolStripMenuItem btnModelC;
         public System.Windows.Forms.ToolStripButton btnRunVB;
         private System.Windows.Forms.ToolStripButton btnClear;
+        private System.Windows.Forms.ToolStripButton btnPipelineMonitor;
+        private System.Windows.Forms.ToolStripButton btnMenuGenerateInference;
         private System.Windows.Forms.ToolStripButton toolStripButton1;
         public System.Windows.Forms.ToolStrip toolStrip;
         public System.Windows.Forms.Label lbl_title;

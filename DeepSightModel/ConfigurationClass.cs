@@ -91,6 +91,11 @@ namespace DeepSightModel
         /// </summary>
         public int MaxWaitTime { get; set; } = DefaultValues.MaxWaitTime;
 
+        /// <summary>
+        /// 是否使用 Gerber 图进行推理和显示（false=使用 Template 图，true=使用 Gerber 图）
+        /// </summary>
+        public bool UseGerberImage { get; set; } = DefaultValues.UseGerberImage;
+
         public ConfigurationClass()
         {
 
@@ -136,7 +141,8 @@ namespace DeepSightModel
                     ShortcutNextImage = DefaultValues.ShortcutNextImage,
                     ShortcutPrevImage = DefaultValues.ShortcutPrevImage,
                     ShortcutNextPage = DefaultValues.ShortcutNextPage,
-                    ShortcutPrevPage = DefaultValues.ShortcutPrevPage
+                    ShortcutPrevPage = DefaultValues.ShortcutPrevPage,
+                    UseGerberImage = DefaultValues.UseGerberImage
                 };
                 return Save(config);
             }

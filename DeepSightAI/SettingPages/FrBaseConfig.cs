@@ -60,6 +60,10 @@ namespace DeepSightAI.SettingPages
                 {
                     Machine.sysConfig.WelcomeFontSize = welcomeFontSize;
                 }
+                // 图片类型：0=Template图（默认），1=Gerber图
+                Machine.sysConfig.UseGerberImage = this.cmb_ImageType.SelectedIndex == 1;
+                // 同步更新 Machine.ShowFlag
+                Machine.ShowFlag = Machine.sysConfig.UseGerberImage ? "B" : "C";
             }
             catch (Exception ex)
             {
@@ -73,6 +77,8 @@ namespace DeepSightAI.SettingPages
             this.txt_GetInferResultTimeout.Text = Machine.sysConfig.MaxWaitTime.ToString();
             this.txt_WelcomeTitle.Text = Machine.sysConfig.WelcomeTitle ?? "Deepsight AI";
             this.txt_WelcomeFontSize.Text = Machine.sysConfig.WelcomeFontSize.ToString();
+            // 图片类型：false(0)=Template图，true(1)=Gerber图
+            this.cmb_ImageType.SelectedIndex = Machine.sysConfig.UseGerberImage ? 1 : 0;
         }
 
  

@@ -138,7 +138,7 @@
         #endregion
         private System.Windows.Forms.DataGridViewTextBoxColumn sn;
         private System.Windows.Forms.TabPage tabPage9;
-        private ToolboxControl analyticsControl1;
+        internal ToolboxControl analyticsControl1;
         private System.Windows.Forms.TabPage tabPage7;
         private HeatMapControl2 heatMapControl21;
         private System.Windows.Forms.TabPage tabPage10;

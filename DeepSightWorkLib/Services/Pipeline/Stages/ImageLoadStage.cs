@@ -12,10 +12,12 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
     public class ImageLoadStage
     {
         private readonly ImageLoaderService _imageLoaderService;
+        private readonly Func<bool> _useGerberImageProvider;
 
-        public ImageLoadStage(ImageLoaderService imageLoaderService)
+        public ImageLoadStage(ImageLoaderService imageLoaderService, Func<bool> useGerberImageProvider = null)
         {
             _imageLoaderService = imageLoaderService ?? throw new ArgumentNullException(nameof(imageLoaderService));
+            _useGerberImageProvider = useGerberImageProvider ?? (() => false);
         }
 
         /// <summary>
@@ -25,18 +27,37 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
         {
             var loadModel = ctx.LoadModel;
             var model = loadModel.Model;
+            bool useGerber = _useGerberImageProvider();
 
-            LogTextHelper.Info($"开始加载图片，SN:{model.SN}，数量：{model.ImageKeys.Count}");
+            LogTextHelper.Info($"开始加载图片，SN:{model.SN}，数量：{model.ImageKeys.Count}，图片类型：{(useGerber ? "Gerber" : "Template")}");
             TaskStatusSender.SendLoadingImages(model.SN, model.Side);
 
             model.Mats = _imageLoaderService.LoadImages(model.ImageKeys);
-            model.Mats_Temp = _imageLoaderService.LoadImages(model.ImageKeys_Temp);
 
-            // 当 temp 图为空时，使用 Gerber 图替代
-            if (model.Mats_Temp == null || model.Mats_Temp.Count == 0)
+            if (useGerber)
             {
-                LogTextHelper.Info($"SN:{model.SN} Temp图为空，使用Gerber图替代");
-                model.Mats_Temp = _imageLoaderService.LoadImages(model.ImageKeys_Gerber);
+                // 配置为使用 Gerber 图：加载 Gerber 图到 Mats_Gerber，并赋值给 Mats_Temp 用于推理
+                model.Mats_Gerber = _imageLoaderService.LoadImages(model.ImageKeys_Gerber);
+                model.Mats_Temp = model.Mats_Gerber;
+
+                if (model.Mats_Temp == null || model.Mats_Temp.Count == 0)
+                {
+                    LogTextHelper.Warn($"SN:{model.SN} Gerber图为空，回退使用Template图");
+                    model.Mats_Temp = _imageLoaderService.LoadImages(model.ImageKeys_Temp);
+                }
+            }
+            else
+            {
+                // 配置为使用 Template 图（默认）
+                model.Mats_Temp = _imageLoaderService.LoadImages(model.ImageKeys_Temp);
+
+                // 当 temp 图为空时，使用 Gerber 图替代
+                if (model.Mats_Temp == null || model.Mats_Temp.Count == 0)
+                {
+                    LogTextHelper.Info($"SN:{model.SN} Temp图为空，使用Gerber图替代");
+                    model.Mats_Gerber = _imageLoaderService.LoadImages(model.ImageKeys_Gerber);
+                    model.Mats_Temp = model.Mats_Gerber;
+                }
             }
 
             LogImageLoadResult(loadModel);

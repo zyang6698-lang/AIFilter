@@ -91,6 +91,19 @@ namespace DeepSightWorkLib
         /// </summary>
         private ProcessingPipeline _pipeline;
 
+        /// <summary>
+        /// 获取 Pipeline 统计信息（供 UI 监控使用）
+        /// </summary>
+        public PipelineStatistics GetPipelineStatistics()
+        {
+            return _pipeline?.GetStatistics() ?? new PipelineStatistics();
+        }
+
+        /// <summary>
+        /// Pipeline 是否正在运行
+        /// </summary>
+        public bool IsPipelineRunning => _pipeline?.IsRunning ?? false;
+
         #endregion
 
         #region 公共属性
@@ -242,7 +255,8 @@ namespace DeepSightWorkLib
                 _imageLoaderService,
                 _queueManager,
                 SolConfig,
-                AviConfig);
+                AviConfig,
+                () => SysConfig.UseGerberImage);
 
             // 将验证测试服务注入到后处理服务
             _postProcessService.SetValidationTestService(_validationTestService);
@@ -280,8 +294,8 @@ namespace DeepSightWorkLib
                     OnSolutionConfigChanged = SaveSolutionConfig
                 });
 
-            // 阶段2: 图片加载
-            var imageLoadStage = new ImageLoadStage(_imageLoaderService);
+            // 阶段2: 图片加载（根据配置决定使用 Gerber 图还是 Template 图）
+            var imageLoadStage = new ImageLoadStage(_imageLoaderService, () => SysConfig.UseGerberImage);
 
             // 阶段3: 推理
             var inferenceStage = new InferenceStage(

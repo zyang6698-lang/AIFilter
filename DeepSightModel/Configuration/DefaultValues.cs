@@ -99,6 +99,11 @@ namespace DeepSightModel.Configuration
         /// </summary>
         public const int MaxWaitTime = 10;
 
+        /// <summary>
+        /// 是否使用 Gerber 图（默认 false，使用 Template 图）
+        /// </summary>
+        public const bool UseGerberImage = false;
+
         #endregion
 
         #region AVI 配置

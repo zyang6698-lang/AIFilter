@@ -55,6 +55,16 @@ namespace DeepSightWorkLib.Services.Pipeline
         /// </summary>
         private int _downstreamCount = 2;
 
+        #region 已处理计数（线程安全）
+
+        private long _jsonParseProcessed;
+        private long _imageLoadProcessed;
+        private long _inferenceProcessed;
+        private long _resultWriteProcessed;
+        private long _postProcessProcessed;
+
+        #endregion
+
         /// <summary>
         /// Pipeline 是否正在运行
         /// </summary>
@@ -276,22 +286,22 @@ namespace DeepSightWorkLib.Services.Pipeline
             };
 
             _jsonParseBlock = new TransformBlock<PipelineContext, PipelineContext>(
-                ctx => SafeExecuteTransform(ctx, "JSON解析", _jsonParseFunc), blockOptions);
+                ctx => { Interlocked.Increment(ref _jsonParseProcessed); return SafeExecuteTransform(ctx, "JSON解析", _jsonParseFunc); }, blockOptions);
 
             _imageLoadBlock = new TransformBlock<PipelineContext, PipelineContext>(
-                ctx => SafeExecuteTransform(ctx, "图片加载", _imageLoadFunc), blockOptions);
+                ctx => { Interlocked.Increment(ref _imageLoadProcessed); return SafeExecuteTransform(ctx, "图片加载", _imageLoadFunc); }, blockOptions);
 
             _inferenceBlock = new TransformBlock<PipelineContext, PipelineContext>(
-                ctx => SafeExecuteTransform(ctx, "推理", _inferenceFunc), inferenceOptions);
+                ctx => { Interlocked.Increment(ref _inferenceProcessed); return SafeExecuteTransform(ctx, "推理", _inferenceFunc); }, inferenceOptions);
 
             _broadcastBlock = new BroadcastBlock<PipelineContext>(ctx => ctx,
                 new DataflowBlockOptions { CancellationToken = _cts.Token });
 
             _resultWriteBlock = new ActionBlock<PipelineContext>(
-                ctx => SafeExecuteAction(ctx, "结果回写", _resultWriteAction), blockOptions);
+                ctx => { Interlocked.Increment(ref _resultWriteProcessed); SafeExecuteAction(ctx, "结果回写", _resultWriteAction); }, blockOptions);
 
             _postProcessBlock = new ActionBlock<PipelineContext>(
-                ctx => SafeExecuteAction(ctx, "后处理", _postProcessAction), blockOptions);
+                ctx => { Interlocked.Increment(ref _postProcessProcessed); SafeExecuteAction(ctx, "后处理", _postProcessAction); }, blockOptions);
         }
 
         private void LinkBlocks()
@@ -383,7 +393,20 @@ namespace DeepSightWorkLib.Services.Pipeline
                 ImageLoadInputCount = _imageLoadBlock.InputCount,
                 InferenceInputCount = _inferenceBlock.InputCount,
                 ResultWriteInputCount = _resultWriteBlock.InputCount,
-                PostProcessInputCount = _postProcessBlock.InputCount
+                PostProcessInputCount = _postProcessBlock.InputCount,
+
+                JsonParseStatus = _jsonParseBlock.Completion.Status,
+                ImageLoadStatus = _imageLoadBlock.Completion.Status,
+                InferenceStatus = _inferenceBlock.Completion.Status,
+                BroadcastStatus = _broadcastBlock.Completion.Status,
+                ResultWriteStatus = _resultWriteBlock.Completion.Status,
+                PostProcessStatus = _postProcessBlock.Completion.Status,
+
+                JsonParseProcessed = Interlocked.Read(ref _jsonParseProcessed),
+                ImageLoadProcessed = Interlocked.Read(ref _imageLoadProcessed),
+                InferenceProcessed = Interlocked.Read(ref _inferenceProcessed),
+                ResultWriteProcessed = Interlocked.Read(ref _resultWriteProcessed),
+                PostProcessProcessed = Interlocked.Read(ref _postProcessProcessed),
             };
         }
 
@@ -418,6 +441,21 @@ namespace DeepSightWorkLib.Services.Pipeline
         public int InferenceInputCount { get; set; }
         public int ResultWriteInputCount { get; set; }
         public int PostProcessInputCount { get; set; }
+
+        /// <summary>各阶段 Block 的 Completion 状态</summary>
+        public TaskStatus JsonParseStatus { get; set; } = TaskStatus.WaitingForActivation;
+        public TaskStatus ImageLoadStatus { get; set; } = TaskStatus.WaitingForActivation;
+        public TaskStatus InferenceStatus { get; set; } = TaskStatus.WaitingForActivation;
+        public TaskStatus BroadcastStatus { get; set; } = TaskStatus.WaitingForActivation;
+        public TaskStatus ResultWriteStatus { get; set; } = TaskStatus.WaitingForActivation;
+        public TaskStatus PostProcessStatus { get; set; } = TaskStatus.WaitingForActivation;
+
+        /// <summary>各阶段累计已处理数量</summary>
+        public long JsonParseProcessed { get; set; }
+        public long ImageLoadProcessed { get; set; }
+        public long InferenceProcessed { get; set; }
+        public long ResultWriteProcessed { get; set; }
+        public long PostProcessProcessed { get; set; }
 
         public override string ToString()
         {

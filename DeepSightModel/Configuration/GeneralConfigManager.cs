@@ -35,7 +35,8 @@ namespace DeepSightModel.Configuration
                 ShortcutNextImage = DefaultValues.ShortcutNextImage,
                 ShortcutPrevImage = DefaultValues.ShortcutPrevImage,
                 ShortcutNextPage = DefaultValues.ShortcutNextPage,
-                ShortcutPrevPage = DefaultValues.ShortcutPrevPage
+                ShortcutPrevPage = DefaultValues.ShortcutPrevPage,
+                UseGerberImage = DefaultValues.UseGerberImage
             };
         }
 

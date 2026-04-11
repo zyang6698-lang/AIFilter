@@ -40,6 +40,8 @@
             this.txt_WelcomeTitle = new System.Windows.Forms.TextBox();
             this.label25 = new System.Windows.Forms.Label();
             this.txt_WelcomeFontSize = new System.Windows.Forms.TextBox();
+            this.label26 = new System.Windows.Forms.Label();
+            this.cmb_ImageType = new System.Windows.Forms.ComboBox();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -57,6 +59,8 @@
             this.tableLayoutPanel1.Controls.Add(this.txt_WelcomeTitle, 1, 3);
             this.tableLayoutPanel1.Controls.Add(this.label25, 0, 4);
             this.tableLayoutPanel1.Controls.Add(this.txt_WelcomeFontSize, 1, 4);
+            this.tableLayoutPanel1.Controls.Add(this.label26, 0, 5);
+            this.tableLayoutPanel1.Controls.Add(this.cmb_ImageType, 1, 5);
             this.tableLayoutPanel1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             // 
@@ -115,6 +119,21 @@
             resources.ApplyResources(this.txt_WelcomeFontSize, "txt_WelcomeFontSize");
             this.txt_WelcomeFontSize.Name = "txt_WelcomeFontSize";
             // 
+            // label26
+            // 
+            resources.ApplyResources(this.label26, "label26");
+            this.label26.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.label26.Name = "label26";
+            // 
+            // cmb_ImageType
+            // 
+            resources.ApplyResources(this.cmb_ImageType, "cmb_ImageType");
+            this.cmb_ImageType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmb_ImageType.Items.AddRange(new object[] {
+            resources.GetString("cmb_ImageType.Items"),
+            resources.GetString("cmb_ImageType.Items1")});
+            this.cmb_ImageType.Name = "cmb_ImageType";
+            // 
             // FrBaseConfig
             // 
             resources.ApplyResources(this, "$this");
@@ -144,5 +163,7 @@
         internal System.Windows.Forms.Label label24;
         internal System.Windows.Forms.TextBox txt_WelcomeFontSize;
         internal System.Windows.Forms.Label label25;
+        internal System.Windows.Forms.Label label26;
+        internal System.Windows.Forms.ComboBox cmb_ImageType;
     }
 }

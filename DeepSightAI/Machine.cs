@@ -76,6 +76,8 @@ namespace DeepSightAI
                         "请检查文件是否存在、JSON 格式是否正确。");
                     return;
                 }
+                // 根据配置初始化图片显示标志（B=Gerber，C=Template）
+                ShowFlag = sysConfig.UseGerberImage ? "B" : "C";
                 if (!sol_class.Read(out solconfig))
                 {
                     FrWelcome.Instance.ShowError(

@@ -1056,23 +1056,10 @@ namespace DeepSightAI
         #endregion 状态栏-运行时间-当前时间
 
 
-        private void btnModelB_Click(object sender, EventArgs e)
-        {
-            if (btnModelB.Checked)
-            {
-                Machine.ShowFlag = "B";
-                btnModelC.Checked = false;
-            }
-        }
-
-        private void btnModelC_Click(object sender, EventArgs e)
-        {
-            if (btnModelC.Checked)
-            {
-                Machine.ShowFlag = "C";
-                btnModelB.Checked = false;
-            }
-        }
+        // 图片切换功能已移至配置界面（常规配置 → 推理/显示图片类型）
+        // Machine.ShowFlag 由配置 UseGerberImage 控制
+        private void btnModelB_Click(object sender, EventArgs e) { }
+        private void btnModelC_Click(object sender, EventArgs e) { }
         private void btnClear_Click(object sender, EventArgs e)
         {
             Machine.master.IsStart = false;
@@ -1129,6 +1116,38 @@ namespace DeepSightAI
                 return;
             }
             SwitchFrom(FormMode.SearchForm);
+        }
+
+        private void btnMenuGenerateInference_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // 触发 ToolboxControl 中的生成推理请求功能
+                FrChart.Instance.analyticsControl1.TriggerGenerateInference();
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error("菜单栏触发生成推理请求失败", ex);
+                MessageBox.Show($"生成推理请求失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private FrPipelineMonitor _pipelineMonitor;
+
+        private void btnPipelineMonitor_Click(object sender, EventArgs e)
+        {
+            if (_pipelineMonitor == null || _pipelineMonitor.IsDisposed)
+            {
+                _pipelineMonitor = new FrPipelineMonitor();
+            }
+            if (!_pipelineMonitor.Visible)
+            {
+                _pipelineMonitor.Show(this);
+            }
+            else
+            {
+                _pipelineMonitor.BringToFront();
+            }
         }
     }
     public enum FormMode
