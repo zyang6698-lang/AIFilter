@@ -24,8 +24,9 @@ namespace DeepSightModel
         public string ImagePath { get; set; }
         public string TempImagePath { get; set; }
         public string GerberImagePath {  get; set; }
-
         public string DrawInfo { get; set; }
+        public int DefectIndex {  get; set; }
+        public int PcsIndex {  get; set; }
         // 分阶段状态：0 未运行 / 1 OK / 2 NG / 3 异常
         public int AIStatus { get; set; }
         public int VVSStatus { get; set; }

@@ -156,92 +156,7 @@ namespace DeepSightAI
                 _currentSelectedLot = null;
 
                 // 收集所有数据，同时统计指标
-                var panels = QueryControl.GetQueryResult();
-                foreach (var panel in panels)
-                {
-                    if (panel.Sides == null) continue;
-                    string lotNumber = panel.LotNumber ?? "未知Lot";
-
-                    // 确保该Lot的统计数据存在
-                    if (!_lotStatistics.ContainsKey(lotNumber))
-                    {
-                        _lotStatistics[lotNumber] = new LotStatistics();
-                    }
-                    var stat = _lotStatistics[lotNumber];
-
-                    // 记录基本信息（取第一条）
-                    if (string.IsNullOrEmpty(stat.MachineId))
-                    {
-                        stat.MachineId = panel.MachineId;
-                        stat.ProductSerial = panel.ProductSerial;
-                    }
-
-                    // Panel(Array)级别统计
-                    stat.TotalPanelCount++;
-                    bool panelAllAviOk = true;
-                    bool panelAllAiPass = true;
-
-                    foreach (var side in panel.Sides)
-                    {
-                        if (side == null) continue;
-
-                        // PCS级别统计
-                        stat.TotalPcsCount++;
-                        if (side.AviState == 1)
-                        {
-                            stat.AviOkPcsCount++;
-                        }
-                        else
-                        {
-                            panelAllAviOk = false;
-                            switch (side.AiState)
-                            {
-                                case 1:
-                                    stat.AiOkPcsCount++;
-                                    break;
-                                case 2:
-                                    stat.AiNgPcsCount++;
-                                    panelAllAiPass = false;
-                                    break;
-                                case 3:
-                                    stat.AiExceptionPcsCount++;
-                                    panelAllAiPass = false;
-                                    break;
-                                default:
-                                    stat.AiUninspectedPcsCount++;
-                                    panelAllAiPass = false;
-                                    break;
-                            }
-                        }
-
-                        // 报点级别统计
-                        if (side.DetectPoints != null)
-                        {
-                            stat.TotalPointCount += side.DetectPoints.Count;
-                            stat.AiOkPointCount += side.DetectPoints.Count(p => p.AIStatus == 1);
-                            stat.AiNgPointCount += side.DetectPoints.Count(p => p.AIStatus == 2);
-                            stat.AiExceptionPointCount += side.DetectPoints.Count(p => p.AIStatus == 3);
-                            stat.AiUninspectedPointCount += side.DetectPoints.Count(p => p.AIStatus == 0);
-                        }
-
-                        // 根据复选框决定是否仅加入 AVI NG 数据
-                        if (!chk_OnlyAviNg.Checked || side.AviState != 1)
-                        {
-                            _allDefectItems.Add(CreateDefectReviewItem(panel, side));
-                        }
-                    }
-
-                    if (panelAllAviOk) stat.AviOkPanelCount++;
-                    if (panelAllAiPass) stat.AiPassPanelCount++;
-                }
-
-                // 按Lot分组
-                _lotGroups = _allDefectItems
-                    .GroupBy(x => x.LotNumber ?? "未知Lot")
-                    .ToDictionary(g => g.Key, g => g.ToList());
-
-                // 构建TreeView节点
-                BuildLotTreeNodes();
+                CollectPanelData(QueryControl.GetQueryResult());
 
                 // 默认不加载任何数据到表格，提示用户选择Lot
                 _defectItems.Clear();
@@ -279,91 +194,7 @@ namespace DeepSightAI
                 _currentSelectedLot = null;
 
                 // 根据筛选条件重新收集数据，同时统计指标
-                foreach (var panel in QueryControl.GetQueryResult())
-                {
-                    if (panel.Sides == null) continue;
-                    string lotNumber = panel.LotNumber ?? "未知Lot";
-
-                    // 确保该Lot的统计数据存在
-                    if (!_lotStatistics.ContainsKey(lotNumber))
-                    {
-                        _lotStatistics[lotNumber] = new LotStatistics();
-                    }
-                    var stat = _lotStatistics[lotNumber];
-
-                    // 记录基本信息（取第一条）
-                    if (string.IsNullOrEmpty(stat.MachineId))
-                    {
-                        stat.MachineId = panel.MachineId;
-                        stat.ProductSerial = panel.ProductSerial;
-                    }
-
-                    // Panel(Array)级别统计
-                    stat.TotalPanelCount++;
-                    bool panelAllAviOk = true;
-                    bool panelAllAiPass = true;
-
-                    foreach (var side in panel.Sides)
-                    {
-                        if (side == null) continue;
-
-                        // PCS级别统计
-                        stat.TotalPcsCount++;
-                        if (side.AviState == 1)
-                        {
-                            stat.AviOkPcsCount++;
-                        }
-                        else
-                        {
-                            panelAllAviOk = false;
-                            switch (side.AiState)
-                            {
-                                case 1:
-                                    stat.AiOkPcsCount++;
-                                    break;
-                                case 2:
-                                    stat.AiNgPcsCount++;
-                                    panelAllAiPass = false;
-                                    break;
-                                case 3:
-                                    stat.AiExceptionPcsCount++;
-                                    panelAllAiPass = false;
-                                    break;
-                                default:
-                                    stat.AiUninspectedPcsCount++;
-                                    panelAllAiPass = false;
-                                    break;
-                            }
-                        }
-
-                        // 报点级别统计
-                        if (side.DetectPoints != null)
-                        {
-                            stat.TotalPointCount += side.DetectPoints.Count;
-                            stat.AiOkPointCount += side.DetectPoints.Count(p => p.AIStatus == 1);
-                            stat.AiNgPointCount += side.DetectPoints.Count(p => p.AIStatus == 2);
-                            stat.AiExceptionPointCount += side.DetectPoints.Count(p => p.AIStatus == 3);
-                            stat.AiUninspectedPointCount += side.DetectPoints.Count(p => p.AIStatus == 0);
-                        }
-
-                        // 根据复选框决定是否仅加入 AVI NG 数据
-                        if (!chk_OnlyAviNg.Checked || side.AviState != 1)
-                        {
-                            _allDefectItems.Add(CreateDefectReviewItem(panel, side));
-                        }
-                    }
-
-                    if (panelAllAviOk) stat.AviOkPanelCount++;
-                    if (panelAllAiPass) stat.AiPassPanelCount++;
-                }
-
-                // 按Lot分组
-                _lotGroups = _allDefectItems
-                    .GroupBy(x => x.LotNumber ?? "未知Lot")
-                    .ToDictionary(g => g.Key, g => g.ToList());
-
-                // 构建TreeView节点
-                BuildLotTreeNodes();
+                CollectPanelData(QueryControl.GetQueryResult());
 
                 // 更新表格显示
                 _defectItems.Clear();
@@ -1472,6 +1303,114 @@ namespace DeepSightAI
 
         #region Data Operations
 
+        /// <summary>
+        /// 遍历面板列表，填充 _lotStatistics 和 _allDefectItems，并重建 _lotGroups 及 TreeView 节点。
+        /// 供查询和筛选两个事件处理器共用，消除重复代码。
+        /// </summary>
+        private void CollectPanelData(IEnumerable<PanelDataRecord> panels)
+        {
+            foreach (var panel in panels)
+            {
+                if (panel.Sides == null) continue;
+                string lotNumber = panel.LotNumber ?? "未知Lot";
+
+                if (!_lotStatistics.ContainsKey(lotNumber))
+                    _lotStatistics[lotNumber] = new LotStatistics();
+                var stat = _lotStatistics[lotNumber];
+
+                // 记录基本信息（取第一条）
+                if (string.IsNullOrEmpty(stat.MachineId))
+                {
+                    stat.MachineId = panel.MachineId;
+                    stat.ProductSerial = panel.ProductSerial;
+                }
+
+                stat.TotalPanelCount++;
+                bool panelAllAviOk = true;
+                bool panelAllAiPass = true;
+
+                foreach (var side in panel.Sides)
+                {
+                    if (side == null) continue;
+
+                    // PCS级别统计：按 PcsIndex 分组，同一 PcsIndex 为同一片 PCS
+                    if (side.AviState == 1)
+                    {
+                        stat.TotalPcsCount++;
+                        stat.AviOkPcsCount++;
+                    }
+                    else
+                    {
+                        panelAllAviOk = false;
+                        if (side.DetectPoints != null && side.DetectPoints.Count > 0)
+                        {
+                            var pcsGroups = side.DetectPoints.GroupBy(p => p.PcsIndex);
+                            foreach (var pcsGroup in pcsGroups)
+                            {
+                                var pts = pcsGroup.ToList();
+                                stat.TotalPcsCount++;
+                                if (pts.Any(p => p.AIStatus == 2))
+                                {
+                                    stat.AiNgPcsCount++;
+                                    panelAllAiPass = false;
+                                }
+                                else if (pts.Any(p => p.AIStatus == 3))
+                                {
+                                    stat.AiExceptionPcsCount++;
+                                    panelAllAiPass = false;
+                                }
+                                else if (pts.All(p => p.AIStatus == 1))
+                                {
+                                    stat.AiOkPcsCount++;
+                                }
+                                else
+                                {
+                                    stat.AiUninspectedPcsCount++;
+                                    panelAllAiPass = false;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // 没有报点时，按面级别的 AiState 计入
+                            stat.TotalPcsCount++;
+                            switch (side.AiState)
+                            {
+                                case 1: stat.AiOkPcsCount++; break;
+                                case 2: stat.AiNgPcsCount++; panelAllAiPass = false; break;
+                                case 3: stat.AiExceptionPcsCount++; panelAllAiPass = false; break;
+                                default: stat.AiUninspectedPcsCount++; panelAllAiPass = false; break;
+                            }
+                        }
+                    }
+
+                    // 报点级别统计
+                    if (side.DetectPoints != null)
+                    {
+                        stat.TotalPointCount += side.DetectPoints.Count;
+                        stat.AiOkPointCount += side.DetectPoints.Count(p => p.AIStatus == 1);
+                        stat.AiNgPointCount += side.DetectPoints.Count(p => p.AIStatus == 2);
+                        stat.AiExceptionPointCount += side.DetectPoints.Count(p => p.AIStatus == 3);
+                        stat.AiUninspectedPointCount += side.DetectPoints.Count(p => p.AIStatus == 0);
+                    }
+
+                    // 根据复选框决定是否仅加入 AVI NG 数据
+                    if (!chk_OnlyAviNg.Checked || side.AviState != 1)
+                        _allDefectItems.Add(CreateDefectReviewItem(panel, side));
+                }
+
+                if (panelAllAviOk) stat.AviOkPanelCount++;
+                if (panelAllAiPass) stat.AiPassPanelCount++;
+            }
+
+            // 按Lot分组
+            _lotGroups = _allDefectItems
+                .GroupBy(x => x.LotNumber ?? "未知Lot")
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            // 构建TreeView节点
+            BuildLotTreeNodes();
+        }
 
         private DefectReviewItem CreateDefectReviewItem(PanelDataRecord panel, SideData sideData)
         {
@@ -1555,9 +1494,6 @@ namespace DeepSightAI
                 if (item.LotNumber != _currentReviewLot) continue;
                 if (item.HeatPoints == null) continue;
 
-                bool isAiOkPcs = IsAiOkStatus(item.OriginalAiState);
-                bool isAiNgPcs = IsAiNgStatus(item.OriginalAiState);
-
                 // 报点级别交叉统计
                 foreach (var hp in item.HeatPoints)
                 {
@@ -1573,15 +1509,24 @@ namespace DeepSightAI
                     else if (isAiNgPoint && hp.VVSStatus == 2) _aiNgVvsNgPointCount++;
                 }
 
-                // PCS级别交叉统计（需要有VVS结果的PCS才计入）
-                bool hasVvsResult = item.HeatPoints.Any(hp => hp.VVSStatus != 0);
-                if (hasVvsResult)
+                // PCS级别交叉统计：按 PcsIndex 分组，同一 PcsIndex 为同一片 PCS（需有VVS结果才计入）
+                var pcsGroups = item.HeatPoints.GroupBy(hp => hp.PcsIndex);
+                foreach (var pcsGroup in pcsGroups)
                 {
-                    bool pcsVvsOk = item.HeatPoints.All(hp => hp.VVSStatus == 0 || hp.VVSStatus == 1);
-                    if (isAiOkPcs && pcsVvsOk) _aiOkVvsOkPcsCount++;
-                    else if (isAiOkPcs && !pcsVvsOk) _aiOkVvsNgPcsCount++;
-                    else if (isAiNgPcs && pcsVvsOk) _aiNgVvsOkPcsCount++;
-                    else if (isAiNgPcs && !pcsVvsOk) _aiNgVvsNgPcsCount++;
+                    var pts = pcsGroup.ToList();
+                    bool hasVvsResult = pts.Any(p => p.VVSStatus != 0);
+                    if (!hasVvsResult) continue;
+
+                    // 根据该 PCS 内各点的 AIStatus 判断 PCS 的 AI 状态
+                    bool pcsAiOk = pts.All(p => p.AIStatus == 1);
+                    bool pcsAiNg = pts.Any(p => p.AIStatus == 2);
+                    // 有任意一点 VVS 判定为 NG，则该 PCS 为人工 NG
+                    bool pcsVvsOk = pts.All(p => p.VVSStatus == 0 || p.VVSStatus == 1);
+
+                    if (pcsAiOk && pcsVvsOk) _aiOkVvsOkPcsCount++;
+                    else if (pcsAiOk && !pcsVvsOk) _aiOkVvsNgPcsCount++;
+                    else if (pcsAiNg && pcsVvsOk) _aiNgVvsOkPcsCount++;
+                    else if (pcsAiNg && !pcsVvsOk) _aiNgVvsNgPcsCount++;
                 }
             }
         }

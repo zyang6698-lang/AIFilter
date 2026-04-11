@@ -305,6 +305,8 @@ namespace DeepSightWorkLib.Services
                     }
 
                     defect = defect ?? new DetectInfo();
+                    defect.PcsIndex = vBModel.PcsIndex.ElementAtOrDefault(i);
+                    defect.DefectIndex=vBModel.DefectIndex.ElementAtOrDefault(i );
                     defect.ImagePath = allImageKeys.ElementAtOrDefault(i) ?? defect.ImagePath ?? "";
                     defect.GerberImagePath = allGerberKeys?.ElementAtOrDefault(i) ?? defect.GerberImagePath ?? "";
                     defect.TempImagePath = allTempKeys?.ElementAtOrDefault(i) ?? defect.TempImagePath ?? "";
