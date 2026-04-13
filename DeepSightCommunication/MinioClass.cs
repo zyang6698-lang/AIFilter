@@ -25,7 +25,7 @@ namespace DeepSightCommunication
     {
         public static ConcurrentDictionary<string, MinioClient> dic_Minio = new ConcurrentDictionary<string, MinioClient>();
         public MinioClient _minioClient;
-        private bool _overwriteExisting = true;
+        private readonly bool _overwriteExisting = true;
 
         /// <summary>
         /// 从配置获取 Minio 凭证信息

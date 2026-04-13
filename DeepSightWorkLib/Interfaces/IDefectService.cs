@@ -10,6 +10,11 @@ namespace DeepSightWorkLib.Interfaces
     public interface IDefectService
     {
         /// <summary>
+        /// AI 引擎是否初始化成功（ProxyServer.dll 加载成功）
+        /// </summary>
+        bool IsInitialized { get; }
+
+        /// <summary>
         /// 获取底层 AI 检测类实例（用于需要直接访问的场景）
         /// </summary>
         AI_DefectClass AiDefect { get; }

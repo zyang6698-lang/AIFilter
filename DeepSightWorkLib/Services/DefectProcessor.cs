@@ -36,6 +36,13 @@ namespace DeepSightWorkLib.Services
         public bool DefectMethod(VBModel vBModel,int maxCount, out List<string> resList, int timeoutSeconds = 10)
         {
             resList = new List<string>();
+            if (!_defect.IsInitialized)
+            {
+                LogTextHelper.Warn($"[{vBModel.SN} {vBModel.Side}] AI 引擎未初始化，跳过推理（主流程）");
+                EnqueuePostProcess(vBModel, "", false);
+                TaskStatusSender.SendSkipped(vBModel.SN, vBModel.Side, "AI引擎未初始化");
+                return true;
+            }
             if (vBModel.Mats == null || vBModel.Mats.Count == 0)
             {
                 EnqueuePostProcess(vBModel, "", false);
@@ -295,6 +302,15 @@ namespace DeepSightWorkLib.Services
         public InferenceStageResult Infer(VBModel vBModel, int maxCount, int timeoutSeconds = 10, CancellationToken cancellationToken = default)
         {
             var stageResult = new InferenceStageResult();
+
+            if (!_defect.IsInitialized)
+            {
+                LogTextHelper.Warn($"[{vBModel.SN} {vBModel.Side}] AI 引擎未初始化，跳过推理（Pipeline）");
+                stageResult.PostProcessModel = BuildPostProcessModel(vBModel, "", false);
+                TaskStatusSender.SendSkipped(vBModel.SN, vBModel.Side, "AI引擎未初始化");
+                stageResult.Success = true;
+                return stageResult;
+            }
 
             if (vBModel.Mats == null || vBModel.Mats.Count == 0)
             {

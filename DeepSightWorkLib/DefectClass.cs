@@ -20,15 +20,35 @@ namespace DeepSightWorkLib
     public class DefectClass : IDefectService
     {
         private AI_DefectClass _aiDefect = null;
+        private string _initError = null;
 
         /// <summary>
         /// 获取底层 AI 检测类实例
         /// </summary>
         public AI_DefectClass AiDefect => _aiDefect;
 
+        /// <summary>
+        /// AI 引擎是否初始化成功（ProxyServer.dll 加载成功）
+        /// </summary>
+        public bool IsInitialized => _aiDefect != null;
+
+        /// <summary>
+        /// 初始化失败时的错误信息（成功时为 null）
+        /// </summary>
+        public string InitError => _initError;
+
         public DefectClass()
         {
-            _aiDefect = new AI_DefectClass();
+            try
+            {
+                _aiDefect = new AI_DefectClass();
+            }
+            catch (Exception ex)
+            {
+                _initError = ex.Message;
+                LogTextHelper.Warn($"DefectClass 初始化失败，AI 推理功能不可用（通常是 ProxyServer.dll 缺失或加载失败）：{ex.Message}");
+                // 不重新抛出异常，允许软件在没有 AI 引擎的情况下正常启动
+            }
         }
 
         /// <summary>
@@ -36,6 +56,12 @@ namespace DeepSightWorkLib
         /// </summary>
         public void DefectMethod(RootVBInfo info, out string vb_outStr)
         {
+            if (_aiDefect == null)
+            {
+                vb_outStr = "";
+                LogTextHelper.Warn("DefectMethod: AI 引擎未初始化，跳过推理");
+                return;
+            }
             try
             {
                 JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
@@ -59,6 +85,12 @@ namespace DeepSightWorkLib
         /// <param name="vb_outStr">推理结果输出</param>
         public void DefectMethodWithImages(RootVBInfo info, List<Mat> mats, out string vb_outStr)
         {
+            if (_aiDefect == null)
+            {
+                vb_outStr = "";
+                LogTextHelper.Warn("DefectMethodWithImages: AI 引擎未初始化，跳过推理");
+                return;
+            }
             try
             {
                 // 检查 mats 是否为空
@@ -104,6 +136,12 @@ namespace DeepSightWorkLib
         /// <param name="vb_outStr">推理结果输出</param>
         public void DefectMethodWithImages2(RootVBInfo info, List<Mat> mats, List<Mat> mats_Tmp, out string vb_outStr)
         {
+            if (_aiDefect == null)
+            {
+                vb_outStr = "";
+                LogTextHelper.Warn("DefectMethodWithImages2: AI 引擎未初始化，跳过推理");
+                return;
+            }
             try
             {
                 // 检查 mats 是否为空

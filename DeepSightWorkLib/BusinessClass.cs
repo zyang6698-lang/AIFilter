@@ -249,11 +249,12 @@ namespace DeepSightWorkLib
             _resultWriterService = new ResultWriterService(httpInstance, _queueManager.ProcessingSnSet);
 
             // 初始化模型验证测试服务
+            // 注意：_pipeline 在 InitPipeline() 中初始化，lambda 惰性求值，执行时 _pipeline 已就绪
             var dbHelper = _databaseHelper as DatabaseHelper ?? new DatabaseHelper();
             _validationTestService = new ModelValidationTestService(
                 dbHelper,
                 _imageLoaderService,
-                _queueManager,
+                ctx => _pipeline?.Post(ctx, out _),
                 SolConfig,
                 AviConfig,
                 () => SysConfig.UseGerberImage);

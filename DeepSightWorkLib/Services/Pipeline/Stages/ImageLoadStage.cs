@@ -27,6 +27,14 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
         {
             var loadModel = ctx.LoadModel;
             var model = loadModel.Model;
+
+            // 如果图片已预加载（离线/验证测试任务已在投递前完成图片加载），跳过加载阶段
+            if (model.Mats != null && model.Mats.Count > 0)
+            {
+                LogTextHelper.Info($"SN:{model.SN} 图片已预加载({model.Mats.Count}张)，跳过图片加载阶段（离线任务）");
+                return ctx;
+            }
+
             bool useGerber = _useGerberImageProvider();
 
             LogTextHelper.Info($"开始加载图片，SN:{model.SN}，数量：{model.ImageKeys.Count}，图片类型：{(useGerber ? "Gerber" : "Template")}");

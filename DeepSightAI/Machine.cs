@@ -111,10 +111,12 @@ namespace DeepSightAI
                     machineRegistry = new MachineRegistryConfig();
                     machineRegistryManager.Save(machineRegistry);
                 }
-                master = new BusinessClass();
-                master.SolConfig = solconfig;
-                master.AviConfig = aviconfig;
-                master.SysConfig = sysConfig;
+                master = new BusinessClass
+                {
+                    SolConfig = solconfig,
+                    AviConfig = aviconfig,
+                    SysConfig = sysConfig
+                };
                 master.InitWork();
 
                 UpdateStep(50, "读取配置文件中...", true);

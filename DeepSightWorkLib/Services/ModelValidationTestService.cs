@@ -2,6 +2,7 @@ using DeepSightDB;
 using DeepSightModel;
 using DeepSightModel.Configuration;
 using DeepSightTool;
+using DeepSightWorkLib.Services.Pipeline;
 using Newtonsoft.Json;
 using OpenCvSharp;
 using System;
@@ -20,7 +21,7 @@ namespace DeepSightWorkLib.Services
     public class ModelValidationTestService
     {
         private readonly DatabaseHelper _databaseHelper;
-        private readonly QueueManager _queueManager;
+        private readonly Action<PipelineContext> _postToPipeline;
         private readonly VBModelBuilder _vbModelBuilder;
         private readonly ImageLoaderService _imageLoaderService;
         private readonly Func<bool> _useGerberImageProvider;
@@ -35,14 +36,14 @@ namespace DeepSightWorkLib.Services
         public ModelValidationTestService(
             DatabaseHelper databaseHelper,
             ImageLoaderService imageLoaderService,
-            QueueManager queueManager,
+            Action<PipelineContext> postToPipeline,
             SolutionConfig solutionConfig,
             AVIConfig aviConfig,
             Func<bool> useGerberImageProvider = null)
         {
             _databaseHelper = databaseHelper ?? throw new ArgumentNullException(nameof(databaseHelper));
             _imageLoaderService = imageLoaderService ?? throw new ArgumentNullException(nameof(imageLoaderService));
-            _queueManager = queueManager ?? throw new ArgumentNullException(nameof(queueManager));
+            _postToPipeline = postToPipeline ?? throw new ArgumentNullException(nameof(postToPipeline));
             _vbModelBuilder = new VBModelBuilder(solutionConfig);
             _useGerberImageProvider = useGerberImageProvider ?? (() => false);
         }
@@ -335,9 +336,13 @@ namespace DeepSightWorkLib.Services
                     vbModel.Mats_Temp = _imageLoaderService.LoadImages(tempImagePaths);
                 }
 
-                // 入队到推理队列
-                _queueManager.AviQueue.Enqueue(vbModel);
-                LogTextHelper.Info($"{GetModeName(task.Mode)}任务入队: {panel.SerialNumber}_{side.Side}, 总缺陷数: {defectPoints.Count}, 推理缺陷数: {nonDirectReportDefects.Count}");
+                // 构建 PipelineContext 并投递到 Pipeline（跳过JSON解析和图片加载阶段，图片已预加载）
+                var pipelineCtx = new PipelineContext
+                {
+                    LoadModel = new ImageLoadModel { Model = vbModel }
+                };
+                _postToPipeline(pipelineCtx);
+                LogTextHelper.Info($"{GetModeName(task.Mode)}任务投递Pipeline: {panel.SerialNumber}_{side.Side}, 总缺陷数: {defectPoints.Count}, 推理缺陷数: {nonDirectReportDefects.Count}");
 
                 task.EnqueuedRecords++;
             }
@@ -637,8 +642,13 @@ namespace DeepSightWorkLib.Services
                     vbModel.Mats_Temp = new List<Mat>();
                 }
 
-                _queueManager.AviQueue.Enqueue(vbModel);
-                LogTextHelper.Info($"单图测试入队: {testKey}, 图片: {detectInfo.ImagePath}");
+                // 构建 PipelineContext 并投递到 Pipeline（跳过JSON解析和图片加载阶段，图片已预加载）
+                var pipelineCtx = new PipelineContext
+                {
+                    LoadModel = new ImageLoadModel { Model = vbModel }
+                };
+                _postToPipeline(pipelineCtx);
+                LogTextHelper.Info($"单图测试投递Pipeline: {testKey}, 图片: {detectInfo.ImagePath}");
 
                 // 等待结果
                 var timeoutTask = Task.Delay(TimeSpan.FromSeconds(timeout));

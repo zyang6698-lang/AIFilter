@@ -46,6 +46,13 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
         /// </summary>
         public PipelineContext Execute(PipelineContext ctx)
         {
+            // 如果 LoadModel 已就绪（离线/验证测试任务已预构建 VBModel），直接跳过 JSON 解析阶段
+            if (ctx.LoadModel != null)
+            {
+                LogTextHelper.Info($"{ctx.SN} {ctx.Side} LoadModel已预设，跳过JSON解析阶段（离线任务）");
+                return ctx;
+            }
+
             var aviCtx = ctx.AviContext;
             var ip = aviCtx.MinioIp;
             var port = aviCtx.MinioPort;

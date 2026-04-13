@@ -38,6 +38,8 @@ namespace DeepSightAI
             Error,
             /// <summary>Block 已正常完成 (RanToCompletion)</summary>
             Completed,
+            /// <summary>阶段功能不可用（如 AI 引擎未初始化）</summary>
+            Warning,
         }
 
         /// <summary>各状态对应的背景颜色</summary>
@@ -47,6 +49,7 @@ namespace DeepSightAI
         private static readonly Color BgBusy      = Color.FromArgb(140, 100, 20);
         private static readonly Color BgError     = Color.FromArgb(130, 35, 35);
         private static readonly Color BgCompleted = Color.FromArgb(50, 75, 110);
+        private static readonly Color BgWarning   = Color.FromArgb(130, 110, 0);
 
         /// <summary>Pipeline 各阶段定义（名称、填充色）</summary>
         private static readonly StageInfo[] _stages = new StageInfo[]
@@ -62,6 +65,11 @@ namespace DeepSightAI
         public FrPipelineMonitor()
         {
             InitializeComponent();
+            // 为流程图面板开启双缓冲，消除定时刷新导致的闪烁
+            typeof(System.Windows.Forms.Panel)
+                .GetProperty("DoubleBuffered",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.SetValue(panelFlow, true);
             this.Load += FrPipelineMonitor_Load;
             this.FormClosing += FrPipelineMonitor_FormClosing;
         }
@@ -214,10 +222,17 @@ namespace DeepSightAI
         /// <summary>根据队列深度 + Block 状态 + 处理增量 计算各阶段的运行状态</summary>
         private StageState[] GetStageStateArray(int[] queueCounts, long[] processedDeltas)
         {
+            bool defectReady = Machine.master?.DefectService?.IsInitialized ?? true;
+
             bool running = Machine.master?.IsPipelineRunning ?? false;
             if (!running)
-                return new StageState[] { StageState.Idle, StageState.Idle, StageState.Idle,
-                                          StageState.Idle, StageState.Idle, StageState.Idle };
+            {
+                var idleStates = new StageState[] { StageState.Idle, StageState.Idle, StageState.Idle,
+                                                    StageState.Idle, StageState.Idle, StageState.Idle };
+                if (!defectReady)
+                    idleStates[2] = StageState.Warning;
+                return idleStates;
+            }
 
             System.Threading.Tasks.TaskStatus[] blockStatuses = new System.Threading.Tasks.TaskStatus[]
             {
@@ -242,6 +257,10 @@ namespace DeepSightAI
                                    || queueCounts[4] > 0 || queueCounts[5] > 0;
                 states[3] = neighborActive ? StageState.Running : StageState.Empty;
             }
+
+            // AI 引擎未初始化时，推理阶段始终显示警告
+            if (!defectReady)
+                states[2] = StageState.Warning;
 
             return states;
         }
@@ -272,6 +291,7 @@ namespace DeepSightAI
                 case StageState.Busy:      return BgBusy;
                 case StageState.Error:     return BgError;
                 case StageState.Completed: return BgCompleted;
+                case StageState.Warning:   return BgWarning;
                 default:                   return BgIdle;
             }
         }
@@ -287,6 +307,7 @@ namespace DeepSightAI
                 case StageState.Busy:      return "积压";
                 case StageState.Error:     return "异常";
                 case StageState.Completed: return "已完成";
+                case StageState.Warning:   return "未就绪";
                 default:                   return "";
             }
         }
@@ -343,6 +364,7 @@ namespace DeepSightAI
                 (BgBusy,      "积压"),
                 (BgError,     "异常"),
                 (BgCompleted, "已完成"),
+                (BgWarning,   "未就绪"),
             };
 
             using (var font = new Font("微软雅黑", 8F))
