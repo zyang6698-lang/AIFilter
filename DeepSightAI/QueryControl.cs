@@ -32,6 +32,16 @@ namespace DeepSightAI
         /// </summary>
         private bool _suppressFilterChanged = false;
 
+        /// <summary>
+        /// 筛选结果缓存，避免每次调用 GetQueryResult 都重新投影
+        /// </summary>
+        private List<PanelDataRecord> _cachedFilterResult;
+
+        /// <summary>
+        /// 缓存对应的筛选条件签名，用于判断是否需要重新计算
+        /// </summary>
+        private string _cachedFilterKey;
+
         #endregion
 
         #region Properties
@@ -132,13 +142,29 @@ namespace DeepSightAI
         /// <summary>
         /// 获取或设置查询结果
         /// </summary>
-        private List<PanelDataRecord> QueryResult { get;  set; }
+        private List<PanelDataRecord> _queryResult;
+        private List<PanelDataRecord> QueryResult
+        {
+            get => _queryResult;
+            set
+            {
+                _queryResult = value;
+                InvalidateFilterCache();
+            }
+        }
 
         public List<PanelDataRecord> GetQueryResult()
         {
             if (QueryResult == null)
             {
                 return new List<PanelDataRecord>();
+            }
+
+            // 计算当前筛选条件的签名
+            string currentKey = $"{PartNumber}|{MachineID}|{SelectedSide}|{SelectedDefectName}";
+            if (_cachedFilterResult != null && _cachedFilterKey == currentKey)
+            {
+                return _cachedFilterResult;
             }
 
             var query = QueryResult.AsQueryable();
@@ -158,7 +184,7 @@ namespace DeepSightAI
             // 然后根据选择的面和缺陷名称筛选每个记录的Sides列表
             var selectedSide = this.SelectedSide;
             var selectedDefect = this.SelectedDefectName;
-            return query.Select(record => new PanelDataRecord
+            _cachedFilterResult = query.Select(record => new PanelDataRecord
             {
                 Id = record.Id,
                 MachineId = record.MachineId,
@@ -193,6 +219,18 @@ namespace DeepSightAI
             // 过滤掉没有任何匹配面的记录
             .Where(record => record.Sides.Count > 0)
             .ToList();
+
+            _cachedFilterKey = currentKey;
+            return _cachedFilterResult;
+        }
+
+        /// <summary>
+        /// 当查询数据变更时清除筛选缓存
+        /// </summary>
+        private void InvalidateFilterCache()
+        {
+            _cachedFilterResult = null;
+            _cachedFilterKey = null;
         }
 
         #endregion
@@ -458,24 +496,21 @@ namespace DeepSightAI
         {
             errorMessage = string.Empty;
 
+            // 必须至少输入 Lot 号或勾选日期
             if (string.IsNullOrWhiteSpace(txt_Lot.Text) && !timePicker.Checked)
             {
-                errorMessage = "请输入Lot号，或选择日期并选择一个料号。";
+                errorMessage = "请输入Lot号，或勾选日期进行查询。";
                 return false;
             }
 
-            if (timePicker.Checked && string.IsNullOrEmpty(cmb_PartNumber.Text))
-            {
-                errorMessage = "请选择至少一个料号。";
-                return false;
-            }
-
+            // 日期范围校验
             if (timePicker.Checked && timePickerEnd.Value.Date < timePicker.Value.Date)
             {
                 errorMessage = "结束日期不能早于起始日期！";
                 return false;
             }
 
+            // 注意：不再要求必须选择料号，因为 QueryDataAsync 支持不选料号时查全部并自动填充料号列表
             return true;
         }
 

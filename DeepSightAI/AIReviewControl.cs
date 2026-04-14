@@ -1,4 +1,5 @@
-﻿using DeepSightDB;
+﻿using DeepSightAI.Services;
+using DeepSightDB;
 using DeepSightModel;
 using DeepSightTool;
 using DeepSightWorkLib.Services;
@@ -135,7 +136,7 @@ namespace DeepSightAI
 
         #region Event Handlers
 
-        private void HeatMapQueryControl_QueryClicked(object sender, EventArgs e)
+        private async void HeatMapQueryControl_QueryClicked(object sender, EventArgs e)
         {
             try
             {
@@ -155,16 +156,34 @@ namespace DeepSightAI
                 defectDetailControl1.ClearDetails();
                 _currentSelectedLot = null;
 
-                // 收集所有数据，同时统计指标
-                CollectPanelData(QueryControl.GetQueryResult());
+                // 获取查询结果（可能涉及数据库 I/O）
+                var queryResult = QueryControl.GetQueryResult();
+
+                // 在后台线程执行统计计算，避免阻塞 UI
+                var panelList = queryResult as IList<PanelDataRecord> ?? queryResult.ToList();
+                var statistics = await Task.Run(() => LotStatisticsCalculator.Calculate(panelList));
+
+                // 回到 UI 线程更新控件
+                _lotStatistics = statistics;
+                bool onlyAviNg = chk_OnlyAviNg.Checked;
+                foreach (var panel in panelList)
+                {
+                    if (panel.Sides == null) continue;
+                    foreach (var side in panel.Sides)
+                    {
+                        if (side == null) continue;
+                        if (!onlyAviNg || side.AviState != 1)
+                            _allDefectItems.Add(CreateDefectReviewItem(panel, side));
+                    }
+                }
+
+                _lotGroups = _allDefectItems
+                    .GroupBy(x => x.LotNumber ?? "未知Lot")
+                    .ToDictionary(g => g.Key, g => g.ToList());
+                BuildLotTreeNodes();
 
                 // 默认不加载任何数据到表格，提示用户选择Lot
-                _defectItems.Clear();
-                _bindingList = new SortableBindingList<DefectReviewItem>(_defectItems);
-                dataGridView_Defects.DataSource = _bindingList;
-
-                //MessageBox.Show($"查询完成，共找到 {_allDefectItems.Count} 条记录，分布在 {_lotGroups.Count} 个Lot中。\n请在左侧选择Lot查看详情。",
-                //    "查询结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                RefreshDataGridView();
             }
             catch (Exception ex)
             {
@@ -180,7 +199,7 @@ namespace DeepSightAI
         /// <summary>
         /// 筛选条件变化事件处理（料号或机台号选择变化时自动筛选）
         /// </summary>
-        private void QueryControl_FilterChanged(object sender, EventArgs e)
+        private async void QueryControl_FilterChanged(object sender, EventArgs e)
         {
             try
             {
@@ -193,13 +212,34 @@ namespace DeepSightAI
                 defectDetailControl1.ClearDetails();
                 _currentSelectedLot = null;
 
-                // 根据筛选条件重新收集数据，同时统计指标
-                CollectPanelData(QueryControl.GetQueryResult());
+                // 获取筛选结果
+                var queryResult = QueryControl.GetQueryResult();
+
+                // 在后台线程执行统计计算
+                var panelList = queryResult as IList<PanelDataRecord> ?? queryResult.ToList();
+                var statistics = await Task.Run(() => LotStatisticsCalculator.Calculate(panelList));
+
+                // 回到 UI 线程更新
+                _lotStatistics = statistics;
+                bool onlyAviNg = chk_OnlyAviNg.Checked;
+                foreach (var panel in panelList)
+                {
+                    if (panel.Sides == null) continue;
+                    foreach (var side in panel.Sides)
+                    {
+                        if (side == null) continue;
+                        if (!onlyAviNg || side.AviState != 1)
+                            _allDefectItems.Add(CreateDefectReviewItem(panel, side));
+                    }
+                }
+
+                _lotGroups = _allDefectItems
+                    .GroupBy(x => x.LotNumber ?? "未知Lot")
+                    .ToDictionary(g => g.Key, g => g.ToList());
+                BuildLotTreeNodes();
 
                 // 更新表格显示
-                _defectItems.Clear();
-                _bindingList = new SortableBindingList<DefectReviewItem>(_defectItems);
-                dataGridView_Defects.DataSource = _bindingList;
+                RefreshDataGridView();
             }
             catch (Exception ex)
             {
@@ -220,8 +260,9 @@ namespace DeepSightAI
             var selectedItem = dataGridView_Defects.Rows[e.RowIndex].DataBoundItem as DefectReviewItem;
             if (selectedItem != null)
             {
-                defectDetailControl1.DisplayDefectDetails(selectedItem);
+                // 先切换到详情页，确保面板布局正确后再加载图片
                 tabControl_Main.SelectedTab = tabPage_Details;
+                defectDetailControl1.DisplayDefectDetails(selectedItem);
             }
         }
 
@@ -314,7 +355,7 @@ namespace DeepSightAI
         /// <summary>
         /// 当VVS状态改变时触发，用于更新左下角复判详情并执行自动保存动作
         /// </summary>
-        private async void DefectDetailControl_VvsStatusChanged(object sender, EventArgs e)
+        private async void DefectDetailControl_VvsStatusChanged(object sender, VvsStatusChangedEventArgs e)
         {
             // 如果当前有展示的详情，重新统计VVS状态
             if (_currentReviewLot != null)
@@ -323,8 +364,8 @@ namespace DeepSightAI
                 RefreshReviewDetailDisplay();
             }
 
-            // 每次VVS状态修改后，标记对应的DefectReviewItem为已修改，并累加保存计数
-            MarkCurrentVvsItemModified();
+            // 精确标记被修改的缺陷点所属的 DefectReviewItem
+            MarkModifiedItem(e?.ModifiedHeatPoint);
             _pendingSaveCount++;
 
             // 积攒满100次时批量保存到数据库
@@ -335,20 +376,18 @@ namespace DeepSightAI
         }
 
         /// <summary>
-        /// 标记当前正在操作的缺陷点所属的DefectReviewItem为已修改
+        /// 根据被修改的缺陷点，精确标记其所属的 DefectReviewItem 为已修改
         /// </summary>
-        private void MarkCurrentVvsItemModified()
+        private void MarkModifiedItem(DetectInfo modifiedHeatPoint)
         {
-            // 通过DefectDetailControl获取当前显示的source items，标记所有为已修改
-            // 因为VVS状态改变可能影响任何一个item
-            if (_allDefectItems == null) return;
+            if (modifiedHeatPoint == null || _allDefectItems == null) return;
 
             foreach (var item in _allDefectItems)
             {
-                if (item.HeatPoints != null && item.HeatPoints.Any(hp => hp.VVSStatus != 0))
+                if (item.HeatPoints != null && item.HeatPoints.Contains(modifiedHeatPoint))
                 {
-                    // 如果有任何一个缺陷点被设置过VVS状态，标记为已修改
                     item.IsModified = true;
+                    return; // 一个缺陷点只属于一个 item，找到即可返回
                 }
             }
         }
@@ -801,22 +840,20 @@ namespace DeepSightAI
                 if (totalHeatPoints > 0)
                 {
                     // 更新复判详情显示（使用第一个项目的信息）
-                    if (itemsToDisplay.Count > 0)
+                    var firstItem = itemsToDisplay.FirstOrDefault();
+                    if (firstItem != null)
                     {
-                        var firstItem = itemsToDisplay.FirstOrDefault();
-                        if (firstItem != null)
-                        {
-                            _currentReviewLot = firstItem.LotNumber;
-                            _currentReviewTime = firstItem.DetectionDate;
-                            // 更新统计数据（包括VVS状态和统计指标）
-                            UpdateVvsStatusSummary();
-                            RefreshReviewDetailDisplay();
-                        }
+                        _currentReviewLot = firstItem.LotNumber;
+                        _currentReviewTime = firstItem.DetectionDate;
+                        // 更新统计数据（包括VVS状态和统计指标）
+                        UpdateVvsStatusSummary();
+                        RefreshReviewDetailDisplay();
                     }
-                    
+
+                    // 先切换到详情页，确保面板布局正确后再加载图片
+                    tabControl_Main.SelectedTab = tabPage_Details;
                     // 使用新的重载方法，传递原始items列表（保持HeatPoints引用），以便按SN分组检查VVS状态
                     defectDetailControl1.DisplayDefectDetails(itemsToDisplay, displayTitle);
-                    tabControl_Main.SelectedTab = tabPage_Details;
                 }
                 else
                 {
@@ -882,12 +919,7 @@ namespace DeepSightAI
             if (!_lotGroups.TryGetValue(lotNumber, out var items)) return;
 
             _currentSelectedLot = lotNumber;
-            _defectItems.Clear();
-            _defectItems.AddRange(items);
-
-            _bindingList = new SortableBindingList<DefectReviewItem>(_defectItems);
-            dataGridView_Defects.DataSource = _bindingList;
-            _bindingList.ResetBindings();
+            RefreshDataGridView(items);
 
             label_LotTitle.Text = $"Lot: {lotNumber} ({items.Count}条)";
         }
@@ -902,12 +934,7 @@ namespace DeepSightAI
             var filteredItems = items.Where(x => x.Side == category).ToList();
 
             _currentSelectedLot = lotNumber;
-            _defectItems.Clear();
-            _defectItems.AddRange(filteredItems);
-
-            _bindingList = new SortableBindingList<DefectReviewItem>(_defectItems);
-            dataGridView_Defects.DataSource = _bindingList;
-            _bindingList.ResetBindings();
+            RefreshDataGridView(filteredItems);
 
             label_LotTitle.Text = $"Lot: {lotNumber} - {category}面 ({filteredItems.Count}条)";
         }
@@ -972,12 +999,7 @@ namespace DeepSightAI
                 .ToList();
 
             // 更新表格
-            _defectItems.Clear();
-            _defectItems.AddRange(filteredItems);
-
-            _bindingList = new SortableBindingList<DefectReviewItem>(_defectItems);
-            dataGridView_Defects.DataSource = _bindingList;
-            _bindingList.ResetBindings();
+            RefreshDataGridView(filteredItems);
 
             // 更新标题
             string scopeText = string.IsNullOrEmpty(_currentSelectedLot) ? "全部" : $"Lot: {_currentSelectedLot}";
@@ -1004,9 +1026,7 @@ namespace DeepSightAI
             if (string.IsNullOrEmpty(filterText))
             {
                 // 清空表格，提示用户选择Lot
-                _defectItems.Clear();
-                _bindingList = new SortableBindingList<DefectReviewItem>(_defectItems);
-                dataGridView_Defects.DataSource = _bindingList;
+                RefreshDataGridView();
                 label_LotTitle.Text = "请选择Lot或输入SN搜索";
                 return;
             }
@@ -1015,12 +1035,7 @@ namespace DeepSightAI
                 .Where(x => x.SerialNumber != null && x.SerialNumber.IndexOf(filterText, StringComparison.OrdinalIgnoreCase) >= 0)
                 .ToList();
 
-            _defectItems.Clear();
-            _defectItems.AddRange(filteredItems);
-
-            _bindingList = new SortableBindingList<DefectReviewItem>(_defectItems);
-            dataGridView_Defects.DataSource = _bindingList;
-            _bindingList.ResetBindings();
+            RefreshDataGridView(filteredItems);
 
             label_LotTitle.Text = $"全局搜索: {filterText} ({filteredItems.Count}条)";
         }
@@ -1304,103 +1319,40 @@ namespace DeepSightAI
         #region Data Operations
 
         /// <summary>
+        /// 刷新 DataGridView 的数据绑定
+        /// </summary>
+        private void RefreshDataGridView(List<DefectReviewItem> items = null)
+        {
+            _defectItems.Clear();
+            if (items != null)
+                _defectItems.AddRange(items);
+            _bindingList = new SortableBindingList<DefectReviewItem>(_defectItems);
+            dataGridView_Defects.DataSource = _bindingList;
+        }
+
+        /// <summary>
         /// 遍历面板列表，填充 _lotStatistics 和 _allDefectItems，并重建 _lotGroups 及 TreeView 节点。
         /// 供查询和筛选两个事件处理器共用，消除重复代码。
         /// </summary>
         private void CollectPanelData(IEnumerable<PanelDataRecord> panels)
         {
-            foreach (var panel in panels)
+            var panelList = panels as IList<PanelDataRecord> ?? panels.ToList();
+
+            // 使用 LotStatisticsCalculator 计算统计指标（可独立单元测试）
+            _lotStatistics = LotStatisticsCalculator.Calculate(panelList);
+
+            // 构建缺陷明细列表
+            bool onlyAviNg = chk_OnlyAviNg.Checked;
+            foreach (var panel in panelList)
             {
                 if (panel.Sides == null) continue;
-                string lotNumber = panel.LotNumber ?? "未知Lot";
-
-                if (!_lotStatistics.ContainsKey(lotNumber))
-                    _lotStatistics[lotNumber] = new LotStatistics();
-                var stat = _lotStatistics[lotNumber];
-
-                // 记录基本信息（取第一条）
-                if (string.IsNullOrEmpty(stat.MachineId))
-                {
-                    stat.MachineId = panel.MachineId;
-                    stat.ProductSerial = panel.ProductSerial;
-                }
-
-                stat.TotalPanelCount++;
-                bool panelAllAviOk = true;
-                bool panelAllAiPass = true;
-
                 foreach (var side in panel.Sides)
                 {
                     if (side == null) continue;
-
-                    // PCS级别统计：按 PcsIndex 分组，同一 PcsIndex 为同一片 PCS
-                    if (side.AviState == 1)
-                    {
-                        stat.TotalPcsCount++;
-                        stat.AviOkPcsCount++;
-                    }
-                    else
-                    {
-                        panelAllAviOk = false;
-                        if (side.DetectPoints != null && side.DetectPoints.Count > 0)
-                        {
-                            var pcsGroups = side.DetectPoints.GroupBy(p => p.PcsIndex);
-                            foreach (var pcsGroup in pcsGroups)
-                            {
-                                var pts = pcsGroup.ToList();
-                                stat.TotalPcsCount++;
-                                if (pts.Any(p => p.AIStatus == 2))
-                                {
-                                    stat.AiNgPcsCount++;
-                                    panelAllAiPass = false;
-                                }
-                                else if (pts.Any(p => p.AIStatus == 3))
-                                {
-                                    stat.AiExceptionPcsCount++;
-                                    panelAllAiPass = false;
-                                }
-                                else if (pts.All(p => p.AIStatus == 1))
-                                {
-                                    stat.AiOkPcsCount++;
-                                }
-                                else
-                                {
-                                    stat.AiUninspectedPcsCount++;
-                                    panelAllAiPass = false;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            // 没有报点时，按面级别的 AiState 计入
-                            stat.TotalPcsCount++;
-                            switch (side.AiState)
-                            {
-                                case 1: stat.AiOkPcsCount++; break;
-                                case 2: stat.AiNgPcsCount++; panelAllAiPass = false; break;
-                                case 3: stat.AiExceptionPcsCount++; panelAllAiPass = false; break;
-                                default: stat.AiUninspectedPcsCount++; panelAllAiPass = false; break;
-                            }
-                        }
-                    }
-
-                    // 报点级别统计
-                    if (side.DetectPoints != null)
-                    {
-                        stat.TotalPointCount += side.DetectPoints.Count;
-                        stat.AiOkPointCount += side.DetectPoints.Count(p => p.AIStatus == 1);
-                        stat.AiNgPointCount += side.DetectPoints.Count(p => p.AIStatus == 2);
-                        stat.AiExceptionPointCount += side.DetectPoints.Count(p => p.AIStatus == 3);
-                        stat.AiUninspectedPointCount += side.DetectPoints.Count(p => p.AIStatus == 0);
-                    }
-
                     // 根据复选框决定是否仅加入 AVI NG 数据
-                    if (!chk_OnlyAviNg.Checked || side.AviState != 1)
+                    if (!onlyAviNg || side.AviState != 1)
                         _allDefectItems.Add(CreateDefectReviewItem(panel, side));
                 }
-
-                if (panelAllAviOk) stat.AviOkPanelCount++;
-                if (panelAllAiPass) stat.AiPassPanelCount++;
             }
 
             // 按Lot分组
@@ -1420,7 +1372,7 @@ namespace DeepSightAI
                 .Select(dp => dp.DefectName)
                 .Distinct()
                 .ToList();
-            string defectNameStr = defectNames.Count > 0 ? string.Join(", ", defectNames) : "";
+            string defectNameStr = defectNames?.Count > 0 ? string.Join(", ", defectNames) : "";
 
             return new DefectReviewItem
             {
@@ -1628,63 +1580,66 @@ namespace DeepSightAI
         {
             await Task.Run(() =>
             {
+                // 批量构建所有待保存记录
+                var records = new List<PanelSideRecord>();
                 foreach (var item in items)
                 {
-                    try
+                    // 将人工判定状态转换为 FinalState
+                    // ManualStatus: "OK" -> 1, "NG" -> 2, "未判定" -> 0
+                    int finalState = 0;
+                    if (item.ManualStatus == "OK") finalState = 1;
+                    else if (item.ManualStatus == "NG") finalState = 2;
+
+                    // 使用原始状态码回写，避免丢失 0(未检测)/3(异常) 等状态
+                    int aviState = item.OriginalAviState;
+                    int aiState = item.OriginalAiState;
+
+                    // 计算 VVS 状态：基于 HeatPoints 中的 VVSStatus
+                    int vvsState = 0;
+                    if (item.HeatPoints != null && item.HeatPoints.Count > 0)
                     {
-                        // 将人工判定状态转换为 FinalState
-                        // ManualStatus: "OK" -> 1, "NG" -> 2, "未判定" -> 0
-                        int finalState = 0;
-                        if (item.ManualStatus == "OK") finalState = 1;
-                        else if (item.ManualStatus == "NG") finalState = 2;
-
-                        // 使用原始状态码回写，避免丢失 0(未检测)/3(异常) 等状态
-                        int aviState = item.OriginalAviState;
-                        int aiState = item.OriginalAiState;
-
-                        // 计算 VVS 状态：基于 HeatPoints 中的 VVSStatus
-                        int vvsState = 0;
-                        if (item.HeatPoints != null && item.HeatPoints.Count > 0)
+                        bool hasVvsSet = item.HeatPoints.Any(hp => hp.VVSStatus != 0);
+                        if (hasVvsSet)
                         {
-                            bool hasVvsSet = item.HeatPoints.Any(hp => hp.VVSStatus != 0);
-                            if (hasVvsSet)
-                            {
-                                bool allVvsOk = item.HeatPoints.All(hp => hp.VVSStatus == 0 || hp.VVSStatus == 1);
-                                vvsState = allVvsOk ? 1 : 2;
-                            }
+                            bool allVvsOk = item.HeatPoints.All(hp => hp.VVSStatus == 0 || hp.VVSStatus == 1);
+                            vvsState = allVvsOk ? 1 : 2;
                         }
-
-                        // 创建 PanelSideRecord 用于保存
-                        var record = new PanelSideRecord
-                        {
-                            SerialNumber = item.SerialNumber,
-                            LotNumber = item.LotNumber,
-                            MachineId = item.MachineId,
-                            ProductSerial = item.ProductSerial,
-                            Side = item.Side,
-                            DetectionDate = item.DetectionDate,
-                            Data = new SideData
-                            {
-                                Side = item.Side,
-                                DetectPoints = item.HeatPoints ?? new List<DetectInfo>(),
-                                AviState = aviState,
-                                AiState = aiState,
-                                VvsState = vvsState,
-                                VrsState = 0, // VRS 状态暂不处理
-                                FinalState = finalState
-                            }
-                        };
-
-                        // 调用 SavePanelSide 保存到数据库（支持覆盖）
-                        Machine.master.SavePanelSide(record);
-
-                        LogTextHelper.Info($"保存人工判定结果成功: SN={item.SerialNumber}, Side={item.Side}, " +
-                            $"ManualStatus={item.ManualStatus}, FinalState={finalState}");
                     }
-                    catch (Exception ex)
+
+                    records.Add(new PanelSideRecord
                     {
-                        LogTextHelper.Error($"保存人工判定结果失败: SN={item.SerialNumber}, Side={item.Side}, 错误: {ex.Message}");
+                        SerialNumber = item.SerialNumber,
+                        LotNumber = item.LotNumber,
+                        MachineId = item.MachineId,
+                        ProductSerial = item.ProductSerial,
+                        Side = item.Side,
+                        DetectionDate = item.DetectionDate,
+                        Data = new SideData
+                        {
+                            Side = item.Side,
+                            DetectPoints = item.HeatPoints ?? new List<DetectInfo>(),
+                            AviState = aviState,
+                            AiState = aiState,
+                            VvsState = vvsState,
+                            VrsState = 0, // VRS 状态暂不处理
+                            FinalState = finalState
+                        }
+                    });
+                }
+
+                // 使用批量保存接口（事务性，保证数据一致性）
+                try
+                {
+                    Machine.master.SavePanelSidesBatch(records);
+                    foreach (var item in items)
+                    {
+                        LogTextHelper.Info($"保存人工判定结果成功: SN={item.SerialNumber}, Side={item.Side}, ManualStatus={item.ManualStatus}");
                     }
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error($"批量保存人工判定结果失败({records.Count}条): {ex.Message}");
+                    throw; // 向上层抛出，让调用者感知失败
                 }
             });
         }

@@ -2,6 +2,8 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,6 +30,8 @@ namespace DeepSightAI
         private List<DefectReviewItem> _sourceItems;
         // 记录已经触发过完成事件的SN（避免重复触发）
         private readonly HashSet<string> _completedSnSet = new HashSet<string>();
+        // 用于取消正在进行的异步图片加载（翻页或重新加载时取消旧任务）
+        private CancellationTokenSource _loadCts;
 
         /// <summary>
         /// 当需要切换到下一行记录时触发（按Tab键时）
@@ -40,9 +44,9 @@ namespace DeepSightAI
         public event EventHandler<VvsCompletedEventArgs> SnVvsCompleted;
 
         /// <summary>
-        /// 当VVS状态改变时触发
+        /// 当VVS状态改变时触发，传递被修改的缺陷点信息
         /// </summary>
-        public event EventHandler VvsStatusChanged;
+        public event EventHandler<VvsStatusChangedEventArgs> VvsStatusChanged;
 
         /// <summary>
         /// 当请求单图测试时触发
@@ -338,8 +342,8 @@ namespace DeepSightAI
                     // 检查是否所有缺陷点都已完成VVS复判
                     CheckAllVvsStatusSet();
 
-                    // 触发VVS状态改变事件，用于更新左下角复判详情
-                    VvsStatusChanged?.Invoke(this, EventArgs.Empty);
+                    // 触发VVS状态改变事件，传递被修改的缺陷点
+                    VvsStatusChanged?.Invoke(this, new VvsStatusChangedEventArgs { ModifiedHeatPoint = heatPoint });
                 }
 
                 // 更新状态显示
@@ -404,6 +408,9 @@ namespace DeepSightAI
         /// </summary>
         public void DisplayDefectDetails(List<DefectReviewItem> items, string title)
         {
+            // 取消正在进行的异步图片加载
+            CancelPendingImageLoads();
+
             // 保存原始items列表，用于按SN分组检查VVS状态
             _sourceItems = items;
             _completedSnSet.Clear();
@@ -440,53 +447,112 @@ namespace DeepSightAI
             LoadDefectsPage(_currentPage);
         }
 
+        /// <summary>
+        /// 取消正在进行的异步图片加载任务
+        /// </summary>
+        private void CancelPendingImageLoads()
+        {
+            if (_loadCts != null)
+            {
+                _loadCts.Cancel();
+                _loadCts.Dispose();
+                _loadCts = null;
+            }
+        }
 
         private void LoadDefectsPage(int page)
         {
-            // Dispose all existing child controls to release Win32 window handles before clearing
-            var oldControls = new System.Windows.Forms.Control[flowLayoutPanel_DefectImages.Controls.Count];
-            flowLayoutPanel_DefectImages.Controls.CopyTo(oldControls, 0);
-            flowLayoutPanel_DefectImages.Controls.Clear();
-            foreach (var ctrl in oldControls)
-                ctrl.Dispose();
+            // 取消上一页未完成的图片加载
+            CancelPendingImageLoads();
 
-            _selectedIndex = -1;
-
-            if (_filteredHeatPoints.Count == 0)
+            try
             {
-                var noDataLabel = new Label
+                flowLayoutPanel_DefectImages.SuspendLayout();
+
+                // Dispose all existing child controls to release Win32 window handles before clearing
+                var oldControls = new System.Windows.Forms.Control[flowLayoutPanel_DefectImages.Controls.Count];
+                flowLayoutPanel_DefectImages.Controls.CopyTo(oldControls, 0);
+                flowLayoutPanel_DefectImages.Controls.Clear();
+                foreach (var ctrl in oldControls)
+                    ctrl.Dispose();
+
+                // 重置滚动位置，避免翻页后新控件被旧的滚动偏移遮挡
+                flowLayoutPanel_DefectImages.AutoScrollPosition = new Point(0, 0);
+
+                _selectedIndex = -1;
+
+                if (_filteredHeatPoints.Count == 0)
                 {
-                    Text = "该记录无缺陷图片",
-                    AutoSize = true,
-                    ForeColor = Color.White,
-                    Font = new Font("微软雅黑", 10F),
-                    Margin = new Padding(10)
-                };
-                flowLayoutPanel_DefectImages.Controls.Add(noDataLabel);
-                lblPageInfo.Text = "第 0/0 页";
-                btnPrevPage.Enabled = false;
-                btnNextPage.Enabled = false;
-                return;
+                    var noDataLabel = new Label
+                    {
+                        Text = "该记录无缺陷图片",
+                        AutoSize = true,
+                        ForeColor = Color.White,
+                        Font = new Font("微软雅黑", 10F),
+                        Margin = new Padding(10)
+                    };
+                    flowLayoutPanel_DefectImages.Controls.Add(noDataLabel);
+                    lblPageInfo.Text = "第 0/0 页";
+                    btnPrevPage.Enabled = false;
+                    btnNextPage.Enabled = false;
+                    return;
+                }
+
+                _currentPage = page;
+                var heatPointsToShow = _filteredHeatPoints.Skip((_currentPage - 1) * PageSize).Take(PageSize).ToList();
+
+                // 计算控件高度
+                int itemHeight = flowLayoutPanel_DefectImages.ClientSize.Height - flowLayoutPanel_DefectImages.Padding.Vertical - 6;
+                // 确保最小高度，避免面板尚未布局时高度为0
+                if (itemHeight < 100) itemHeight = 300;
+
+                // 第一步：同步创建所有占位控件（瞬间完成，立即显示SN和状态文本）
+                var itemControls = new List<DefectImageItemControl>();
+                for (int i = 0; i < heatPointsToShow.Count; i++)
+                {
+                    var itemControl = CreateDefectImageItemControl(heatPointsToShow[i], i, itemHeight);
+                    flowLayoutPanel_DefectImages.Controls.Add(itemControl);
+                    itemControls.Add(itemControl);
+                }
+
+                if (flowLayoutPanel_DefectImages.Controls.Count > 0)
+                {
+                    SelectImage(0);
+                }
+
+                UpdatePaginationButtons();
+
+                // 第二步：异步逐个加载图片（不阻塞UI）
+                _loadCts = new CancellationTokenSource();
+                var token = _loadCts.Token;
+                LoadPageImagesAsync(itemControls, token);
             }
-
-            _currentPage = page;
-            var heatPointsToShow = _filteredHeatPoints.Skip((_currentPage - 1) * PageSize).Take(PageSize).ToList();
-
-            // 计算控件高度
-            int itemHeight = flowLayoutPanel_DefectImages.ClientSize.Height - flowLayoutPanel_DefectImages.Padding.Vertical - 6;
-
-            for (int i = 0; i < heatPointsToShow.Count; i++)
+            finally
             {
-                var itemControl = CreateDefectImageItemControl(heatPointsToShow[i], i, itemHeight);
-                flowLayoutPanel_DefectImages.Controls.Add(itemControl);
+                flowLayoutPanel_DefectImages.ResumeLayout(true);
             }
+        }
 
-            if (flowLayoutPanel_DefectImages.Controls.Count > 0)
+        /// <summary>
+        /// 异步逐个加载当前页所有控件的图片。
+        /// 每个控件的图片加载完成后立即显示，不阻塞UI线程。
+        /// </summary>
+        private async void LoadPageImagesAsync(List<DefectImageItemControl> controls, CancellationToken token)
+        {
+            foreach (var ctrl in controls)
             {
-                SelectImage(0);
-            }
+                if (token.IsCancellationRequested) return;
+                if (ctrl.IsDisposed) return;
 
-            UpdatePaginationButtons();
+                try
+                {
+                    await ctrl.LoadImagesAsync(token);
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+            }
         }
 
         /// <summary>
@@ -584,6 +650,9 @@ namespace DeepSightAI
 
         public void ClearDetails()
         {
+            // 取消正在进行的异步图片加载
+            CancelPendingImageLoads();
+
             // Dispose all existing child controls to release Win32 window handles before clearing
             var oldControls = new System.Windows.Forms.Control[flowLayoutPanel_DefectImages.Controls.Count];
             flowLayoutPanel_DefectImages.Controls.CopyTo(oldControls, 0);
@@ -834,5 +903,16 @@ namespace DeepSightAI
         /// 要测试的缺陷点信息
         /// </summary>
         public DetectInfo HeatPoint { get; set; }
+    }
+
+    /// <summary>
+    /// VVS状态改变事件参数
+    /// </summary>
+    public class VvsStatusChangedEventArgs : EventArgs
+    {
+        /// <summary>
+        /// 被修改的缺陷点
+        /// </summary>
+        public DetectInfo ModifiedHeatPoint { get; set; }
     }
 }

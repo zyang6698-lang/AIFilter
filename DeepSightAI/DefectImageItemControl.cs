@@ -8,6 +8,8 @@ using System;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace DeepSightAI
@@ -48,7 +50,9 @@ namespace DeepSightAI
         public event EventHandler ItemClicked;
 
         /// <summary>
-        /// 获取或设置关联的缺陷信息
+        /// 获取或设置关联的缺陷信息。
+        /// 设置时仅初始化文本和状态（同步，不加载图片）。
+        /// 图片需要通过 <see cref="LoadImagesAsync"/> 异步加载。
         /// </summary>
         public DetectInfo HeatPoint
         {
@@ -56,7 +60,7 @@ namespace DeepSightAI
             set
             {
                 _point = value;
-                LoadData();
+                InitializeMetadata();
             }
         }
 
@@ -123,9 +127,9 @@ namespace DeepSightAI
         }
 
         /// <summary>
-        /// 加载缺陷数据
+        /// 仅初始化文本和状态信息（同步、轻量），不加载图片。
         /// </summary>
-        private void LoadData()
+        private void InitializeMetadata()
         {
             if (_point == null)
             {
@@ -138,19 +142,105 @@ namespace DeepSightAI
                 return;
             }
 
-            // 第一行：SN信息
+            // SN信息
             label_SN.Text = !string.IsNullOrEmpty(_point.DisplaySN) ? _point.DisplaySN : "";
 
-            // 第四行：状态信息
+            // 状态信息
             UpdateStatusLabel();
 
-            // 第二行：加载原图
-            LoadOriginalImage();
-
-            // 第三行：加载模板图
-            LoadTemplateImage();
+            // 清空旧图片，显示为空白占位
+            pictureBox_OriginalImage.Image?.Dispose();
+            pictureBox_OriginalImage.Image = null;
+            pictureBox_TemplateImage.Image?.Dispose();
+            pictureBox_TemplateImage.Image = null;
 
             UpdateAppearance();
+        }
+
+        /// <summary>
+        /// 异步加载原图和模板图。在后台线程加载和解码图片，完成后回到UI线程设置显示。
+        /// 支持通过 CancellationToken 取消（翻页或重新加载时）。
+        /// </summary>
+        public async Task LoadImagesAsync(CancellationToken cancellationToken = default)
+        {
+            if (_point == null || string.IsNullOrEmpty(_point.ImagePath))
+                return;
+
+            var point = _point; // 捕获引用，防止加载期间 _point 被替换
+
+            try
+            {
+                // 在后台线程执行耗时的网络I/O和图片解码
+                var (originalMarked, rawOriginal, templateMarked) = await Task.Run(() =>
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    Bitmap rawBmp = null;
+                    Bitmap originalWithBox = null;
+                    Bitmap templateWithBox = null;
+
+                    // 加载原图
+                    try
+                    {
+                        rawBmp = LoadImageFromMinio(point.ImagePath);
+                        if (rawBmp != null)
+                        {
+                            cancellationToken.ThrowIfCancellationRequested();
+                            originalWithBox = ImageHelper.DrawDefectBoxOnImage(rawBmp, point);
+                        }
+                    }
+                    catch (OperationCanceledException) { throw; }
+                    catch (Exception ex)
+                    {
+                        LogTextHelper.Error($"加载图片失败: {point.ImagePath}, {ex.Message}");
+                    }
+
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    // 加载模板图
+                    try
+                    {
+                        string templatePath = point.TempImagePath;
+                        if (!string.IsNullOrEmpty(templatePath))
+                        {
+                            var tempBmp = LoadImageFromMinio(templatePath);
+                            if (tempBmp != null)
+                            {
+                                cancellationToken.ThrowIfCancellationRequested();
+                                templateWithBox = ImageHelper.DrawDefectBoxOnImage(tempBmp, point);
+                                tempBmp.Dispose();
+                            }
+                        }
+                    }
+                    catch (OperationCanceledException) { throw; }
+                    catch (Exception ex)
+                    {
+                        LogTextHelper.Error($"加载模板图片失败: {ex.Message}");
+                    }
+
+                    return (originalWithBox, rawBmp, templateWithBox);
+                }, cancellationToken);
+
+                // 回到UI线程更新控件（Task.Run后自动回到调用线程的同步上下文）
+                if (this.IsDisposed || _point != point) return;
+
+                _rawOriginalImage?.Dispose();
+                _rawOriginalImage = rawOriginal;
+
+                pictureBox_OriginalImage.Image?.Dispose();
+                pictureBox_OriginalImage.Image = originalMarked;
+
+                pictureBox_TemplateImage.Image?.Dispose();
+                pictureBox_TemplateImage.Image = templateMarked;
+            }
+            catch (OperationCanceledException)
+            {
+                // 正常取消，不需要处理
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"异步加载图片异常: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -185,62 +275,7 @@ namespace DeepSightAI
             }
         }
 
-        /// <summary>
-        /// 加载原图并绘制缺陷框（通过Minio加载）
-        /// </summary>
-        private void LoadOriginalImage()
-        {
-            pictureBox_OriginalImage.Image?.Dispose();
-            pictureBox_OriginalImage.Image = null;
 
-            if (string.IsNullOrEmpty(_point.ImagePath))
-                return;
-
-            try
-            {
-                var bmp = LoadImageFromMinio(_point.ImagePath);
-                if (bmp != null)
-                {
-                    _rawOriginalImage?.Dispose();
-                    _rawOriginalImage = bmp;
-                    pictureBox_OriginalImage.Image = ImageHelper.DrawDefectBoxOnImage(bmp, _point);
-                }
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error($"加载图片失败: {_point.ImagePath}, {ex.Message}");
-            }
-        }
-
-
-        /// <summary>
-        /// 加载模板图（通过Minio加载，路径从缺陷图路径派生）
-        /// </summary>
-        private void LoadTemplateImage()
-        {
-            pictureBox_TemplateImage.Image?.Dispose();
-            pictureBox_TemplateImage.Image = null;
-
-            if (string.IsNullOrEmpty(_point.ImagePath))
-                return;
-
-            try
-            {
-                string templatePath = _point.TempImagePath;
-                if (string.IsNullOrEmpty(templatePath)) return;
-
-                var bmp = LoadImageFromMinio(templatePath);
-                if (bmp != null)
-                {
-                    pictureBox_TemplateImage.Image = ImageHelper.DrawDefectBoxOnImage(bmp, _point);
-                    bmp.Dispose();
-                }
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error($"加载模板图片失败: {ex.Message}");
-            }
-        }
 
         /// <summary>
         /// 更新状态标签

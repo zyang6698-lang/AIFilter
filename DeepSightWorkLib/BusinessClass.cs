@@ -484,6 +484,13 @@ namespace DeepSightWorkLib
             _databaseHelper.SavePanelSide(record);
 
         /// <summary>
+        /// 批量保存/更新 PanelSide 数据到数据库（事务性保证一致性）
+        /// </summary>
+        /// <param name="records">PanelSideRecord 记录列表</param>
+        public void SavePanelSidesBatch(List<PanelSideRecord> records) =>
+            _databaseHelper.SavePanelSidesBatch(records);
+
+        /// <summary>
         /// 获取数据库服务实例（用于 CSV 数据导入等场景）
         /// </summary>
         public IDatabaseService GetDatabaseService() => _databaseHelper;

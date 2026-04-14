@@ -461,6 +461,7 @@
     <Compile Include="SettingPages\FrUserManagement.Designer.cs">
       <DependentUpon>FrUserManagement.cs</DependentUpon>
     </Compile>
+    <Compile Include="Services\LotStatisticsCalculator.cs" />
     <Compile Include="SortableBindingList.cs" />
     <Compile Include="StyledButton.cs">
       <SubType>Component</SubType>

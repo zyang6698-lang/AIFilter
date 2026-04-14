@@ -58,6 +58,7 @@
             this.analyticsControl1.Location = new System.Drawing.Point(0, 0);
             this.analyticsControl1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.analyticsControl1.Name = "analyticsControl1";
+            this.analyticsControl1.Padding = new System.Windows.Forms.Padding(12);
             this.analyticsControl1.Size = new System.Drawing.Size(1373, 792);
             this.analyticsControl1.TabIndex = 0;
             // 
@@ -91,7 +92,7 @@
             this.tabPage10.Padding = new System.Windows.Forms.Padding(3);
             this.tabPage10.Size = new System.Drawing.Size(1373, 792);
             this.tabPage10.TabIndex = 6;
-            this.tabPage10.Text = "AIReview";
+            this.tabPage10.Text = "数据查询";
             this.tabPage10.UseVisualStyleBackColor = true;
             // 
             // aiReviewControl1
