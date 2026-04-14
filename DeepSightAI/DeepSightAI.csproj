@@ -312,12 +312,17 @@
     <Compile Include="DefectImageItemControl.Designer.cs">
       <DependentUpon>DefectImageItemControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="FileNotifier.cs" />
     <Compile Include="FrAlarm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="FrAlarm.Designer.cs">
       <DependentUpon>FrAlarm.cs</DependentUpon>
     </Compile>
+    <Compile Include="ToastNotificationForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToastNotifier.cs" />
     <Compile Include="FrChart.cs">
       <SubType>Form</SubType>
     </Compile>

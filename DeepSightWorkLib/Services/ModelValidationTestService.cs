@@ -38,7 +38,6 @@ namespace DeepSightWorkLib.Services
             ImageLoaderService imageLoaderService,
             Action<PipelineContext> postToPipeline,
             SolutionConfig solutionConfig,
-            AVIConfig aviConfig,
             Func<bool> useGerberImageProvider = null)
         {
             _databaseHelper = databaseHelper ?? throw new ArgumentNullException(nameof(databaseHelper));

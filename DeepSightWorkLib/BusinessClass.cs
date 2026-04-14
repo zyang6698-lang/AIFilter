@@ -256,7 +256,6 @@ namespace DeepSightWorkLib
                 _imageLoaderService,
                 ctx => _pipeline?.Post(ctx, out _),
                 SolConfig,
-                AviConfig,
                 () => SysConfig.UseGerberImage);
 
             // 将验证测试服务注入到后处理服务

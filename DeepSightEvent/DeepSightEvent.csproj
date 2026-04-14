@@ -44,6 +44,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AlarmService.cs" />
+    <Compile Include="IAlarmNotifier.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SystemDelegate.cs" />
     <Compile Include="SystemEvent.cs" />

@@ -1,4 +1,6 @@
-﻿using DeepSightTool;
+﻿using DeepSightEvent;
+using DeepSightModel.Alarm;
+using DeepSightTool;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -141,6 +143,12 @@ namespace DeepSightAI
 
                 FrWelcome.Instance.bar_step.Value = 100;
                 FrmMain.Instance.Activate();
+
+                // 注册告警通知器
+                AlarmService.Instance.RegisterNotifier(
+                    new ToastNotifier(FrmMain.Instance, AlarmLevel.Warning));
+                AlarmService.Instance.RegisterNotifier(
+                    new FileNotifier());
 
                 LogTextHelper.Info("程序启动");
             }

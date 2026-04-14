@@ -114,6 +114,9 @@
     <Compile Include="PanelData.cs" />
     <Compile Include="VBModel.cs" />
     <Compile Include="VBOutInfo.cs" />
+    <Compile Include="Alarm\AlarmLevel.cs" />
+    <Compile Include="Alarm\AlarmCategory.cs" />
+    <Compile Include="Alarm\AlarmInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DeepSightTool\DeepSightTool.csproj">

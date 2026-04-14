@@ -1,5 +1,6 @@
 ﻿using DeepSightDB;
 using DeepSightModel;
+using DeepSightModel.Alarm;
 using DeepSightTool;
 using System;
 using System.Collections.Generic;
@@ -14,12 +15,25 @@ namespace DeepSightEvent
     {
         public static event SendAlarm EventSendAlarmToUI;
         /// <summary>
-        /// 订阅报警
+        /// 订阅报警（旧接口，自动桥接到 AlarmService）
         /// </summary>
         /// <param name="msg"></param>
         public static void SendAlarmMsg(string msg)
         {
+            // 保留旧事件通知（向后兼容）
             EventSendAlarmToUI?.Invoke(msg);
+
+            // 桥接到新告警系统
+            AlarmService.Instance.RaiseAlarmFromLegacy(msg);
+        }
+
+        /// <summary>
+        /// 发送结构化告警（推荐使用）
+        /// </summary>
+        public static void SendAlarm(AlarmLevel level, AlarmCategory category,
+            string source, string message, string detail = null, string relatedSN = null)
+        {
+            AlarmService.Instance.RaiseAlarm(level, category, source, message, detail, relatedSN);
         }
 
         public static event SendProcess EventSendProcessToUI;
