@@ -1132,6 +1132,55 @@ namespace DeepSightAI
             }
         }
 
+        #region 键盘快捷键
+
+        /// <summary>
+        /// 全局键盘拦截：
+        ///   Ctrl+S       → 保存当前配置页（仅在配置界面且按钮可用时）
+        ///   Alt+1        → 主界面
+        ///   Alt+2        → 配置界面（需设定模式）
+        ///   Alt+3        → 查询界面（需设定模式）
+        ///   Alt+4        → 报警界面（需设定模式）
+        ///   Alt+5        → 图表界面（需设定模式）
+        /// </summary>
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            // Ctrl+S：触发配置保存
+            if (keyData == (Keys.Control | Keys.S))
+            {
+                if (curFormMode == FormMode.SettingForm && FrSetting.Instance.btnSave.Enabled)
+                {
+                    FrSetting.Instance.SaveCurrentConfig();
+                }
+                return true;
+            }
+
+            // Alt+数字：切换页面（顺序与菜单栏按钮排列一致）
+            // Home(1) → Tool/Setting(2) → Alarm(3) → Chart(4) → Search(5)
+            switch (keyData)
+            {
+                case Keys.Alt | Keys.D1:
+                    SwitchFrom(FormMode.MainForm);
+                    return true;
+                case Keys.Alt | Keys.D2:
+                    if (IsAllow) SwitchFrom(FormMode.SettingForm);
+                    return true;
+                case Keys.Alt | Keys.D3:
+                    if (IsAllow) SwitchFrom(FormMode.AlarmForm);
+                    return true;
+                case Keys.Alt | Keys.D4:
+                    if (IsAllow) SwitchFrom(FormMode.ChartForm);
+                    return true;
+                case Keys.Alt | Keys.D5:
+                    if (IsAllow) SwitchFrom(FormMode.SearchForm);
+                    return true;
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
+        #endregion
+
         private FrPipelineMonitor _pipelineMonitor;
 
         private void btnPipelineMonitor_Click(object sender, EventArgs e)

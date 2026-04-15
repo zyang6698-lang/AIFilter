@@ -423,8 +423,8 @@ namespace DeepSightAI
             this.table_menu.Controls.Add(this.panel_tool, 1, 0);
             this.table_menu.Controls.Add(this.panel_alarm, 2, 0);
             this.table_menu.Controls.Add(this.panel_chart, 3, 0);
-            this.table_menu.Controls.Add(this.panel_start, 4, 0);
-            this.table_menu.Controls.Add(this.panel_search, 5, 0);
+            this.table_menu.Controls.Add(this.panel_search, 4, 0);
+            this.table_menu.Controls.Add(this.panel_start, 5, 0);
             this.table_menu.Controls.Add(this.panel_login, 6, 0);
             this.table_menu.Controls.Add(this.panel9, 7, 0);
             this.table_menu.Controls.Add(this.panel8, 8, 0);

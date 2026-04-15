@@ -48,6 +48,14 @@ namespace DeepSightAI
         }
 
         /// <summary>
+        /// 供 FrmMain Ctrl+S 调用的公开保存入口
+        /// </summary>
+        public void SaveCurrentConfig()
+        {
+            btn_saveSetting_Click(this, EventArgs.Empty);
+        }
+
+        /// <summary>
         /// 窗体对象实例
         /// </summary>
         private static FrSetting _instance;
@@ -326,7 +334,6 @@ namespace DeepSightAI
                         // 更新FrHome中的AviCtr状态
                         FrHome.Instance.RefreshMachineStatusConfigs();
                         MessageBox.Show("保存Agent配置文件成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
                     }
                 }
                 if (tvw_setting.SelectedNode.Text == "算法方案配置")
