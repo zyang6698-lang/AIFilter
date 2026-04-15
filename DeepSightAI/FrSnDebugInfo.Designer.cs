@@ -26,6 +26,8 @@ namespace DeepSightAI
             this.tvVbInferenceJson = new System.Windows.Forms.TreeView();
             this.tabInferReturn = new System.Windows.Forms.TabPage();
             this.tvInferenceReturnJson = new System.Windows.Forms.TreeView();
+            this.tabInferAnalysis = new System.Windows.Forms.TabPage();
+            this.tvInferAnalysis = new System.Windows.Forms.TreeView();
             this.tabAviWriteBack = new System.Windows.Forms.TabPage();
             this.tvAviWriteBackJson = new System.Windows.Forms.TreeView();
             this.tabVrsWriteBack = new System.Windows.Forms.TabPage();
@@ -45,6 +47,7 @@ namespace DeepSightAI
             this.tabPanelInfo.SuspendLayout();
             this.tabVbJson.SuspendLayout();
             this.tabInferReturn.SuspendLayout();
+            this.tabInferAnalysis.SuspendLayout();
             this.tabAviWriteBack.SuspendLayout();
             this.tabVrsWriteBack.SuspendLayout();
             this.tabOther.SuspendLayout();
@@ -55,20 +58,26 @@ namespace DeepSightAI
             // tabControl
             //
             this.tabControl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tabControl.Font = new System.Drawing.Font("微软雅黑", 12F);
+            this.tabControl.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
+            this.tabControl.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
+            this.tabControl.ItemSize = new System.Drawing.Size(146, 36);
+            this.tabControl.Font = new System.Drawing.Font("微软雅黑", 10F);
             this.tabControl.Location = new System.Drawing.Point(0, 0);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
             this.tabControl.Size = new System.Drawing.Size(1184, 815);
             this.tabControl.TabIndex = 0;
+            this.tabControl.Padding = new System.Drawing.Point(0, 0);
             this.tabControl.TabPages.AddRange(new System.Windows.Forms.TabPage[] {
                 this.tabLevelDb,
                 this.tabPanelInfo,
                 this.tabVbJson,
                 this.tabInferReturn,
+                this.tabInferAnalysis,
                 this.tabAviWriteBack,
                 this.tabVrsWriteBack,
                 this.tabOther});
+            this.tabControl.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.TabControl_DrawItem);
             this.tabControl.SelectedIndexChanged += new System.EventHandler(this.TabControl_SelectedIndexChanged);
             //
             // tabLevelDb
@@ -162,6 +171,29 @@ namespace DeepSightAI
             this.tvInferenceReturnJson.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.tvInferenceReturnJson.FullRowSelect = true;
             this.tvInferenceReturnJson.ItemHeight = 24;
+            //
+            // tabInferAnalysis
+            //
+            this.tabInferAnalysis.Controls.Add(this.tvInferAnalysis);
+            this.tabInferAnalysis.Location = new System.Drawing.Point(4, 34);
+            this.tabInferAnalysis.Name = "tabInferAnalysis";
+            this.tabInferAnalysis.Size = new System.Drawing.Size(1176, 777);
+            this.tabInferAnalysis.TabIndex = 8;
+            this.tabInferAnalysis.Text = "推理结果解析";
+            //
+            // tvInferAnalysis
+            //
+            this.tvInferAnalysis.BackColor = System.Drawing.Color.FromArgb(20, 35, 45);
+            this.tvInferAnalysis.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tvInferAnalysis.Font = new System.Drawing.Font("Consolas", 11F);
+            this.tvInferAnalysis.ForeColor = System.Drawing.Color.FromArgb(200, 220, 240);
+            this.tvInferAnalysis.Location = new System.Drawing.Point(0, 0);
+            this.tvInferAnalysis.Name = "tvInferAnalysis";
+            this.tvInferAnalysis.Size = new System.Drawing.Size(1176, 777);
+            this.tvInferAnalysis.TabIndex = 0;
+            this.tvInferAnalysis.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.tvInferAnalysis.FullRowSelect = true;
+            this.tvInferAnalysis.ItemHeight = 24;
             //
             // tabAviWriteBack
             //
@@ -358,6 +390,7 @@ namespace DeepSightAI
             this.tabPanelInfo.ResumeLayout(false);
             this.tabVbJson.ResumeLayout(false);
             this.tabInferReturn.ResumeLayout(false);
+            this.tabInferAnalysis.ResumeLayout(false);
             this.tabAviWriteBack.ResumeLayout(false);
             this.tabVrsWriteBack.ResumeLayout(false);
             this.tabOther.ResumeLayout(false);
@@ -378,6 +411,8 @@ namespace DeepSightAI
         private System.Windows.Forms.TreeView tvVbInferenceJson;
         private System.Windows.Forms.TabPage tabInferReturn;
         private System.Windows.Forms.TreeView tvInferenceReturnJson;
+        private System.Windows.Forms.TabPage tabInferAnalysis;
+        private System.Windows.Forms.TreeView tvInferAnalysis;
         private System.Windows.Forms.TabPage tabAviWriteBack;
         private System.Windows.Forms.TreeView tvAviWriteBackJson;
         private System.Windows.Forms.TabPage tabVrsWriteBack;
