@@ -446,8 +446,6 @@ namespace DeepSightWorkLib
 
         #region 算法调用与结果处理
 
-        public bool DefectMethod(VBModel vBModel, out List<string> resList) => _defectProcessor.DefectMethod(vBModel, SysConfig.MaxDefectCount, out resList);
-
         #endregion
 
         #region 配置保存

@@ -60,7 +60,7 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
 
                 if (stageResult.Success)
                 {
-                    TaskStatusSender.SendAICompleted(model.SN, model.Side);
+                    //TaskStatusSender.SendAICompleted(model.SN, model.Side);
 
                     if (!model.IsValidationTest)
                     {

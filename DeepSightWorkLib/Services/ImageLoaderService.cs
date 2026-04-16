@@ -172,17 +172,5 @@ namespace DeepSightWorkLib.Services
             var normalizedRel = rel.Replace('\\', '/').TrimStart('/');
             return $"{endpoint}:{prefix}/{normalizedRel}";
         }
-
-        private static void AddImages(List<string> images, string endpoint, string prefix, List<string> output)
-        {
-            if (images == null || images.Count == 0) return;
-            foreach (var rel in images)
-            {
-                if (string.IsNullOrWhiteSpace(rel)) continue;
-                var normalizedRel = rel.Replace('\\', '/').TrimStart('/');
-                var objectKey = $"{prefix}/{normalizedRel}";
-                output.Add($"{endpoint}:{objectKey}");
-            }
-        }
     }
 }

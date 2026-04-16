@@ -13,17 +13,6 @@ namespace DeepSightWorkLib.Services
     public class QueueManager : IDisposable
     {
         #region 队列定义
-
-        /// <summary>
-        /// 图片加载队列（解耦图片读取和推理）
-        /// </summary>
-        public ConcurrentQueue<ImageLoadModel> ImageLoadQueue { get; } = new ConcurrentQueue<ImageLoadModel>();
-
-        /// <summary>
-        /// AVI/推理处理队列
-        /// </summary>
-        public ConcurrentQueue<VBModel> AviQueue { get; } = new ConcurrentQueue<VBModel>();
-
         /// <summary>
         /// AI 结果回写队列 (Key, SN, Side, RootAIResult)
         /// </summary>
@@ -52,8 +41,6 @@ namespace DeepSightWorkLib.Services
         {
             return new QueueStatistics
             {
-                ImageLoadQueueCount = ImageLoadQueue.Count,
-                AviQueueCount = AviQueue.Count,
                 AIResultQueueCount = AIResultQueue.Count,
                 PostProcessQueueCount = PostProcessQueue.Count,
                 ProcessingSnCount = ProcessingSnSet.Count
@@ -65,8 +52,7 @@ namespace DeepSightWorkLib.Services
         /// </summary>
         public bool HasPendingTasks()
         {
-            return ImageLoadQueue.Count > 0 ||
-                   AviQueue.Count > 0 ||
+            return 
                    AIResultQueue.Count > 0 ||
                    PostProcessQueue.Count > 0;
         }
@@ -123,19 +109,6 @@ namespace DeepSightWorkLib.Services
 
             int removedCount = 0;
 
-            // 从 AviQueue 中过滤移除
-            removedCount += DrainAndFilter(AviQueue, item =>
-            {
-                if (item?.SN == sn) { item.Dispose(); return true; }
-                return false;
-            });
-
-            // 从 ImageLoadQueue 中过滤移除
-            removedCount += DrainAndFilter(ImageLoadQueue, item =>
-            {
-                if (item?.Model?.SN == sn) { item.Model.Dispose(); return true; }
-                return false;
-            });
 
             // 从 AIResultQueue 中过滤移除
             removedCount += DrainAndFilter(AIResultQueue, item =>
@@ -203,29 +176,7 @@ namespace DeepSightWorkLib.Services
         public HashSet<string> ClearAllQueues()
         {
             var clearedSnSet = new HashSet<string>();
-            int aviCount = 0, imageLoadCount = 0, aiResultCount = 0, postProcessCount = 0;
-
-            // 清空 AviQueue 并释放 Mat 资源
-            while (AviQueue.TryDequeue(out var vbModel))
-            {
-                if (vbModel != null)
-                {
-                    if (!string.IsNullOrEmpty(vbModel.SN)) clearedSnSet.Add(vbModel.SN);
-                    vbModel.Dispose();
-                }
-                aviCount++;
-            }
-
-            // 清空 ImageLoadQueue
-            while (ImageLoadQueue.TryDequeue(out var loadModel))
-            {
-                if (loadModel?.Model != null)
-                {
-                    if (!string.IsNullOrEmpty(loadModel.Model.SN)) clearedSnSet.Add(loadModel.Model.SN);
-                    loadModel.Model.Dispose();
-                }
-                imageLoadCount++;
-            }
+            int  aiResultCount = 0, postProcessCount = 0;
 
             // 清空 AIResultQueue
             while (AIResultQueue.TryDequeue(out var info))
@@ -245,7 +196,7 @@ namespace DeepSightWorkLib.Services
             int processingCount = ProcessingSnSet.Count;
             ProcessingSnSet.Clear();
 
-            LogTextHelper.Info($"所有队列已清空 - AVI:{aviCount}, 图片加载:{imageLoadCount}, " +
+            LogTextHelper.Info($"所有队列已清空 - " +
                 $"AI结果:{aiResultCount}, 后处理:{postProcessCount}, 处理中:{processingCount}");
 
             return clearedSnSet;
