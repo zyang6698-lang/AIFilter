@@ -5,7 +5,6 @@ using DeepSightModel;
 using DeepSightTool;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace DeepSightWorkLib.Services
@@ -13,12 +12,10 @@ namespace DeepSightWorkLib.Services
     public class ResultWriterService
     {
         private readonly HttpClass _httpDb;
-        private readonly ConcurrentDictionary<string, DateTime> _processingSnSet;
 
-        public ResultWriterService(HttpClass httpDb, ConcurrentDictionary<string, DateTime> processingSnSet)
+        public ResultWriterService(HttpClass httpDb)
         {
             _httpDb = httpDb ?? throw new ArgumentNullException(nameof(httpDb));
-            _processingSnSet = processingSnSet ?? throw new ArgumentNullException(nameof(processingSnSet));
         }
 
         public bool ReturnAVIVRS( RootAIResult aiResult)
@@ -81,21 +78,12 @@ namespace DeepSightWorkLib.Services
                 {
                     aviSuccess = true;
                     TaskStatusSender.SendCompleted(aiResult.SN, aiResult.Side);
-
-                    string snKey = $"{aiResult.SN}_{aiResult.Side}";
-                    if (_processingSnSet.TryRemove(snKey, out DateTime addTime))
-                    {
-                        var duration = DateTime.Now - addTime;
-                        LogTextHelper.Info($"SN:{aiResult.SN} Side:{aiResult.Side} 处理完成，耗时：{duration.TotalSeconds:F2}秒，已从处理集合中移除");
-                    }
-                    else
-                    {
-                        LogTextHelper.Warn($"SN:{aiResult.SN} Side:{aiResult.Side} 未在处理集合中找到，可能已被清理或未正确添加");
-                    }
+                    LogTextHelper.Info($"SN:{aiResult.SN} Side:{aiResult.Side} AVI回写成功");
                 }
                 else
                 {
                     LogTextHelper.Warn($"SN:{aiResult.SN} Side:{aiResult.Side} AVI回写失败");
+                    TaskStatusSender.SendFailed(aiResult.SN, aiResult.Side, "AVI回写失败");
                 }
 
                 return aviSuccess;

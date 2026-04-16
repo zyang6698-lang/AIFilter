@@ -246,7 +246,7 @@ namespace DeepSightWorkLib
             this.IsStart = false;
 
             var httpInstance = HttpService as HttpClass ?? new HttpClass();
-            _resultWriterService = new ResultWriterService(httpInstance, _queueManager.ProcessingSnSet);
+            _resultWriterService = new ResultWriterService(httpInstance);
 
             // 初始化模型验证测试服务
             // 注意：_pipeline 在 InitPipeline() 中初始化，lambda 惰性求值，执行时 _pipeline 已就绪
@@ -369,6 +369,18 @@ namespace DeepSightWorkLib
                 ctx.Stopwatch.Stop();
                 string sn = ctx.SN;
                 string side = ctx.Side;
+
+                // 在所有下游阶段（ResultWrite + PostProcess）都完成后才移除处理标记
+                // 避免 ResultWriterService 提前移除导致同一 SN 在 PostProcess 仍运行时被重复拾取
+                if (!string.IsNullOrEmpty(sn) && !string.IsNullOrEmpty(side))
+                {
+                    string snKey = $"{sn}_{side}";
+                    if (_queueManager.ProcessingSnSet.TryRemove(snKey, out DateTime addTime))
+                    {
+                        var totalDuration = DateTime.Now - addTime;
+                        LogTextHelper.Info($"SN:{sn} {side} 已从处理集合移除，全链路耗时: {totalDuration.TotalSeconds:F2}秒");
+                    }
+                }
 
                 LogTextHelper.Info($"SN:{sn} {side} Pipeline 全流程完成，总耗时: {ctx.Stopwatch.ElapsedMilliseconds}ms" +
                     (ctx.InferenceElapsedMs > 0 ? $"（推理: {ctx.InferenceElapsedMs}ms）" : ""));

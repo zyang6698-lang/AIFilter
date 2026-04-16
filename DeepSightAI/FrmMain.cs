@@ -143,6 +143,8 @@ namespace DeepSightAI
                 int resultCount;
                 lock (resultList)
                 {
+                    // 清除旧数据后再添加，避免同一SN重复处理时AI结果累积翻倍
+                    resultList.Clear();
                     resultList.AddRange(msg);
                     resultCount = resultList.Count;
                 }
@@ -166,6 +168,8 @@ namespace DeepSightAI
                 var roiList = FrHome.Instance.dic_DetectRois.GetOrAdd(key, _ => new List<Roi>());
                 lock (roiList)
                 {
+                    // 清除旧数据后再添加，避免同一SN重复处理时ROI累积
+                    roiList.Clear();
                     roiList.AddRange(rois);
                 }
             }
@@ -184,6 +188,8 @@ namespace DeepSightAI
                 var infoList = FrHome.Instance.dic_DetectInfos.GetOrAdd(key, _ => new List<DetectInfo>());
                 lock (infoList)
                 {
+                    // 清除旧数据后再添加，避免同一SN重复处理时DetectInfo累积
+                    infoList.Clear();
                     infoList.AddRange(detectInfos);
                 }
             }
@@ -202,22 +208,18 @@ namespace DeepSightAI
                 var infoList = FrHome.Instance.dic_Infos.GetOrAdd(key, _ => new List<RootPanelInfoWithIP>());
                 lock (infoList)
                 {
+                    // 每次新处理到来时替换旧数据，避免同一SN被多次处理时AVI计数累加翻倍
+                    infoList.Clear();
                     infoList.Add(info);
                 }
 
-                // 计算 AVI 计数并入队（Timer 中刷新 DataGridView）
+                // 计算 AVI 计数：仅统计本次处理的 info，不累积历史数据
                 int aviCount = 0;
-                lock (infoList)
+                if (info?.RootInfo?.PcsInfo != null)
                 {
-                    foreach (var inf in infoList)
+                    foreach (var pcs in info.RootInfo.PcsInfo.Values)
                     {
-                        if (inf?.RootInfo?.PcsInfo != null)
-                        {
-                            foreach (var pcs in inf.RootInfo.PcsInfo.Values)
-                            {
-                                aviCount += pcs.DefectInfo?.Count ?? 0;
-                            }
-                        }
+                        aviCount += pcs.DefectInfo?.Count ?? 0;
                     }
                 }
                 _pendingAviUpdates[key] = (sn, side, aviCount);
@@ -428,7 +430,7 @@ namespace DeepSightAI
         }
 
         /// <summary>
-        /// 更新 B 面完成的行数据
+        /// 更新 B 面完成的行数据（只统计 B 面自身数据，与 A 面逻辑独立一致）
         /// </summary>
         private void UpdateBSideCompletedRow(DataGridViewRow row, string sn, ref string msg)
         {
@@ -436,74 +438,47 @@ namespace DeepSightAI
             int ok = 0;
             int ng = 0;
             int byPass = 0;
-            int aDefectCount = 0;
             int bDefectCount = 0;
 
-            // 以SN+Side为单位获取A/B面缺陷数
-            string keyA = $"{sn}_A";
             string keyB = $"{sn}_B";
 
-            if (FrHome.Instance.dic_Infos.TryGetValue(keyA, out List<RootPanelInfoWithIP> aInfos))
+            // 统计 B 面缺陷数（dic_Infos 已在 SendPanelInfo 时替换为最新一次数据，直接累加即可）
+            FrHome.Instance.dic_Infos.TryGetValue(keyB, out List<RootPanelInfoWithIP> bInfos);
+            if (bInfos != null)
             {
-                foreach (var info in aInfos)
+                lock (bInfos)
                 {
-                    foreach (var pcsInfo in info.RootInfo.PcsInfo.Values)
+                    foreach (var info in bInfos)
                     {
-                        aDefectCount += pcsInfo.DefectInfo?.Count ?? 0;
+                        if (info?.RootInfo?.PcsInfo == null) continue;
+                        foreach (var pcsInfo in info.RootInfo.PcsInfo.Values)
+                        {
+                            bDefectCount += pcsInfo.DefectInfo?.Count ?? 0;
+                        }
                     }
                 }
             }
 
-            if (FrHome.Instance.dic_Infos.TryGetValue(keyB, out List<RootPanelInfoWithIP> bInfos))
-            {
-                foreach (var info in bInfos)
-                {
-                    foreach (var pcsInfo in info.RootInfo.PcsInfo.Values)
-                    {
-                        bDefectCount += pcsInfo.DefectInfo?.Count ?? 0;
-                    }
-                }
-            }
-
-            // 合并A/B面的结果进行统计
-            var allResults = new List<string>();
-            if (FrHome.Instance.dic_Results.TryGetValue(keyA, out List<string> aResults))
-            {
-                allResults.AddRange(aResults);
-            }
+            // 只统计 B 面 AI 结果
             if (FrHome.Instance.dic_Results.TryGetValue(keyB, out List<string> bResults))
             {
-                allResults.AddRange(bResults);
-            }
-
-            if (allResults.Count > 0)
-            {
-                count = allResults.Count;
-                ok = allResults.Count(o => o.Contains("0"));
-                ng = allResults.Count(o => o.Contains("1"));
-                byPass = allResults.Count(o => o.Contains("2"));
-                msg = $"{msg}_A面:{aDefectCount} B面:{bDefectCount}_OK:{ok} NG:{ng} ByPass:{byPass}";
+                count = bResults.Count;
+                ok = bResults.Count(o => o.Contains("0"));
+                ng = bResults.Count(o => o.Contains("1"));
+                byPass = bResults.Count(o => o.Contains("2"));
+                msg = $"{msg}_AVI:{bDefectCount}_OK:{ok} NG:{ng} ByPass:{byPass}";
             }
 
             // 列顺序: SN[0], Side[1], AVI[2], AI[3], Time[4], Status[5]
-            // AVI列 = B面自身的缺陷图片数，A/B面各自独立显示
             row.Cells[2].Value = bDefectCount;
             row.Cells[3].Value = count;
             row.Cells[5].Value = msg;
-            FrHome.Instance.str_SN = $"{sn}_B";
+            FrHome.Instance.str_SN = keyB;
 
-            // B面完成时：仅当有缺陷图片时触发完整加载，否则仅更新AI结果标签
-            bool hasImages = false;
-            // 检查A面和B面是否有缺陷图片
-            foreach (var key in new[] { keyA, keyB })
-            {
-                if (FrHome.Instance.dic_Infos.TryGetValue(key, out var sideInfos))
-                {
-                    hasImages = sideInfos.Any(inf => inf?.RootInfo?.PcsInfo?.Values?.Any(pcs =>
-                        pcs.DefectInfo?.Any(d => d.DefectVrsImages != null && d.DefectVrsImages.Count > 0) == true) == true);
-                    if (hasImages) break;
-                }
-            }
+            // B面完成时：仅当 B 面有缺陷图片时触发完整加载，否则仅更新AI结果标签
+            bool hasImages = bInfos != null && bInfos.Any(inf => inf?.RootInfo?.PcsInfo?.Values?.Any(pcs =>
+                pcs.DefectInfo?.Any(d => d.DefectVrsImages != null && d.DefectVrsImages.Count > 0) == true) == true);
+
             if (hasImages)
             {
                 FrHome.Instance.dataGridViewData_CellClick(null, null);
