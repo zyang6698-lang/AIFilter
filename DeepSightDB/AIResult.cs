@@ -25,7 +25,11 @@ namespace DeepSightDB
 
         [JsonIgnore]
         public string VRSDbName { get; set; }
-
+        /// <summary>
+        /// 由于AB面SN不一致，所以VRS回写的时候需要这个key
+        /// </summary>
+        [JsonIgnore]
+        public string VRSDbKey { get; set; }
         [JsonIgnore]
         public List<AIDetailResultItem> AIDetailResultItems { get; set; }
 

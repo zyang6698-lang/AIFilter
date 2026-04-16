@@ -76,7 +76,9 @@ namespace DeepSightModel
 
         [JsonProperty("serial_level")]
         public string SerialLevel { get; set; }
-
+        /// <summary>
+        /// 这个属性目前只有生成推理请求和VRS回写的key会用到，由于AB面SN有差异认为这个参数是不可信的
+        /// </summary>
         [JsonProperty("serial_number")]
         public string SerialNumber { get; set; }
 

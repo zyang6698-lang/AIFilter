@@ -85,6 +85,7 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
 
             // 通过工厂获取最新配置快照，避免 SolConfig/AviConfig 并发修改问题
             var convertContext = _convertContextFactory();
+            convertContext.SN= sn;
             convertContext.MinioIP = ip;
             convertContext.MinioPort = port;
             convertContext.Head = head;

@@ -43,7 +43,6 @@ namespace DeepSightWorkLib.Services
         /// </summary>
         public DateTime GetFetchTime(string dbName)
         {
-            //return DateTime.Today.AddDays(-7);
             return _fetchTimeByDb.GetOrAdd(dbName, DateTime.MinValue);
         }
 

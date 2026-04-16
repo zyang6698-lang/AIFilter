@@ -9,6 +9,7 @@ namespace DeepSightWorkLib.Interfaces
     /// </summary>
     public class PanelConvertContext
     {
+        public string SN {  get; set; }
         /// <summary>
         /// Minio IP 地址
         /// </summary>

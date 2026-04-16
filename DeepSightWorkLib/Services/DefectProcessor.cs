@@ -213,6 +213,7 @@ namespace DeepSightWorkLib.Services
             {
                 SN = info.SN,
                 Side = info.Side,
+                VRSDbKey=info.panelInfo.SerialNumber,
                 AVIDbName = writeBackDbName,
                 Operation = "put",
                 OpMode = info.Side == "A" ? "all_ow" : "ap",
@@ -244,7 +245,7 @@ namespace DeepSightWorkLib.Services
                     PcsIndex = info.PcsIndex[i],
                     AiLabel = msg[i] == "0" ? "OK" : "NG",
                     AiClsType = "",
-                    AiFlag = "Experiment",
+                    AiFlag = "experiment",
                     InferDetail = new Dictionary<string, object>(),
                 });
             }

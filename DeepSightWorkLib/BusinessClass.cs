@@ -496,14 +496,15 @@ namespace DeepSightWorkLib
         public IDatabaseService GetDatabaseService() => _databaseHelper;
 
         /// <summary>
-        /// 保存 PanelSide 数据到数据库（从 RootPanelInfo 构建记录）
+        /// 保存 PanelSide 数据到数据库（从 VBModel 构建记录）
         /// </summary>
-        /// <param name="panelInfo">面板信息</param>
+        /// <param name="vbModel">VB模型（含面板信息）</param>
         /// <param name="detectPoints">缺陷点列表</param>
         /// <param name="aviState">AVI 状态 (1: OK, 2: NG)</param>
         /// <param name="aiState">AI 状态 (1: OK, 2: NG, 3: Bypass)</param>
-        private void SavePanelSideToDatabase(RootPanelInfo panelInfo, List<DetectInfo> detectPoints, int aviState, int aiState)
+        private void SavePanelSideToDatabase(VBModel vbModel, List<DetectInfo> detectPoints, int aviState, int aiState)
         {
+            RootPanelInfo panelInfo = vbModel.panelInfo;
             if (!DateTime.TryParse(panelInfo.AviCreateTime, out DateTime aviCreationTime))
             {
                 aviCreationTime = DateTime.Now;
@@ -525,7 +526,7 @@ namespace DeepSightWorkLib
                 }
             }
 
-            LogTextHelper.Info($"存储 SN={panelInfo.SerialNumber}, Side={panelInfo.SideIndex}, AviState={aviState}, AiState={aiState}, DefectCount={detectPoints?.Count ?? 0} 到数据库...");
+            LogTextHelper.Info($"存储 SN={vbModel.SN}, Side={panelInfo.SideIndex}, AviState={aviState}, AiState={aiState}, DefectCount={detectPoints?.Count ?? 0} 到数据库...");
             var record = new PanelSideRecord()
             {
                 Data = new SideData()
@@ -543,7 +544,7 @@ namespace DeepSightWorkLib
                 DetectionDate = DateTime.Now,
                 AviCreationTime = aviCreationTime,
                 LotNumber = panelInfo.LotId,
-                SerialNumber = panelInfo.SerialNumber,
+                SerialNumber = vbModel.SN,
                 MachineId = panelInfo.MachineName,
                 Side = panelInfo.SideIndex,
             };
@@ -559,11 +560,11 @@ namespace DeepSightWorkLib
                     Width = dp.Width,
                     Height = dp.Height
                 }).ToList();
-                SystemEvent.SendRoiInfo(panelInfo.SerialNumber, panelInfo.SideIndex, rois);
+                SystemEvent.SendRoiInfo(vbModel.SN, panelInfo.SideIndex, rois);
             }
 
             // 将DetectInfo信息发送到UI（用于图片放大和单图测试）
-            SystemEvent.SendDetectInfo(panelInfo.SerialNumber, panelInfo.SideIndex, detectPoints ?? new List<DetectInfo>());
+            SystemEvent.SendDetectInfo(vbModel.SN, panelInfo.SideIndex, detectPoints ?? new List<DetectInfo>());
 
             List<PanelSideRecord> batchToFlush = null;
             lock (_panelRecordLock)

@@ -34,10 +34,9 @@ namespace DeepSightWorkLib.Services
             if (context == null) throw new ArgumentNullException(nameof(context));
 
             var result = new PanelConvertResult();
-
             try
             {
-                LogTextHelper.Info($"{panelInfo.SerialNumber} {panelInfo.SideIndex} ProductSerial: {panelInfo.ProductSerial}");
+                LogTextHelper.Info($"{context.SN} {panelInfo.SideIndex} ProductSerial: {panelInfo.ProductSerial} ");
 
                 //  解析方案配置
                 var solutionInfo = ResolveSolution(panelInfo, context);
@@ -75,7 +74,7 @@ namespace DeepSightWorkLib.Services
                 ? (pipeline.Asolution, pipeline.Aflow)
                 : (pipeline.Bsolution, pipeline.Bflow);
 
-            LogTextHelper.Info($"当前产品:{panelInfo.SerialNumber},{panelInfo.SideIndex}面,所属料号:{panelInfo.ProductSerial},流程:{pipeline.Name},方案:{solution},flow:{flow}");
+            LogTextHelper.Info($"当前产品:{context.SN},{panelInfo.SideIndex}面,所属料号:{panelInfo.ProductSerial},流程:{pipeline.Name},方案:{solution},flow:{flow}");
             return (solution, flow, pipeline.IsSwitch);
         }
 
@@ -196,7 +195,7 @@ namespace DeepSightWorkLib.Services
                     {
                         directReportDefectList.Add(j);
                         directReportPcsList.Add(defect.PcsIndex);
-                        LogTextHelper.Info($"SN:{panelInfo.SerialNumber} 缺陷 {defect.DefectCode} (Pcs:{defect.PcsIndex}, Defect:{j}) 标记为直报，跳过AI推理");
+                        LogTextHelper.Info($"SN:{context.SN} 缺陷 {defect.DefectCode} (Pcs:{defect.PcsIndex}, Defect:{j}) 标记为直报，跳过AI推理");
                         continue;
                     }
 
@@ -213,7 +212,7 @@ namespace DeepSightWorkLib.Services
                     pcsList.Add(defect.PcsIndex);
                 }
             }
-            LogTextHelper.Info($"SN:{panelInfo.SerialNumber}_{panelInfo.SideIndex}面报点数据为:{defectCount}");
+            LogTextHelper.Info($"SN:{context.SN}_{panelInfo.SideIndex}面报点数据为:{defectCount}");
 
         }
 

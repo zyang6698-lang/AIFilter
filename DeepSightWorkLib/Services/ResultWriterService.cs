@@ -41,7 +41,7 @@ namespace DeepSightWorkLib.Services
                         db_name = aiResult.VRSDbName,
                         operation = "put",
                         op_mode = "all_ow",
-                        key = $"{aiResult.SN}_{aiResult.Side}",
+                        key = $"{aiResult.VRSDbKey}_{aiResult.Side}",
                         value = JsonConvert.SerializeObject(aiResult.AIDetailResultItems),
                     };
 

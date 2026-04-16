@@ -19,7 +19,7 @@ namespace DeepSightWorkLib.Services
     public class PostProcessService
     {
         private readonly ConfigurationClass _sysConfig;
-        private readonly Action<RootPanelInfo, List<DetectInfo>, int, int> _savePanelSideAction;
+        private readonly Action<VBModel, List<DetectInfo>, int, int> _savePanelSideAction;
 
         // 模型验证测试服务（可选注入）
         private ModelValidationTestService _validationTestService;
@@ -30,7 +30,7 @@ namespace DeepSightWorkLib.Services
 
         public PostProcessService(
             ConfigurationClass sysConfig,
-            Action<RootPanelInfo, List<DetectInfo>, int, int> savePanelSideAction)
+            Action<VBModel, List<DetectInfo>, int, int> savePanelSideAction)
         {
             _sysConfig = sysConfig ?? throw new ArgumentNullException(nameof(sysConfig));
             _savePanelSideAction = savePanelSideAction ?? throw new ArgumentNullException(nameof(savePanelSideAction));
@@ -89,14 +89,14 @@ namespace DeepSightWorkLib.Services
                             skipAiState = 3;
                         }
 
-                        _savePanelSideAction(panelInfo, allDefects, skipAviState, skipAiState);
+                        _savePanelSideAction(vBModel, allDefects, skipAviState, skipAiState);
                         LogTextHelper.Info($"跳过处理(无图片): SN={vBModel.SN}, 保存缺陷路径数={allDefects.Count}, AviState={skipAviState}, AiState={skipAiState}");
                     }
                     else if (vBModel.Mats.Count > _sysConfig.MaxDefectCount)
                     {
                         var allDefects = BuildAllDefectsWithPaths(vBModel);
                         foreach (var d in allDefects) d.AIStatus = 3;
-                        _savePanelSideAction(panelInfo, allDefects, 2, 3);
+                        _savePanelSideAction(vBModel, allDefects, 2, 3);
                         LogTextHelper.Info($"跳过处理(图片超限): SN={vBModel.SN}, 保存缺陷路径数={allDefects.Count}");
                     }
                     return;
@@ -267,7 +267,7 @@ namespace DeepSightWorkLib.Services
                 }
 
                 // 不论什么情况都保存（所有缺陷包含完整图片路径）
-                _savePanelSideAction(panelInfo, defects, aviState, aiState);
+                _savePanelSideAction(vBModel, defects, aviState, aiState);
 
             }
             catch (Exception ex)
