@@ -438,22 +438,7 @@ namespace DeepSightAI
 
         private async void btnGenerateInference_Click(object sender, EventArgs e)
         {
-            // 1. 选择文件夹
-            string folderPath;
-            using (var folderDialog = new FolderBrowserDialog())
-            {
-                folderDialog.Description = "请选择包含 panel.json 文件的根目录";
-                // 默认定位到 C:\minio\{bucket}（与本地 Minio 数据目录保持一致，bucket 取自 MinioSettings）
-                string defaultRoot = Path.Combine(@"C:\minio", MinioSettings.Instance.DefaultBucket ?? "deepiresults");
-                if (Directory.Exists(defaultRoot))
-                {
-                    folderDialog.SelectedPath = defaultRoot;
-                }
-                if (folderDialog.ShowDialog() != DialogResult.OK) return;
-                folderPath = folderDialog.SelectedPath;
-            }
-
-            // 2. 获取 LevelDB 配置
+            // 1. 获取 LevelDB 配置（用于发送请求的目标 DB）
             var dbConfigs = LevelDbConfigManager.Instance.Databases
                 .Where(db => db.IsEnabled && db.DbName == "ai_merged_results")
                 .ToList();
@@ -464,33 +449,63 @@ namespace DeepSightAI
                 return;
             }
 
+            // 2. 收集所有启用数据库中的 MinIO IP（A/B 合并去重）作为可选列表
+            var availableIps = LevelDbConfigManager.Instance.Databases
+                .Where(db => db.IsEnabled)
+                .SelectMany(db => new[] { db.MinioIpA, db.MinioIpB })
+                .Where(ip => !string.IsNullOrWhiteSpace(ip))
+                .Distinct()
+                .ToList();
+            if (availableIps.Count == 0)
+            {
+                MessageBox.Show("未在已启用的 LevelDB 配置中找到任何 MinIO IP。", "配置缺失",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // 3. 弹出 MinIO 目录浏览器选择前缀
+            var minioInstance = (Machine.master?.MinioService as MinioClass) ?? new MinioClass();
+            string bucket = MinioSettings.Instance.DefaultBucket ?? "deepiresults";
+            string selectedIp;
+            string selectedPrefix;
+            using (var picker = new FrMinioFolderPicker(minioInstance, availableIps, bucket))
+            {
+                if (picker.ShowDialog(this) != DialogResult.OK) return;
+                selectedIp = picker.SelectedIp;
+                selectedPrefix = picker.SelectedPrefix ?? string.Empty;
+            }
+
             btnGenerateInference.Enabled = false;
-            UpdateProgress(0, "正在扫描 panel.json 文件...");
+            UpdateProgress(0, $"正在扫描 {bucket}/{selectedPrefix} 下的 panel.json ...");
 
             try
             {
-                // 3. 扫描所有 panel.json 文件
-                var panelFiles = await Task.Run(() =>
-                    Directory.EnumerateFiles(folderPath, "*-panel.json", SearchOption.AllDirectories).ToList());
+                // 4. 递归列出选中前缀下的所有对象键，筛选 *-panel.json
+                var allKeys = await minioInstance.ListAllObjectKeysAsync(bucket, selectedPrefix, selectedIp);
+                var panelFiles = allKeys
+                    .Where(k => !string.IsNullOrEmpty(k) && k.EndsWith("-panel.json", StringComparison.OrdinalIgnoreCase))
+                    .ToList();
 
                 if (panelFiles.Count == 0)
                 {
                     UpdateProgress(0, "未找到 panel.json 文件");
-                    MessageBox.Show("所选目录下未找到任何 *-panel.json 文件。", "提示",
+                    MessageBox.Show("所选 MinIO 目录下未找到任何 *-panel.json 对象。", "提示",
                         MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
 
                 UpdateProgress(10, $"找到 {panelFiles.Count} 个 panel.json 文件，正在解析...");
 
-                // 4. 解析并按 SN 分组
-                var snGroups = new Dictionary<string, Dictionary<string, string>>(); // SN -> { "A" -> path, "B" -> path }
+                // 5. 从 MinIO 下载并解析，按 SN 分组
+                // SN -> { "A" -> objectKey, "B" -> objectKey }
+                var snGroups = new Dictionary<string, Dictionary<string, string>>();
                 int parsed = 0;
-                foreach (var file in panelFiles)
+                foreach (var objectKey in panelFiles)
                 {
                     try
                     {
-                        string json = File.ReadAllText(file);
+                        string json = minioInstance.ReadJsonSync(bucket, objectKey, selectedIp);
+                        if (string.IsNullOrWhiteSpace(json)) continue;
                         var panelInfo = JsonConvert.DeserializeObject<RootPanelInfo>(json);
                         if (panelInfo == null || string.IsNullOrEmpty(panelInfo.SerialNumber)) continue;
 
@@ -505,11 +520,12 @@ namespace DeepSightAI
                         if (!snGroups.ContainsKey(sn))
                             snGroups[sn] = new Dictionary<string, string>();
 
-                        snGroups[sn][side] = file;
+                        // 存为 "bucket/objectKey" 形式，下游 ParseMinioPath 以 bucket 标识切分
+                        snGroups[sn][side] = $"{bucket}/{objectKey}";
                     }
                     catch (Exception ex)
                     {
-                        LogTextHelper.Warn($"解析 panel.json 失败: {file}, 错误: {ex.Message}");
+                        LogTextHelper.Warn($"解析 panel.json 失败: {objectKey}, 错误: {ex.Message}");
                     }
                     parsed++;
                     UpdateProgress(10 + (int)(parsed * 30.0 / panelFiles.Count),
@@ -551,11 +567,12 @@ namespace DeepSightAI
                         try
                         {
                             // 构建 results_info 列表，只包含存在的面
+                            // A/B 两面均使用用户在 MinIO 浏览器中选定的 IP（浏览源即请求源，保持一致）
                             var resultsInfo = new List<object>();
                             if (hasA)
-                                resultsInfo.Add(new { side = "A", minio_ip = dbConfig.MinioIpA, minio_port = minioPort, result_path = entry.Value["A"] });
+                                resultsInfo.Add(new { side = "A", minio_ip = selectedIp, minio_port = minioPort, result_path = entry.Value["A"] });
                             if (hasB)
-                                resultsInfo.Add(new { side = "B", minio_ip = dbConfig.MinioIpB, minio_port = minioPort, result_path = entry.Value["B"] });
+                                resultsInfo.Add(new { side = "B", minio_ip = selectedIp, minio_port = minioPort, result_path = entry.Value["B"] });
 
                             var valueObj = new
                             {

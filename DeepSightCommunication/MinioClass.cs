@@ -323,6 +323,83 @@ namespace DeepSightCommunication
         }
 
         /// <summary>
+        /// 非递归列出指定前缀下的子文件夹（公共前缀），返回以 '/' 结尾的前缀列表。
+        /// </summary>
+        public async Task<List<string>> ListSubFoldersAsync(string bucket, string prefix, string ip)
+        {
+            var result = new List<string>();
+            var client = GetOrCreateClient(ip);
+            if (client == null)
+            {
+                LogTextHelper.Warn($"ListSubFoldersAsync: 无法获取MinioClient, IP:{ip}");
+                return result;
+            }
+
+            var normalizedPrefix = string.IsNullOrEmpty(prefix) ? string.Empty : prefix;
+            var tcs = new TaskCompletionSource<List<string>>();
+            var observable = client.ListObjectsAsync(
+                new ListObjectsArgs()
+                    .WithBucket(bucket)
+                    .WithPrefix(normalizedPrefix)
+                    .WithRecursive(false)
+            );
+            var subscription = observable.Subscribe(
+                onNext: item =>
+                {
+                    if (item.IsDir) result.Add(item.Key);
+                },
+                onError: ex => tcs.TrySetException(ex),
+                onCompleted: () => tcs.TrySetResult(result)
+            );
+            try
+            {
+                return await tcs.Task;
+            }
+            finally
+            {
+                subscription.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// 递归列出指定前缀下的所有文件对象键（不含目录项）。
+        /// </summary>
+        public async Task<List<string>> ListAllObjectKeysAsync(string bucket, string prefix, string ip)
+        {
+            var result = new List<string>();
+            var client = GetOrCreateClient(ip);
+            if (client == null)
+            {
+                LogTextHelper.Warn($"ListAllObjectKeysAsync: 无法获取MinioClient, IP:{ip}");
+                return result;
+            }
+
+            var tcs = new TaskCompletionSource<List<string>>();
+            var observable = client.ListObjectsAsync(
+                new ListObjectsArgs()
+                    .WithBucket(bucket)
+                    .WithPrefix(prefix ?? string.Empty)
+                    .WithRecursive(true)
+            );
+            var subscription = observable.Subscribe(
+                onNext: item =>
+                {
+                    if (!item.IsDir) result.Add(item.Key);
+                },
+                onError: ex => tcs.TrySetException(ex),
+                onCompleted: () => tcs.TrySetResult(result)
+            );
+            try
+            {
+                return await tcs.Task;
+            }
+            finally
+            {
+                subscription.Dispose();
+            }
+        }
+
+        /// <summary>
         /// 错误处理
         /// </summary>
         private void HandleMinioError(MinioException ex)

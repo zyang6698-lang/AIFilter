@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -52,6 +53,22 @@ namespace DeepSightCommunication.Interfaces
         /// 异步下载文件夹
         /// </summary>
         Task DownloadFolderAsync(string bucket, string minioFolderPath, string localRootPath, string ip, bool recursive = true);
+
+        /// <summary>
+        /// 非递归列出指定前缀下的子文件夹（公共前缀），返回以 '/' 结尾的前缀列表。
+        /// </summary>
+        /// <param name="bucket">存储桶名称</param>
+        /// <param name="prefix">当前前缀（如 "" 表示桶根，或 "SN123/"）</param>
+        /// <param name="ip">Minio 服务器 IP</param>
+        Task<List<string>> ListSubFoldersAsync(string bucket, string prefix, string ip);
+
+        /// <summary>
+        /// 递归列出指定前缀下的所有文件对象键（不含目录项）。
+        /// </summary>
+        /// <param name="bucket">存储桶名称</param>
+        /// <param name="prefix">检索前缀（如 "" 表示桶根，或 "SN123/"）</param>
+        /// <param name="ip">Minio 服务器 IP</param>
+        Task<List<string>> ListAllObjectKeysAsync(string bucket, string prefix, string ip);
     }
 }
 
