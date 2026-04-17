@@ -443,6 +443,12 @@ namespace DeepSightAI
             using (var folderDialog = new FolderBrowserDialog())
             {
                 folderDialog.Description = "请选择包含 panel.json 文件的根目录";
+                // 默认定位到 C:\minio\{bucket}（与本地 Minio 数据目录保持一致，bucket 取自 MinioSettings）
+                string defaultRoot = Path.Combine(@"C:\minio", MinioSettings.Instance.DefaultBucket ?? "deepiresults");
+                if (Directory.Exists(defaultRoot))
+                {
+                    folderDialog.SelectedPath = defaultRoot;
+                }
                 if (folderDialog.ShowDialog() != DialogResult.OK) return;
                 folderPath = folderDialog.SelectedPath;
             }

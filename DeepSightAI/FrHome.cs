@@ -612,13 +612,22 @@ namespace DeepSightAI
                                     {
                                         detectInfoList.Add(null);
                                     }
+                                    // 保持与缺陷一一对齐，空则占位为""，便于显示时按索引做主/备回退
                                     if (pcsInfo.DefectInfo[k].DefectVrsGerberImages != null && pcsInfo.DefectInfo[k].DefectVrsGerberImages.Count > 0)
                                     {
                                         imagePaths_Gerber.Add($"{info[i].Head}/{pcsInfo.DefectInfo[k].DefectVrsGerberImages[0].ToString()}:{info[i].IP}");
                                     }
+                                    else
+                                    {
+                                        imagePaths_Gerber.Add("");
+                                    }
                                     if (pcsInfo.DefectInfo[k].DefectVrsOkImages != null && pcsInfo.DefectInfo[k].DefectVrsOkImages.Count > 0)
                                     {
                                         imagePaths_Template.Add($"{info[i].Head}/{pcsInfo.DefectInfo[k].DefectVrsOkImages[0].ToString()}:{info[i].IP}");
+                                    }
+                                    else
+                                    {
+                                        imagePaths_Template.Add("");
                                     }
                                     index++;
                                 }
@@ -717,9 +726,12 @@ namespace DeepSightAI
                 }
 
                 // 获取当前页数据
+                // 主路径按 ShowFlag 选择；备路径用于主路径为空时的回退（与推理阶段 Temp 为空回退 Gerber 的行为对齐）
                 var gerberOrtemp_paths = Machine.ShowFlag == "B" ? imagePaths_Gerber : imagePaths_Template;
+                var fallback_paths = Machine.ShowFlag == "B" ? imagePaths_Template : imagePaths_Gerber;
                 var defect_pagedData = imagePaths.Skip(skipCount).Take(pageSize).ToList();
                 var gerberOrtemp_pagedData = gerberOrtemp_paths.Skip(skipCount).Take(pageSize).ToList();
+                var fallback_pagedData = fallback_paths.Skip(skipCount).Take(pageSize).ToList();
                 var defect_pagedRois = defectRois.Skip(skipCount).Take(pageSize).ToList();
                 var pagedDetectInfos = detectInfoList.Skip(skipCount).Take(pageSize).ToList();
                 var pagedDisInfos = disInfosList.Skip(skipCount).Take(pageSize).ToList();
@@ -748,11 +760,16 @@ namespace DeepSightAI
                                 original = DrawDefectBoxOnBitmap(rawOriginal, roi);
                             }
 
-                            // 加载模板图
+                            // 加载模板图（主路径为空时回退到备路径，与推理逻辑保持一致）
                             Bitmap template = null;
                             if (i < gerberOrtemp_pagedData.Count)
                             {
-                                Bitmap rawTemplate = LoadBitmapFromMinioPath(gerberOrtemp_pagedData[i]);
+                                string refPath = gerberOrtemp_pagedData[i];
+                                if (string.IsNullOrEmpty(refPath) && i < fallback_pagedData.Count)
+                                {
+                                    refPath = fallback_pagedData[i];
+                                }
+                                Bitmap rawTemplate = LoadBitmapFromMinioPath(refPath);
                                 template = rawTemplate != null ? DrawDefectBoxOnBitmap(rawTemplate, roi) : null;
                                 // rawTemplate 已被 DrawDefectBoxOnBitmap 复制，可以释放
                                 if (rawTemplate != null && template != rawTemplate)
