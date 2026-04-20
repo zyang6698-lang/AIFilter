@@ -128,6 +128,8 @@ namespace DeepSightAI
             dataGridView_Defects.DefaultCellStyle.SelectionBackColor = Color.FromArgb(0, 122, 204);
             dataGridView_Defects.DefaultCellStyle.SelectionForeColor = Color.White;
             dataGridView_Defects.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(55, 55, 58);
+            dataGridView_Defects.StripeEvenColor = Color.FromArgb(45, 45, 48);
+            dataGridView_Defects.StripeOddColor = Color.FromArgb(55, 55, 58);
             dataGridView_Defects.GridColor = Color.FromArgb(60, 60, 60);
             dataGridView_Defects.BorderStyle = BorderStyle.None;
         }

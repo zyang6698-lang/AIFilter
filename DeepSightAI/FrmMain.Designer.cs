@@ -102,14 +102,15 @@ namespace DeepSightAI
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
-            // 
+            //
+            this.tableLayoutPanel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.tableLayoutPanel1.ColumnCount = 1;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.Controls.Add(this.statusStrip, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this.panel10, 0, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 144);
-            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 96.17564F));
@@ -177,7 +178,8 @@ namespace DeepSightAI
             this.solutionAndflow.Visible = false;
             // 
             // panel10
-            // 
+            //
+            this.panel10.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.panel10.Controls.Add(this.panel7);
             this.panel10.Controls.Add(this.panel6);
             this.panel10.Controls.Add(this.panel5);
@@ -186,10 +188,10 @@ namespace DeepSightAI
             this.panel10.Controls.Add(this.panel2);
             this.panel10.Controls.Add(this.panel1);
             this.panel10.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel10.Location = new System.Drawing.Point(3, 2);
-            this.panel10.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.panel10.Location = new System.Drawing.Point(0, 0);
+            this.panel10.Margin = new System.Windows.Forms.Padding(0);
             this.panel10.Name = "panel10";
-            this.panel10.Size = new System.Drawing.Size(1411, 548);
+            this.panel10.Size = new System.Drawing.Size(1417, 552);
             this.panel10.TabIndex = 0;
             // 
             // panel7

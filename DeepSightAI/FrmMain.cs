@@ -1080,7 +1080,15 @@ namespace DeepSightAI
         {
             this.Invoke(new MethodInvoker(() =>
             {
-                Machine.master.DefectService.AiDefect.Vision_Show_View(1);
+                try
+                {
+                    Machine.master.DefectService.AiDefect.Vision_Show_View(1);
+                }
+                catch (Exception ex)
+                {
+                    // Vision_Show_View 内部已 Report 并 rethrow，这里只拦住 UI 线程异常
+                    LogTextHelper.Error("btnRunVB_Click: 打开 VB 界面失败", ex);
+                }
             }));
         }
 

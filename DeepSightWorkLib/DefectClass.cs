@@ -2,6 +2,7 @@
 using DeepSightModel;
 using DeepSightTool;
 using DeepSightWorkLib.Interfaces;
+using DeepSightWorkLib.Services;
 using Newtonsoft.Json;
 using OpenCvSharp;
 using System;
@@ -47,6 +48,8 @@ namespace DeepSightWorkLib
             {
                 _initError = ex.Message;
                 LogTextHelper.Warn($"DefectClass 初始化失败，AI 推理功能不可用（通常是 ProxyServer.dll 缺失或加载失败）：{ex.Message}");
+                // 此处不直接 RaiseAlarm，因为 Notifier 尚未注册，Toast 无法弹出；
+                // 统一由 Machine.Init 在注册 Notifier 后根据 InitError 补报
                 // 不重新抛出异常，允许软件在没有 AI 引擎的情况下正常启动
             }
         }
@@ -267,7 +270,16 @@ namespace DeepSightWorkLib
 
         public void Vision_Show_View(int isShow)
         {
-            vision_show_view(isShow);
+            try
+            {
+                vision_show_view(isShow);
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"Vision_Show_View 调用失败: {ex.Message}");
+                AiEngineAlarm.ReportShowViewFailed(ex);
+                throw;
+            }
         }
 
         /// <summary>

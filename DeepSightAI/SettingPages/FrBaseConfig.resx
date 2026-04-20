@@ -130,10 +130,13 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="label21.Location" type="System.Drawing.Point, System.Drawing">
-    <value>34, 21</value>
+    <value>25, 17</value>
+  </data>
+  <data name="label21.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
   </data>
   <data name="label21.Size" type="System.Drawing.Size, System.Drawing">
-    <value>251, 46</value>
+    <value>196, 38</value>
   </data>
   <data name="label21.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -160,13 +163,13 @@
     <value>Left, Right</value>
   </data>
   <data name="txt_MaxDefectCount.Location" type="System.Drawing.Point, System.Drawing">
-    <value>292, 29</value>
+    <value>226, 24</value>
   </data>
   <data name="txt_MaxDefectCount.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>3, 4, 3, 4</value>
   </data>
   <data name="txt_MaxDefectCount.Size" type="System.Drawing.Size, System.Drawing">
-    <value>250, 28</value>
+    <value>194, 23</value>
   </data>
   <data name="txt_MaxDefectCount.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -190,10 +193,13 @@
     <value>Fill</value>
   </data>
   <data name="label22.Location" type="System.Drawing.Point, System.Drawing">
-    <value>34, 65</value>
+    <value>25, 55</value>
+  </data>
+  <data name="label22.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
   </data>
   <data name="label22.Size" type="System.Drawing.Size, System.Drawing">
-    <value>251, 46</value>
+    <value>196, 38</value>
   </data>
   <data name="label22.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -220,13 +226,13 @@
     <value>Left, Right</value>
   </data>
   <data name="txt_AgentShutdownTimeout.Location" type="System.Drawing.Point, System.Drawing">
-    <value>292, 75</value>
+    <value>226, 62</value>
   </data>
   <data name="txt_AgentShutdownTimeout.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>3, 4, 3, 4</value>
   </data>
   <data name="txt_AgentShutdownTimeout.Size" type="System.Drawing.Size, System.Drawing">
-    <value>250, 28</value>
+    <value>194, 23</value>
   </data>
   <data name="txt_AgentShutdownTimeout.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
@@ -250,10 +256,13 @@
     <value>Fill</value>
   </data>
   <data name="label23.Location" type="System.Drawing.Point, System.Drawing">
-    <value>34, 111</value>
+    <value>25, 93</value>
+  </data>
+  <data name="label23.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
   </data>
   <data name="label23.Size" type="System.Drawing.Size, System.Drawing">
-    <value>251, 46</value>
+    <value>196, 38</value>
   </data>
   <data name="label23.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -280,13 +289,13 @@
     <value>Left, Right</value>
   </data>
   <data name="txt_GetInferResultTimeout.Location" type="System.Drawing.Point, System.Drawing">
-    <value>292, 119</value>
+    <value>226, 100</value>
   </data>
   <data name="txt_GetInferResultTimeout.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>3, 4, 3, 4</value>
   </data>
   <data name="txt_GetInferResultTimeout.Size" type="System.Drawing.Size, System.Drawing">
-    <value>250, 28</value>
+    <value>194, 23</value>
   </data>
   <data name="txt_GetInferResultTimeout.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -310,10 +319,13 @@
     <value>Fill</value>
   </data>
   <data name="label24.Location" type="System.Drawing.Point, System.Drawing">
-    <value>34, 155</value>
+    <value>25, 131</value>
+  </data>
+  <data name="label24.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
   </data>
   <data name="label24.Size" type="System.Drawing.Size, System.Drawing">
-    <value>251, 46</value>
+    <value>196, 38</value>
   </data>
   <data name="label24.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -340,13 +352,13 @@
     <value>Left, Right</value>
   </data>
   <data name="txt_WelcomeTitle.Location" type="System.Drawing.Point, System.Drawing">
-    <value>292, 165</value>
+    <value>226, 138</value>
   </data>
   <data name="txt_WelcomeTitle.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>3, 4, 3, 4</value>
   </data>
   <data name="txt_WelcomeTitle.Size" type="System.Drawing.Size, System.Drawing">
-    <value>250, 28</value>
+    <value>194, 23</value>
   </data>
   <data name="txt_WelcomeTitle.TabIndex" type="System.Int32, mscorlib">
     <value>11</value>
@@ -370,10 +382,13 @@
     <value>Fill</value>
   </data>
   <data name="label25.Location" type="System.Drawing.Point, System.Drawing">
-    <value>34, 201</value>
+    <value>25, 169</value>
+  </data>
+  <data name="label25.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
   </data>
   <data name="label25.Size" type="System.Drawing.Size, System.Drawing">
-    <value>251, 46</value>
+    <value>196, 38</value>
   </data>
   <data name="label25.TabIndex" type="System.Int32, mscorlib">
     <value>12</value>
@@ -400,13 +415,13 @@
     <value>Left, Right</value>
   </data>
   <data name="txt_WelcomeFontSize.Location" type="System.Drawing.Point, System.Drawing">
-    <value>292, 209</value>
+    <value>226, 176</value>
   </data>
   <data name="txt_WelcomeFontSize.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>3, 4, 3, 4</value>
   </data>
   <data name="txt_WelcomeFontSize.Size" type="System.Drawing.Size, System.Drawing">
-    <value>250, 28</value>
+    <value>194, 23</value>
   </data>
   <data name="txt_WelcomeFontSize.TabIndex" type="System.Int32, mscorlib">
     <value>13</value>
@@ -433,10 +448,13 @@
     <value>Fill</value>
   </data>
   <data name="label26.Location" type="System.Drawing.Point, System.Drawing">
-    <value>34, 245</value>
+    <value>25, 207</value>
+  </data>
+  <data name="label26.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
   </data>
   <data name="label26.Size" type="System.Drawing.Size, System.Drawing">
-    <value>251, 46</value>
+    <value>196, 38</value>
   </data>
   <data name="label26.TabIndex" type="System.Int32, mscorlib">
     <value>14</value>
@@ -469,10 +487,13 @@
     <value>Gerber图</value>
   </data>
   <data name="cmb_ImageType.Location" type="System.Drawing.Point, System.Drawing">
-    <value>242, 207</value>
+    <value>225, 210</value>
+  </data>
+  <data name="cmb_ImageType.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 3, 2, 3</value>
   </data>
   <data name="cmb_ImageType.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 28</value>
+    <value>196, 25</value>
   </data>
   <data name="cmb_ImageType.TabIndex" type="System.Int32, mscorlib">
     <value>15</value>
@@ -496,16 +517,16 @@
     <value>0, 0</value>
   </data>
   <data name="tableLayoutPanel1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 4, 3, 4</value>
+    <value>2, 3, 2, 3</value>
   </data>
   <data name="tableLayoutPanel1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>30, 20, 30, 0</value>
+    <value>23, 17, 23, 0</value>
   </data>
   <data name="tableLayoutPanel1.RowCount" type="System.Int32, mscorlib">
     <value>7</value>
   </data>
   <data name="tableLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>1084, 666</value>
+    <value>843, 566</value>
   </data>
   <data name="tableLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -523,22 +544,22 @@
     <value>0</value>
   </data>
   <data name="tableLayoutPanel1.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="label21" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="txt_MaxDefectCount" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="label22" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="txt_AgentShutdownTimeout" Row="1" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="label23" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="txt_GetInferResultTimeout" Row="2" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="label24" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="txt_WelcomeTitle" Row="3" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="label25" Row="4" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="txt_WelcomeFontSize" Row="4" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="label26" Row="5" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="cmb_ImageType" Row="5" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Absolute,257,Absolute,257,AutoSize,0" /&gt;&lt;Rows Styles="Absolute,45,Absolute,45,Absolute,45,Absolute,45,Absolute,45,Absolute,45,Percent,100" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="label21" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="txt_MaxDefectCount" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="label22" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="txt_AgentShutdownTimeout" Row="1" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="label23" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="txt_GetInferResultTimeout" Row="2" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="label24" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="txt_WelcomeTitle" Row="3" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="label25" Row="4" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="txt_WelcomeFontSize" Row="4" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="label26" Row="5" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="cmb_ImageType" Row="5" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Absolute,200,Absolute,200,AutoSize,0" /&gt;&lt;Rows Styles="Absolute,38,Absolute,38,Absolute,38,Absolute,38,Absolute,38,Absolute,38,Percent,100" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>9, 20</value>
+    <value>7, 17</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>1084, 666</value>
+    <value>843, 566</value>
   </data>
   <data name="$this.Font" type="System.Drawing.Font, System.Drawing">
     <value>微软雅黑, 9pt</value>
   </data>
   <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>3, 4, 3, 4</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterScreen</value>

@@ -1,4 +1,4 @@
-using DeepSightModel;
+﻿using DeepSightModel;
 using OpenCvSharp;
 using System.Collections.Generic;
 
@@ -13,6 +13,11 @@ namespace DeepSightWorkLib.Interfaces
         /// AI 引擎是否初始化成功（ProxyServer.dll 加载成功）
         /// </summary>
         bool IsInitialized { get; }
+
+        /// <summary>
+        /// 初始化失败时的错误信息（成功时为 null）
+        /// </summary>
+        string InitError { get; }
 
         /// <summary>
         /// 获取底层 AI 检测类实例（用于需要直接访问的场景）

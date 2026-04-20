@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using DeepSightWorkLib;
+using DeepSightWorkLib.Services;
 using DeepSightModel;
 using DeepSightModel.Configuration;
 
@@ -149,6 +150,12 @@ namespace DeepSightAI
                     new ToastNotifier(FrmMain.Instance, AlarmLevel.Warning));
                 AlarmService.Instance.RegisterNotifier(
                     new FileNotifier());
+
+                // 若 AI 引擎初始化失败（ProxyServer.dll 缺失等），此时 Notifier 已就绪，补报一次以触发 Toast
+                if (master?.DefectService != null && !master.DefectService.IsInitialized)
+                {
+                    AiEngineAlarm.ReportInitFailed(master.DefectService.InitError);
+                }
 
                 LogTextHelper.Info("程序启动");
             }

@@ -1,6 +1,7 @@
-using DeepSightEvent;
+﻿using DeepSightEvent;
 using DeepSightModel.Alarm;
 using DeepSightTool;
+using DeepSightWorkLib.Services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -200,6 +201,18 @@ namespace DeepSightAI
                 cell.Style.ForeColor = ackColor;
                 cell.Style.SelectionForeColor = ackColor;
             }
+        }
+
+        #endregion
+
+        #region 测试告警
+
+        /// <summary>
+        /// 依次触发三种 AI 引擎告警，用于验证告警链路（Toast/表格/文件）
+        /// </summary>
+        private void btnTestAlarm_Click(object sender, EventArgs e)
+        {
+            AiEngineAlarm.TestFireAll();
         }
 
         #endregion

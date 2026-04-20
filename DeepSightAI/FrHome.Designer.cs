@@ -34,9 +34,9 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
             this.table_main = new System.Windows.Forms.TableLayoutPanel();
             this.panel_show = new System.Windows.Forms.Panel();
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.splitContainer4 = new System.Windows.Forms.SplitContainer();
-            this.dataGridViewData = new System.Windows.Forms.DataGridView();
+            this.splitContainer1 = new Sunny.UI.UISplitContainer();
+            this.splitContainer4 = new Sunny.UI.UISplitContainer();
+            this.dataGridViewData = new Sunny.UI.UIDataGridView();
             this.Code = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Side = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.AVI = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -45,20 +45,20 @@
             this.Status = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.contextMenuStripData = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.btnShowDebugInfo = new System.Windows.Forms.ToolStripMenuItem();
-            this.rich_log = new System.Windows.Forms.RichTextBox();
+            this.rich_log = new Sunny.UI.UIRichTextBox();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.btnClearLog = new System.Windows.Forms.ToolStripMenuItem();
             this.btnShowLog = new System.Windows.Forms.ToolStripMenuItem();
-            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
+            this.splitContainer2 = new Sunny.UI.UISplitContainer();
             this.avi_panel = new System.Windows.Forms.Panel();
             this.machineStatusPanel = new DeepSightAI.SettingPages.MachineStatusPanel();
-            this.splitContainer3 = new System.Windows.Forms.SplitContainer();
-            this.splitContainer5 = new System.Windows.Forms.SplitContainer();
+            this.splitContainer3 = new Sunny.UI.UISplitContainer();
+            this.splitContainer5 = new Sunny.UI.UISplitContainer();
             this.table_Small = new System.Windows.Forms.TableLayoutPanel();
             this.paginationPanel = new System.Windows.Forms.TableLayoutPanel();
-            this.btnPrevious = new System.Windows.Forms.Button();
+            this.btnPrevious = new DeepSightAI.StyledButton();
             this.lblPageInfo = new System.Windows.Forms.Label();
-            this.btnNext = new System.Windows.Forms.Button();
+            this.btnNext = new DeepSightAI.StyledButton();
             this.panel1 = new System.Windows.Forms.Panel();
             this.statsGridPanel = new System.Windows.Forms.TableLayoutPanel();
             this.lbl_SnTotalCount = new System.Windows.Forms.Label();
@@ -124,41 +124,59 @@
             this.panel_show.Name = "panel_show";
             this.panel_show.Size = new System.Drawing.Size(1755, 845);
             this.panel_show.TabIndex = 2;
-            // 
+            //
             // splitContainer1
-            // 
+            //
+            this.splitContainer1.ArrowColor = System.Drawing.Color.FromArgb(((int)(((byte)(180)))), ((int)(((byte)(190)))), ((int)(((byte)(200)))));
+            this.splitContainer1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.splitContainer1.BarColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer1.HandleColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(80)))), ((int)(((byte)(95)))));
+            this.splitContainer1.HandleHoverColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(122)))), ((int)(((byte)(204)))));
             this.splitContainer1.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer1.MinimumSize = new System.Drawing.Size(15, 16);
             this.splitContainer1.Name = "splitContainer1";
-            // 
+            //
             // splitContainer1.Panel1
-            // 
+            //
             this.splitContainer1.Panel1.BackColor = System.Drawing.Color.Black;
             this.splitContainer1.Panel1.Controls.Add(this.splitContainer4);
-            // 
+            //
             // splitContainer1.Panel2
-            // 
+            //
             this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
             this.splitContainer1.Size = new System.Drawing.Size(1755, 845);
             this.splitContainer1.SplitterDistance = 494;
+            this.splitContainer1.SplitterWidth = 3;
+            this.splitContainer1.Style = Sunny.UI.UIStyle.Custom;
+            this.splitContainer1.StyleCustomMode = true;
             this.splitContainer1.TabIndex = 0;
-            // 
+            //
             // splitContainer4
-            // 
+            //
+            this.splitContainer4.ArrowColor = System.Drawing.Color.FromArgb(((int)(((byte)(180)))), ((int)(((byte)(190)))), ((int)(((byte)(200)))));
+            this.splitContainer4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.splitContainer4.BarColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.splitContainer4.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer4.HandleColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(80)))), ((int)(((byte)(95)))));
+            this.splitContainer4.HandleHoverColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(122)))), ((int)(((byte)(204)))));
             this.splitContainer4.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer4.MinimumSize = new System.Drawing.Size(15, 16);
             this.splitContainer4.Name = "splitContainer4";
             this.splitContainer4.Orientation = System.Windows.Forms.Orientation.Horizontal;
-            // 
+            //
             // splitContainer4.Panel1
-            // 
+            //
             this.splitContainer4.Panel1.Controls.Add(this.dataGridViewData);
-            // 
+            //
             // splitContainer4.Panel2
-            // 
+            //
             this.splitContainer4.Panel2.Controls.Add(this.rich_log);
             this.splitContainer4.Size = new System.Drawing.Size(494, 845);
             this.splitContainer4.SplitterDistance = 550;
+            this.splitContainer4.SplitterWidth = 3;
+            this.splitContainer4.Style = Sunny.UI.UIStyle.Custom;
+            this.splitContainer4.StyleCustomMode = true;
             this.splitContainer4.TabIndex = 1;
             // 
             // dataGridViewData
@@ -168,15 +186,17 @@
             this.dataGridViewData.AllowUserToResizeColumns = false;
             this.dataGridViewData.AllowUserToResizeRows = false;
             this.dataGridViewData.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            dataGridViewCellStyle4.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle4.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            this.dataGridViewData.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(44)))), ((int)(((byte)(62)))), ((int)(((byte)(80)))));
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle4.ForeColor = System.Drawing.Color.White;
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(44)))), ((int)(((byte)(62)))), ((int)(((byte)(80)))));
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.Color.White;
             dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.dataGridViewData.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
-            this.dataGridViewData.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridViewData.ColumnHeadersHeight = 32;
+            this.dataGridViewData.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             this.dataGridViewData.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Code,
             this.Side,
@@ -189,16 +209,18 @@
             dataGridViewCellStyle5.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             dataGridViewCellStyle5.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             dataGridViewCellStyle5.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(247)))), ((int)(((byte)(249)))), ((int)(((byte)(235)))));
-            dataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.InactiveCaption;
-            dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle5.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(122)))), ((int)(((byte)(204)))));
+            dataGridViewCellStyle5.SelectionForeColor = System.Drawing.Color.White;
             dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
             this.dataGridViewData.DefaultCellStyle = dataGridViewCellStyle5;
             this.dataGridViewData.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridViewData.EnableHeadersVisualStyles = false;
+            this.dataGridViewData.GridColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(80)))), ((int)(((byte)(95)))));
             this.dataGridViewData.Location = new System.Drawing.Point(0, 0);
             this.dataGridViewData.MultiSelect = false;
             this.dataGridViewData.Name = "dataGridViewData";
             this.dataGridViewData.ReadOnly = true;
+            this.dataGridViewData.RowHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
             dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle6.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             dataGridViewCellStyle6.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
@@ -210,12 +232,20 @@
             this.dataGridViewData.RowHeadersVisible = false;
             this.dataGridViewData.RowHeadersWidth = 51;
             this.dataGridViewData.RowTemplate.Height = 27;
+            this.dataGridViewData.ScrollBarBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.dataGridViewData.ScrollBarColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(80)))), ((int)(((byte)(95)))));
+            this.dataGridViewData.ScrollBarRectColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.dataGridViewData.ScrollBarStyleInherited = false;
             this.dataGridViewData.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dataGridViewData.ShowCellErrors = false;
             this.dataGridViewData.ShowCellToolTips = false;
             this.dataGridViewData.ShowEditingIcon = false;
             this.dataGridViewData.ShowRowErrors = false;
             this.dataGridViewData.Size = new System.Drawing.Size(494, 550);
+            this.dataGridViewData.StripeEvenColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.dataGridViewData.StripeOddColor = System.Drawing.Color.FromArgb(((int)(((byte)(35)))), ((int)(((byte)(55)))), ((int)(((byte)(70)))));
+            this.dataGridViewData.Style = Sunny.UI.UIStyle.Custom;
+            this.dataGridViewData.StyleCustomMode = true;
             this.dataGridViewData.TabIndex = 2;
             this.dataGridViewData.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewData_CellClick);
             // 
@@ -289,16 +319,27 @@
             this.btnShowDebugInfo.Click += new System.EventHandler(this.btnShowDebugInfo_Click);
             // 
             // rich_log
-            // 
+            //
             this.rich_log.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.rich_log.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.rich_log.ContextMenuStrip = this.contextMenuStrip1;
             this.rich_log.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.rich_log.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.rich_log.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.rich_log.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.rich_log.Location = new System.Drawing.Point(0, 0);
             this.rich_log.Margin = new System.Windows.Forms.Padding(6);
+            this.rich_log.MinimumSize = new System.Drawing.Size(1, 1);
             this.rich_log.Name = "rich_log";
+            this.rich_log.Padding = new System.Windows.Forms.Padding(2);
             this.rich_log.ReadOnly = true;
+            this.rich_log.RectColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.rich_log.ScrollBarBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.rich_log.ScrollBarColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(80)))), ((int)(((byte)(95)))));
+            this.rich_log.ScrollBarStyleInherited = false;
+            this.rich_log.ShowText = false;
             this.rich_log.Size = new System.Drawing.Size(494, 291);
+            this.rich_log.Style = Sunny.UI.UIStyle.Custom;
+            this.rich_log.StyleCustomMode = true;
             this.rich_log.TabIndex = 12;
             this.rich_log.Text = "";
             // 
@@ -326,22 +367,31 @@
             this.btnShowLog.Click += new System.EventHandler(this.btnShowLog_Click);
             // 
             // splitContainer2
-            // 
+            //
+            this.splitContainer2.ArrowColor = System.Drawing.Color.FromArgb(((int)(((byte)(180)))), ((int)(((byte)(190)))), ((int)(((byte)(200)))));
+            this.splitContainer2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.splitContainer2.BarColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer2.HandleColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(80)))), ((int)(((byte)(95)))));
+            this.splitContainer2.HandleHoverColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(122)))), ((int)(((byte)(204)))));
             this.splitContainer2.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer2.MinimumSize = new System.Drawing.Size(15, 16);
             this.splitContainer2.Name = "splitContainer2";
             this.splitContainer2.Orientation = System.Windows.Forms.Orientation.Horizontal;
-            // 
+            //
             // splitContainer2.Panel1
-            // 
+            //
             this.splitContainer2.Panel1.Controls.Add(this.avi_panel);
-            // 
+            //
             // splitContainer2.Panel2
-            // 
-            this.splitContainer2.Panel2.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
+            //
+            this.splitContainer2.Panel2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.splitContainer2.Panel2.Controls.Add(this.splitContainer3);
             this.splitContainer2.Size = new System.Drawing.Size(1257, 845);
             this.splitContainer2.SplitterDistance = 402;
+            this.splitContainer2.SplitterWidth = 3;
+            this.splitContainer2.Style = Sunny.UI.UIStyle.Custom;
+            this.splitContainer2.StyleCustomMode = true;
             this.splitContainer2.TabIndex = 0;
             // 
             // avi_panel
@@ -365,38 +415,56 @@
             this.machineStatusPanel.TabIndex = 0;
             // 
             // splitContainer3
-            // 
+            //
+            this.splitContainer3.ArrowColor = System.Drawing.Color.FromArgb(((int)(((byte)(180)))), ((int)(((byte)(190)))), ((int)(((byte)(200)))));
+            this.splitContainer3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.splitContainer3.BarColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.splitContainer3.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer3.HandleColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(80)))), ((int)(((byte)(95)))));
+            this.splitContainer3.HandleHoverColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(122)))), ((int)(((byte)(204)))));
             this.splitContainer3.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer3.MinimumSize = new System.Drawing.Size(15, 16);
             this.splitContainer3.Name = "splitContainer3";
-            // 
+            //
             // splitContainer3.Panel1
-            // 
+            //
             this.splitContainer3.Panel1.Controls.Add(this.splitContainer5);
-            // 
+            //
             // splitContainer3.Panel2
-            // 
+            //
             this.splitContainer3.Panel2.Controls.Add(this.panel1);
             this.splitContainer3.Size = new System.Drawing.Size(1257, 439);
             this.splitContainer3.SplitterDistance = 831;
+            this.splitContainer3.SplitterWidth = 3;
+            this.splitContainer3.Style = Sunny.UI.UIStyle.Custom;
+            this.splitContainer3.StyleCustomMode = true;
             this.splitContainer3.TabIndex = 0;
-            // 
+            //
             // splitContainer5
-            // 
+            //
+            this.splitContainer5.ArrowColor = System.Drawing.Color.FromArgb(((int)(((byte)(180)))), ((int)(((byte)(190)))), ((int)(((byte)(200)))));
+            this.splitContainer5.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.splitContainer5.BarColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.splitContainer5.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer5.HandleColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(80)))), ((int)(((byte)(95)))));
+            this.splitContainer5.HandleHoverColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(122)))), ((int)(((byte)(204)))));
             this.splitContainer5.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer5.MinimumSize = new System.Drawing.Size(15, 16);
             this.splitContainer5.Name = "splitContainer5";
             this.splitContainer5.Orientation = System.Windows.Forms.Orientation.Horizontal;
-            // 
+            //
             // splitContainer5.Panel1
-            // 
+            //
             this.splitContainer5.Panel1.Controls.Add(this.table_Small);
-            // 
+            //
             // splitContainer5.Panel2
-            // 
+            //
             this.splitContainer5.Panel2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.splitContainer5.Panel2.Controls.Add(this.paginationPanel);
             this.splitContainer5.Size = new System.Drawing.Size(831, 439);
+            this.splitContainer5.SplitterWidth = 3;
+            this.splitContainer5.Style = Sunny.UI.UIStyle.Custom;
+            this.splitContainer5.StyleCustomMode = true;
             this.splitContainer5.SplitterDistance = 374;
             this.splitContainer5.TabIndex = 0;
             // 
@@ -436,15 +504,14 @@
             this.paginationPanel.TabIndex = 0;
             // 
             // btnPrevious
-            // 
+            //
             this.btnPrevious.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnPrevious.Location = new System.Drawing.Point(10, 5);
             this.btnPrevious.Margin = new System.Windows.Forms.Padding(10, 5, 5, 5);
             this.btnPrevious.Name = "btnPrevious";
             this.btnPrevious.Size = new System.Drawing.Size(80, 51);
             this.btnPrevious.TabIndex = 45;
-            this.btnPrevious.Text = "上一页";
-            this.btnPrevious.UseVisualStyleBackColor = true;
+            this.btnPrevious.Text = "◀  上一页";
             this.btnPrevious.Click += new System.EventHandler(this.btnPrevious_Click);
             // 
             // lblPageInfo
@@ -461,15 +528,14 @@
             this.lblPageInfo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // btnNext
-            // 
+            //
             this.btnNext.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnNext.Location = new System.Drawing.Point(741, 5);
             this.btnNext.Margin = new System.Windows.Forms.Padding(5, 5, 10, 5);
             this.btnNext.Name = "btnNext";
             this.btnNext.Size = new System.Drawing.Size(80, 51);
             this.btnNext.TabIndex = 44;
-            this.btnNext.Text = "下一页";
-            this.btnNext.UseVisualStyleBackColor = true;
+            this.btnNext.Text = "下一页  ▶";
             this.btnNext.Click += new System.EventHandler(this.btnNext_Click);
             // 
             // panel1
@@ -692,20 +758,20 @@
         #endregion
         private System.Windows.Forms.Panel panel_show;
         public System.Windows.Forms.TableLayoutPanel table_main;
-        private System.Windows.Forms.SplitContainer splitContainer1;
-        private System.Windows.Forms.SplitContainer splitContainer4;
+        private Sunny.UI.UISplitContainer splitContainer1;
+        private Sunny.UI.UISplitContainer splitContainer4;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem btnClearLog;
         private System.Windows.Forms.ToolStripMenuItem btnShowLog;
-        public System.Windows.Forms.RichTextBox rich_log;
-        private System.Windows.Forms.SplitContainer splitContainer2;
-        private System.Windows.Forms.SplitContainer splitContainer3;
-        private System.Windows.Forms.SplitContainer splitContainer5;
+        public Sunny.UI.UIRichTextBox rich_log;
+        private Sunny.UI.UISplitContainer splitContainer2;
+        private Sunny.UI.UISplitContainer splitContainer3;
+        private Sunny.UI.UISplitContainer splitContainer5;
         public System.Windows.Forms.TableLayoutPanel table_Small;
         private System.Windows.Forms.Label lblPageInfo;
-        private System.Windows.Forms.Button btnPrevious;
-        private System.Windows.Forms.Button btnNext;
-        public System.Windows.Forms.DataGridView dataGridViewData;
+        private DeepSightAI.StyledButton btnPrevious;
+        private DeepSightAI.StyledButton btnNext;
+        public Sunny.UI.UIDataGridView dataGridViewData;
         private System.Windows.Forms.Panel avi_panel;
         private System.Windows.Forms.Panel panel1;
         private SettingPages.MachineStatusPanel machineStatusPanel;

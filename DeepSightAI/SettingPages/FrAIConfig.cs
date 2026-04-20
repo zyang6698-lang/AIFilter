@@ -1,4 +1,5 @@
 ﻿using DeepSightTool;
+using DeepSightWorkLib.Services;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -126,6 +127,7 @@ namespace DeepSightAI.SettingPages
 
                 if (string.IsNullOrEmpty(solutionandflow_List))
                 {
+                    AiEngineAlarm.ReportSolutionListEmpty("Vision_runMethod 返回为空字符串");
                     throw new Exception("获取的方案流程列表为空。");
                 }
 
@@ -157,6 +159,11 @@ namespace DeepSightAI.SettingPages
             catch (Exception ex)
             {
                 LogTextHelper.Error("获取方案流程失败: " + ex.ToString());
+                // 避免与上面"空字符串"分支重复触发：仅在异常消息不含"为空"关键字时再次上报
+                if (ex.Message == null || !ex.Message.Contains("为空"))
+                {
+                    AiEngineAlarm.ReportSolutionListEmpty("Vision_runMethod 调用异常: " + ex.Message);
+                }
                 dic_solutionAndFlow.Clear();
                 dic_solutionAndFlow.Add("DefaultSolution", new List<string> { "(空流程)" });
 
