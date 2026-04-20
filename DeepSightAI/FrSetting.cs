@@ -11,38 +11,26 @@ namespace DeepSightAI
 {
     public partial class FrSetting : Form
     {
+        /// <summary>
+        /// 6 个配置页索引常量，与 uiTabControl 中 TabPage 顺序保持一致
+        /// </summary>
+        private const int PageBase = 0;
+        private const int PageAI = 1;
+        private const int PageHW = 2;
+        private const int PageDb = 3;
+        private const int PageKeyDefect = 4;
+        private const int PageShortcut = 5;
+
         public FrSetting()
         {
             InitializeComponent();
 
-            treeNode1 = new System.Windows.Forms.TreeNode("常规配置");
-            treeNode2 = new System.Windows.Forms.TreeNode("算法方案配置");
-            treeNode3 = new System.Windows.Forms.TreeNode("机台配置");
-            treeNode4 = new System.Windows.Forms.TreeNode("数据库配置");
-            treeNode5 = new System.Windows.Forms.TreeNode("重点缺陷管理");
-            treeNode6 = new System.Windows.Forms.TreeNode("快捷键配置");
-
-            treeNode1.Name = "节点0";
-            treeNode1.Text = "常规配置";
-            treeNode2.Name = "节点1";
-            treeNode2.Text = "算法方案配置";
-            treeNode3.Name = "节点2";
-            treeNode3.Text = "机台配置";
-            treeNode4.Name = "节点3";
-            treeNode4.Text = "数据库配置";
-            treeNode5.Name = "节点4";
-            treeNode5.Text = "重点缺陷管理";
-            treeNode6.Name = "节点5";
-            treeNode6.Text = "快捷键配置";
-
-            this.tvw_setting.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode1,
-            treeNode2,
-            treeNode3,
-            treeNode4,
-            treeNode5,
-            treeNode6,
-            });
+            navNodeBase = uiNavMenu.CreateNode("常规配置", PageBase);
+            navNodeAI = uiNavMenu.CreateNode("算法方案配置", PageAI);
+            navNodeHW = uiNavMenu.CreateNode("机台配置", PageHW);
+            navNodeDb = uiNavMenu.CreateNode("数据库配置", PageDb);
+            navNodeKeyDefect = uiNavMenu.CreateNode("重点缺陷管理", PageKeyDefect);
+            navNodeShortcut = uiNavMenu.CreateNode("快捷键配置", PageShortcut);
 
             Load += FrSetting_Load;
         }
@@ -81,9 +69,8 @@ namespace DeepSightAI
         {
             try
             {
-
                 LoadMethod();
-                tvw_setting.SelectedNode = tvw_setting.Nodes[0];
+                uiNavMenu.SelectFirst();
 
                 Language(1);
             }
@@ -92,35 +79,37 @@ namespace DeepSightAI
                 LogTextHelper.Error("Error", ex);
             }
         }
-        System.Windows.Forms.TreeNode treeNode1;
-        System.Windows.Forms.TreeNode treeNode2;
-        System.Windows.Forms.TreeNode treeNode3;
-        System.Windows.Forms.TreeNode treeNode4;
-        System.Windows.Forms.TreeNode treeNode5;
-        System.Windows.Forms.TreeNode treeNode6;
+
+        private System.Windows.Forms.TreeNode navNodeBase;
+        private System.Windows.Forms.TreeNode navNodeAI;
+        private System.Windows.Forms.TreeNode navNodeHW;
+        private System.Windows.Forms.TreeNode navNodeDb;
+        private System.Windows.Forms.TreeNode navNodeKeyDefect;
+        private System.Windows.Forms.TreeNode navNodeShortcut;
+
         public void Language(int language)
         {
             if (language == 1)
             {
-
                 btnSave.Text = "保存";
-                this.treeNode1.Text = "常规配置";
-                this.treeNode2.Text = "算法方案配置";
-                this.treeNode3.Text = "机台配置";
-                this.treeNode4.Text = "数据库配置";
-                this.treeNode5.Text = "重点缺陷管理";
-                this.treeNode6.Text = "快捷键配置";
+                navNodeBase.Text = "常规配置";
+                navNodeAI.Text = "算法方案配置";
+                navNodeHW.Text = "机台配置";
+                navNodeDb.Text = "数据库配置";
+                navNodeKeyDefect.Text = "重点缺陷管理";
+                navNodeShortcut.Text = "快捷键配置";
             }
             else
             {
                 btnSave.Text = "Save";
-                this.treeNode1.Text = "conventional";
-                this.treeNode2.Text = "AVI";
-                this.treeNode3.Text = "AI";
-                this.treeNode4.Text = "Database";
-                this.treeNode5.Text = "Key Defect";
-                this.treeNode6.Text = "Shortcuts";
+                navNodeBase.Text = "conventional";
+                navNodeAI.Text = "AVI";
+                navNodeHW.Text = "AI";
+                navNodeDb.Text = "Database";
+                navNodeKeyDefect.Text = "Key Defect";
+                navNodeShortcut.Text = "Shortcuts";
             }
+            uiNavMenu.Invalidate();
         }
 
 
@@ -128,167 +117,12 @@ namespace DeepSightAI
         {
             try
             {
-                //常规
-                panel1.Controls.Clear();
-                FrBaseConfig.Instance.TopLevel = false;
-                FrBaseConfig.Instance.Parent = panel1;
-                FrBaseConfig.Instance.Dock = DockStyle.Fill;
-                FrBaseConfig.Instance.Show();
-
-                //
-                panel2.Controls.Clear();
-                FrAIConfig.Instance.TopLevel = false;
-                FrAIConfig.Instance.Parent = panel2;
-                FrAIConfig.Instance.Dock = DockStyle.Fill;
-                FrAIConfig.Instance.Show();
-
-                ///
-                panel3.Controls.Clear();
-                FrHWConfig.Instance.TopLevel = false;
-                FrHWConfig.Instance.Parent = panel3;
-                FrHWConfig.Instance.Dock = DockStyle.Fill;
-                FrHWConfig.Instance.Show();
-
-                ////后处理调参
-                panel7.Controls.Clear();
-                FrUserManagement.Instance.TopLevel = false;
-                FrUserManagement.Instance.Parent = panel7;
-                FrUserManagement.Instance.Dock = DockStyle.Fill;
-                FrUserManagement.Instance.Show();
-
-                //// 数据库配置
-                panel4.Controls.Clear();
-                FrLevelDbConfig.Instance.TopLevel = false;
-                FrLevelDbConfig.Instance.Parent = panel4;
-                FrLevelDbConfig.Instance.Dock = DockStyle.Fill;
-                FrLevelDbConfig.Instance.Show();
-
-                //// 重点缺陷管理
-                panel5.Controls.Clear();
-                FrKeyDefectConfig.Instance.TopLevel = false;
-                FrKeyDefectConfig.Instance.Parent = panel5;
-                FrKeyDefectConfig.Instance.Dock = DockStyle.Fill;
-                FrKeyDefectConfig.Instance.Show();
-
-                //// 快捷键配置
-                panel9.Controls.Clear();
-                FrShortcutConfig.Instance.TopLevel = false;
-                FrShortcutConfig.Instance.Parent = panel9;
-                FrShortcutConfig.Instance.Dock = DockStyle.Fill;
-                FrShortcutConfig.Instance.Show();
-
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error("Error", ex);
-            }
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void tvw_setting_AfterSelect(object sender, TreeViewEventArgs e)
-        {
-            try
-            {
-                btnSave.Visible = true;
-                TreeNode node = tvw_setting.SelectedNode;
-                switch (node.Text)
-                {
-                    case "常规配置":
-                        panel1.Dock = DockStyle.Fill;
-
-                        panel1.Visible = true;
-                        panel2.Visible = false;
-                        panel3.Visible = false;
-                        panel4.Visible = false;
-                        panel5.Visible = false;
-                        panel6.Visible = false;
-                        panel7.Visible = false;
-                        panel8.Visible = false;
-                        panel9.Visible = false;
-
-                        break;
-
-                    case "算法方案配置":
-                        panel2.Dock = DockStyle.Fill;
-
-                        panel1.Visible = false;
-                        panel2.Visible = true;
-                        panel3.Visible = false;
-                        panel4.Visible = false;
-                        panel5.Visible = false;
-                        panel6.Visible = false;
-                        panel7.Visible = false;
-                        panel8.Visible = false;
-                        panel9.Visible = false;
-
-                        break;
-
-                    case "机台配置":
-                        panel3.Dock = DockStyle.Fill;
-
-                        panel1.Visible = false;
-                        panel2.Visible = false;
-                        panel3.Visible = true;
-                        panel4.Visible = false;
-                        panel5.Visible = false;
-                        panel6.Visible = false;
-                        panel7.Visible = false;
-                        panel8.Visible = false;
-                        panel9.Visible = false;
-
-                        break;
-
-                    case "数据库配置":
-                        panel4.Dock = DockStyle.Fill;
-
-                        panel1.Visible = false;
-                        panel2.Visible = false;
-                        panel3.Visible = false;
-                        panel4.Visible = true;
-                        panel5.Visible = false;
-                        panel6.Visible = false;
-                        panel7.Visible = false;
-                        panel8.Visible = false;
-                        panel9.Visible = false;
-
-                        break;
-
-                    case "重点缺陷管理":
-                    case "Key Defect":
-                        panel5.Dock = DockStyle.Fill;
-
-                        panel1.Visible = false;
-                        panel2.Visible = false;
-                        panel3.Visible = false;
-                        panel4.Visible = false;
-                        panel5.Visible = true;
-                        panel6.Visible = false;
-                        panel7.Visible = false;
-                        panel8.Visible = false;
-                        panel9.Visible = false;
-
-                        break;
-
-                    case "快捷键配置":
-                    case "Shortcuts":
-                        panel9.Dock = DockStyle.Fill;
-
-                        panel1.Visible = false;
-                        panel2.Visible = false;
-                        panel3.Visible = false;
-                        panel4.Visible = false;
-                        panel5.Visible = false;
-                        panel6.Visible = false;
-                        panel7.Visible = false;
-                        panel8.Visible = false;
-                        panel9.Visible = true;
-
-                        break;
-                }
+                uiTabControl.AddPage(FrBaseConfig.Instance);
+                uiTabControl.AddPage(FrAIConfig.Instance);
+                uiTabControl.AddPage(FrHWConfig.Instance);
+                uiTabControl.AddPage(FrLevelDbConfig.Instance);
+                uiTabControl.AddPage(FrKeyDefectConfig.Instance);
+                uiTabControl.AddPage(FrShortcutConfig.Instance);
             }
             catch (Exception ex)
             {
@@ -305,87 +139,88 @@ namespace DeepSightAI
         {
             try
             {
-                if (tvw_setting.SelectedNode.Text == "常规配置")
+                switch (uiTabControl.SelectedIndex)
                 {
-                    FrBaseConfig.Instance.GetBaseParams();
-                    if (Machine.config_class.Save(Machine.sysConfig))
-                    {
-                        Machine.master.SysConfig = Machine.sysConfig;
-                        MessageBox.Show("保存配置文件成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                }
-                if (tvw_setting.SelectedNode.Text == "机台配置")
-                {
-                    // 检查软件是否处于运行状态
-                    if (Machine.master != null && Machine.master.IsStart)
-                    {
-                        MessageBox.Show("软件正在运行中，请先停止运行后再保存机台配置！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
-                    }
-
-                    FrHWConfig.Instance.GetStationParam();
-                    if (Machine.avi_class.Save(Machine.aviconfig))
-                    {
-                        if (Machine.HasAgentMachines)
+                    case PageBase:
+                        FrBaseConfig.Instance.GetBaseParams();
+                        if (Machine.config_class.Save(Machine.sysConfig))
                         {
-                            RestartApplication(appPath, appExe, Machine.sysConfig.AgentShutdownTimeout);
+                            Machine.master.SysConfig = Machine.sysConfig;
+                            MessageBox.Show("保存配置文件成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
-                        Machine.master.AviConfig = Machine.aviconfig;
-                        // 更新FrHome中的AviCtr状态
-                        FrHome.Instance.RefreshMachineStatusConfigs();
-                        MessageBox.Show("保存Agent配置文件成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                }
-                if (tvw_setting.SelectedNode.Text == "算法方案配置")
-                {
-                    if (FrAIConfig.Instance.SaveParam())
-                    {
-                        Machine.master.SolConfig = Machine.solconfig;
-                        MessageBox.Show("方案及流程配置保存成功", "保存成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
+                        break;
 
-                }
-                if (tvw_setting.SelectedNode.Text == "数据库配置")
-                {
-                    if (FrLevelDbConfig.Instance.SaveConfig())
-                    {
-                        MessageBox.Show("数据库配置保存成功", "保存成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                    else
-                    {
-                        MessageBox.Show("数据库配置保存失败", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
-                if (tvw_setting.SelectedNode.Text == "重点缺陷管理" || tvw_setting.SelectedNode.Text == "Key Defect")
-                {
-                    if (FrKeyDefectConfig.Instance.SaveConfig())
-                    {
-                        MessageBox.Show("重点缺陷配置保存成功", "保存成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                    else
-                    {
-                        MessageBox.Show("重点缺陷配置保存失败", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
-                if (tvw_setting.SelectedNode.Text == "快捷键配置" || tvw_setting.SelectedNode.Text == "Shortcuts")
-                {
-                    FrShortcutConfig.Instance.SaveToConfig();
-                    if (Machine.config_class.Save(Machine.sysConfig))
-                    {
-                        Machine.master.SysConfig = Machine.sysConfig;
-                        MessageBox.Show("快捷键配置保存成功", "保存成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                    else
-                    {
-                        MessageBox.Show("快捷键配置保存失败", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
+                    case PageAI:
+                        if (FrAIConfig.Instance.SaveParam())
+                        {
+                            Machine.master.SolConfig = Machine.solconfig;
+                            MessageBox.Show("方案及流程配置保存成功", "保存成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        break;
+
+                    case PageHW:
+                        // 检查软件是否处于运行状态
+                        if (Machine.master != null && Machine.master.IsStart)
+                        {
+                            MessageBox.Show("软件正在运行中，请先停止运行后再保存机台配置！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            return;
+                        }
+
+                        FrHWConfig.Instance.GetStationParam();
+                        if (Machine.avi_class.Save(Machine.aviconfig))
+                        {
+                            if (Machine.HasAgentMachines)
+                            {
+                                RestartApplication(appPath, appExe, Machine.sysConfig.AgentShutdownTimeout);
+                            }
+                            Machine.master.AviConfig = Machine.aviconfig;
+                            // 更新FrHome中的AviCtr状态
+                            FrHome.Instance.RefreshMachineStatusConfigs();
+                            MessageBox.Show("保存Agent配置文件成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        break;
+
+                    case PageDb:
+                        if (FrLevelDbConfig.Instance.SaveConfig())
+                        {
+                            MessageBox.Show("数据库配置保存成功", "保存成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        else
+                        {
+                            MessageBox.Show("数据库配置保存失败", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                        break;
+
+                    case PageKeyDefect:
+                        if (FrKeyDefectConfig.Instance.SaveConfig())
+                        {
+                            MessageBox.Show("重点缺陷配置保存成功", "保存成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        else
+                        {
+                            MessageBox.Show("重点缺陷配置保存失败", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                        break;
+
+                    case PageShortcut:
+                        FrShortcutConfig.Instance.SaveToConfig();
+                        if (Machine.config_class.Save(Machine.sysConfig))
+                        {
+                            Machine.master.SysConfig = Machine.sysConfig;
+                            MessageBox.Show("快捷键配置保存成功", "保存成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        else
+                        {
+                            MessageBox.Show("快捷键配置保存失败", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                        break;
                 }
             }
             catch (Exception)
             {
                 throw;
             }
-        
+
         }
 
         public void RestartApplication(string appDirectory, string exeName, int timeoutMs = 2000, bool isRun = false)

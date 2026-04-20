@@ -11,16 +11,17 @@ namespace DeepSightAI.SettingPages
     /// <summary>
     /// 重点缺陷管理配置界面（支持多 profile + 料号映射）
     /// </summary>
-    public partial class FrKeyDefectConfig : Form
+    public partial class FrKeyDefectConfig : Sunny.UI.UIPage
     {
         public FrKeyDefectConfig()
         {
             InitializeComponent();
+            PageIndex = 4;
+            ShowTitle = false;
             Control.CheckForIllegalCrossThreadCalls = false;
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);
             SetStyle(ControlStyles.DoubleBuffer, true);
-            MaximizedBounds = Screen.PrimaryScreen.WorkingArea;
         }
 
         private static FrKeyDefectConfig _instance;

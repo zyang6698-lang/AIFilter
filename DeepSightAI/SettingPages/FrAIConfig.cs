@@ -16,7 +16,7 @@ namespace DeepSightAI.SettingPages
     /// <summary>
     /// 算法配置界面 - 以算法流程为核心，料号为从属
     /// </summary>
-    public partial class FrAIConfig : Form
+    public partial class FrAIConfig : Sunny.UI.UIPage
     {
         // Mode 枚举
         public enum PicOptMode
@@ -71,6 +71,8 @@ namespace DeepSightAI.SettingPages
         public FrAIConfig()
         {
             InitializeComponent();
+            PageIndex = 1;
+            ShowTitle = false;
             InitParNumberConfig();
             CheckForIllegalCrossThreadCalls = false;
             SetStyle(ControlStyles.UserPaint, true);

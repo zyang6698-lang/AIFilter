@@ -13,16 +13,17 @@ namespace DeepSightAI.SettingPages
     /// <summary>
     /// LevelDB 数据库配置界面
     /// </summary>
-    public partial class FrLevelDbConfig : Form
+    public partial class FrLevelDbConfig : Sunny.UI.UIPage
     {
         public FrLevelDbConfig()
         {
             InitializeComponent();
+            PageIndex = 3;
+            ShowTitle = false;
             Control.CheckForIllegalCrossThreadCalls = false;
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);
             SetStyle(ControlStyles.DoubleBuffer, true);
-            MaximizedBounds = Screen.PrimaryScreen.WorkingArea;
         }
 
         /// <summary>

@@ -6,11 +6,13 @@ namespace DeepSightAI.SettingPages
     /// <summary>
     /// 缺陷复判快捷键配置页面
     /// </summary>
-    public partial class FrShortcutConfig : Form
+    public partial class FrShortcutConfig : Sunny.UI.UIPage
     {
         public FrShortcutConfig()
         {
             InitializeComponent();
+            PageIndex = 5;
+            ShowTitle = false;
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);
             SetStyle(ControlStyles.DoubleBuffer, true);

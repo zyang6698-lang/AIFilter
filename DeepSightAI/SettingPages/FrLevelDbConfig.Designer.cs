@@ -254,7 +254,6 @@ namespace DeepSightAI.SettingPages
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Name = "FrLevelDbConfig";
             this.Size = new System.Drawing.Size(800, 500);
-            this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.Load += new System.EventHandler(this.FrLevelDbConfig_Load);
             this.dgvDatabases.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvDatabases_CellContentClick);
             this.dgvDatabases.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvDatabases_CellValueChanged);

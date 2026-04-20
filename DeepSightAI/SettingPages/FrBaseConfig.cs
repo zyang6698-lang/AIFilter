@@ -8,11 +8,13 @@ namespace DeepSightAI.SettingPages
     /// <summary>
     /// 基础参数
     /// </summary>
-    public partial class FrBaseConfig : Form
+    public partial class FrBaseConfig : Sunny.UI.UIPage
     {
         public FrBaseConfig()
         {
             InitializeComponent();
+            PageIndex = 0;
+            ShowTitle = false;
             Control.CheckForIllegalCrossThreadCalls = false;
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.AllPaintingInWmPaint, true); // 禁止擦除背景.

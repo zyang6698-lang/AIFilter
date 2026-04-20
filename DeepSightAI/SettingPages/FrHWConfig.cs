@@ -14,11 +14,13 @@ using Sunny.UI;
 
 namespace DeepSightAI.SettingPages
 {
-    public partial class FrHWConfig : Form
+    public partial class FrHWConfig : Sunny.UI.UIPage
     {
         internal FrHWConfig()
         {
             InitializeComponent();
+            PageIndex = 2;
+            ShowTitle = false;
             Control.CheckForIllegalCrossThreadCalls = false;
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.AllPaintingInWmPaint, true); // 禁止擦除背景.

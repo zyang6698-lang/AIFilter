@@ -346,7 +346,6 @@
             this.Controls.Add(this.panel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Name = "FrAIConfig";
-            this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.tableLayoutPanel1.ResumeLayout(false);
             this.panelLeftContent.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvPipeline)).EndInit();
