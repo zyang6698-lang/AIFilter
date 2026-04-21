@@ -121,14 +121,14 @@
   <data name="tableLayoutPanel1.ColumnCount" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
+  <data name="dgvPipeline.ColumnHeadersHeight" type="System.Int32, mscorlib">
+    <value>32</value>
+  </data>
   <data name="colConfigName.HeaderText" xml:space="preserve">
     <value>配置名称</value>
   </data>
   <data name="colConfigName.MinimumWidth" type="System.Int32, mscorlib">
     <value>6</value>
-  </data>
-  <data name="colConfigName.Width" type="System.Int32, mscorlib">
-    <value>80</value>
   </data>
   <data name="colASolution.HeaderText" xml:space="preserve">
     <value>A方案</value>
@@ -146,7 +146,7 @@
     <value>6</value>
   </data>
   <data name="colAFlow.Width" type="System.Int32, mscorlib">
-    <value>80</value>
+    <value>125</value>
   </data>
   <data name="colBSolution.HeaderText" xml:space="preserve">
     <value>B方案</value>
@@ -164,7 +164,7 @@
     <value>6</value>
   </data>
   <data name="colBFlow.Width" type="System.Int32, mscorlib">
-    <value>80</value>
+    <value>125</value>
   </data>
   <data name="colIsSwitch.HeaderText" xml:space="preserve">
     <value>激活分支控制</value>
@@ -173,7 +173,7 @@
     <value>6</value>
   </data>
   <data name="colIsSwitch.Width" type="System.Int32, mscorlib">
-    <value>120</value>
+    <value>150</value>
   </data>
   <data name="colProductCount.HeaderText" xml:space="preserve">
     <value>料号数</value>
@@ -182,13 +182,16 @@
     <value>6</value>
   </data>
   <data name="colProductCount.Width" type="System.Int32, mscorlib">
-    <value>60</value>
+    <value>80</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="dgvPipeline.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="dgvPipeline.Font" type="System.Drawing.Font, System.Drawing">
+    <value>宋体, 12pt</value>
+  </data>
   <data name="dgvPipeline.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 53</value>
   </data>
@@ -208,7 +211,7 @@
     <value>dgvPipeline</value>
   </data>
   <data name="&gt;&gt;dgvPipeline.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>Sunny.UI.UIDataGridView, SunnyUI, Version=3.9.6.0, Culture=neutral, PublicKeyToken=3f4ebed4237db5e1</value>
   </data>
   <data name="&gt;&gt;dgvPipeline.Parent" xml:space="preserve">
     <value>panelLeftContent</value>
@@ -244,7 +247,7 @@
     <value>btn_GetAgain</value>
   </data>
   <data name="&gt;&gt;btn_GetAgain.Type" xml:space="preserve">
-    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.2.7, Culture=neutral, PublicKeyToken=null</value>
+    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.5.1, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;btn_GetAgain.Parent" xml:space="preserve">
     <value>panelLeftHeader</value>
@@ -280,7 +283,7 @@
     <value>btnDeleteConfig</value>
   </data>
   <data name="&gt;&gt;btnDeleteConfig.Type" xml:space="preserve">
-    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.2.7, Culture=neutral, PublicKeyToken=null</value>
+    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.5.1, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;btnDeleteConfig.Parent" xml:space="preserve">
     <value>panelLeftHeader</value>
@@ -316,7 +319,7 @@
     <value>btnAddConfig</value>
   </data>
   <data name="&gt;&gt;btnAddConfig.Type" xml:space="preserve">
-    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.2.7, Culture=neutral, PublicKeyToken=null</value>
+    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.5.1, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;btnAddConfig.Parent" xml:space="preserve">
     <value>panelLeftHeader</value>
@@ -411,6 +414,9 @@
   <data name="&gt;&gt;panelLeftContent.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="dgvProducts.ColumnHeadersHeight" type="System.Int32, mscorlib">
+    <value>32</value>
+  </data>
   <data name="colIndex.HeaderText" xml:space="preserve">
     <value>序号</value>
   </data>
@@ -418,7 +424,7 @@
     <value>6</value>
   </data>
   <data name="colIndex.Width" type="System.Int32, mscorlib">
-    <value>50</value>
+    <value>80</value>
   </data>
   <data name="colProductSerial.HeaderText" xml:space="preserve">
     <value>料号</value>
@@ -450,6 +456,9 @@
   <data name="dgvProducts.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
+  <data name="dgvProducts.Font" type="System.Drawing.Font, System.Drawing">
+    <value>宋体, 12pt</value>
+  </data>
   <data name="dgvProducts.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 53</value>
   </data>
@@ -469,7 +478,7 @@
     <value>dgvProducts</value>
   </data>
   <data name="&gt;&gt;dgvProducts.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>Sunny.UI.UIDataGridView, SunnyUI, Version=3.9.6.0, Culture=neutral, PublicKeyToken=3f4ebed4237db5e1</value>
   </data>
   <data name="&gt;&gt;dgvProducts.Parent" xml:space="preserve">
     <value>panelRightContent</value>
@@ -505,7 +514,7 @@
     <value>btnAutoAdd</value>
   </data>
   <data name="&gt;&gt;btnAutoAdd.Type" xml:space="preserve">
-    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.2.7, Culture=neutral, PublicKeyToken=null</value>
+    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.5.1, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;btnAutoAdd.Parent" xml:space="preserve">
     <value>panelRightHeader</value>
@@ -541,7 +550,7 @@
     <value>btnDeleteProduct</value>
   </data>
   <data name="&gt;&gt;btnDeleteProduct.Type" xml:space="preserve">
-    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.2.7, Culture=neutral, PublicKeyToken=null</value>
+    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.5.1, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;btnDeleteProduct.Parent" xml:space="preserve">
     <value>panelRightHeader</value>
@@ -577,7 +586,7 @@
     <value>btnAddProduct</value>
   </data>
   <data name="&gt;&gt;btnAddProduct.Type" xml:space="preserve">
-    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.2.7, Culture=neutral, PublicKeyToken=null</value>
+    <value>DeepSightAI.StyledButton, DeepSightAI, Version=1.1.5.1, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;btnAddProduct.Parent" xml:space="preserve">
     <value>panelRightHeader</value>
@@ -595,7 +604,7 @@
     <value>8, 14</value>
   </data>
   <data name="lblRightTitle.Size" type="System.Drawing.Size, System.Drawing">
-    <value>65, 20</value>
+    <value>78, 24</value>
   </data>
   <data name="lblRightTitle.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -738,9 +747,6 @@
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>9, 20</value>
-  </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
     <value>1247, 775</value>
   </data>
@@ -749,9 +755,6 @@
   </data>
   <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 4, 3, 4</value>
-  </data>
-  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
-    <value>CenterScreen</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value> </value>
@@ -826,6 +829,6 @@
     <value>PgSettingAi</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>Sunny.UI.UIPage, SunnyUI, Version=3.9.6.0, Culture=neutral, PublicKeyToken=3f4ebed4237db5e1</value>
   </data>
 </root>

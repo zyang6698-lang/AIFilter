@@ -284,14 +284,12 @@
             // 
             // PgSettingShortcut
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.ClientSize = new System.Drawing.Size(438, 359);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.lblTitle);
             this.Font = new System.Drawing.Font("微软雅黑", 9F);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Name = "PgSettingShortcut";
             this.Load += new System.EventHandler(this.FrShortcutConfig_Load);
             this.tableLayoutPanel1.ResumeLayout(false);

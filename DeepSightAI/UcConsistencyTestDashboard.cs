@@ -38,6 +38,7 @@ namespace DeepSightAI
         public UcConsistencyTestDashboard()
         {
             InitializeComponent();
+            dataGridView_Rounds.ApplyDarkTheme();
             InitializeGridColumns();
             InitializeChartConfig();
             SubscribeEvents();

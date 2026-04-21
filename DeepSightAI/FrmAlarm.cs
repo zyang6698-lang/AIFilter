@@ -53,6 +53,7 @@ namespace DeepSightAI
         public FrmAlarm()
         {
             InitializeComponent();
+            dataGridViewData.ApplyDarkTheme();
             Control.CheckForIllegalCrossThreadCalls = false;
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);

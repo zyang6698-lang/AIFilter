@@ -65,6 +65,7 @@ namespace DeepSightAI
         public FrmPipelineMonitor()
         {
             InitializeComponent();
+            dgvTasks.ApplyDarkTheme();
             // 为流程图面板开启双缓冲，消除定时刷新导致的闪烁
             typeof(System.Windows.Forms.Panel)
                 .GetProperty("DoubleBuffered",

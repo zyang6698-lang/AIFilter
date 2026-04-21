@@ -118,20 +118,7 @@ namespace DeepSightAI
 
         private void SetupDataGridViewStyle()
         {
-            // 设置样式
-            dataGridView_Defects.EnableHeadersVisualStyles = false;
-            dataGridView_Defects.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(0, 64, 82);
-            dataGridView_Defects.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-            dataGridView_Defects.ColumnHeadersDefaultCellStyle.Font = new Font("微软雅黑", 9F, FontStyle.Bold);
-            dataGridView_Defects.DefaultCellStyle.BackColor = Color.FromArgb(45, 45, 48);
-            dataGridView_Defects.DefaultCellStyle.ForeColor = Color.White;
-            dataGridView_Defects.DefaultCellStyle.SelectionBackColor = Color.FromArgb(0, 122, 204);
-            dataGridView_Defects.DefaultCellStyle.SelectionForeColor = Color.White;
-            dataGridView_Defects.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(55, 55, 58);
-            dataGridView_Defects.StripeEvenColor = Color.FromArgb(45, 45, 48);
-            dataGridView_Defects.StripeOddColor = Color.FromArgb(55, 55, 58);
-            dataGridView_Defects.GridColor = Color.FromArgb(60, 60, 60);
-            dataGridView_Defects.BorderStyle = BorderStyle.None;
+            dataGridView_Defects.ApplyDarkTheme();
         }
 
         #endregion

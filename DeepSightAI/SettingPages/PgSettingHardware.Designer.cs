@@ -31,13 +31,11 @@ namespace DeepSightAI.SettingPages
         {
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.panel2 = new System.Windows.Forms.Panel();
-            this.uiGroupBox1 = new Sunny.UI.UIGroupBox();
             this.machineStatusPanel1 = new DeepSightAI.SettingPages.UcMachineStatusPanel();
             this.panel1 = new System.Windows.Forms.Panel();
             this.btn_add_station = new DeepSightAI.StyledButton();
             this.tableLayoutPanel1.SuspendLayout();
             this.panel2.SuspendLayout();
-            this.uiGroupBox1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -60,7 +58,7 @@ namespace DeepSightAI.SettingPages
             // 
             // panel2
             // 
-            this.panel2.Controls.Add(this.uiGroupBox1);
+            this.panel2.Controls.Add(this.machineStatusPanel1);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel2.Location = new System.Drawing.Point(4, 91);
             this.panel2.Margin = new System.Windows.Forms.Padding(4);
@@ -68,34 +66,14 @@ namespace DeepSightAI.SettingPages
             this.panel2.Size = new System.Drawing.Size(2242, 891);
             this.panel2.TabIndex = 1;
             // 
-            // uiGroupBox1
-            // 
-            this.uiGroupBox1.Controls.Add(this.machineStatusPanel1);
-            this.uiGroupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.uiGroupBox1.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.uiGroupBox1.FillDisableColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.uiGroupBox1.Font = new System.Drawing.Font("微软雅黑", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.uiGroupBox1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.uiGroupBox1.Location = new System.Drawing.Point(0, 0);
-            this.uiGroupBox1.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
-            this.uiGroupBox1.MinimumSize = new System.Drawing.Size(1, 1);
-            this.uiGroupBox1.Name = "uiGroupBox1";
-            this.uiGroupBox1.Padding = new System.Windows.Forms.Padding(27, 25, 27, 25);
-            this.uiGroupBox1.RectColor = System.Drawing.Color.FromArgb(((int)(((byte)(110)))), ((int)(((byte)(190)))), ((int)(((byte)(40)))));
-            this.uiGroupBox1.Size = new System.Drawing.Size(2242, 891);
-            this.uiGroupBox1.Style = Sunny.UI.UIStyle.Custom;
-            this.uiGroupBox1.TabIndex = 27;
-            this.uiGroupBox1.Text = "AVI配置";
-            this.uiGroupBox1.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
             // machineStatusPanel1
-            //
+            // 
             this.machineStatusPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.machineStatusPanel1.Location = new System.Drawing.Point(27, 25);
-            this.machineStatusPanel1.Margin = new System.Windows.Forms.Padding(72, 304, 72, 304);
+            this.machineStatusPanel1.Location = new System.Drawing.Point(0, 0);
+            this.machineStatusPanel1.Margin = new System.Windows.Forms.Padding(90, 352, 90, 352);
             this.machineStatusPanel1.Name = "machineStatusPanel1";
             this.machineStatusPanel1.ShowDeleteButtons = true;
-            this.machineStatusPanel1.Size = new System.Drawing.Size(2188, 841);
+            this.machineStatusPanel1.Size = new System.Drawing.Size(1868, 743);
             this.machineStatusPanel1.TabIndex = 0;
             // 
             // panel1
@@ -110,28 +88,31 @@ namespace DeepSightAI.SettingPages
             // 
             // btn_add_station
             // 
+            this.btn_add_station.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
+            this.btn_add_station.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btn_add_station.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btn_add_station.Font = new System.Drawing.Font("微软雅黑", 9F);
+            this.btn_add_station.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.btn_add_station.Location = new System.Drawing.Point(11, 11);
             this.btn_add_station.Name = "btn_add_station";
             this.btn_add_station.Size = new System.Drawing.Size(160, 50);
             this.btn_add_station.TabIndex = 0;
             this.btn_add_station.Text = "＋ 添加机台";
+            this.btn_add_station.UseVisualStyleBackColor = false;
             this.btn_add_station.Click += new System.EventHandler(this.btn_add_station_Click);
             // 
             // PgSettingHardware
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(76)))), ((int)(((byte)(80)))));
             this.ClientSize = new System.Drawing.Size(2250, 986);
             this.Controls.Add(this.tableLayoutPanel1);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "PgSettingHardware";
             this.Text = "FrmUserManagement";
             this.Shown += new System.EventHandler(this.FrHWConfig_Shown);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.panel2.ResumeLayout(false);
-            this.uiGroupBox1.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -143,7 +124,6 @@ namespace DeepSightAI.SettingPages
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Panel panel1;
         private DeepSightAI.StyledButton btn_add_station;
-        private Sunny.UI.UIGroupBox uiGroupBox1;
         private UcMachineStatusPanel machineStatusPanel1;
     }
 }

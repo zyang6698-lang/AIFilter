@@ -24,6 +24,7 @@ namespace DeepSightAI.SettingPages
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);
             SetStyle(ControlStyles.DoubleBuffer, true);
+            dgvDatabases.ApplyDarkTheme();
         }
 
         /// <summary>
@@ -41,35 +42,6 @@ namespace DeepSightAI.SettingPages
                 }
                 return _instance;
             }
-        }
-
-        /// <summary>
-        /// 获取 DataGridView 的表头样式
-        /// </summary>
-        private static DataGridViewCellStyle GetHeaderStyle()
-        {
-            return new DataGridViewCellStyle
-            {
-                BackColor = Color.FromArgb(20, 38, 48),
-                ForeColor = Color.FromArgb(216, 219, 188),
-                Font = new Font("微软雅黑", 9F, FontStyle.Bold),
-                Alignment = DataGridViewContentAlignment.MiddleCenter
-            };
-        }
-
-        /// <summary>
-        /// 获取 DataGridView 的单元格样式
-        /// </summary>
-        private static DataGridViewCellStyle GetCellStyle()
-        {
-            return new DataGridViewCellStyle
-            {
-                BackColor = Color.FromArgb(29, 48, 60),
-                ForeColor = Color.FromArgb(216, 219, 188),
-                SelectionBackColor = Color.FromArgb(0, 64, 82),
-                SelectionForeColor = Color.White,
-                Font = new Font("微软雅黑", 9F)
-            };
         }
 
         /// <summary>

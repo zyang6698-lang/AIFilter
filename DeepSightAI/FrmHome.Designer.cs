@@ -39,12 +39,6 @@
             this.splitContainer1 = new Sunny.UI.UISplitContainer();
             this.splitContainer4 = new Sunny.UI.UISplitContainer();
             this.dataGridViewData = new Sunny.UI.UIDataGridView();
-            this.Code = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Side = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.AVI = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.AI = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Time = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Status = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.contextMenuStripData = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.btnShowDebugInfo = new System.Windows.Forms.ToolStripMenuItem();
             this.rich_log = new Sunny.UI.UIRichTextBox();
@@ -72,6 +66,12 @@
             this.lbl_aviPassRateCount = new System.Windows.Forms.Label();
             this.lbl_boardAiPassRate = new System.Windows.Forms.Label();
             this.lbl_utilizationRate = new System.Windows.Forms.Label();
+            this.Code = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Side = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.AVI = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.AI = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Time = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Status = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.table_main.SuspendLayout();
             this.panel_show.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -249,7 +249,6 @@
             this.dataGridViewData.SelectedIndex = -1;
             this.dataGridViewData.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dataGridViewData.ShowCellErrors = false;
-            this.dataGridViewData.ShowCellToolTips = false;
             this.dataGridViewData.ShowEditingIcon = false;
             this.dataGridViewData.ShowRowErrors = false;
             this.dataGridViewData.Size = new System.Drawing.Size(494, 550);
@@ -259,60 +258,6 @@
             this.dataGridViewData.StyleCustomMode = true;
             this.dataGridViewData.TabIndex = 2;
             this.dataGridViewData.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewData_CellClick);
-            // 
-            // Code
-            // 
-            this.Code.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Code.DataPropertyName = "Code";
-            this.Code.FillWeight = 180F;
-            this.Code.HeaderText = "SN任务队列";
-            this.Code.MinimumWidth = 6;
-            this.Code.Name = "Code";
-            this.Code.ReadOnly = true;
-            this.Code.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            // 
-            // Side
-            // 
-            this.Side.HeaderText = "面";
-            this.Side.MinimumWidth = 6;
-            this.Side.Name = "Side";
-            this.Side.ReadOnly = true;
-            this.Side.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.Side.Width = 35;
-            // 
-            // AVI
-            // 
-            this.AVI.HeaderText = "AVI";
-            this.AVI.MinimumWidth = 6;
-            this.AVI.Name = "AVI";
-            this.AVI.ReadOnly = true;
-            this.AVI.Width = 50;
-            // 
-            // AI
-            // 
-            this.AI.HeaderText = "AI";
-            this.AI.MinimumWidth = 6;
-            this.AI.Name = "AI";
-            this.AI.ReadOnly = true;
-            this.AI.Width = 50;
-            // 
-            // Time
-            // 
-            this.Time.HeaderText = "时间(ms)";
-            this.Time.MinimumWidth = 6;
-            this.Time.Name = "Time";
-            this.Time.ReadOnly = true;
-            this.Time.Width = 125;
-            // 
-            // Status
-            // 
-            this.Status.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Status.FillWeight = 150F;
-            this.Status.HeaderText = "状态";
-            this.Status.MinimumWidth = 8;
-            this.Status.Name = "Status";
-            this.Status.ReadOnly = true;
-            this.Status.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             // 
             // contextMenuStripData
             // 
@@ -735,6 +680,63 @@
             this.lbl_utilizationRate.Text = "-";
             this.lbl_utilizationRate.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
+            // Code
+            // 
+            this.Code.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.Code.DataPropertyName = "Code";
+            this.Code.FillWeight = 180F;
+            this.Code.HeaderText = "SN任务队列";
+            this.Code.MinimumWidth = 6;
+            this.Code.Name = "Code";
+            this.Code.ReadOnly = true;
+            this.Code.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            // 
+            // Side
+            // 
+            this.Side.HeaderText = "面";
+            this.Side.MinimumWidth = 6;
+            this.Side.Name = "Side";
+            this.Side.ReadOnly = true;
+            this.Side.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.Side.Width = 35;
+            // 
+            // AVI
+            // 
+            this.AVI.HeaderText = "AVI";
+            this.AVI.MinimumWidth = 6;
+            this.AVI.Name = "AVI";
+            this.AVI.ReadOnly = true;
+            this.AVI.ToolTipText = "来自AVI机台的总图片数";
+            this.AVI.Width = 50;
+            // 
+            // AI
+            // 
+            this.AI.HeaderText = "AI";
+            this.AI.MinimumWidth = 6;
+            this.AI.Name = "AI";
+            this.AI.ReadOnly = true;
+            this.AI.ToolTipText = "AI实际推理的总图片数（不包含直报图片）";
+            this.AI.Width = 50;
+            // 
+            // Time
+            // 
+            this.Time.HeaderText = "时间(ms)";
+            this.Time.MinimumWidth = 6;
+            this.Time.Name = "Time";
+            this.Time.ReadOnly = true;
+            this.Time.ToolTipText = "推理阶段用时";
+            this.Time.Width = 125;
+            // 
+            // Status
+            // 
+            this.Status.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.Status.FillWeight = 150F;
+            this.Status.HeaderText = "状态";
+            this.Status.MinimumWidth = 8;
+            this.Status.Name = "Status";
+            this.Status.ReadOnly = true;
+            this.Status.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            // 
             // FrmHome
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
@@ -809,15 +811,15 @@
         private System.Windows.Forms.Label lbl_boardAiPassRate;
         private System.Windows.Forms.Label lbl_utilizationRate;
         private System.Windows.Forms.Label lbl_CountPerPanel;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStripData;
+        private System.Windows.Forms.ToolStripMenuItem btnShowDebugInfo;
+        private System.Windows.Forms.TableLayoutPanel paginationPanel;
+        private System.Windows.Forms.TableLayoutPanel statsGridPanel;
         private System.Windows.Forms.DataGridViewTextBoxColumn Code;
         private System.Windows.Forms.DataGridViewTextBoxColumn Side;
         private System.Windows.Forms.DataGridViewTextBoxColumn AVI;
         private System.Windows.Forms.DataGridViewTextBoxColumn AI;
         private System.Windows.Forms.DataGridViewTextBoxColumn Time;
         private System.Windows.Forms.DataGridViewTextBoxColumn Status;
-        private System.Windows.Forms.ContextMenuStrip contextMenuStripData;
-        private System.Windows.Forms.ToolStripMenuItem btnShowDebugInfo;
-        private System.Windows.Forms.TableLayoutPanel paginationPanel;
-        private System.Windows.Forms.TableLayoutPanel statsGridPanel;
     }
 }

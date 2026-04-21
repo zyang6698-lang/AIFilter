@@ -29,6 +29,7 @@ namespace DeepSightAI
         public FrmDefectImageDetail(DetectInfo detectInfo, Image originalImage, Image templateImage, Image defectBoxImage)
         {
             InitializeComponent();
+            dataGridView_Info.ApplyDarkTheme();
 
             _detectInfo = detectInfo;
             // Clone images so this form owns its own copies

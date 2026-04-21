@@ -37,18 +37,7 @@ namespace DeepSightAI
 
         private void InitializeStyles()
         {
-            // DataGridView 样式
-            dataGridView_Results.EnableHeadersVisualStyles = false;
-            dataGridView_Results.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(0, 64, 82);
-            dataGridView_Results.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-            dataGridView_Results.ColumnHeadersDefaultCellStyle.Font = new Font("微软雅黑", 9F, FontStyle.Bold);
-            dataGridView_Results.DefaultCellStyle.BackColor = Color.FromArgb(45, 45, 48);
-            dataGridView_Results.DefaultCellStyle.ForeColor = Color.White;
-            dataGridView_Results.DefaultCellStyle.SelectionBackColor = Color.FromArgb(0, 122, 204);
-            dataGridView_Results.DefaultCellStyle.SelectionForeColor = Color.White;
-            dataGridView_Results.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(55, 55, 58);
-            dataGridView_Results.GridColor = Color.FromArgb(60, 60, 60);
-            dataGridView_Results.BorderStyle = BorderStyle.None;
+            dataGridView_Results.ApplyDarkTheme();
 
             // ComboBox 默认选项
             comboBox_Filter.SelectedIndex = 0;

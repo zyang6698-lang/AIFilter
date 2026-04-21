@@ -464,6 +464,7 @@
     <Compile Include="SettingPages\FrmUserManagement.Designer.cs">
       <DependentUpon>FrmUserManagement.cs</DependentUpon>
     </Compile>
+    <Compile Include="DataGridViewStyleHelper.cs" />
     <Compile Include="Services\LotStatisticsCalculator.cs" />
     <Compile Include="SortableBindingList.cs" />
     <Compile Include="StyledButton.cs">

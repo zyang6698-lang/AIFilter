@@ -21,6 +21,7 @@ namespace DeepSightAI.SettingPages
         internal FrmUserManagement()
         {
             InitializeComponent();
+            this.dgv_User.ApplyDarkTheme();
             this.Load += FrUserManagement_Load;
             this.dgv_User.AutoGenerateColumns = false;
             Control.CheckForIllegalCrossThreadCalls = false;

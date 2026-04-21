@@ -71,6 +71,8 @@ namespace DeepSightAI.SettingPages
         public PgSettingAi()
         {
             InitializeComponent();
+            dgvPipeline.ApplyDarkTheme();
+            dgvProducts.ApplyDarkTheme();
             PageIndex = 1;
             ShowTitle = false;
             InitParNumberConfig();

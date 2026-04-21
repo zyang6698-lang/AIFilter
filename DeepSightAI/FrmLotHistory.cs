@@ -77,28 +77,12 @@ namespace DeepSightAI
 
         private void ApplyGridStyles()
         {
-            var headerStyle = new DataGridViewCellStyle
-            {
-                BackColor = Color.FromArgb(44, 62, 80),
-                ForeColor = Color.White,
-                Font = new Font("微软雅黑", 9.5F, FontStyle.Bold),
-                Alignment = DataGridViewContentAlignment.MiddleCenter
-            };
-
-            var cellStyle = new DataGridViewCellStyle
-            {
-                BackColor = Color.FromArgb(34, 55, 70),
-                ForeColor = Color.White,
-                SelectionBackColor = Color.FromArgb(52, 101, 164),
-                SelectionForeColor = Color.White,
-                Font = new Font("微软雅黑", 9F),
-                Alignment = DataGridViewContentAlignment.MiddleCenter
-            };
-
             foreach (var dgv in new[] { dgv_Lots, dgv_Panels })
             {
-                dgv.ColumnHeadersDefaultCellStyle = headerStyle;
-                dgv.DefaultCellStyle = cellStyle;
+                dgv.ApplyDarkTheme();
+                // 保留原有居中对齐
+                dgv.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                dgv.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             }
         }
 

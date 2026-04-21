@@ -81,6 +81,7 @@ namespace DeepSightAI
         public FrmHome()
         {
             InitializeComponent();
+            dataGridViewData.ApplyDarkTheme();
             InitializeUI();
             Load += FrHome_Load;
 

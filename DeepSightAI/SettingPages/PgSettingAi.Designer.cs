@@ -35,16 +35,13 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle7 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle8 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle9 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle10 = new System.Windows.Forms.DataGridViewCellStyle();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.panelLeftContent = new System.Windows.Forms.Panel();
             this.dgvPipeline = new Sunny.UI.UIDataGridView();
-            this.colConfigName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colASolution = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.colAFlow = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.colBSolution = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.colBFlow = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.colIsSwitch = new System.Windows.Forms.DataGridViewCheckBoxColumn();
-            this.colProductCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.panelLeftHeader = new System.Windows.Forms.Panel();
             this.btn_GetAgain = new DeepSightAI.StyledButton();
             this.btnDeleteConfig = new DeepSightAI.StyledButton();
@@ -52,16 +49,23 @@
             this.lblLeftTitle = new System.Windows.Forms.Label();
             this.panelRightContent = new System.Windows.Forms.Panel();
             this.dgvProducts = new Sunny.UI.UIDataGridView();
-            this.colIndex = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colProductSerial = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colMode = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.colKeyDefectProfile = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.panelRightHeader = new System.Windows.Forms.Panel();
             this.btnAutoAdd = new DeepSightAI.StyledButton();
             this.btnDeleteProduct = new DeepSightAI.StyledButton();
             this.btnAddProduct = new DeepSightAI.StyledButton();
             this.lblRightTitle = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.colConfigName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colASolution = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.colAFlow = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.colBSolution = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.colBFlow = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.colIsSwitch = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            this.colProductCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colIndex = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colProductSerial = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colMode = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.colKeyDefectProfile = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.tableLayoutPanel1.SuspendLayout();
             this.panelLeftContent.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvPipeline)).BeginInit();
@@ -92,16 +96,20 @@
             // 
             this.dgvPipeline.AllowUserToAddRows = false;
             this.dgvPipeline.AllowUserToDeleteRows = false;
+            dataGridViewCellStyle1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(55)))), ((int)(((byte)(58)))));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.Color.White;
+            this.dgvPipeline.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             this.dgvPipeline.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.dgvPipeline.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            dataGridViewCellStyle1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold);
-            dataGridViewCellStyle1.ForeColor = System.Drawing.Color.White;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.Color.White;
-            this.dgvPipeline.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
-            this.dgvPipeline.ColumnHeadersHeight = 32;
+            this.dgvPipeline.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold);
+            dataGridViewCellStyle2.ForeColor = System.Drawing.Color.White;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.Color.White;
+            this.dgvPipeline.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
+            resources.ApplyResources(this.dgvPipeline, "dgvPipeline");
             this.dgvPipeline.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             this.dgvPipeline.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colConfigName,
@@ -111,28 +119,37 @@
             this.colBFlow,
             this.colIsSwitch,
             this.colProductCount});
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("微软雅黑", 9F);
-            dataGridViewCellStyle2.ForeColor = System.Drawing.Color.White;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(122)))), ((int)(((byte)(204)))));
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.Color.White;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dgvPipeline.DefaultCellStyle = dataGridViewCellStyle2;
-            dataGridViewCellStyle5.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(55)))), ((int)(((byte)(58)))));
-            dataGridViewCellStyle5.ForeColor = System.Drawing.Color.White;
-            this.dgvPipeline.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle5;
-            resources.ApplyResources(this.dgvPipeline, "dgvPipeline");
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("微软雅黑", 9F);
+            dataGridViewCellStyle3.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(122)))), ((int)(((byte)(204)))));
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.Color.White;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dgvPipeline.DefaultCellStyle = dataGridViewCellStyle3;
             this.dgvPipeline.EnableHeadersVisualStyles = false;
             this.dgvPipeline.GridColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
             this.dgvPipeline.MultiSelect = false;
             this.dgvPipeline.Name = "dgvPipeline";
+            this.dgvPipeline.RowHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(243)))), ((int)(((byte)(255)))));
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("宋体", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle4.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(80)))), ((int)(((byte)(160)))), ((int)(((byte)(255)))));
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.Color.White;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dgvPipeline.RowHeadersDefaultCellStyle = dataGridViewCellStyle4;
             this.dgvPipeline.RowHeadersVisible = false;
+            dataGridViewCellStyle5.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
+            dataGridViewCellStyle5.Font = new System.Drawing.Font("宋体", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.dgvPipeline.RowsDefaultCellStyle = dataGridViewCellStyle5;
             this.dgvPipeline.RowTemplate.Height = 28;
             this.dgvPipeline.ScrollBarBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.dgvPipeline.ScrollBarColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(80)))), ((int)(((byte)(95)))));
             this.dgvPipeline.ScrollBarRectColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.dgvPipeline.ScrollBarStyleInherited = false;
+            this.dgvPipeline.SelectedIndex = -1;
             this.dgvPipeline.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgvPipeline.StripeEvenColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
             this.dgvPipeline.StripeOddColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(55)))), ((int)(((byte)(58)))));
@@ -141,46 +158,6 @@
             this.dgvPipeline.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvPipeline_CellValueChanged);
             this.dgvPipeline.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dgvPipeline_DataError);
             this.dgvPipeline.SelectionChanged += new System.EventHandler(this.dgvPipeline_SelectionChanged);
-            // 
-            // colConfigName
-            // 
-            resources.ApplyResources(this.colConfigName, "colConfigName");
-            this.colConfigName.Name = "colConfigName";
-            // 
-            // colASolution
-            // 
-            this.colASolution.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
-            resources.ApplyResources(this.colASolution, "colASolution");
-            this.colASolution.Name = "colASolution";
-            // 
-            // colAFlow
-            // 
-            this.colAFlow.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
-            resources.ApplyResources(this.colAFlow, "colAFlow");
-            this.colAFlow.Name = "colAFlow";
-            // 
-            // colBSolution
-            // 
-            this.colBSolution.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
-            resources.ApplyResources(this.colBSolution, "colBSolution");
-            this.colBSolution.Name = "colBSolution";
-            // 
-            // colBFlow
-            // 
-            this.colBFlow.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
-            resources.ApplyResources(this.colBFlow, "colBFlow");
-            this.colBFlow.Name = "colBFlow";
-            // 
-            // colIsSwitch
-            // 
-            resources.ApplyResources(this.colIsSwitch, "colIsSwitch");
-            this.colIsSwitch.Name = "colIsSwitch";
-            // 
-            // colProductCount
-            // 
-            resources.ApplyResources(this.colProductCount, "colProductCount");
-            this.colProductCount.Name = "colProductCount";
-            this.colProductCount.ReadOnly = true;
             // 
             // panelLeftHeader
             // 
@@ -240,75 +217,61 @@
             // 
             this.dgvProducts.AllowUserToAddRows = false;
             this.dgvProducts.AllowUserToDeleteRows = false;
+            dataGridViewCellStyle6.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(55)))), ((int)(((byte)(58)))));
+            dataGridViewCellStyle6.ForeColor = System.Drawing.Color.White;
+            this.dgvProducts.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle6;
             this.dgvProducts.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.dgvProducts.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            dataGridViewCellStyle3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold);
-            dataGridViewCellStyle3.ForeColor = System.Drawing.Color.White;
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.Color.White;
-            this.dgvProducts.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle3;
-            this.dgvProducts.ColumnHeadersHeight = 32;
+            this.dgvProducts.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
+            dataGridViewCellStyle7.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle7.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
+            dataGridViewCellStyle7.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold);
+            dataGridViewCellStyle7.ForeColor = System.Drawing.Color.White;
+            dataGridViewCellStyle7.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(82)))));
+            dataGridViewCellStyle7.SelectionForeColor = System.Drawing.Color.White;
+            this.dgvProducts.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle7;
+            resources.ApplyResources(this.dgvProducts, "dgvProducts");
             this.dgvProducts.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             this.dgvProducts.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colIndex,
             this.colProductSerial,
             this.colMode,
             this.colKeyDefectProfile});
-            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
-            dataGridViewCellStyle4.Font = new System.Drawing.Font("微软雅黑", 9F);
-            dataGridViewCellStyle4.ForeColor = System.Drawing.Color.White;
-            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(122)))), ((int)(((byte)(204)))));
-            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.Color.White;
-            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dgvProducts.DefaultCellStyle = dataGridViewCellStyle4;
-            dataGridViewCellStyle6.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(55)))), ((int)(((byte)(58)))));
-            dataGridViewCellStyle6.ForeColor = System.Drawing.Color.White;
-            this.dgvProducts.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle6;
-            resources.ApplyResources(this.dgvProducts, "dgvProducts");
+            dataGridViewCellStyle8.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle8.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
+            dataGridViewCellStyle8.Font = new System.Drawing.Font("微软雅黑", 9F);
+            dataGridViewCellStyle8.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            dataGridViewCellStyle8.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(122)))), ((int)(((byte)(204)))));
+            dataGridViewCellStyle8.SelectionForeColor = System.Drawing.Color.White;
+            dataGridViewCellStyle8.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dgvProducts.DefaultCellStyle = dataGridViewCellStyle8;
             this.dgvProducts.EnableHeadersVisualStyles = false;
             this.dgvProducts.GridColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
             this.dgvProducts.Name = "dgvProducts";
+            this.dgvProducts.RowHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
+            dataGridViewCellStyle9.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle9.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(243)))), ((int)(((byte)(255)))));
+            dataGridViewCellStyle9.Font = new System.Drawing.Font("宋体", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle9.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
+            dataGridViewCellStyle9.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(80)))), ((int)(((byte)(160)))), ((int)(((byte)(255)))));
+            dataGridViewCellStyle9.SelectionForeColor = System.Drawing.Color.White;
+            dataGridViewCellStyle9.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dgvProducts.RowHeadersDefaultCellStyle = dataGridViewCellStyle9;
             this.dgvProducts.RowHeadersVisible = false;
+            dataGridViewCellStyle10.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
+            dataGridViewCellStyle10.Font = new System.Drawing.Font("宋体", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.dgvProducts.RowsDefaultCellStyle = dataGridViewCellStyle10;
             this.dgvProducts.RowTemplate.Height = 26;
             this.dgvProducts.ScrollBarBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.dgvProducts.ScrollBarColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(80)))), ((int)(((byte)(95)))));
             this.dgvProducts.ScrollBarRectColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.dgvProducts.ScrollBarStyleInherited = false;
+            this.dgvProducts.SelectedIndex = -1;
             this.dgvProducts.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgvProducts.StripeEvenColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
             this.dgvProducts.StripeOddColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(55)))), ((int)(((byte)(58)))));
             this.dgvProducts.Style = Sunny.UI.UIStyle.Custom;
             this.dgvProducts.StyleCustomMode = true;
-            // 
-            // colIndex
-            // 
-            resources.ApplyResources(this.colIndex, "colIndex");
-            this.colIndex.Name = "colIndex";
-            this.colIndex.ReadOnly = true;
-            // 
-            // colProductSerial
-            // 
-            resources.ApplyResources(this.colProductSerial, "colProductSerial");
-            this.colProductSerial.Name = "colProductSerial";
-            // 
-            // colMode
-            // 
-            this.colMode.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
-            resources.ApplyResources(this.colMode, "colMode");
-            this.colMode.Items.AddRange(new object[] {
-            "by_machine",
-            "copy",
-            "cut"});
-            this.colMode.Name = "colMode";
-            // 
-            // colKeyDefectProfile
-            // 
-            this.colKeyDefectProfile.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
-            resources.ApplyResources(this.colKeyDefectProfile, "colKeyDefectProfile");
-            this.colKeyDefectProfile.Name = "colKeyDefectProfile";
             // 
             // panelRightHeader
             // 
@@ -364,13 +327,79 @@
             this.panel1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.panel1.Name = "panel1";
             // 
+            // colConfigName
+            // 
+            resources.ApplyResources(this.colConfigName, "colConfigName");
+            this.colConfigName.Name = "colConfigName";
+            // 
+            // colASolution
+            // 
+            this.colASolution.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
+            resources.ApplyResources(this.colASolution, "colASolution");
+            this.colASolution.Name = "colASolution";
+            // 
+            // colAFlow
+            // 
+            this.colAFlow.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
+            resources.ApplyResources(this.colAFlow, "colAFlow");
+            this.colAFlow.Name = "colAFlow";
+            // 
+            // colBSolution
+            // 
+            this.colBSolution.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
+            resources.ApplyResources(this.colBSolution, "colBSolution");
+            this.colBSolution.Name = "colBSolution";
+            // 
+            // colBFlow
+            // 
+            this.colBFlow.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
+            resources.ApplyResources(this.colBFlow, "colBFlow");
+            this.colBFlow.Name = "colBFlow";
+            // 
+            // colIsSwitch
+            // 
+            resources.ApplyResources(this.colIsSwitch, "colIsSwitch");
+            this.colIsSwitch.Name = "colIsSwitch";
+            // 
+            // colProductCount
+            // 
+            resources.ApplyResources(this.colProductCount, "colProductCount");
+            this.colProductCount.Name = "colProductCount";
+            this.colProductCount.ReadOnly = true;
+            // 
+            // colIndex
+            // 
+            resources.ApplyResources(this.colIndex, "colIndex");
+            this.colIndex.Name = "colIndex";
+            this.colIndex.ReadOnly = true;
+            // 
+            // colProductSerial
+            // 
+            resources.ApplyResources(this.colProductSerial, "colProductSerial");
+            this.colProductSerial.Name = "colProductSerial";
+            // 
+            // colMode
+            // 
+            this.colMode.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
+            resources.ApplyResources(this.colMode, "colMode");
+            this.colMode.Items.AddRange(new object[] {
+            "by_machine",
+            "copy",
+            "cut"});
+            this.colMode.Name = "colMode";
+            // 
+            // colKeyDefectProfile
+            // 
+            this.colKeyDefectProfile.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
+            resources.ApplyResources(this.colKeyDefectProfile, "colKeyDefectProfile");
+            this.colKeyDefectProfile.Name = "colKeyDefectProfile";
+            // 
             // PgSettingAi
             // 
-            resources.ApplyResources(this, "$this");
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.BackColor = System.Drawing.Color.White;
+            resources.ApplyResources(this, "$this");
             this.Controls.Add(this.panel1);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Name = "PgSettingAi";
             this.tableLayoutPanel1.ResumeLayout(false);
             this.panelLeftContent.ResumeLayout(false);
@@ -409,10 +438,6 @@
         private DeepSightAI.StyledButton btnDeleteProduct;
         internal DeepSightAI.StyledButton btnAutoAdd;
         private Sunny.UI.UIDataGridView dgvProducts;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colIndex;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colProductSerial;
-        private System.Windows.Forms.DataGridViewComboBoxColumn colMode;
-        private System.Windows.Forms.DataGridViewComboBoxColumn colKeyDefectProfile;
         private System.Windows.Forms.DataGridViewTextBoxColumn colConfigName;
         private System.Windows.Forms.DataGridViewComboBoxColumn colASolution;
         private System.Windows.Forms.DataGridViewComboBoxColumn colAFlow;
@@ -420,5 +445,9 @@
         private System.Windows.Forms.DataGridViewComboBoxColumn colBFlow;
         private System.Windows.Forms.DataGridViewCheckBoxColumn colIsSwitch;
         private System.Windows.Forms.DataGridViewTextBoxColumn colProductCount;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colIndex;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colProductSerial;
+        private System.Windows.Forms.DataGridViewComboBoxColumn colMode;
+        private System.Windows.Forms.DataGridViewComboBoxColumn colKeyDefectProfile;
     }
 }
