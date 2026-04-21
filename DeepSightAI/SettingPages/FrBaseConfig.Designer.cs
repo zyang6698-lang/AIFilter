@@ -136,11 +136,10 @@
             // 
             // FrBaseConfig
             // 
-            resources.ApplyResources(this, "$this");
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.BackColor = System.Drawing.Color.White;
+            resources.ApplyResources(this, "$this");
             this.Controls.Add(this.tableLayoutPanel1);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Name = "FrBaseConfig";
             this.Load += new System.EventHandler(this.FrBaseConfig_Load);
             this.tableLayoutPanel1.ResumeLayout(false);

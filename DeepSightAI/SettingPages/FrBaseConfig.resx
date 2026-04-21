@@ -163,13 +163,13 @@
     <value>Left, Right</value>
   </data>
   <data name="txt_MaxDefectCount.Location" type="System.Drawing.Point, System.Drawing">
-    <value>226, 24</value>
+    <value>226, 22</value>
   </data>
   <data name="txt_MaxDefectCount.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 4, 3, 4</value>
   </data>
   <data name="txt_MaxDefectCount.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 23</value>
+    <value>194, 27</value>
   </data>
   <data name="txt_MaxDefectCount.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -226,13 +226,13 @@
     <value>Left, Right</value>
   </data>
   <data name="txt_AgentShutdownTimeout.Location" type="System.Drawing.Point, System.Drawing">
-    <value>226, 62</value>
+    <value>226, 60</value>
   </data>
   <data name="txt_AgentShutdownTimeout.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 4, 3, 4</value>
   </data>
   <data name="txt_AgentShutdownTimeout.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 23</value>
+    <value>194, 27</value>
   </data>
   <data name="txt_AgentShutdownTimeout.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
@@ -289,13 +289,13 @@
     <value>Left, Right</value>
   </data>
   <data name="txt_GetInferResultTimeout.Location" type="System.Drawing.Point, System.Drawing">
-    <value>226, 100</value>
+    <value>226, 98</value>
   </data>
   <data name="txt_GetInferResultTimeout.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 4, 3, 4</value>
   </data>
   <data name="txt_GetInferResultTimeout.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 23</value>
+    <value>194, 27</value>
   </data>
   <data name="txt_GetInferResultTimeout.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -352,13 +352,13 @@
     <value>Left, Right</value>
   </data>
   <data name="txt_WelcomeTitle.Location" type="System.Drawing.Point, System.Drawing">
-    <value>226, 138</value>
+    <value>226, 136</value>
   </data>
   <data name="txt_WelcomeTitle.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 4, 3, 4</value>
   </data>
   <data name="txt_WelcomeTitle.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 23</value>
+    <value>194, 27</value>
   </data>
   <data name="txt_WelcomeTitle.TabIndex" type="System.Int32, mscorlib">
     <value>11</value>
@@ -415,13 +415,13 @@
     <value>Left, Right</value>
   </data>
   <data name="txt_WelcomeFontSize.Location" type="System.Drawing.Point, System.Drawing">
-    <value>226, 176</value>
+    <value>226, 174</value>
   </data>
   <data name="txt_WelcomeFontSize.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 4, 3, 4</value>
   </data>
   <data name="txt_WelcomeFontSize.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 23</value>
+    <value>194, 27</value>
   </data>
   <data name="txt_WelcomeFontSize.TabIndex" type="System.Int32, mscorlib">
     <value>13</value>
@@ -493,7 +493,7 @@
     <value>2, 3, 2, 3</value>
   </data>
   <data name="cmb_ImageType.Size" type="System.Drawing.Size, System.Drawing">
-    <value>196, 25</value>
+    <value>196, 28</value>
   </data>
   <data name="cmb_ImageType.TabIndex" type="System.Int32, mscorlib">
     <value>15</value>
@@ -549,9 +549,6 @@
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>7, 17</value>
-  </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
     <value>843, 566</value>
   </data>
@@ -561,9 +558,6 @@
   <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 4, 3, 4</value>
   </data>
-  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
-    <value>CenterScreen</value>
-  </data>
   <data name="$this.Text" xml:space="preserve">
     <value> </value>
   </data>
@@ -571,6 +565,6 @@
     <value>FrBaseConfig</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>Sunny.UI.UIPage, SunnyUI, Version=3.9.6.0, Culture=neutral, PublicKeyToken=3f4ebed4237db5e1</value>
   </data>
 </root>

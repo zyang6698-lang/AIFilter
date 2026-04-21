@@ -1,12 +1,22 @@
 ﻿using DeepSightModel;
 using DeepSightTool;
 using System;
+using System.Collections.Generic;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace DeepSightAI.SettingPages
 {
     public partial class FrStationCofig : Form
     {
+        private static readonly Color ThemeBg = Color.FromArgb(29, 48, 60);
+        private static readonly Color ThemeFg = Color.FromArgb(216, 219, 188);
+        private static readonly Color ThemeBtnBg = Color.FromArgb(0, 64, 82);
+        private static readonly Color ThemeBtnHover = Color.FromArgb(0, 86, 110);
+        private static readonly Color ThemeBtnDown = Color.FromArgb(0, 50, 64);
+        private static readonly Font ThemeFont = new Font("微软雅黑", 9F, FontStyle.Regular);
+        private static readonly Font ThemeBtnFont = new Font("微软雅黑", 10F, FontStyle.Regular);
+
         public FrStationCofig(WatchPathConfig _config)
         {
             InitializeComponent();
@@ -15,6 +25,63 @@ namespace DeepSightAI.SettingPages
             SetStyle(ControlStyles.AllPaintingInWmPaint, true); // 禁止擦除背景.
             SetStyle(ControlStyles.DoubleBuffer, true); // 双缓冲
             stationConfig = _config;
+            ApplyDarkTheme();
+        }
+
+        /// <summary>
+        /// 统一深色主题：TextBox/RadioButton/Label/Button 样式与其他设置页一致
+        /// </summary>
+        private void ApplyDarkTheme()
+        {
+            foreach (var c in EnumerateControls(this))
+            {
+                switch (c)
+                {
+                    case TextBox tb:
+                        tb.BackColor = ThemeBg;
+                        tb.ForeColor = ThemeFg;
+                        tb.BorderStyle = BorderStyle.FixedSingle;
+                        tb.Font = ThemeFont;
+                        break;
+                    case RadioButton rb:
+                        rb.BackColor = Color.Transparent;
+                        rb.ForeColor = ThemeFg;
+                        rb.Font = ThemeFont;
+                        break;
+                    case Label lbl:
+                        lbl.BackColor = Color.Transparent;
+                        lbl.ForeColor = ThemeFg;
+                        lbl.Font = ThemeFont;
+                        break;
+                }
+            }
+
+            StyleActionButton(btn_OK);
+            StyleActionButton(btn_Close);
+        }
+
+        private static void StyleActionButton(Button btn)
+        {
+            btn.BackgroundImage = null;
+            btn.FlatStyle = FlatStyle.Flat;
+            btn.FlatAppearance.BorderSize = 0;
+            btn.FlatAppearance.MouseOverBackColor = ThemeBtnHover;
+            btn.FlatAppearance.MouseDownBackColor = ThemeBtnDown;
+            btn.BackColor = ThemeBtnBg;
+            btn.ForeColor = ThemeFg;
+            btn.Font = ThemeBtnFont;
+            btn.Cursor = Cursors.Hand;
+            btn.UseVisualStyleBackColor = false;
+        }
+
+        private static IEnumerable<Control> EnumerateControls(Control root)
+        {
+            foreach (Control c in root.Controls)
+            {
+                yield return c;
+                foreach (var child in EnumerateControls(c))
+                    yield return child;
+            }
         }
         public WatchPathConfig stationConfig = new WatchPathConfig();
         public void Language(int language)

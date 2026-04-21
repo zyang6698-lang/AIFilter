@@ -347,6 +347,9 @@
     <Compile Include="FrMinioFolderPicker.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="FrMinioFolderPicker.Designer.cs">
+      <DependentUpon>FrMinioFolderPicker.cs</DependentUpon>
+    </Compile>
     <Compile Include="FrLogin.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -480,6 +483,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="DefectImageItemControl.resx">
       <DependentUpon>DefectImageItemControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrMinioFolderPicker.resx">
+      <DependentUpon>FrMinioFolderPicker.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FrPipelineMonitor.resx">
       <DependentUpon>FrPipelineMonitor.cs</DependentUpon>

@@ -22,6 +22,27 @@ namespace DeepSightAI.SettingPages
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);
             SetStyle(ControlStyles.DoubleBuffer, true);
+            SetupDataGridViewStyle();
+        }
+
+        private void SetupDataGridViewStyle()
+        {
+            dgvDefects.EnableHeadersVisualStyles = false;
+            dgvDefects.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(0, 64, 82);
+            dgvDefects.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+            dgvDefects.ColumnHeadersDefaultCellStyle.Font = new Font("微软雅黑", 9F, FontStyle.Bold);
+            dgvDefects.DefaultCellStyle.BackColor = Color.FromArgb(45, 45, 48);
+            dgvDefects.DefaultCellStyle.ForeColor = Color.White;
+            dgvDefects.DefaultCellStyle.SelectionBackColor = Color.FromArgb(0, 122, 204);
+            dgvDefects.DefaultCellStyle.SelectionForeColor = Color.White;
+            dgvDefects.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(55, 55, 58);
+            dgvDefects.AlternatingRowsDefaultCellStyle.ForeColor = Color.White;
+            dgvDefects.AlternatingRowsDefaultCellStyle.SelectionBackColor = Color.FromArgb(0, 122, 204);
+            dgvDefects.AlternatingRowsDefaultCellStyle.SelectionForeColor = Color.White;
+            dgvDefects.StripeEvenColor = Color.FromArgb(45, 45, 48);
+            dgvDefects.StripeOddColor = Color.FromArgb(55, 55, 58);
+            dgvDefects.GridColor = Color.FromArgb(60, 60, 60);
+            dgvDefects.BorderStyle = BorderStyle.None;
         }
 
         private static FrKeyDefectConfig _instance;

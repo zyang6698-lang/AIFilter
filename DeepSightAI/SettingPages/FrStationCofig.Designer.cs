@@ -29,7 +29,6 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrStationCofig));
-            this.grpAxisOfSelection = new Sunny.UI.UIGroupBox();
             this.panel4 = new System.Windows.Forms.Panel();
             this.radioActive = new System.Windows.Forms.RadioButton();
             this.radioPassive = new System.Windows.Forms.RadioButton();
@@ -65,61 +64,10 @@
             this.txt_B_lot_timestamp = new System.Windows.Forms.TextBox();
             this.label17 = new System.Windows.Forms.Label();
             this.txt_B_panel_index_timestamp = new System.Windows.Forms.TextBox();
-            this.grpAxisOfSelection.SuspendLayout();
             this.panel4.SuspendLayout();
             this.panel3.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // grpAxisOfSelection
-            // 
-            this.grpAxisOfSelection.Controls.Add(this.panel4);
-            this.grpAxisOfSelection.Controls.Add(this.label18);
-            this.grpAxisOfSelection.Controls.Add(this.panel3);
-            this.grpAxisOfSelection.Controls.Add(this.label16);
-            this.grpAxisOfSelection.Controls.Add(this.txt_deepsight_agent_data_workspace);
-            this.grpAxisOfSelection.Controls.Add(this.label15);
-            this.grpAxisOfSelection.Controls.Add(this.txt_A_minio_config);
-            this.grpAxisOfSelection.Controls.Add(this.label7);
-            this.grpAxisOfSelection.Controls.Add(this.txt_temporary_file_storage_area_B);
-            this.grpAxisOfSelection.Controls.Add(this.label13);
-            this.grpAxisOfSelection.Controls.Add(this.txt_temporary_file_storage_area_A);
-            this.grpAxisOfSelection.Controls.Add(this.label14);
-            this.grpAxisOfSelection.Controls.Add(this.btn_Close);
-            this.grpAxisOfSelection.Controls.Add(this.btn_OK);
-            this.grpAxisOfSelection.Controls.Add(this.txt_stationName);
-            this.grpAxisOfSelection.Controls.Add(this.label1);
-            this.grpAxisOfSelection.Controls.Add(this.txt_Depth);
-            this.grpAxisOfSelection.Controls.Add(this.txt_APath);
-            this.grpAxisOfSelection.Controls.Add(this.label2);
-            this.grpAxisOfSelection.Controls.Add(this.radiotcp2);
-            this.grpAxisOfSelection.Controls.Add(this.radiotcp1);
-            this.grpAxisOfSelection.Controls.Add(this.label3);
-            this.grpAxisOfSelection.Controls.Add(this.label4);
-            this.grpAxisOfSelection.Controls.Add(this.label5);
-            this.grpAxisOfSelection.Controls.Add(this.txt_BPath);
-            this.grpAxisOfSelection.Controls.Add(this.label11);
-            this.grpAxisOfSelection.Controls.Add(this.txt_B_path_index_timestamp);
-            this.grpAxisOfSelection.Controls.Add(this.label12);
-            this.grpAxisOfSelection.Controls.Add(this.txt_B_lot_timestamp);
-            this.grpAxisOfSelection.Controls.Add(this.label17);
-            this.grpAxisOfSelection.Controls.Add(this.txt_B_panel_index_timestamp);
-            this.grpAxisOfSelection.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.grpAxisOfSelection.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.grpAxisOfSelection.FillDisableColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.grpAxisOfSelection.Font = new System.Drawing.Font("微软雅黑", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.grpAxisOfSelection.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.grpAxisOfSelection.Location = new System.Drawing.Point(0, 0);
-            this.grpAxisOfSelection.Margin = new System.Windows.Forms.Padding(100, 60, 100, 60);
-            this.grpAxisOfSelection.MinimumSize = new System.Drawing.Size(20, 10);
-            this.grpAxisOfSelection.Name = "grpAxisOfSelection";
-            this.grpAxisOfSelection.Padding = new System.Windows.Forms.Padding(540, 250, 540, 250);
-            this.grpAxisOfSelection.RectColor = System.Drawing.Color.FromArgb(((int)(((byte)(110)))), ((int)(((byte)(190)))), ((int)(((byte)(40)))));
-            this.grpAxisOfSelection.Size = new System.Drawing.Size(1017, 756);
-            this.grpAxisOfSelection.Style = Sunny.UI.UIStyle.Custom;
-            this.grpAxisOfSelection.TabIndex = 30;
-            this.grpAxisOfSelection.Text = "机台配置";
-            this.grpAxisOfSelection.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
+            //
             // panel4
             // 
             this.panel4.BackColor = System.Drawing.Color.Transparent;
@@ -542,19 +490,48 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(120F, 120F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
-            this.BackColor = System.Drawing.SystemColors.Control;
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(38)))), ((int)(((byte)(48)))));
             this.ClientSize = new System.Drawing.Size(1017, 756);
-            this.Controls.Add(this.grpAxisOfSelection);
+            this.Controls.Add(this.panel4);
+            this.Controls.Add(this.label18);
+            this.Controls.Add(this.panel3);
+            this.Controls.Add(this.label16);
+            this.Controls.Add(this.txt_deepsight_agent_data_workspace);
+            this.Controls.Add(this.label15);
+            this.Controls.Add(this.txt_A_minio_config);
+            this.Controls.Add(this.label7);
+            this.Controls.Add(this.txt_temporary_file_storage_area_B);
+            this.Controls.Add(this.label13);
+            this.Controls.Add(this.txt_temporary_file_storage_area_A);
+            this.Controls.Add(this.label14);
+            this.Controls.Add(this.btn_Close);
+            this.Controls.Add(this.btn_OK);
+            this.Controls.Add(this.txt_stationName);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.txt_Depth);
+            this.Controls.Add(this.txt_APath);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.radiotcp2);
+            this.Controls.Add(this.radiotcp1);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.label5);
+            this.Controls.Add(this.txt_BPath);
+            this.Controls.Add(this.label11);
+            this.Controls.Add(this.txt_B_path_index_timestamp);
+            this.Controls.Add(this.label12);
+            this.Controls.Add(this.txt_B_lot_timestamp);
+            this.Controls.Add(this.label17);
+            this.Controls.Add(this.txt_B_panel_index_timestamp);
             this.DoubleBuffered = true;
-            this.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Margin = new System.Windows.Forms.Padding(60, 20, 60, 20);
             this.Name = "FrStationCofig";
+            this.Padding = new System.Windows.Forms.Padding(10, 32, 10, 10);
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Shown += new System.EventHandler(this.FrStationCofig_Shown);
-            this.grpAxisOfSelection.ResumeLayout(false);
-            this.grpAxisOfSelection.PerformLayout();
             this.panel4.ResumeLayout(false);
             this.panel4.PerformLayout();
             this.panel3.ResumeLayout(false);
@@ -564,7 +541,6 @@
         }
 
         #endregion
-        private Sunny.UI.UIGroupBox grpAxisOfSelection;
         private System.Windows.Forms.Panel panel4;
         internal System.Windows.Forms.RadioButton radioActive;
         internal System.Windows.Forms.RadioButton radioPassive;
