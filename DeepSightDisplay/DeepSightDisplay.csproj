@@ -60,11 +60,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="frFullScreen.cs">
+    <Compile Include="FrmFullScreen.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="frFullScreen.Designer.cs">
-      <DependentUpon>frFullScreen.cs</DependentUpon>
+    <Compile Include="FrmFullScreen.Designer.cs">
+      <DependentUpon>FrmFullScreen.cs</DependentUpon>
     </Compile>
     <Compile Include="HeatMap\HeatMapControl.cs">
       <SubType>Component</SubType>
@@ -90,8 +90,8 @@
     <Compile Include="src\PosChangedEventArgs.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="frFullScreen.resx">
-      <DependentUpon>frFullScreen.cs</DependentUpon>
+    <EmbeddedResource Include="FrmFullScreen.resx">
+      <DependentUpon>FrmFullScreen.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="src\CvDisplay.resx">
       <DependentUpon>CvDisplay.cs</DependentUpon>

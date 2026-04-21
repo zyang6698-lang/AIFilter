@@ -74,7 +74,7 @@ namespace DeepSightWorkLib.Services
 
         /// <summary>
         /// 测试用：依次触发三种 AI 引擎告警，用于验证告警链路是否畅通
-        /// （Toast / FrAlarm 表格 / 文件持久化）
+        /// （Toast / FrmAlarm 表格 / 文件持久化）
         /// 冷却 Key = Category + Source + Message 前50字符，故把递增序号和时间戳放入 message
         /// 以保证每次调用都能突破冷却、真正弹窗
         /// </summary>

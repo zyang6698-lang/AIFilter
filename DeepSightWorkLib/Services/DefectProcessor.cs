@@ -93,7 +93,7 @@ namespace DeepSightWorkLib.Services
                 {
                     Index = info.DefectIndex[i],
                     PcsIndex = info.PcsIndex[i],
-                    AiLabel = msg[i] == "0" ? "ok" : "ng",
+                    AiLabel = msg[i] == "0" ? "OK" : "NG",
                     AiClsType = "",
                     AiFlag = "experiment",
                     InferDetail = new Dictionary<string, object>(),

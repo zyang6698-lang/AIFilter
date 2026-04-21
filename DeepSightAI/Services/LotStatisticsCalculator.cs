@@ -1,4 +1,4 @@
-using DeepSightAI;
+﻿using DeepSightAI;
 using DeepSightModel;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +7,7 @@ namespace DeepSightAI.Services
 {
     /// <summary>
     /// Lot 统计指标计算器，负责从面板数据中计算 PCS / 报点 / Panel 级别的统计指标。
-    /// 从 AIReviewControl.CollectPanelData 中抽离，便于单独单元测试。
+    /// 从 UcAiReview.CollectPanelData 中抽离，便于单独单元测试。
     /// </summary>
     public static class LotStatisticsCalculator
     {

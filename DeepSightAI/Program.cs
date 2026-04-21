@@ -44,7 +44,7 @@ namespace DeepSightAI
             #endregion Error捕抓全局
 
 
-            Application.Run(FrWelcome.Instance);
+            Application.Run(FrmSplash.Instance);
         }
 
 

@@ -139,7 +139,7 @@ namespace DeepSightAI
             {
                 // 以SN+Side为单位存储结果（ConcurrentDictionary，线程安全）
                 string key = $"{sn}_{side}";
-                var resultList = FrHome.Instance.dic_Results.GetOrAdd(key, _ => new List<string>());
+                var resultList = FrmHome.Instance.dic_Results.GetOrAdd(key, _ => new List<string>());
                 int resultCount;
                 lock (resultList)
                 {
@@ -165,7 +165,7 @@ namespace DeepSightAI
             {
                 // 以SN+Side为单位存储ROI
                 string key = $"{sn}_{side}";
-                var roiList = FrHome.Instance.dic_DetectRois.GetOrAdd(key, _ => new List<Roi>());
+                var roiList = FrmHome.Instance.dic_DetectRois.GetOrAdd(key, _ => new List<Roi>());
                 lock (roiList)
                 {
                     // 清除旧数据后再添加，避免同一SN重复处理时ROI累积
@@ -185,7 +185,7 @@ namespace DeepSightAI
             {
                 // 以SN+Side为单位存储DetectInfo（用于图片放大和单图测试）
                 string key = $"{sn}_{side}";
-                var infoList = FrHome.Instance.dic_DetectInfos.GetOrAdd(key, _ => new List<DetectInfo>());
+                var infoList = FrmHome.Instance.dic_DetectInfos.GetOrAdd(key, _ => new List<DetectInfo>());
                 lock (infoList)
                 {
                     // 清除旧数据后再添加，避免同一SN重复处理时DetectInfo累积
@@ -205,7 +205,7 @@ namespace DeepSightAI
             {
                 // ── 数据存储（线程安全，可在后台线程执行） ──
                 string key = $"{sn}_{side}";
-                var infoList = FrHome.Instance.dic_Infos.GetOrAdd(key, _ => new List<RootPanelInfoWithIP>());
+                var infoList = FrmHome.Instance.dic_Infos.GetOrAdd(key, _ => new List<RootPanelInfoWithIP>());
                 lock (infoList)
                 {
                     // 每次新处理到来时替换旧数据，避免同一SN被多次处理时AVI计数累加翻倍
@@ -328,7 +328,7 @@ namespace DeepSightAI
         /// </summary>
         private void AddNewTaskRow(string sn, string side)
         {
-            var dgv = FrHome.Instance.dataGridViewData;
+            var dgv = FrmHome.Instance.dataGridViewData;
 
             // 列顺序: SN[0], Side[1], AVI[2], AI[3], Time[4], Status[5]
             dgv.Rows.Insert(0, new object[] { sn, side, "0", "0", "", "排队中" });
@@ -358,7 +358,7 @@ namespace DeepSightAI
         /// </summary>
         private DataGridViewRow FindRowBySnSide(string sn, string side)
         {
-            foreach (DataGridViewRow row in FrHome.Instance.dataGridViewData.Rows)
+            foreach (DataGridViewRow row in FrmHome.Instance.dataGridViewData.Rows)
             {
                 if (row.Cells[0].Value?.ToString() == sn && row.Cells[1].Value?.ToString() == side)
                 {
@@ -373,7 +373,7 @@ namespace DeepSightAI
         /// </summary>
         private DataGridViewRow FindRowBySn(string sn)
         {
-            foreach (DataGridViewRow row in FrHome.Instance.dataGridViewData.Rows)
+            foreach (DataGridViewRow row in FrmHome.Instance.dataGridViewData.Rows)
             {
                 if (row.Cells[0].Value?.ToString() == sn)
                 {
@@ -443,7 +443,7 @@ namespace DeepSightAI
             string keyB = $"{sn}_B";
 
             // 统计 B 面缺陷数（dic_Infos 已在 SendPanelInfo 时替换为最新一次数据，直接累加即可）
-            FrHome.Instance.dic_Infos.TryGetValue(keyB, out List<RootPanelInfoWithIP> bInfos);
+            FrmHome.Instance.dic_Infos.TryGetValue(keyB, out List<RootPanelInfoWithIP> bInfos);
             if (bInfos != null)
             {
                 lock (bInfos)
@@ -460,7 +460,7 @@ namespace DeepSightAI
             }
 
             // 只统计 B 面 AI 结果
-            if (FrHome.Instance.dic_Results.TryGetValue(keyB, out List<string> bResults))
+            if (FrmHome.Instance.dic_Results.TryGetValue(keyB, out List<string> bResults))
             {
                 count = bResults.Count;
                 ok = bResults.Count(o => o.Contains("0"));
@@ -473,7 +473,7 @@ namespace DeepSightAI
             row.Cells[2].Value = bDefectCount;
             row.Cells[3].Value = count;
             row.Cells[5].Value = msg;
-            FrHome.Instance.str_SN = keyB;
+            FrmHome.Instance.str_SN = keyB;
 
             // B面完成时：仅当 B 面有缺陷图片时触发完整加载，否则仅更新AI结果标签
             bool hasImages = bInfos != null && bInfos.Any(inf => inf?.RootInfo?.PcsInfo?.Values?.Any(pcs =>
@@ -481,11 +481,11 @@ namespace DeepSightAI
 
             if (hasImages)
             {
-                FrHome.Instance.dataGridViewData_CellClick(null, null);
+                FrmHome.Instance.dataGridViewData_CellClick(null, null);
             }
             else
             {
-                FrHome.Instance.UpdateAIResultLabels();
+                FrmHome.Instance.UpdateAIResultLabels();
             }
         }
 
@@ -505,7 +505,7 @@ namespace DeepSightAI
         private void CleanupExcessRows()
         {
             const int MAX_ROWS = 50;
-            var dgv = FrHome.Instance.dataGridViewData;
+            var dgv = FrmHome.Instance.dataGridViewData;
 
             if (dgv.Rows.Count > MAX_ROWS)
             {
@@ -538,11 +538,11 @@ namespace DeepSightAI
         private void CleanupTaskData(string sn, string side)
         {
             string key = $"{sn}_{side}";
-            FrHome.Instance.dic_Infos.TryRemove(key, out _);
-            FrHome.Instance.dic_Results.TryRemove(key, out _);
-            FrHome.Instance.dic_DetectRois.TryRemove(key, out _);
+            FrmHome.Instance.dic_Infos.TryRemove(key, out _);
+            FrmHome.Instance.dic_Results.TryRemove(key, out _);
+            FrmHome.Instance.dic_DetectRois.TryRemove(key, out _);
             // 不再删除 SnDebugInfoCache，让缓存独立管理生命周期（MaxCacheSize=1000）
-            // FrSearch 需要访问历史调试数据，不能随 FrHome 行清理而删除
+            // FrmLotHistory 需要访问历史调试数据，不能随 FrmHome 行清理而删除
         }
 
         #region UI 批量刷新 — Timer Tick
@@ -555,7 +555,7 @@ namespace DeepSightAI
         {
             try
             {
-                var dgv = FrHome.Instance.dataGridViewData;
+                var dgv = FrmHome.Instance.dataGridViewData;
                 bool gridChanged = false;
 
                 // ═══ 1. 批量处理任务状态队列 ═══
@@ -611,19 +611,19 @@ namespace DeepSightAI
                 if (_machineConfigDirty)
                 {
                     _machineConfigDirty = false;
-                    FrHome.Instance.RefreshMachineStatusConfigs();
+                    FrmHome.Instance.RefreshMachineStatusConfigs();
                 }
                 while (_pendingStationUpdates.TryDequeue(out var machineName))
                 {
-                    FrHome.Instance.UpdateStationDataReceived(machineName);
+                    FrmHome.Instance.UpdateStationDataReceived(machineName);
                 }
 
                 // ═══ 5. 图片显示刷新（仅最新一条，防抖） ═══
                 string imageKey = Interlocked.Exchange(ref _pendingImageRefreshKey, null);
                 if (imageKey != null)
                 {
-                    FrHome.Instance.str_SN = imageKey;
-                    FrHome.Instance.dataGridViewData_CellClick(null, null);
+                    FrmHome.Instance.str_SN = imageKey;
+                    FrmHome.Instance.dataGridViewData_CellClick(null, null);
                 }
             }
             catch (Exception ex)
@@ -641,11 +641,11 @@ namespace DeepSightAI
                 // 统一嵌入子窗体到对应 Panel
                 var formPanelMap = new (Form form, Panel panel)[]
                 {
-                    (FrHome.Instance,    panel1),
-                    (FrSetting.Instance, panel2),
-                    (FrSearch.Instance,  panel3),
-                    (FrAlarm.Instance,   panel4),
-                    (FrChart.Instance,   panel5),
+                    (FrmHome.Instance,    panel1),
+                    (FrmSetting.Instance, panel2),
+                    (FrmLotHistory.Instance,  panel3),
+                    (FrmAlarm.Instance,   panel4),
+                    (FrmChart.Instance,   panel5),
                 };
 
                 foreach (var (form, panel) in formPanelMap)
@@ -657,8 +657,8 @@ namespace DeepSightAI
                     form.Show();
                 }
 
-                // FrHome 特有的初始化
-                FrHome.Instance.InitMethod();
+                // FrmHome 特有的初始化
+                FrmHome.Instance.InitMethod();
             }
             catch (Exception ex)
             {
@@ -725,7 +725,7 @@ namespace DeepSightAI
                     btnStart.Image = Resources.pause2;
                     if (Machine.HasAgentMachines)
                     {
-                        FrSetting.Instance.RestartApplication(FrSetting.Instance.appPath, FrSetting.Instance.appExe, Machine.sysConfig.AgentShutdownTimeout, true);
+                        FrmSetting.Instance.RestartApplication(FrmSetting.Instance.appPath, FrmSetting.Instance.appExe, Machine.sysConfig.AgentShutdownTimeout, true);
                     }
                     else
                     {
@@ -740,7 +740,7 @@ namespace DeepSightAI
                     btnStart.Image = Resources.start2;
                     if (Machine.HasAgentMachines)
                     {
-                        FrSetting.Instance.KillProcessInDirectory(FrSetting.Instance.appPath, FrSetting.Instance.appExe, Machine.sysConfig.AgentShutdownTimeout);
+                        FrmSetting.Instance.KillProcessInDirectory(FrmSetting.Instance.appPath, FrmSetting.Instance.appExe, Machine.sysConfig.AgentShutdownTimeout);
                     }
 
                     LogTextHelper.Info("暂停作业...");
@@ -792,22 +792,22 @@ namespace DeepSightAI
         }
         private void btnLogin_Click(object sender, EventArgs e)
         {
-            FrLogin login = new FrLogin();
+            FrmLogin login = new FrmLogin();
             login.ShowDialog();
             if (!string.IsNullOrWhiteSpace(Machine.LoginUserName))
             {
                 btnLogin.Image = Resources.user2;
                 if (string.IsNullOrWhiteSpace(Machine.LoginUserName))
                 {
-                    FrSetting.Instance.btnSave.Enabled = false;
+                    FrmSetting.Instance.btnSave.Enabled = false;
                 }
                 else if (Machine.LoginUserName.Contains("操作员") || Machine.LoginUserName.Contains("Operator"))
                 {
-                    FrSetting.Instance.btnSave.Enabled = false;
+                    FrmSetting.Instance.btnSave.Enabled = false;
                 }
                 else
                 {
-                    FrSetting.Instance.btnSave.Enabled = true;
+                    FrmSetting.Instance.btnSave.Enabled = true;
                 }
             }
             else
@@ -933,7 +933,7 @@ namespace DeepSightAI
         private int enterY;
 
         //双击
-        private void panelTile_DoubleClick(object sender, EventArgs e)
+        private void pnlTitleBar_DoubleClick(object sender, EventArgs e)
         {
             if (WindowState == FormWindowState.Normal)
             {
@@ -1031,29 +1031,25 @@ namespace DeepSightAI
         #endregion 状态栏-运行时间-当前时间
 
 
-        // 图片切换功能已移至配置界面（常规配置 → 推理/显示图片类型）
-        // Machine.ShowFlag 由配置 UseGerberImage 控制
-        private void btnModelB_Click(object sender, EventArgs e) { }
-        private void btnModelC_Click(object sender, EventArgs e) { }
         private void btnClear_Click(object sender, EventArgs e)
         {
             Machine.master.IsStart = false;
             Machine.master.ClearAllProcessingQueues();
-            FrHome.Instance.ClearAllImages();
+            FrmHome.Instance.ClearAllImages();
 
             // 清空任务队列 DataGridView 行及相关缓存
             try
             {
-                var dgv = FrHome.Instance.dataGridViewData;
+                var dgv = FrmHome.Instance.dataGridViewData;
                 if (dgv.InvokeRequired)
                     dgv.BeginInvoke(new MethodInvoker(() => dgv.Rows.Clear()));
                 else
                     dgv.Rows.Clear();
 
-                FrHome.Instance.dic_Infos.Clear();
-                FrHome.Instance.dic_Results.Clear();
-                FrHome.Instance.dic_DetectRois.Clear();
-                FrHome.Instance.dic_DetectInfos.Clear();
+                FrmHome.Instance.dic_Infos.Clear();
+                FrmHome.Instance.dic_Results.Clear();
+                FrmHome.Instance.dic_DetectRois.Clear();
+                FrmHome.Instance.dic_DetectInfos.Clear();
             }
             catch (Exception ex)
             {
@@ -1105,8 +1101,8 @@ namespace DeepSightAI
         {
             try
             {
-                // 触发 ToolboxControl 中的生成推理请求功能
-                FrChart.Instance.analyticsControl1.TriggerGenerateInference();
+                // 触发 UcStatisticsToolbox 中的生成推理请求功能
+                FrmChart.Instance.analyticsControl1.TriggerGenerateInference();
             }
             catch (Exception ex)
             {
@@ -1131,9 +1127,9 @@ namespace DeepSightAI
             // Ctrl+S：触发配置保存
             if (keyData == (Keys.Control | Keys.S))
             {
-                if (curFormMode == FormMode.SettingForm && FrSetting.Instance.btnSave.Enabled)
+                if (curFormMode == FormMode.SettingForm && FrmSetting.Instance.btnSave.Enabled)
                 {
-                    FrSetting.Instance.SaveCurrentConfig();
+                    FrmSetting.Instance.SaveCurrentConfig();
                 }
                 return true;
             }
@@ -1164,13 +1160,13 @@ namespace DeepSightAI
 
         #endregion
 
-        private FrPipelineMonitor _pipelineMonitor;
+        private FrmPipelineMonitor _pipelineMonitor;
 
         private void btnPipelineMonitor_Click(object sender, EventArgs e)
         {
             if (_pipelineMonitor == null || _pipelineMonitor.IsDisposed)
             {
-                _pipelineMonitor = new FrPipelineMonitor();
+                _pipelineMonitor = new FrmPipelineMonitor();
             }
             if (!_pipelineMonitor.Visible)
             {

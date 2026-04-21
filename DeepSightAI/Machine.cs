@@ -73,7 +73,7 @@ namespace DeepSightAI
                 UpdateStep(20, "程序初始化中...", true);
                 if (!config_class.Read(out sysConfig))
                 {
-                    FrWelcome.Instance.ShowError(
+                    FrmSplash.Instance.ShowError(
                         "读取常规配置文件失败！\r\n" +
                         "配置文件路径：configs\\general.config.json\r\n" +
                         "请检查文件是否存在、JSON 格式是否正确。");
@@ -83,7 +83,7 @@ namespace DeepSightAI
                 ShowFlag = sysConfig.UseGerberImage ? "B" : "C";
                 if (!sol_class.Read(out solconfig))
                 {
-                    FrWelcome.Instance.ShowError(
+                    FrmSplash.Instance.ShowError(
                         "读取 AI 方案配置文件失败！\r\n" +
                         "配置文件路径：configs\\aisolution.config.json\r\n" +
                         "请检查文件是否存在、JSON 格式是否正确。");
@@ -127,8 +127,8 @@ namespace DeepSightAI
                 Application.DoEvents();
                 //Thread.Sleep(400);
 
-                // 获取 FrWelcome 所在的屏幕，让 FrmMain 显示在同一屏幕上
-                var targetScreen = Screen.FromControl(FrWelcome.Instance);
+                // 获取 FrmSplash 所在的屏幕，让 FrmMain 显示在同一屏幕上
+                var targetScreen = Screen.FromControl(FrmSplash.Instance);
                 FrmMain.Instance.StartPosition = FormStartPosition.Manual;
                 FrmMain.Instance.Location = targetScreen.WorkingArea.Location;
                // FrmMain.Instance.MaximizedBounds = targetScreen.WorkingArea;
@@ -136,13 +136,13 @@ namespace DeepSightAI
                 // 程序开启后是否自动最大化
                 FrmMain.Instance.WindowState = FormWindowState.Maximized;
                 FrmMain.Instance.Show();
-                FrWelcome.Instance.Hide();
+                FrmSplash.Instance.Hide();
                 UpdateStep(100, "程序启动完成", true);
                 FrmMain.Instance.Opacity = 100;
 
                 FrmMain.Instance.SwitchFrom(FormMode.MainForm);
 
-                FrWelcome.Instance.bar_step.Value = 100;
+                FrmSplash.Instance.bar_step.Value = 100;
                 FrmMain.Instance.Activate();
 
                 // 注册告警通知器
@@ -162,7 +162,7 @@ namespace DeepSightAI
             catch (Exception ex)
             {
                 LogTextHelper.Error("启动异常", ex);
-                FrWelcome.Instance.ShowError(
+                FrmSplash.Instance.ShowError(
                     $"启动时发生未知错误：\r\n{ex.Message}\r\n\r\n详细信息已写入日志，请联系技术支持。");
             }
 
@@ -172,8 +172,8 @@ namespace DeepSightAI
             try
             {
                 LogTextHelper.Info(stepMsg);
-                FrWelcome.Instance.bar_step.Value = percentValue;
-                FrWelcome.Instance.lbl_step.Text = stepMsg + "......";
+                FrmSplash.Instance.bar_step.Value = percentValue;
+                FrmSplash.Instance.lbl_step.Text = stepMsg + "......";
                 Application.DoEvents();
             }
             catch (Exception ex)

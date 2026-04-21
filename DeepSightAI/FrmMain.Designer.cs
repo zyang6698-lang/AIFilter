@@ -76,7 +76,7 @@ namespace DeepSightAI
             this.btnClose = new System.Windows.Forms.Button();
             this.btnMin = new System.Windows.Forms.Button();
             this.btnMax = new System.Windows.Forms.Button();
-            this.panelTile = new System.Windows.Forms.Panel();
+            this.pnlTitleBar = new System.Windows.Forms.Panel();
             this.tableLayoutPanel1.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.panel10.SuspendLayout();
@@ -98,7 +98,7 @@ namespace DeepSightAI
             this.panel9.SuspendLayout();
             this.toolStrip.SuspendLayout();
             this.panel_r.SuspendLayout();
-            this.panelTile.SuspendLayout();
+            this.pnlTitleBar.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -665,22 +665,22 @@ namespace DeepSightAI
             this.btnMax.UseVisualStyleBackColor = false;
             this.btnMax.Click += new System.EventHandler(this.btnMax_Click);
             // 
-            // panelTile
+            // pnlTitleBar
             // 
-            this.panelTile.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.panelTile.Controls.Add(this.panel_r);
-            this.panelTile.Controls.Add(this.lbl_title);
-            this.panelTile.Dock = System.Windows.Forms.DockStyle.Top;
-            this.panelTile.Location = new System.Drawing.Point(0, 0);
-            this.panelTile.Margin = new System.Windows.Forms.Padding(0);
-            this.panelTile.Name = "panelTile";
-            this.panelTile.Size = new System.Drawing.Size(1417, 48);
-            this.panelTile.TabIndex = 13;
-            this.panelTile.DoubleClick += new System.EventHandler(this.panelTile_DoubleClick);
-            this.panelTile.MouseDown += new System.Windows.Forms.MouseEventHandler(this.setForm_MouseDown);
-            this.panelTile.MouseLeave += new System.EventHandler(this.setForm_MouseLeave);
-            this.panelTile.MouseMove += new System.Windows.Forms.MouseEventHandler(this.setForm_MouseMove);
-            this.panelTile.MouseUp += new System.Windows.Forms.MouseEventHandler(this.setForm_MouseUp);
+            this.pnlTitleBar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.pnlTitleBar.Controls.Add(this.panel_r);
+            this.pnlTitleBar.Controls.Add(this.lbl_title);
+            this.pnlTitleBar.Dock = System.Windows.Forms.DockStyle.Top;
+            this.pnlTitleBar.Location = new System.Drawing.Point(0, 0);
+            this.pnlTitleBar.Margin = new System.Windows.Forms.Padding(0);
+            this.pnlTitleBar.Name = "pnlTitleBar";
+            this.pnlTitleBar.Size = new System.Drawing.Size(1417, 48);
+            this.pnlTitleBar.TabIndex = 13;
+            this.pnlTitleBar.DoubleClick += new System.EventHandler(this.pnlTitleBar_DoubleClick);
+            this.pnlTitleBar.MouseDown += new System.Windows.Forms.MouseEventHandler(this.setForm_MouseDown);
+            this.pnlTitleBar.MouseLeave += new System.EventHandler(this.setForm_MouseLeave);
+            this.pnlTitleBar.MouseMove += new System.Windows.Forms.MouseEventHandler(this.setForm_MouseMove);
+            this.pnlTitleBar.MouseUp += new System.Windows.Forms.MouseEventHandler(this.setForm_MouseUp);
             // 
             // FrmMain
             // 
@@ -692,7 +692,7 @@ namespace DeepSightAI
             this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.table_menu);
             this.Controls.Add(this.toolStrip);
-            this.Controls.Add(this.panelTile);
+            this.Controls.Add(this.pnlTitleBar);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
@@ -723,7 +723,7 @@ namespace DeepSightAI
             this.toolStrip.ResumeLayout(false);
             this.toolStrip.PerformLayout();
             this.panel_r.ResumeLayout(false);
-            this.panelTile.ResumeLayout(false);
+            this.pnlTitleBar.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -772,7 +772,7 @@ namespace DeepSightAI
         private System.Windows.Forms.Button btnClose;
         private System.Windows.Forms.Button btnMin;
         private System.Windows.Forms.Button btnMax;
-        private System.Windows.Forms.Panel panelTile;
+        private System.Windows.Forms.Panel pnlTitleBar;
         private System.Windows.Forms.Panel panel_search;
         private System.Windows.Forms.PictureBox btnSearch;
         private System.Windows.Forms.Panel panel8;

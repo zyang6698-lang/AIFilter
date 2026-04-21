@@ -267,94 +267,94 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AIReviewControl.cs">
+    <Compile Include="UcAiReview.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="AIReviewControl.Designer.cs">
-      <DependentUpon>AIReviewControl.cs</DependentUpon>
+    <Compile Include="UcAiReview.Designer.cs">
+      <DependentUpon>UcAiReview.cs</DependentUpon>
     </Compile>
-    <Compile Include="ToolboxControl.cs">
+    <Compile Include="UcStatisticsToolbox.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="ToolboxControl.Designer.cs">
-      <DependentUpon>ToolboxControl.cs</DependentUpon>
+    <Compile Include="UcStatisticsToolbox.Designer.cs">
+      <DependentUpon>UcStatisticsToolbox.cs</DependentUpon>
     </Compile>
-    <Compile Include="AddToDatasetDialog.cs">
+    <Compile Include="DlgAddToDataset.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ConsistencyTestDashboard.cs">
+    <Compile Include="UcConsistencyTestDashboard.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="ConsistencyTestDashboard.Designer.cs">
-      <DependentUpon>ConsistencyTestDashboard.cs</DependentUpon>
+    <Compile Include="UcConsistencyTestDashboard.Designer.cs">
+      <DependentUpon>UcConsistencyTestDashboard.cs</DependentUpon>
     </Compile>
-    <Compile Include="ArrayConfigDialog.cs">
+    <Compile Include="DlgArrayConfig.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ArrayConfigDialog.Designer.cs">
-      <DependentUpon>ArrayConfigDialog.cs</DependentUpon>
+    <Compile Include="DlgArrayConfig.Designer.cs">
+      <DependentUpon>DlgArrayConfig.cs</DependentUpon>
     </Compile>
-    <Compile Include="ExportOptionsDialog.cs">
+    <Compile Include="DlgExportOptions.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ExportOptionsDialog.Designer.cs">
-      <DependentUpon>ExportOptionsDialog.cs</DependentUpon>
+    <Compile Include="DlgExportOptions.Designer.cs">
+      <DependentUpon>DlgExportOptions.cs</DependentUpon>
     </Compile>
-    <Compile Include="DefectDetailControl.cs">
+    <Compile Include="UcDefectDetail.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="DefectDetailControl.Designer.cs">
-      <DependentUpon>DefectDetailControl.cs</DependentUpon>
+    <Compile Include="UcDefectDetail.Designer.cs">
+      <DependentUpon>UcDefectDetail.cs</DependentUpon>
     </Compile>
-    <Compile Include="DefectImageItemControl.cs">
+    <Compile Include="UcDefectImageItem.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="DefectImageItemControl.Designer.cs">
-      <DependentUpon>DefectImageItemControl.cs</DependentUpon>
+    <Compile Include="UcDefectImageItem.Designer.cs">
+      <DependentUpon>UcDefectImageItem.cs</DependentUpon>
     </Compile>
     <Compile Include="FileNotifier.cs" />
-    <Compile Include="FrAlarm.cs">
+    <Compile Include="FrmAlarm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrAlarm.Designer.cs">
-      <DependentUpon>FrAlarm.cs</DependentUpon>
+    <Compile Include="FrmAlarm.Designer.cs">
+      <DependentUpon>FrmAlarm.cs</DependentUpon>
     </Compile>
     <Compile Include="ToastNotifier.cs" />
-    <Compile Include="FrChart.cs">
+    <Compile Include="FrmChart.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrChart.Designer.cs">
-      <DependentUpon>FrChart.cs</DependentUpon>
+    <Compile Include="FrmChart.Designer.cs">
+      <DependentUpon>FrmChart.cs</DependentUpon>
     </Compile>
-    <Compile Include="FrSearch.cs">
+    <Compile Include="FrmLotHistory.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrSearch.Designer.cs">
-      <DependentUpon>FrSearch.cs</DependentUpon>
+    <Compile Include="FrmLotHistory.Designer.cs">
+      <DependentUpon>FrmLotHistory.cs</DependentUpon>
     </Compile>
-    <Compile Include="FrDefectImageDetail.cs">
+    <Compile Include="FrmDefectImageDetail.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrDefectImageDetail.Designer.cs">
-      <DependentUpon>FrDefectImageDetail.cs</DependentUpon>
+    <Compile Include="FrmDefectImageDetail.Designer.cs">
+      <DependentUpon>FrmDefectImageDetail.cs</DependentUpon>
     </Compile>
-    <Compile Include="FrHome.cs">
+    <Compile Include="FrmHome.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrHome.Designer.cs">
-      <DependentUpon>FrHome.cs</DependentUpon>
+    <Compile Include="FrmHome.Designer.cs">
+      <DependentUpon>FrmHome.cs</DependentUpon>
     </Compile>
-    <Compile Include="FrMinioFolderPicker.cs">
+    <Compile Include="DlgMinioFolderPicker.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrMinioFolderPicker.Designer.cs">
-      <DependentUpon>FrMinioFolderPicker.cs</DependentUpon>
+    <Compile Include="DlgMinioFolderPicker.Designer.cs">
+      <DependentUpon>DlgMinioFolderPicker.cs</DependentUpon>
     </Compile>
-    <Compile Include="FrLogin.cs">
+    <Compile Include="FrmLogin.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrLogin.Designer.cs">
-      <DependentUpon>FrLogin.cs</DependentUpon>
+    <Compile Include="FrmLogin.Designer.cs">
+      <DependentUpon>FrmLogin.cs</DependentUpon>
     </Compile>
     <Compile Include="FrmMain.cs">
       <SubType>Form</SubType>
@@ -362,41 +362,41 @@
     <Compile Include="FrmMain.Designer.cs">
       <DependentUpon>FrmMain.cs</DependentUpon>
     </Compile>
-    <Compile Include="FrSetting.cs">
+    <Compile Include="FrmSetting.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrSetting.Designer.cs">
-      <DependentUpon>FrSetting.cs</DependentUpon>
+    <Compile Include="FrmSetting.Designer.cs">
+      <DependentUpon>FrmSetting.cs</DependentUpon>
     </Compile>
-    <Compile Include="FrSnDebugInfo.Designer.cs">
-      <DependentUpon>FrSnDebugInfo.cs</DependentUpon>
+    <Compile Include="FrmSnDebugInfo.Designer.cs">
+      <DependentUpon>FrmSnDebugInfo.cs</DependentUpon>
     </Compile>
-    <Compile Include="FrWelcome.cs">
+    <Compile Include="FrmSplash.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrWelcome.Designer.cs">
-      <DependentUpon>FrWelcome.cs</DependentUpon>
+    <Compile Include="FrmSplash.Designer.cs">
+      <DependentUpon>FrmSplash.cs</DependentUpon>
     </Compile>
-    <Compile Include="HeatMapControl2.cs">
+    <Compile Include="UcHeatMap.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="HeatMapControl2.Designer.cs">
-      <DependentUpon>HeatMapControl2.cs</DependentUpon>
+    <Compile Include="UcHeatMap.Designer.cs">
+      <DependentUpon>UcHeatMap.cs</DependentUpon>
     </Compile>
-    <Compile Include="QueryControl.cs">
+    <Compile Include="UcDefectQuery.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="QueryControl.Designer.cs">
-      <DependentUpon>QueryControl.cs</DependentUpon>
+    <Compile Include="UcDefectQuery.Designer.cs">
+      <DependentUpon>UcDefectQuery.cs</DependentUpon>
     </Compile>
-    <Compile Include="FrSnDebugInfo.cs">
+    <Compile Include="FrmSnDebugInfo.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrPipelineMonitor.cs">
+    <Compile Include="FrmPipelineMonitor.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrPipelineMonitor.Designer.cs">
-      <DependentUpon>FrPipelineMonitor.cs</DependentUpon>
+    <Compile Include="FrmPipelineMonitor.Designer.cs">
+      <DependentUpon>FrmPipelineMonitor.cs</DependentUpon>
     </Compile>
     <Compile Include="Machine.cs" />
     <Compile Include="MachinePanel.cs">
@@ -404,136 +404,136 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SettingPages\FrKeyDefectConfig.cs">
+    <Compile Include="SettingPages\PgSettingKeyDefect.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="SettingPages\FrKeyDefectConfig.Designer.cs">
-      <DependentUpon>FrKeyDefectConfig.cs</DependentUpon>
+    <Compile Include="SettingPages\PgSettingKeyDefect.Designer.cs">
+      <DependentUpon>PgSettingKeyDefect.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingPages\FrShortcutConfig.cs">
+    <Compile Include="SettingPages\PgSettingShortcut.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="SettingPages\FrShortcutConfig.Designer.cs">
-      <DependentUpon>FrShortcutConfig.cs</DependentUpon>
+    <Compile Include="SettingPages\PgSettingShortcut.Designer.cs">
+      <DependentUpon>PgSettingShortcut.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingPages\MachineStatusCard.cs">
+    <Compile Include="SettingPages\UcMachineStatusCard.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="SettingPages\MachineStatusCard.Designer.cs">
-      <DependentUpon>MachineStatusCard.cs</DependentUpon>
+    <Compile Include="SettingPages\UcMachineStatusCard.Designer.cs">
+      <DependentUpon>UcMachineStatusCard.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingPages\MachineStatusPanel.cs">
+    <Compile Include="SettingPages\UcMachineStatusPanel.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="SettingPages\MachineStatusPanel.Designer.cs">
-      <DependentUpon>MachineStatusPanel.cs</DependentUpon>
+    <Compile Include="SettingPages\UcMachineStatusPanel.Designer.cs">
+      <DependentUpon>UcMachineStatusPanel.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingPages\FrAIConfig.cs">
+    <Compile Include="SettingPages\PgSettingAi.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="SettingPages\FrAIConfig.Designer.cs">
-      <DependentUpon>FrAIConfig.cs</DependentUpon>
+    <Compile Include="SettingPages\PgSettingAi.Designer.cs">
+      <DependentUpon>PgSettingAi.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingPages\FrBaseConfig.cs">
+    <Compile Include="SettingPages\PgSettingBase.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="SettingPages\FrBaseConfig.Designer.cs">
-      <DependentUpon>FrBaseConfig.cs</DependentUpon>
+    <Compile Include="SettingPages\PgSettingBase.Designer.cs">
+      <DependentUpon>PgSettingBase.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingPages\FrHWConfig.cs">
+    <Compile Include="SettingPages\PgSettingHardware.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="SettingPages\FrHWConfig.Designer.cs">
-      <DependentUpon>FrHWConfig.cs</DependentUpon>
+    <Compile Include="SettingPages\PgSettingHardware.Designer.cs">
+      <DependentUpon>PgSettingHardware.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingPages\FrStationCofig.cs">
+    <Compile Include="SettingPages\DlgStationConfig.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="SettingPages\FrStationCofig.Designer.cs">
-      <DependentUpon>FrStationCofig.cs</DependentUpon>
+    <Compile Include="SettingPages\DlgStationConfig.Designer.cs">
+      <DependentUpon>DlgStationConfig.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingPages\FrLevelDbConfig.cs">
+    <Compile Include="SettingPages\PgSettingDatabase.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="SettingPages\FrLevelDbConfig.Designer.cs">
-      <DependentUpon>FrLevelDbConfig.cs</DependentUpon>
+    <Compile Include="SettingPages\PgSettingDatabase.Designer.cs">
+      <DependentUpon>PgSettingDatabase.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingPages\FrUserManagement.cs">
+    <Compile Include="SettingPages\FrmUserManagement.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="SettingPages\FrUserManagement.Designer.cs">
-      <DependentUpon>FrUserManagement.cs</DependentUpon>
+    <Compile Include="SettingPages\FrmUserManagement.Designer.cs">
+      <DependentUpon>FrmUserManagement.cs</DependentUpon>
     </Compile>
     <Compile Include="Services\LotStatisticsCalculator.cs" />
     <Compile Include="SortableBindingList.cs" />
     <Compile Include="StyledButton.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="ValidationTestResultControl.cs">
+    <Compile Include="UcValidationTestResult.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="ValidationTestResultControl.Designer.cs">
-      <DependentUpon>ValidationTestResultControl.cs</DependentUpon>
+    <Compile Include="UcValidationTestResult.Designer.cs">
+      <DependentUpon>UcValidationTestResult.cs</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="AIReviewControl.resx">
-      <DependentUpon>AIReviewControl.cs</DependentUpon>
+    <EmbeddedResource Include="UcAiReview.resx">
+      <DependentUpon>UcAiReview.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ConsistencyTestDashboard.resx">
-      <DependentUpon>ConsistencyTestDashboard.cs</DependentUpon>
+    <EmbeddedResource Include="UcConsistencyTestDashboard.resx">
+      <DependentUpon>UcConsistencyTestDashboard.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="DefectImageItemControl.resx">
-      <DependentUpon>DefectImageItemControl.cs</DependentUpon>
+    <EmbeddedResource Include="UcDefectImageItem.resx">
+      <DependentUpon>UcDefectImageItem.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FrMinioFolderPicker.resx">
-      <DependentUpon>FrMinioFolderPicker.cs</DependentUpon>
+    <EmbeddedResource Include="DlgMinioFolderPicker.resx">
+      <DependentUpon>DlgMinioFolderPicker.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FrPipelineMonitor.resx">
-      <DependentUpon>FrPipelineMonitor.cs</DependentUpon>
+    <EmbeddedResource Include="FrmPipelineMonitor.resx">
+      <DependentUpon>FrmPipelineMonitor.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FrSearch.resx">
-      <DependentUpon>FrSearch.cs</DependentUpon>
+    <EmbeddedResource Include="FrmLotHistory.resx">
+      <DependentUpon>FrmLotHistory.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingPages\FrKeyDefectConfig.resx">
-      <DependentUpon>FrKeyDefectConfig.cs</DependentUpon>
+    <EmbeddedResource Include="SettingPages\PgSettingKeyDefect.resx">
+      <DependentUpon>PgSettingKeyDefect.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingPages\FrShortcutConfig.resx">
-      <DependentUpon>FrShortcutConfig.cs</DependentUpon>
+    <EmbeddedResource Include="SettingPages\PgSettingShortcut.resx">
+      <DependentUpon>PgSettingShortcut.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ValidationTestResultControl.resx">
-      <DependentUpon>ValidationTestResultControl.cs</DependentUpon>
+    <EmbeddedResource Include="UcValidationTestResult.resx">
+      <DependentUpon>UcValidationTestResult.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ToolboxControl.resx">
-      <DependentUpon>ToolboxControl.cs</DependentUpon>
+    <EmbeddedResource Include="UcStatisticsToolbox.resx">
+      <DependentUpon>UcStatisticsToolbox.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="DefectDetailControl.resx">
-      <DependentUpon>DefectDetailControl.cs</DependentUpon>
+    <EmbeddedResource Include="UcDefectDetail.resx">
+      <DependentUpon>UcDefectDetail.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FrAlarm.resx">
-      <DependentUpon>FrAlarm.cs</DependentUpon>
+    <EmbeddedResource Include="FrmAlarm.resx">
+      <DependentUpon>FrmAlarm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FrChart.resx">
-      <DependentUpon>FrChart.cs</DependentUpon>
+    <EmbeddedResource Include="FrmChart.resx">
+      <DependentUpon>FrmChart.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FrHome.resx">
-      <DependentUpon>FrHome.cs</DependentUpon>
+    <EmbeddedResource Include="FrmHome.resx">
+      <DependentUpon>FrmHome.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FrLogin.resx">
-      <DependentUpon>FrLogin.cs</DependentUpon>
+    <EmbeddedResource Include="FrmLogin.resx">
+      <DependentUpon>FrmLogin.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FrmMain.resx">
       <DependentUpon>FrmMain.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FrSetting.resx">
-      <DependentUpon>FrSetting.cs</DependentUpon>
+    <EmbeddedResource Include="FrmSetting.resx">
+      <DependentUpon>FrmSetting.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FrWelcome.resx">
-      <DependentUpon>FrWelcome.cs</DependentUpon>
+    <EmbeddedResource Include="FrmSplash.resx">
+      <DependentUpon>FrmSplash.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="HeatMapControl2.resx">
-      <DependentUpon>HeatMapControl2.cs</DependentUpon>
+    <EmbeddedResource Include="UcHeatMap.resx">
+      <DependentUpon>UcHeatMap.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="QueryControl.resx">
-      <DependentUpon>QueryControl.cs</DependentUpon>
+    <EmbeddedResource Include="UcDefectQuery.resx">
+      <DependentUpon>UcDefectQuery.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -545,29 +545,29 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <EmbeddedResource Include="SettingPages\MachineStatusCard.resx">
-      <DependentUpon>MachineStatusCard.cs</DependentUpon>
+    <EmbeddedResource Include="SettingPages\UcMachineStatusCard.resx">
+      <DependentUpon>UcMachineStatusCard.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingPages\MachineStatusPanel.resx">
-      <DependentUpon>MachineStatusPanel.cs</DependentUpon>
+    <EmbeddedResource Include="SettingPages\UcMachineStatusPanel.resx">
+      <DependentUpon>UcMachineStatusPanel.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingPages\FrAIConfig.resx">
-      <DependentUpon>FrAIConfig.cs</DependentUpon>
+    <EmbeddedResource Include="SettingPages\PgSettingAi.resx">
+      <DependentUpon>PgSettingAi.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingPages\FrBaseConfig.resx">
-      <DependentUpon>FrBaseConfig.cs</DependentUpon>
+    <EmbeddedResource Include="SettingPages\PgSettingBase.resx">
+      <DependentUpon>PgSettingBase.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingPages\FrHWConfig.resx">
-      <DependentUpon>FrHWConfig.cs</DependentUpon>
+    <EmbeddedResource Include="SettingPages\PgSettingHardware.resx">
+      <DependentUpon>PgSettingHardware.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingPages\FrStationCofig.resx">
-      <DependentUpon>FrStationCofig.cs</DependentUpon>
+    <EmbeddedResource Include="SettingPages\DlgStationConfig.resx">
+      <DependentUpon>DlgStationConfig.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingPages\FrLevelDbConfig.resx">
-      <DependentUpon>FrLevelDbConfig.cs</DependentUpon>
+    <EmbeddedResource Include="SettingPages\PgSettingDatabase.resx">
+      <DependentUpon>PgSettingDatabase.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingPages\FrUserManagement.resx">
-      <DependentUpon>FrUserManagement.cs</DependentUpon>
+    <EmbeddedResource Include="SettingPages\FrmUserManagement.resx">
+      <DependentUpon>FrmUserManagement.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
