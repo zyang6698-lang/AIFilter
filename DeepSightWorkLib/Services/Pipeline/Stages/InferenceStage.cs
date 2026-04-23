@@ -71,7 +71,7 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
                     if (!model.IsValidationTest)
                     {
                         TaskStatusSender.SendWritingResults(model.SN, model.Side);
-                        ctx.AIResult = DefectProcessor.BuildAIResult(model, stageResult.Messages);
+                        ctx.AIResult = DefectProcessor.BuildAIResult(model, stageResult.Messages, stageResult.DefectNames);
                     }
                 }
                 else

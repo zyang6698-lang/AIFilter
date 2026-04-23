@@ -49,7 +49,10 @@ namespace DeepSightWorkLib.Services
         /// <summary>
         /// 构建 AI 回写结果（不入队）
         /// </summary>
-        public static RootAIResult BuildAIResult(VBModel info, List<string> msg)
+        /// <param name="info">VB 模型</param>
+        /// <param name="msg">每个缺陷的 OK/NG 标记列表</param>
+        /// <param name="defectNames">AI 推理返回的缺陷名称列表（用于填充 defect_code 字段）</param>
+        public static RootAIResult BuildAIResult(VBModel info, List<string> msg, List<string> defectNames = null)
         {
             var writeBackDbName = !string.IsNullOrEmpty(info.SourceWriteBackDbName)
                 ? info.SourceWriteBackDbName
@@ -96,6 +99,7 @@ namespace DeepSightWorkLib.Services
                     AiLabel = msg[i] == "0" ? "OK" : "NG",
                     AiClsType = "",
                     AiFlag = "experiment",
+                    DefectCode = defectNames != null && i < defectNames.Count ? defectNames[i] : null,
                     InferDetail = new Dictionary<string, object>(),
                 });
             }
@@ -118,7 +122,8 @@ namespace DeepSightWorkLib.Services
                         PcsIndex = info.PcsIndex[i],
                         AiLabel = "NG",
                         AiClsType = "",
-                        AiFlag = "DirectReport",
+                        AiFlag = "experiment",
+                        DefectCode= defectNames != null && i<defectNames.Count ? defectNames[i] :null,
                         InferDetail = new Dictionary<string, object>(),
                     });
                 }
@@ -268,7 +273,9 @@ namespace DeepSightWorkLib.Services
                 {
                     for (int i = 0; i < obj.Data.InferWholeData.InferResults.Count; i++)
                     {
-                        stageResult.Messages.Add(obj.Data.InferWholeData.InferResults[i].Infer_Result == "NG" ? "1" : "0");
+                        var inferResult = obj.Data.InferWholeData.InferResults[i];
+                        stageResult.Messages.Add(inferResult.Infer_Result == "NG" ? "1" : "0");
+                        stageResult.DefectNames.Add(inferResult.Defect_name);
                     }
                     stageResult.Success = true;
                 }
@@ -306,6 +313,9 @@ namespace DeepSightWorkLib.Services
 
         /// <summary>推理结果消息列表（每个缺陷的 OK/NG 标记）</summary>
         public List<string> Messages { get; set; } = new List<string>();
+
+        /// <summary>AI 推理返回的缺陷名称列表（对应 infer_results[i].defect_name）</summary>
+        public List<string> DefectNames { get; set; } = new List<string>();
 
         /// <summary>后处理模型（始终会构建，用于 PostProcess 阶段）</summary>
         public InferenceResultModel PostProcessModel { get; set; }

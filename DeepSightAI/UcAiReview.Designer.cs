@@ -51,6 +51,7 @@
             this.col_Side = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.col_AiStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.col_ManualStatus = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.col_VrsStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.col_DefectCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.col_PathIndex = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.col_DetectionDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -283,6 +284,7 @@
             this.col_Side,
             this.col_AiStatus,
             this.col_ManualStatus,
+            this.col_VrsStatus,
             this.col_DefectCount,
             this.col_PathIndex,
             this.col_DetectionDate});
@@ -390,9 +392,17 @@
             this.col_ManualStatus.Name = "col_ManualStatus";
             this.col_ManualStatus.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.col_ManualStatus.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
+            //
+            // col_VrsStatus
+            //
+            this.col_VrsStatus.DataPropertyName = "VrsStatus";
+            this.col_VrsStatus.HeaderText = "VRS状态";
+            this.col_VrsStatus.MinimumWidth = 6;
+            this.col_VrsStatus.Name = "col_VrsStatus";
+            this.col_VrsStatus.ReadOnly = true;
+            //
             // col_DefectCount
-            // 
+            //
             this.col_DefectCount.DataPropertyName = "DefectCount";
             this.col_DefectCount.HeaderText = "缺陷数";
             this.col_DefectCount.MinimumWidth = 6;
@@ -663,6 +673,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn col_Side;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_AiStatus;
         private System.Windows.Forms.DataGridViewComboBoxColumn col_ManualStatus;
+        private System.Windows.Forms.DataGridViewTextBoxColumn col_VrsStatus;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_DefectCount;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_PathIndex;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_DetectionDate;

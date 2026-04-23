@@ -93,6 +93,10 @@ namespace DeepSightDB
         [JsonProperty("ai_cls_type")]
         public string AiClsType { get; set; }
 
+        /// <summary>缺陷代码</summary>
+        [JsonProperty("defect_code")]
+        public string DefectCode { get; set; }
+
         /// <summary>AI判定依据（详情 JsonObject）</summary>
         [JsonProperty("infer_detail")]
         public Dictionary<string, object> InferDetail { get; set; }

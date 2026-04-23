@@ -190,7 +190,7 @@ namespace DeepSightWorkLib
 
                         vb_outStr = Marshal.PtrToStringAnsi(result);
                     }
-                }
+                } 
             }
             catch (Exception ex)
             {

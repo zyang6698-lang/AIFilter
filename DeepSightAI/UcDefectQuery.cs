@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using System.Linq;
 using DeepSightTool;
 using DeepSightDB;
+using DeepSightCommunication;
+using DeepSightWorkLib.Services;
 
 namespace DeepSightAI
 {
@@ -404,12 +406,94 @@ namespace DeepSightAI
                 {
                     _suppressFilterChanged = false;
                 }
+
+                // 查询完成后异步读取 VRS 历史结果并回填到 DetectInfo.VrsState
+                if (QueryResult != null && QueryResult.Count > 0)
+                {
+                    await Task.Run(() => MergeVrsHistory(QueryResult));
+                    InvalidateFilterCache();
+                }
             }
             catch (Exception ex)
             {
                 MessageBox.Show("请输入Lot号，或选择日期并选择一个料号。");
                 LogTextHelper.Error($"查询数据时发生异常：{ex.Message}");
                 QueryResult = new List<PanelDataRecord>();
+            }
+        }
+
+        /// <summary>
+        /// 从 LevelDB 读取每个 SN 的 VRS 历史结果，按 Side+PcsIndex+DefectIndex 回填 DetectInfo.VrsState，
+        /// 并根据报点聚合每个 SideData.VrsState。
+        /// </summary>
+        private static void MergeVrsHistory(List<PanelDataRecord> records)
+        {
+            try
+            {
+                var svc = new VrsHistoryService(new HttpClass());
+
+                // 相同 SN 只查询一次
+                var vrsCache = new Dictionary<string, VrsHistoryResult>(StringComparer.OrdinalIgnoreCase);
+
+                foreach (var record in records)
+                {
+                    if (string.IsNullOrEmpty(record?.SerialNumber) || record.Sides == null)
+                        continue;
+
+                    if (!vrsCache.TryGetValue(record.SerialNumber, out var vrs))
+                    {
+                        if (!svc.TryGetBySn(record.SerialNumber, out vrs))
+                            vrs = null;
+                        vrsCache[record.SerialNumber] = vrs;
+                    }
+
+                    if (vrs == null || vrs.Entries == null || vrs.Entries.Count == 0)
+                        continue;
+
+                    foreach (var side in record.Sides)
+                    {
+                        if (side == null) continue;
+
+                        var sideEntries = vrs.Entries
+                            .Where(e => string.Equals(e.Side, side.Side, StringComparison.OrdinalIgnoreCase))
+                            .ToList();
+                        if (sideEntries.Count == 0) continue;
+
+                        // 构建 (PcsIndex, DefectIndex) -> ResultCode 索引
+                        var lookup = sideEntries
+                            .GroupBy(e => (e.PcsIndex, e.DefectIndex))
+                            .ToDictionary(g => g.Key, g => g.First().ResultCode);
+
+                        if (side.DetectPoints != null)
+                        {
+                            foreach (var dp in side.DetectPoints)
+                            {
+                                if (lookup.TryGetValue((dp.PcsIndex, dp.DefectIndex), out var code))
+                                {
+                                    dp.VrsState = VrsHistoryService.MapResultCodeToVrsState(code);
+                                }
+                            }
+                        }
+
+                        // 聚合 side 级状态：任一 NG(2/5) → NG；否则任一 OK(1) → OK；否则取首个非 0 状态
+                        if (side.DetectPoints != null && side.DetectPoints.Count > 0)
+                        {
+                            if (side.DetectPoints.Any(p => p.VrsState == 2 || p.VrsState == 5))
+                                side.VrsState = 2;
+                            else if (side.DetectPoints.Any(p => p.VrsState == 1))
+                                side.VrsState = 1;
+                            else
+                            {
+                                var first = side.DetectPoints.FirstOrDefault(p => p.VrsState != 0);
+                                if (first != null) side.VrsState = first.VrsState;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"MergeVrsHistory 异常: {ex}");
             }
         }
 

@@ -43,6 +43,8 @@
             this.label_FilterAI = new System.Windows.Forms.Label();
             this.comboBox_FilterVVS = new System.Windows.Forms.ComboBox();
             this.comboBox_FilterAI = new System.Windows.Forms.ComboBox();
+            this.label_FilterVRS = new System.Windows.Forms.Label();
+            this.comboBox_FilterVRS = new System.Windows.Forms.ComboBox();
             this.panel_Top.SuspendLayout();
             this.flowLayoutPanel_Pagination.SuspendLayout();
             this.panel_Filter.SuspendLayout();
@@ -142,6 +144,8 @@
             this.panel_Filter.Controls.Add(this.flowLayoutPanel_Pagination);
             this.panel_Filter.Controls.Add(this.label_FilterDefectName);
             this.panel_Filter.Controls.Add(this.comboBox_FilterDefectName);
+            this.panel_Filter.Controls.Add(this.label_FilterVRS);
+            this.panel_Filter.Controls.Add(this.comboBox_FilterVRS);
             this.panel_Filter.Controls.Add(this.label_FilterVVS);
             this.panel_Filter.Controls.Add(this.label_FilterAI);
             this.panel_Filter.Controls.Add(this.comboBox_FilterVVS);
@@ -174,12 +178,32 @@
             //
             // btn_Export
             //
-            this.btn_Export.Location = new System.Drawing.Point(720, 10);
+            this.btn_Export.Location = new System.Drawing.Point(960, 10);
             this.btn_Export.Name = "btn_Export";
             this.btn_Export.Size = new System.Drawing.Size(80, 30);
             this.btn_Export.TabIndex = 5;
             this.btn_Export.Text = "导出";
             this.btn_Export.Click += new System.EventHandler(this.btn_Export_Click);
+            //
+            // label_FilterVRS
+            //
+            this.label_FilterVRS.AutoSize = true;
+            this.label_FilterVRS.Font = new System.Drawing.Font("微软雅黑", 9F);
+            this.label_FilterVRS.ForeColor = System.Drawing.Color.White;
+            this.label_FilterVRS.Location = new System.Drawing.Point(720, 16);
+            this.label_FilterVRS.Name = "label_FilterVRS";
+            this.label_FilterVRS.Size = new System.Drawing.Size(83, 20);
+            this.label_FilterVRS.TabIndex = 8;
+            this.label_FilterVRS.Text = "VRS Filter:";
+            //
+            // comboBox_FilterVRS
+            //
+            this.comboBox_FilterVRS.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBox_FilterVRS.FormattingEnabled = true;
+            this.comboBox_FilterVRS.Location = new System.Drawing.Point(809, 14);
+            this.comboBox_FilterVRS.Name = "comboBox_FilterVRS";
+            this.comboBox_FilterVRS.Size = new System.Drawing.Size(140, 28);
+            this.comboBox_FilterVRS.TabIndex = 9;
             // 
             // label_FilterVVS
             // 
@@ -257,5 +281,7 @@
         private DeepSightAI.StyledButton btn_Export;
         private System.Windows.Forms.Label label_FilterDefectName;
         private System.Windows.Forms.ComboBox comboBox_FilterDefectName;
+        private System.Windows.Forms.Label label_FilterVRS;
+        private System.Windows.Forms.ComboBox comboBox_FilterVRS;
     }
 }

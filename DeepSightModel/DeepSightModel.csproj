@@ -110,6 +110,7 @@
     <Compile Include="TaskStatusInfo.cs" />
     <Compile Include="ValidationTestModel.cs" />
     <Compile Include="VBInfo.cs" />
+    <Compile Include="VrsHistoryResult.cs" />
     <Compile Include="SnDebugInfo.cs" />
     <Compile Include="PanelData.cs" />
     <Compile Include="VBModel.cs" />

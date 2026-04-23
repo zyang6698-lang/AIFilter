@@ -1375,6 +1375,7 @@ namespace DeepSightAI
                 OriginalAviState = sideData.AviState,
                 OriginalAiState = sideData.AiState,
                 ManualStatus = sideData.VvsState == 0 ? "未判定" : sideData.VvsState == 1 ? "OK" : "NG",
+                VrsStatus = GetVrsStatusText(sideData.VrsState),
                 DefectCount = sideData.DetectPoints?.Count ?? 0,
                 DefectName = defectNameStr,
                 DetectionDate = panel.DetectionDate,
@@ -1395,6 +1396,24 @@ namespace DeepSightAI
                 case 2: return "NG";
                 case 3: return "异常";
                 default: return status.ToString();
+            }
+        }
+
+        /// <summary>
+        /// 将 VRS 状态码转换为显示文本
+        /// 约定：0=未判定, 1=OK, 2=NG, 3=忽略, 4=无结果, 5=NG不接收
+        /// </summary>
+        private static string GetVrsStatusText(int vrsState)
+        {
+            switch (vrsState)
+            {
+                case 0: return "未判定";
+                case 1: return "OK";
+                case 2: return "NG";
+                case 3: return "忽略";
+                case 4: return "无结果";
+                case 5: return "NG不接收";
+                default: return vrsState.ToString();
             }
         }
 
@@ -1653,6 +1672,10 @@ namespace DeepSightAI
         public string AviStatus { get; set; }
         public string AiStatus { get; set; }
         public string ManualStatus { get; set; }
+        /// <summary>
+        /// VRS 终判状态显示文本（未判定/OK/NG/忽略/无结果/NG不接收）
+        /// </summary>
+        public string VrsStatus { get; set; }
         public int DefectCount { get; set; }
         /// <summary>
         /// 缺陷名称列表，多个缺陷名用逗号分隔

@@ -24,6 +24,7 @@ namespace DeepSightAI
         private int _totalPages;
         private string _aiFilter = "All";
         private string _vvsFilter = "All";
+        private string _vrsFilter = "All";
         private string _defectNameFilter = "All";
 
         // 存储原始的DefectReviewItem列表，用于按SN分组检查VVS状态
@@ -94,6 +95,15 @@ namespace DeepSightAI
                 ApplyFiltersAndReload();
             };
 
+            // VRS Filter
+            this.comboBox_FilterVRS.Items.AddRange(new object[] { "All", "VRS_OK", "VRS_NG", "VRS_Ignore", "VRS_NoResult", "VRS_NotAcceptNg", "NotSet" });
+            this.comboBox_FilterVRS.SelectedIndex = 0;
+            this.comboBox_FilterVRS.SelectedIndexChanged += (s, e) =>
+            {
+                _vrsFilter = this.comboBox_FilterVRS.SelectedItem.ToString();
+                ApplyFiltersAndReload();
+            };
+
             // Defect Name Filter - 事件绑定在PopulateDefectNameFilter中管理
         }
 
@@ -159,6 +169,24 @@ namespace DeepSightAI
                     int targetVvsStatus = _vvsFilter == "VVS_OK" ? 1 : 2;
                     _filteredHeatPoints = _filteredHeatPoints.Where(p => p.VVSStatus == targetVvsStatus).ToList();
                 }
+            }
+
+            if (_vrsFilter != "All")
+            {
+                // VrsState: 0=未判定, 1=OK, 2=NG, 3=忽略, 4=无结果, 5=NG不接收
+                int targetVrsState;
+                switch (_vrsFilter)
+                {
+                    case "NotSet": targetVrsState = 0; break;
+                    case "VRS_OK": targetVrsState = 1; break;
+                    case "VRS_NG": targetVrsState = 2; break;
+                    case "VRS_Ignore": targetVrsState = 3; break;
+                    case "VRS_NoResult": targetVrsState = 4; break;
+                    case "VRS_NotAcceptNg": targetVrsState = 5; break;
+                    default: targetVrsState = -1; break;
+                }
+                if (targetVrsState >= 0)
+                    _filteredHeatPoints = _filteredHeatPoints.Where(p => p.VrsState == targetVrsState).ToList();
             }
 
             if (_defectNameFilter != "All")
@@ -439,9 +467,11 @@ namespace DeepSightAI
             // Reset filters
             _aiFilter = "All";
             _vvsFilter = "All";
+            _vrsFilter = "All";
             _defectNameFilter = "All";
             comboBox_FilterAI.SelectedIndex = 0;
             comboBox_FilterVVS.SelectedIndex = 0;
+            comboBox_FilterVRS.SelectedIndex = 0;
             PopulateDefectNameFilter();
 
             LoadDefectsPage(_currentPage);

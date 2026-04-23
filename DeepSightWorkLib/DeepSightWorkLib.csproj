@@ -193,6 +193,7 @@
     <Compile Include="Services\ConsistencyTestDataStore.cs" />
     <Compile Include="Services\ModelValidationTestService.cs" />
     <Compile Include="Services\VBModelBuilder.cs" />
+    <Compile Include="Services\VrsHistoryService.cs" />
     <Compile Include="Interfaces\IPanelDataConverter.cs" />
   </ItemGroup>
   <ItemGroup>
