@@ -117,6 +117,11 @@ namespace DeepSightModel
         /// 回写VRS的JSON（发送给LevelDB的完整请求体）
         /// </summary>
         public string VrsWriteBackJson { get; set; }
+
+        /// <summary>
+        /// 回写VRS V1.0的JSON（发送给LevelDB的完整请求体，数据库V1.0回写用）
+        /// </summary>
+        public string VrsV1WriteBackJson { get; set; }
     }
 
     /// <summary>

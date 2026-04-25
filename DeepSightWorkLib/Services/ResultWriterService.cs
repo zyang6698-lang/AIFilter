@@ -6,6 +6,7 @@ using DeepSightTool;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DeepSightWorkLib.Services
 {
@@ -58,6 +59,60 @@ namespace DeepSightWorkLib.Services
                     else
                     {
                         LogTextHelper.Warn($"SN:{aiResult.SN} Side:{aiResult.Side} VRS回写失败");
+                    }
+                }
+
+                // === 3. 发送 VRS V1.0 数据（回写数据库V1.0）===
+                if (aiResult.AIDetailResultItems != null && aiResult.AIDetailResultItems.Count > 0
+                    && !string.IsNullOrEmpty(aiResult.VRSTargetUrl))
+                {
+                    // 从配置中查找 VRSWriteBackDbNameV1（默认 "ai_inference_result"）
+                    string vrsDbNameV1 = "ai_inference_result";
+                    try
+                    {
+                        var config = LevelDbConfigManager.Instance.Databases
+                            .FirstOrDefault(db => db.IsEnabled);
+                        if (config != null)
+                            vrsDbNameV1 = config.VRSWriteBackDbNameV1;
+                    }
+                    catch { /* 配置读取失败不影响主流程 */ }
+
+                    // 构建扁平化的 value 数组：side_pcsindex_defectindex_状态码
+                    var valueList = new List<string>();
+                    foreach (var item in aiResult.AIDetailResultItems)
+                    {
+                        string statusCode = item.AiLabel == "OK" ? "0"
+                                          : item.AiLabel == "NG" ? "1"
+                                          : "2";
+                        valueList.Add($"{aiResult.Side}_{item.PcsIndex}_{item.Index}_{statusCode}");
+                    }
+
+                    var vrsV1DbInfo = new RootDbInfo
+                    {
+                        uniqueKey = Guid.NewGuid().ToString(),
+                        db_name = vrsDbNameV1,
+                        operation = "put",
+                        op_mode = "all_ow",
+                        key = $"{aiResult.SN}_{aiResult.Side}",
+                        value = JsonConvert.SerializeObject(valueList),
+                    };
+
+                    // 存储VRS V1.0回写JSON到调试缓存
+                    try
+                    {
+                        var vrsV1DebugInfo = SnDebugInfoCache.GetOrCreate(aiResult.SN, aiResult.Side);
+                        vrsV1DebugInfo.VrsV1WriteBackJson = JsonConvert.SerializeObject(vrsV1DbInfo, Formatting.Indented);
+                    }
+                    catch { /* 调试信息存储失败不影响业务 */ }
+
+                    LogTextHelper.Info($"SN:{aiResult.SN} Side:{aiResult.Side} 回写VRS V1.0到 URL:{aiResult.VRSTargetUrl}, DB:{vrsDbNameV1}");
+                    if (_httpDb.HttpPostMethod(aiResult.VRSTargetUrl, vrsV1DbInfo, 1, out string vrsV1Result))
+                    {
+                        LogTextHelper.Info($"SN:{aiResult.SN} Side:{aiResult.Side} VRS V1.0回写成功");
+                    }
+                    else
+                    {
+                        LogTextHelper.Warn($"SN:{aiResult.SN} Side:{aiResult.Side} VRS V1.0回写失败");
                     }
                 }
 

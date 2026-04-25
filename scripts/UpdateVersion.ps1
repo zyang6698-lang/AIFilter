@@ -25,8 +25,9 @@ $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot  = Split-Path -Parent $scriptDir
 
 function Get-CurrentVersionFromTag {
-    $tag = git describe --tags --match "$TagPrefix*" --abbrev=0 2>$null
-    if (-not $tag) { return @{ Tag = $null; Major = 0; Minor = 0; Patch = 0 } }
+    $tag = $null
+    try { $tag = git describe --tags --match "$TagPrefix*" --abbrev=0 2>$null } catch {}
+    if ($LASTEXITCODE -ne 0 -or -not $tag) { return @{ Tag = $null; Major = 0; Minor = 0; Patch = 0 } }
     $ver = ($tag -replace "^$TagPrefix", "")
     $p = $ver.Split(".")
     return @{
@@ -59,16 +60,16 @@ if ($Bump -ne "") {
     }
 }
 elseif ($Version -eq "") {
-    $gitDescribe = git describe --tags --match "$TagPrefix*" --abbrev=0 2>$null
-    if (-not $gitDescribe) {
+    try { $gitDescribe = git describe --tags --match "$TagPrefix*" --abbrev=0 2>$null } catch {}
+    if ($LASTEXITCODE -ne 0 -or -not $gitDescribe) {
         Write-Warning "No git tag found, using 0.0.0.0"
         $Version = "0.0.0.0"
     } else {
         $Version = ($gitDescribe -replace "^$TagPrefix", "")
     }
-    if ($gitDescribe) {
+    if ($LASTEXITCODE -eq 0 -and $gitDescribe) {
         $commitCount = git rev-list "$gitDescribe..HEAD" --count 2>$null
-        if (-not $commitCount) { $commitCount = "0" }
+        if ($LASTEXITCODE -ne 0 -or -not $commitCount) { $commitCount = "0" }
     }
 }
 

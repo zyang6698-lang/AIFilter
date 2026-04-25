@@ -83,6 +83,7 @@ namespace DeepSightAI.SettingPages
                     row.Cells["colPort"].Value = db.Port;
                     row.Cells["colWriteBackDbName"].Value = db.WriteBackDbName;
                     row.Cells["colVRSWriteBackDbName"].Value = db.VRSWriteBackDbName;
+                    row.Cells["colVRSWriteBackDbNameV1"].Value = db.VRSWriteBackDbNameV1;
                     row.Cells["colConnectionStatus"].Value = "未测试";
                     row.Cells["colIsEnabled"].Value = db.IsEnabled;
                     row.Cells["colMinioIpA"].Value = db.MinioIpA;
@@ -109,6 +110,7 @@ namespace DeepSightAI.SettingPages
             row.Cells["colPort"].Value = "9877";
             row.Cells["colWriteBackDbName"].Value = "filter_time_to_airesults";
             row.Cells["colVRSWriteBackDbName"].Value = "ai_detail_results_tovrs";
+            row.Cells["colVRSWriteBackDbNameV1"].Value = "ai_inference_result";
             row.Cells["colConnectionStatus"].Value = "未测试";
             row.Cells["colIsEnabled"].Value = false;
             row.Cells["colMinioIpA"].Value = "127.0.0.1";
@@ -169,6 +171,7 @@ namespace DeepSightAI.SettingPages
                         Port = row.Cells["colPort"].Value?.ToString() ?? "9877",
                         WriteBackDbName = row.Cells["colWriteBackDbName"].Value?.ToString() ?? "filter_time_to_airesults",
                         VRSWriteBackDbName = row.Cells["colVRSWriteBackDbName"].Value?.ToString() ?? "ai_detail_results_tovrs",
+                        VRSWriteBackDbNameV1 = row.Cells["colVRSWriteBackDbNameV1"].Value?.ToString() ?? "ai_inference_result",
                         IsEnabled = row.Cells["colIsEnabled"].Value != null && (bool)row.Cells["colIsEnabled"].Value,
                         MinioIpA = row.Cells["colMinioIpA"].Value?.ToString() ?? "127.0.0.1",
                         MinioIpB = row.Cells["colMinioIpB"].Value?.ToString() ?? "127.0.0.1"

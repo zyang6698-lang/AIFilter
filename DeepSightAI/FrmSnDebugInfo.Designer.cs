@@ -32,6 +32,8 @@
             this.tvAviWriteBackJson = new System.Windows.Forms.TreeView();
             this.tabVrsWriteBack = new System.Windows.Forms.TabPage();
             this.tvVrsWriteBackJson = new System.Windows.Forms.TreeView();
+            this.tabVrsV1WriteBack = new System.Windows.Forms.TabPage();
+            this.tvVrsV1WriteBackJson = new System.Windows.Forms.TreeView();
             this.tabOther = new System.Windows.Forms.TabPage();
             this.txtOtherInfo = new System.Windows.Forms.RichTextBox();
             this.btnPanel = new System.Windows.Forms.Panel();
@@ -50,6 +52,7 @@
             this.tabInferAnalysis.SuspendLayout();
             this.tabAviWriteBack.SuspendLayout();
             this.tabVrsWriteBack.SuspendLayout();
+            this.tabVrsV1WriteBack.SuspendLayout();
             this.tabOther.SuspendLayout();
             this.btnPanel.SuspendLayout();
             this.searchPanel.SuspendLayout();
@@ -76,6 +79,7 @@
                 this.tabInferAnalysis,
                 this.tabAviWriteBack,
                 this.tabVrsWriteBack,
+                this.tabVrsV1WriteBack,
                 this.tabOther});
             this.tabControl.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.TabControl_DrawItem);
             this.tabControl.SelectedIndexChanged += new System.EventHandler(this.TabControl_SelectedIndexChanged);
@@ -241,6 +245,29 @@
             this.tvVrsWriteBackJson.FullRowSelect = true;
             this.tvVrsWriteBackJson.ItemHeight = 24;
             //
+            // tabVrsV1WriteBack
+            //
+            this.tabVrsV1WriteBack.Controls.Add(this.tvVrsV1WriteBackJson);
+            this.tabVrsV1WriteBack.Location = new System.Drawing.Point(4, 34);
+            this.tabVrsV1WriteBack.Name = "tabVrsV1WriteBack";
+            this.tabVrsV1WriteBack.Size = new System.Drawing.Size(1176, 777);
+            this.tabVrsV1WriteBack.TabIndex = 9;
+            this.tabVrsV1WriteBack.Text = "回写VRS V1.0 JSON";
+            //
+            // tvVrsV1WriteBackJson
+            //
+            this.tvVrsV1WriteBackJson.BackColor = System.Drawing.Color.FromArgb(20, 35, 45);
+            this.tvVrsV1WriteBackJson.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tvVrsV1WriteBackJson.Font = new System.Drawing.Font("Consolas", 11F);
+            this.tvVrsV1WriteBackJson.ForeColor = System.Drawing.Color.FromArgb(200, 220, 240);
+            this.tvVrsV1WriteBackJson.Location = new System.Drawing.Point(0, 0);
+            this.tvVrsV1WriteBackJson.Name = "tvVrsV1WriteBackJson";
+            this.tvVrsV1WriteBackJson.Size = new System.Drawing.Size(1176, 777);
+            this.tvVrsV1WriteBackJson.TabIndex = 0;
+            this.tvVrsV1WriteBackJson.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.tvVrsV1WriteBackJson.FullRowSelect = true;
+            this.tvVrsV1WriteBackJson.ItemHeight = 24;
+            //
             // tabOther
             //
             this.tabOther.Controls.Add(this.txtOtherInfo);
@@ -393,6 +420,7 @@
             this.tabInferAnalysis.ResumeLayout(false);
             this.tabAviWriteBack.ResumeLayout(false);
             this.tabVrsWriteBack.ResumeLayout(false);
+            this.tabVrsV1WriteBack.ResumeLayout(false);
             this.tabOther.ResumeLayout(false);
             this.btnPanel.ResumeLayout(false);
             this.searchPanel.ResumeLayout(false);
@@ -417,6 +445,8 @@
         private System.Windows.Forms.TreeView tvAviWriteBackJson;
         private System.Windows.Forms.TabPage tabVrsWriteBack;
         private System.Windows.Forms.TreeView tvVrsWriteBackJson;
+        private System.Windows.Forms.TabPage tabVrsV1WriteBack;
+        private System.Windows.Forms.TreeView tvVrsV1WriteBackJson;
         private System.Windows.Forms.TabPage tabOther;
         private System.Windows.Forms.RichTextBox txtOtherInfo;
         private System.Windows.Forms.Panel btnPanel;

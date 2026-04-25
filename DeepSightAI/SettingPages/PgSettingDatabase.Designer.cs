@@ -41,6 +41,7 @@
             this.colPort = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colWriteBackDbName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colVRSWriteBackDbName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colVRSWriteBackDbNameV1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colConnectionStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTestConnection = new System.Windows.Forms.DataGridViewButtonColumn();
             this.colIsEnabled = new System.Windows.Forms.DataGridViewCheckBoxColumn();
@@ -86,6 +87,7 @@
             this.colPort,
             this.colWriteBackDbName,
             this.colVRSWriteBackDbName,
+            this.colVRSWriteBackDbNameV1,
             this.colConnectionStatus,
             this.colTestConnection,
             this.colIsEnabled,
@@ -209,6 +211,13 @@
             this.colVRSWriteBackDbName.Name = "colVRSWriteBackDbName";
             this.colVRSWriteBackDbName.Width = 150;
             // 
+            // colVRSWriteBackDbNameV1
+            // 
+            this.colVRSWriteBackDbNameV1.HeaderText = "VRS回写数据库V1.0";
+            this.colVRSWriteBackDbNameV1.MinimumWidth = 6;
+            this.colVRSWriteBackDbNameV1.Name = "colVRSWriteBackDbNameV1";
+            this.colVRSWriteBackDbNameV1.Width = 150;
+            // 
             // colConnectionStatus
             // 
             this.colConnectionStatus.HeaderText = "连接状态";
@@ -308,6 +317,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn colPort;
         private System.Windows.Forms.DataGridViewTextBoxColumn colWriteBackDbName;
         private System.Windows.Forms.DataGridViewTextBoxColumn colVRSWriteBackDbName;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colVRSWriteBackDbNameV1;
         private System.Windows.Forms.DataGridViewTextBoxColumn colConnectionStatus;
         private System.Windows.Forms.DataGridViewButtonColumn colTestConnection;
         private System.Windows.Forms.DataGridViewCheckBoxColumn colIsEnabled;

@@ -191,6 +191,7 @@ namespace DeepSightAI
                 SetTreeViewPlaceholder(tvInferenceReturnJson, "暂无数据");
                 SetTreeViewPlaceholder(tvAviWriteBackJson, "暂无数据");
                 SetTreeViewPlaceholder(tvVrsWriteBackJson, "暂无数据");
+                SetTreeViewPlaceholder(tvVrsV1WriteBackJson, "暂无数据");
                 SetTreeViewPlaceholder(tvInferAnalysis, "暂无数据");
                 txtOtherInfo.Text = "暂无数据";
                 tabControl.Invalidate(); // 刷新Tab绘制
@@ -220,6 +221,9 @@ namespace DeepSightAI
 
                 // 回写VRS JSON
                 LoadJsonToTreeView(tvVrsWriteBackJson, tabVrsWriteBack, debugInfo.VrsWriteBackJson);
+
+                // 回写VRS V1.0 JSON
+                LoadJsonToTreeView(tvVrsV1WriteBackJson, tabVrsV1WriteBack, debugInfo.VrsV1WriteBackJson);
 
                 // Other info
                 sbOther.AppendLine($"SN:              {debugInfo.SerialNumber}");
@@ -258,6 +262,7 @@ namespace DeepSightAI
             _tabStatusMap[tabInferAnalysis] = !string.IsNullOrEmpty(debugInfo.InferenceReturnJson) ? TabDataStatus.HasData : TabDataStatus.Empty;
             _tabStatusMap[tabAviWriteBack] = !string.IsNullOrEmpty(debugInfo.AviWriteBackJson) ? TabDataStatus.HasData : TabDataStatus.Empty;
             _tabStatusMap[tabVrsWriteBack] = !string.IsNullOrEmpty(debugInfo.VrsWriteBackJson) ? TabDataStatus.HasData : TabDataStatus.Empty;
+            _tabStatusMap[tabVrsV1WriteBack] = !string.IsNullOrEmpty(debugInfo.VrsV1WriteBackJson) ? TabDataStatus.HasData : TabDataStatus.Empty;
             _tabStatusMap[tabOther] = debugInfo.HasError ? TabDataStatus.Error : TabDataStatus.HasData;
 
             tabControl.Invalidate(); // 刷新Tab绘制
