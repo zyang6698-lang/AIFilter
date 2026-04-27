@@ -36,6 +36,7 @@ namespace DeepSightAI
             this.lbl_username = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblPageInfo = new System.Windows.Forms.ToolStripStatusLabel();
             this.solutionAndflow = new System.Windows.Forms.ToolStripStatusLabel();
+            this.lblPendingDbCount = new System.Windows.Forms.ToolStripStatusLabel();
             this.panel10 = new System.Windows.Forms.Panel();
             this.panel7 = new System.Windows.Forms.Panel();
             this.panel6 = new System.Windows.Forms.Panel();
@@ -133,7 +134,8 @@ namespace DeepSightAI
             this.lbl_curTime,
             this.lbl_username,
             this.lblPageInfo,
-            this.solutionAndflow});
+            this.solutionAndflow,
+            this.lblPendingDbCount});
             this.statusStrip.Location = new System.Drawing.Point(0, 552);
             this.statusStrip.Name = "statusStrip";
             this.statusStrip.Padding = new System.Windows.Forms.Padding(14, 0, 2, 0);
@@ -176,7 +178,15 @@ namespace DeepSightAI
             this.solutionAndflow.Size = new System.Drawing.Size(288, 17);
             this.solutionAndflow.Text = "当前方案:1_当前流程:1_当前Switch:false";
             this.solutionAndflow.Visible = false;
-            // 
+            //
+            // lblPendingDbCount
+            //
+            this.lblPendingDbCount.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Right;
+            this.lblPendingDbCount.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.lblPendingDbCount.Name = "lblPendingDbCount";
+            this.lblPendingDbCount.Size = new System.Drawing.Size(133, 17);
+            this.lblPendingDbCount.Text = "未存数据库：0";
+            //
             // panel10
             //
             this.panel10.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
@@ -777,6 +787,7 @@ namespace DeepSightAI
         private System.Windows.Forms.PictureBox btnSearch;
         private System.Windows.Forms.Panel panel8;
         public System.Windows.Forms.ToolStripStatusLabel solutionAndflow;
+        public System.Windows.Forms.ToolStripStatusLabel lblPendingDbCount;
     }
 }
 

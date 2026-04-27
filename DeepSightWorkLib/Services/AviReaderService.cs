@@ -2,6 +2,7 @@
 using DeepSightDB;
 using DeepSightEvent;
 using DeepSightModel;
+using DeepSightModel.Configuration;
 using DeepSightTool;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -294,28 +295,31 @@ namespace DeepSightWorkLib.Services
 
                 LogTextHelper.Info($"SN:{serialNumber} Side:{side} 已标记为处理中，当前处理集合大小：{_processingSnSet.Count}");
 
-                // 根据 side 信息从当前 LevelDB 配置中获取对应的 MinIO IP
-                // A面使用 MinioIpA，B面使用 MinioIpB，未配置时回退到 LevelDB 数据中的 MinioIp
+                // 根据 side 信息从当前 LevelDB 配置中获取对应的 MinIO IP 和 Port
+                // A面使用 MinioIpA，B面使用 MinioIpB，端口统一使用 MinioSettings.DefaultPort
+                // 仅当 config 未配置对应面 IP 时，才回退到 LevelDB 数据中的 MinioIp/MinioPort
                 string minioIp;
+                string minioPort;
                 if (string.Equals(side, "A", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(config.MinioIpA))
                 {
                     minioIp = config.MinioIpA;
-                    LogTextHelper.Info($"SN:{serialNumber} Side:{side} 使用配置的A面MinIO IP: {minioIp} (来源DB:{config.DbName})");
+                    minioPort = MinioSettings.Instance.DefaultPort;
+                    LogTextHelper.Info($"SN:{serialNumber} Side:{side} 使用配置的A面MinIO: {minioIp}:{minioPort} (来源DB:{config.DbName})");
                 }
                 else if (string.Equals(side, "B", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(config.MinioIpB))
                 {
                     minioIp = config.MinioIpB;
-                    LogTextHelper.Info($"SN:{serialNumber} Side:{side} 使用配置的B面MinIO IP: {minioIp} (来源DB:{config.DbName})");
+                    minioPort = MinioSettings.Instance.DefaultPort;
+                    LogTextHelper.Info($"SN:{serialNumber} Side:{side} 使用配置的B面MinIO: {minioIp}:{minioPort} (来源DB:{config.DbName})");
                 }
                 else
                 {
                     minioIp = resultInfo.MinioIp;
-                    LogTextHelper.Info($"SN:{serialNumber} Side:{side} 使用LevelDB数据中的MinIO IP: {minioIp}");
+                    minioPort = resultInfo.MinioPort.ToString();
+                    LogTextHelper.Info($"SN:{serialNumber} Side:{side} 使用LevelDB数据中的MinIO: {minioIp}:{minioPort}");
                 }
 
-                string minioPort = resultInfo.MinioPort.ToString();
-
-                if (string.IsNullOrEmpty(minioIp) || resultInfo.MinioPort == 0)
+                if (string.IsNullOrEmpty(minioIp) || string.IsNullOrEmpty(minioPort) || minioPort == "0")
                 {
                     // ⭐ 关键修改点3：异常情况需要移除标记
                     _processingSnSet.TryRemove(snKey, out _);

@@ -1001,16 +1001,19 @@ namespace DeepSightAI
         {
             try
             {
+                int pendingDbCount = Machine.master?.PendingPanelSideRecordCount ?? 0;
                 if (this.InvokeRequired)
                 {
                     this.BeginInvoke(new Action(() =>
                     {
                         lbl_curTime.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                        lblPendingDbCount.Text = $"未存数据库：{pendingDbCount}";
                     }));
                 }
                 else
                 {
                     lbl_curTime.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    lblPendingDbCount.Text = $"未存数据库：{pendingDbCount}";
                 }
 
                 DateTime now = DateTime.Now;

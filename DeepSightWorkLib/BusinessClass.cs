@@ -72,6 +72,20 @@ namespace DeepSightWorkLib
         private readonly object _panelRecordLock = new object();
         private readonly List<PanelSideRecord> _pendingPanelSideRecords = new List<PanelSideRecord>();
 
+        /// <summary>
+        /// 当前未写入数据库的暂存 PanelSide 记录数量
+        /// </summary>
+        public int PendingPanelSideRecordCount
+        {
+            get
+            {
+                lock (_panelRecordLock)
+                {
+                    return _pendingPanelSideRecords.Count;
+                }
+            }
+        }
+
         #endregion
 
         #region 私有字段 - 运行状态
