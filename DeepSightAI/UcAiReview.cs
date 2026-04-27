@@ -28,6 +28,8 @@ namespace DeepSightAI
         // 复判详情相关字段
         private string _currentReviewLot = null;
         private DateTime _currentReviewTime = DateTime.MinValue;
+        // 当前查看的单个SN项；非空时左侧详情面板显示该SN的具体信息，为空时显示Lot级聚合统计
+        private DefectReviewItem _currentReviewSnItem = null;
         private int _vvsOkCount = 0;
         private int _vvsNgCount = 0;
         private int _vvsNotSetCount = 0;
@@ -252,6 +254,7 @@ namespace DeepSightAI
                 // 先切换到详情页，确保面板布局正确后再加载图片
                 tabControl_Main.SelectedTab = tabPage_Details;
                 defectDetailControl1.DisplayDefectDetails(selectedItem);
+                EnterSnReviewMode(selectedItem);
             }
         }
 
@@ -286,7 +289,21 @@ namespace DeepSightAI
             if (selectedItem != null)
             {
                 defectDetailControl1.DisplayDefectDetails(selectedItem);
+                EnterSnReviewMode(selectedItem);
             }
+        }
+
+        /// <summary>
+        /// 进入单SN复判模式：更新当前Lot和SN上下文，刷新左侧详情面板显示该SN的具体信息
+        /// </summary>
+        private void EnterSnReviewMode(DefectReviewItem item)
+        {
+            if (item == null) return;
+            _currentReviewSnItem = item;
+            _currentReviewLot = item.LotNumber;
+            _currentReviewTime = item.DetectionDate;
+            UpdateVvsStatusSummary();
+            RefreshReviewDetailDisplay();
         }
 
         /// <summary>
@@ -760,8 +777,9 @@ namespace DeepSightAI
             if (e.Node.Level == 0)
             {
                 LoadLotData(e.Node.Name);
-                // 清除复判详情，因为只是选择表格数据
+                // 切换到Lot视图，退出单SN模式
                 _currentReviewLot = e.Node.Name;
+                _currentReviewSnItem = null;
                 RefreshReviewDetailDisplay();
             }
             // 如果是子分类节点（第二层，如按Side分组），加载该分类的数据
@@ -770,8 +788,9 @@ namespace DeepSightAI
                 string lotNumber = e.Node.Parent.Name;
                 string category = e.Node.Name; // 如 "A面", "B面" 等
                 LoadLotDataByCategory(lotNumber, category);
-                // 清除复判详情
+                // 切换到Lot视图，退出单SN模式
                 _currentReviewLot = lotNumber;
+                _currentReviewSnItem = null;
                 RefreshReviewDetailDisplay();
             }
         }
@@ -834,6 +853,8 @@ namespace DeepSightAI
                     {
                         _currentReviewLot = firstItem.LotNumber;
                         _currentReviewTime = firstItem.DetectionDate;
+                        // TreeView 双击进入的是 Lot 级聚合视图，退出单SN模式
+                        _currentReviewSnItem = null;
                         // 更新统计数据（包括VVS状态和统计指标）
                         UpdateVvsStatusSummary();
                         RefreshReviewDetailDisplay();
@@ -1502,6 +1523,13 @@ namespace DeepSightAI
                 return;
             }
 
+            // 单SN模式：显示该SN的具体信息和统计
+            if (_currentReviewSnItem != null)
+            {
+                label_ReviewDetail.Text = BuildSnReviewDetailText(_currentReviewSnItem);
+                return;
+            }
+
             var stat = _lotStatistics.TryGetValue(_currentReviewLot, out var s) ? s : new LotStatistics();
 
             var sb = new System.Text.StringBuilder();
@@ -1570,6 +1598,116 @@ namespace DeepSightAI
             sb.Append($"VVS判定NG数: {_vvsNgCount}");
 
             label_ReviewDetail.Text = sb.ToString();
+        }
+
+        /// <summary>
+        /// 构建单SN的复判详情文本：基本信息 + AVI/AI/VVS/VRS 状态 + 报点级别状态分布
+        /// </summary>
+        private string BuildSnReviewDetailText(DefectReviewItem item)
+        {
+            var sb = new System.Text.StringBuilder();
+
+            // VRS 读取状态：任一报点 VrsState!=0 视为已读取到 VRS 结果
+            var hpForVrs = item.HeatPoints;
+            string vrsReadText;
+            if (hpForVrs == null || hpForVrs.Count == 0)
+                vrsReadText = "无报点";
+            else if (hpForVrs.Any(p => p.VrsState != 0))
+                vrsReadText = "已读取";
+            else
+                vrsReadText = "未读取";
+            sb.AppendLine($"【SN详情】(VRS结果: {vrsReadText})");
+            sb.AppendLine();
+
+            // 基本信息
+            sb.AppendLine($"SN: {item.SerialNumber ?? "-"}");
+            sb.AppendLine($"Side: {item.Side ?? "-"}");
+            sb.AppendLine($"Lot: {item.LotNumber ?? "-"}");
+            sb.AppendLine($"机台号: {item.MachineId ?? "-"}");
+            sb.AppendLine($"料号: {item.ProductSerial ?? "-"}");
+            sb.AppendLine($"检测时间: {(item.DetectionDate == DateTime.MinValue ? "-" : item.DetectionDate.ToString("yyyy-MM-dd HH:mm:ss"))}");
+            sb.AppendLine();
+
+            // 状态汇总
+            sb.AppendLine("【状态】");
+            sb.AppendLine($"AVI状态: {item.AviStatus ?? "-"}");
+            sb.AppendLine($"AI状态: {item.AiStatus ?? "-"}");
+            sb.AppendLine($"VVS状态: {item.ManualStatus ?? "-"}");
+            sb.AppendLine($"VRS状态: {item.VrsStatus ?? "-"}");
+            sb.AppendLine();
+
+            // 缺陷概要
+            sb.AppendLine("【缺陷概要】");
+            sb.AppendLine($"缺陷数: {item.DefectCount}");
+            if (!string.IsNullOrEmpty(item.DefectName))
+            {
+                sb.AppendLine($"缺陷名称: {item.DefectName}");
+            }
+            if (!string.IsNullOrEmpty(item.DefectChange))
+            {
+                sb.AppendLine($"缺陷变化: {item.DefectChange}");
+            }
+            sb.AppendLine();
+
+            // 报点级别状态分布
+            var heatPoints = item.HeatPoints ?? new List<DetectInfo>();
+            int totalPoints = heatPoints.Count;
+
+            int aiOk = 0, aiNg = 0, aiException = 0, aiUninspected = 0;
+            int vvsOk = 0, vvsNg = 0, vvsNotSet = 0;
+            int vrsNotSet = 0, vrsOk = 0, vrsNg = 0, vrsIgnore = 0, vrsNoResult = 0, vrsNgReject = 0, vrsOther = 0;
+            foreach (var hp in heatPoints)
+            {
+                switch (hp.AIStatus)
+                {
+                    case 0: aiUninspected++; break;
+                    case 1: aiOk++; break;
+                    case 2: aiNg++; break;
+                    case 3: aiException++; break;
+                }
+                switch (hp.VVSStatus)
+                {
+                    case 0: vvsNotSet++; break;
+                    case 1: vvsOk++; break;
+                    case 2: vvsNg++; break;
+                }
+                switch (hp.VrsState)
+                {
+                    case 0: vrsNotSet++; break;
+                    case 1: vrsOk++; break;
+                    case 2: vrsNg++; break;
+                    case 3: vrsIgnore++; break;
+                    case 4: vrsNoResult++; break;
+                    case 5: vrsNgReject++; break;
+                    default: vrsOther++; break;
+                }
+            }
+
+            sb.AppendLine("【报点统计】");
+            sb.AppendLine($"总报点数: {totalPoints}");
+            sb.AppendLine($"  AI-OK: {aiOk}");
+            sb.AppendLine($"  AI-NG: {aiNg}");
+            sb.AppendLine($"  AI-异常: {aiException}");
+            sb.AppendLine($"  AI-未检测: {aiUninspected}");
+            sb.AppendLine($"  VVS-OK: {vvsOk}");
+            sb.AppendLine($"  VVS-NG: {vvsNg}");
+            sb.AppendLine($"  VVS-未判定: {vvsNotSet}");
+            sb.AppendLine($"  VRS-OK: {vrsOk}");
+            sb.AppendLine($"  VRS-NG: {vrsNg}");
+            sb.AppendLine($"  VRS-忽略: {vrsIgnore}");
+            sb.AppendLine($"  VRS-无结果: {vrsNoResult}");
+            sb.AppendLine($"  VRS-NG不接收: {vrsNgReject}");
+            sb.AppendLine($"  VRS-未判定: {vrsNotSet}");
+            if (vrsOther > 0)
+            {
+                sb.AppendLine($"  VRS-其它: {vrsOther}");
+            }
+
+            // PCS数（按 PcsIndex 去重）
+            int pcsCount = heatPoints.Select(hp => hp.PcsIndex).Distinct().Count();
+            sb.Append($"涉及PCS数: {pcsCount}");
+
+            return sb.ToString();
         }
 
         /// <summary>

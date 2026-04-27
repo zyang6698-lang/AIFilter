@@ -128,6 +128,7 @@
             this.splitContainer_Main.Panel2.Controls.Add(this.tabControl_Main);
             this.splitContainer_Main.Size = new System.Drawing.Size(1924, 1088);
             this.splitContainer_Main.SplitterDistance = 363;
+            this.splitContainer_Main.SplitterWidth = 11;
             this.splitContainer_Main.Style = Sunny.UI.UIStyle.Custom;
             this.splitContainer_Main.StyleCustomMode = true;
             this.splitContainer_Main.TabIndex = 3;
@@ -218,7 +219,7 @@
             this.tabControl_Main.MenuStyle = Sunny.UI.UIMenuStyle.Custom;
             this.tabControl_Main.Name = "tabControl_Main";
             this.tabControl_Main.SelectedIndex = 0;
-            this.tabControl_Main.Size = new System.Drawing.Size(1557, 1088);
+            this.tabControl_Main.Size = new System.Drawing.Size(1550, 1088);
             this.tabControl_Main.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
             this.tabControl_Main.Style = Sunny.UI.UIStyle.Custom;
             this.tabControl_Main.StyleCustomMode = true;
@@ -238,7 +239,7 @@
             this.tabPage_Grid.Location = new System.Drawing.Point(0, 30);
             this.tabPage_Grid.Margin = new System.Windows.Forms.Padding(0);
             this.tabPage_Grid.Name = "tabPage_Grid";
-            this.tabPage_Grid.Size = new System.Drawing.Size(1557, 1058);
+            this.tabPage_Grid.Size = new System.Drawing.Size(1550, 1058);
             this.tabPage_Grid.TabIndex = 0;
             this.tabPage_Grid.Text = "缺陷列表";
             // 
@@ -252,7 +253,7 @@
             this.panel_Grid.Location = new System.Drawing.Point(0, 0);
             this.panel_Grid.Margin = new System.Windows.Forms.Padding(0);
             this.panel_Grid.Name = "panel_Grid";
-            this.panel_Grid.Size = new System.Drawing.Size(1557, 1058);
+            this.panel_Grid.Size = new System.Drawing.Size(1550, 1058);
             this.panel_Grid.TabIndex = 1;
             // 
             // dataGridView_Defects
@@ -325,7 +326,7 @@
             this.dataGridView_Defects.ScrollBarStyleInherited = false;
             this.dataGridView_Defects.SelectedIndex = -1;
             this.dataGridView_Defects.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
-            this.dataGridView_Defects.Size = new System.Drawing.Size(1285, 1058);
+            this.dataGridView_Defects.Size = new System.Drawing.Size(1278, 1058);
             this.dataGridView_Defects.StripeEvenColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.dataGridView_Defects.StripeOddColor = System.Drawing.Color.FromArgb(((int)(((byte)(35)))), ((int)(((byte)(55)))), ((int)(((byte)(70)))));
             this.dataGridView_Defects.Style = Sunny.UI.UIStyle.Custom;
@@ -392,17 +393,17 @@
             this.col_ManualStatus.Name = "col_ManualStatus";
             this.col_ManualStatus.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.col_ManualStatus.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            //
+            // 
             // col_VrsStatus
-            //
+            // 
             this.col_VrsStatus.DataPropertyName = "VrsStatus";
             this.col_VrsStatus.HeaderText = "VRS状态";
             this.col_VrsStatus.MinimumWidth = 6;
             this.col_VrsStatus.Name = "col_VrsStatus";
             this.col_VrsStatus.ReadOnly = true;
-            //
+            // 
             // col_DefectCount
-            //
+            // 
             this.col_DefectCount.DataPropertyName = "DefectCount";
             this.col_DefectCount.HeaderText = "缺陷数";
             this.col_DefectCount.MinimumWidth = 6;
@@ -430,7 +431,7 @@
             // 
             this.splitter_LotGrid.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.splitter_LotGrid.Location = new System.Drawing.Point(267, 0);
-            this.splitter_LotGrid.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.splitter_LotGrid.Margin = new System.Windows.Forms.Padding(4);
             this.splitter_LotGrid.Name = "splitter_LotGrid";
             this.splitter_LotGrid.Size = new System.Drawing.Size(5, 1058);
             this.splitter_LotGrid.TabIndex = 3;
@@ -445,7 +446,7 @@
             this.panel_LotList.Controls.Add(this.label_LotTitle);
             this.panel_LotList.Dock = System.Windows.Forms.DockStyle.Left;
             this.panel_LotList.Location = new System.Drawing.Point(0, 0);
-            this.panel_LotList.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.panel_LotList.Margin = new System.Windows.Forms.Padding(4);
             this.panel_LotList.Name = "panel_LotList";
             this.panel_LotList.Size = new System.Drawing.Size(267, 1058);
             this.panel_LotList.TabIndex = 2;
@@ -460,7 +461,7 @@
             this.treeView_Lots.FullRowSelect = true;
             this.treeView_Lots.HideSelection = false;
             this.treeView_Lots.Location = new System.Drawing.Point(0, 97);
-            this.treeView_Lots.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.treeView_Lots.Margin = new System.Windows.Forms.Padding(4);
             this.treeView_Lots.Name = "treeView_Lots";
             this.treeView_Lots.Size = new System.Drawing.Size(267, 961);
             this.treeView_Lots.TabIndex = 1;
@@ -487,9 +488,9 @@
             this.panel_SnSearch.Controls.Add(this.txt_SnFilter);
             this.panel_SnSearch.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel_SnSearch.Location = new System.Drawing.Point(0, 31);
-            this.panel_SnSearch.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.panel_SnSearch.Margin = new System.Windows.Forms.Padding(4);
             this.panel_SnSearch.Name = "panel_SnSearch";
-            this.panel_SnSearch.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.panel_SnSearch.Padding = new System.Windows.Forms.Padding(4);
             this.panel_SnSearch.Size = new System.Drawing.Size(267, 38);
             this.panel_SnSearch.TabIndex = 2;
             // 
@@ -502,7 +503,7 @@
             this.btn_SnSearch.Font = new System.Drawing.Font("微软雅黑", 9F);
             this.btn_SnSearch.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.btn_SnSearch.Location = new System.Drawing.Point(212, 4);
-            this.btn_SnSearch.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btn_SnSearch.Margin = new System.Windows.Forms.Padding(4);
             this.btn_SnSearch.Name = "btn_SnSearch";
             this.btn_SnSearch.Size = new System.Drawing.Size(51, 30);
             this.btn_SnSearch.TabIndex = 1;
@@ -517,7 +518,7 @@
             this.txt_SnFilter.Font = new System.Drawing.Font("微软雅黑", 9F);
             this.txt_SnFilter.ForeColor = System.Drawing.Color.White;
             this.txt_SnFilter.Location = new System.Drawing.Point(4, 4);
-            this.txt_SnFilter.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.txt_SnFilter.Margin = new System.Windows.Forms.Padding(4);
             this.txt_SnFilter.Name = "txt_SnFilter";
             this.txt_SnFilter.Size = new System.Drawing.Size(259, 27);
             this.txt_SnFilter.TabIndex = 0;
@@ -543,7 +544,7 @@
             this.tabPage_Details.Location = new System.Drawing.Point(0, 30);
             this.tabPage_Details.Margin = new System.Windows.Forms.Padding(0);
             this.tabPage_Details.Name = "tabPage_Details";
-            this.tabPage_Details.Size = new System.Drawing.Size(1436, 1058);
+            this.tabPage_Details.Size = new System.Drawing.Size(1550, 1058);
             this.tabPage_Details.TabIndex = 1;
             this.tabPage_Details.Text = "缺陷详情";
             // 
@@ -554,7 +555,7 @@
             this.defectDetailControl1.Location = new System.Drawing.Point(0, 0);
             this.defectDetailControl1.Margin = new System.Windows.Forms.Padding(0);
             this.defectDetailControl1.Name = "defectDetailControl1";
-            this.defectDetailControl1.Size = new System.Drawing.Size(1436, 1058);
+            this.defectDetailControl1.Size = new System.Drawing.Size(1550, 1058);
             this.defectDetailControl1.TabIndex = 0;
             // 
             // tabPage_ValidationTest
@@ -564,7 +565,7 @@
             this.tabPage_ValidationTest.Location = new System.Drawing.Point(0, 30);
             this.tabPage_ValidationTest.Margin = new System.Windows.Forms.Padding(0);
             this.tabPage_ValidationTest.Name = "tabPage_ValidationTest";
-            this.tabPage_ValidationTest.Size = new System.Drawing.Size(1436, 1058);
+            this.tabPage_ValidationTest.Size = new System.Drawing.Size(1550, 1058);
             this.tabPage_ValidationTest.TabIndex = 2;
             this.tabPage_ValidationTest.Text = "模型一致性测试";
             // 
@@ -576,7 +577,7 @@
             this.validationTestResultControl1.Location = new System.Drawing.Point(0, 0);
             this.validationTestResultControl1.Margin = new System.Windows.Forms.Padding(0);
             this.validationTestResultControl1.Name = "validationTestResultControl1";
-            this.validationTestResultControl1.Size = new System.Drawing.Size(1436, 1058);
+            this.validationTestResultControl1.Size = new System.Drawing.Size(1550, 1058);
             this.validationTestResultControl1.TabIndex = 0;
             // 
             // tabPage_ConsistencyDashboard
@@ -586,7 +587,7 @@
             this.tabPage_ConsistencyDashboard.Location = new System.Drawing.Point(0, 30);
             this.tabPage_ConsistencyDashboard.Margin = new System.Windows.Forms.Padding(0);
             this.tabPage_ConsistencyDashboard.Name = "tabPage_ConsistencyDashboard";
-            this.tabPage_ConsistencyDashboard.Size = new System.Drawing.Size(1436, 1058);
+            this.tabPage_ConsistencyDashboard.Size = new System.Drawing.Size(1550, 1058);
             this.tabPage_ConsistencyDashboard.TabIndex = 3;
             this.tabPage_ConsistencyDashboard.Text = "一致性测试看板";
             // 
@@ -599,7 +600,7 @@
             this.consistencyTestDashboard1.Location = new System.Drawing.Point(0, 0);
             this.consistencyTestDashboard1.Margin = new System.Windows.Forms.Padding(0);
             this.consistencyTestDashboard1.Name = "consistencyTestDashboard1";
-            this.consistencyTestDashboard1.Size = new System.Drawing.Size(1436, 1058);
+            this.consistencyTestDashboard1.Size = new System.Drawing.Size(1550, 1058);
             this.consistencyTestDashboard1.TabIndex = 0;
             // 
             // contextMenuStrip_Lot

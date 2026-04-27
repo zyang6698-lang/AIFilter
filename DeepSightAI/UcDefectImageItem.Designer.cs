@@ -45,6 +45,7 @@
             this.pictureBox_TemplateImage = new System.Windows.Forms.PictureBox();
             this.panel_Status = new System.Windows.Forms.Panel();
             this.label_Status = new System.Windows.Forms.Label();
+            this.label_Index = new System.Windows.Forms.Label();
             this.panel_Header.SuspendLayout();
             this.tableImages.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox_OriginalImage)).BeginInit();
@@ -133,31 +134,44 @@
             this.pictureBox_TemplateImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox_TemplateImage.TabIndex = 2;
             this.pictureBox_TemplateImage.TabStop = false;
-            // 
+            //
             // panel_Status
-            // 
+            //
             this.panel_Status.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.panel_Status.Controls.Add(this.label_Status);
+            this.panel_Status.Controls.Add(this.label_Index);
             this.panel_Status.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.panel_Status.Location = new System.Drawing.Point(0, 428);
             this.panel_Status.Name = "panel_Status";
-            this.panel_Status.Size = new System.Drawing.Size(300, 40);
+            this.panel_Status.Size = new System.Drawing.Size(300, 44);
             this.panel_Status.TabIndex = 3;
-            // 
+            //
             // label_Status
-            // 
+            //
             this.label_Status.Dock = System.Windows.Forms.DockStyle.Fill;
             this.label_Status.Font = new System.Drawing.Font("微软雅黑", 9F);
             this.label_Status.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.label_Status.Location = new System.Drawing.Point(0, 0);
             this.label_Status.Name = "label_Status";
             this.label_Status.Padding = new System.Windows.Forms.Padding(5, 0, 5, 0);
-            this.label_Status.Size = new System.Drawing.Size(300, 40);
+            this.label_Status.Size = new System.Drawing.Size(300, 24);
             this.label_Status.TabIndex = 0;
             this.label_Status.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
+            //
+            // label_Index
+            //
+            this.label_Index.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.label_Index.Font = new System.Drawing.Font("微软雅黑", 8F);
+            this.label_Index.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.label_Index.Location = new System.Drawing.Point(0, 24);
+            this.label_Index.Name = "label_Index";
+            this.label_Index.Padding = new System.Windows.Forms.Padding(5, 0, 5, 0);
+            this.label_Index.Size = new System.Drawing.Size(300, 20);
+            this.label_Index.TabIndex = 1;
+            this.label_Index.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            //
             // UcDefectImageItem
-            // 
+            //
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
@@ -166,7 +180,7 @@
             this.Controls.Add(this.panel_Header);
             this.Font = new System.Drawing.Font("微软雅黑", 9F);
             this.Name = "UcDefectImageItem";
-            this.Size = new System.Drawing.Size(300, 468);
+            this.Size = new System.Drawing.Size(300, 472);
             this.panel_Header.ResumeLayout(false);
             this.tableImages.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox_OriginalImage)).EndInit();
@@ -186,6 +200,7 @@
         private System.Windows.Forms.PictureBox pictureBox_TemplateImage;
         private System.Windows.Forms.Panel panel_Status;
         private System.Windows.Forms.Label label_Status;
+        private System.Windows.Forms.Label label_Index;
     }
 }
 

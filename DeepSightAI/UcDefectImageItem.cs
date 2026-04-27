@@ -135,6 +135,7 @@ namespace DeepSightAI
             {
                 label_SN.Text = "";
                 label_Status.Text = "";
+                label_Index.Text = "";
                 pictureBox_OriginalImage.Image?.Dispose();
                 pictureBox_OriginalImage.Image = null;
                 pictureBox_TemplateImage.Image?.Dispose();
@@ -147,6 +148,7 @@ namespace DeepSightAI
 
             // 状态信息
             UpdateStatusLabel();
+            UpdateIndexLabel();
 
             // 清空旧图片，显示为空白占位
             pictureBox_OriginalImage.Image?.Dispose();
@@ -290,8 +292,21 @@ namespace DeepSightAI
             }
             else
             {
-                label_Status.Text = $"AI: {GetStatusText(_point.AIStatus)}  |  VVS: {GetStatusText(_point.VVSStatus)}";
+                label_Status.Text = $"AI: {GetStatusText(_point.AIStatus)}  |  VVS: {GetStatusText(_point.VVSStatus)}  |  VRS: {GetVrsStatusText(_point.VrsState)}";
             }
+        }
+
+        /// <summary>
+        /// 更新 PcsIndex / DefectIndex 标签
+        /// </summary>
+        private void UpdateIndexLabel()
+        {
+            if (_point == null)
+            {
+                label_Index.Text = "";
+                return;
+            }
+            label_Index.Text = $"PcsIndex:{_point.PcsIndex}  DefectIndex:{_point.DefectIndex}";
         }
 
         /// <summary>
@@ -351,6 +366,24 @@ namespace DeepSightAI
         }
 
         /// <summary>
+        /// 将 VRS 状态码转换为显示文本
+        /// 约定：0=未判定, 1=OK, 2=NG, 3=忽略, 4=无结果, 5=NG不接收
+        /// </summary>
+        private string GetVrsStatusText(int vrsState)
+        {
+            switch (vrsState)
+            {
+                case 0: return "未判定";
+                case 1: return "OK";
+                case 2: return "NG";
+                case 3: return "忽略";
+                case 4: return "无结果";
+                case 5: return "NG不接收";
+                default: return vrsState.ToString();
+            }
+        }
+
+        /// <summary>
         /// 获取已加载的原图（不带缺陷框）
         /// </summary>
         public Image OriginalImage => _rawOriginalImage;
@@ -406,6 +439,9 @@ namespace DeepSightAI
             // 状态
             label_Status.Text = statusText ?? "";
 
+            // 索引信息（PcsIndex / DefectIndex）
+            UpdateIndexLabel();
+
             UpdateAppearance();
         }
 
@@ -430,6 +466,7 @@ namespace DeepSightAI
             _point = null;
             label_SN.Text = "";
             label_Status.Text = "";
+            label_Index.Text = "";
 
             pictureBox_OriginalImage.Image?.Dispose();
             pictureBox_OriginalImage.Image = null;

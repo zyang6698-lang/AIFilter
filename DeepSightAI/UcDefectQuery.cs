@@ -423,8 +423,8 @@ namespace DeepSightAI
         }
 
         /// <summary>
-        /// 从 LevelDB 读取每个 SN 的 VRS 历史结果，按 Side+PcsIndex+DefectIndex 回填 DetectInfo.VrsState，
-        /// 并根据报点聚合每个 SideData.VrsState。
+        /// 从 LevelDB 读取每个 SN 的 VRS 历史结果，回填 DetectInfo.VrsState，并聚合每个 SideData.VrsState。
+        /// 匹配规则：先按 Side+PcsIndex 匹配；同一 PcsIndex 内 VRS 条目与 DetectPoint 各自按 DefectIndex 升序后依次配对。
         /// </summary>
         private static void MergeVrsHistory(List<PanelDataRecord> records)
         {
@@ -459,18 +459,24 @@ namespace DeepSightAI
                             .ToList();
                         if (sideEntries.Count == 0) continue;
 
-                        // 构建 (PcsIndex, DefectIndex) -> ResultCode 索引
-                        var lookup = sideEntries
-                            .GroupBy(e => (e.PcsIndex, e.DefectIndex))
-                            .ToDictionary(g => g.Key, g => g.First().ResultCode);
+                        // 业务规则：先按 PcsIndex 匹配；同一 PcsIndex 内，
+                        // VRS 条目与 DetectPoint 各自按 DefectIndex 升序排序后依次配对（i-th 配 i-th）
+                        var entriesByPcs = sideEntries
+                            .GroupBy(e => e.PcsIndex)
+                            .ToDictionary(
+                                g => g.Key,
+                                g => g.OrderBy(e => e.DefectIndex).Select(e => e.ResultCode).ToList());
 
                         if (side.DetectPoints != null)
                         {
-                            foreach (var dp in side.DetectPoints)
+                            foreach (var grp in side.DetectPoints.GroupBy(p => p.PcsIndex))
                             {
-                                if (lookup.TryGetValue((dp.PcsIndex, dp.DefectIndex), out var code))
+                                if (!entriesByPcs.TryGetValue(grp.Key, out var codes)) continue;
+                                var orderedDps = grp.OrderBy(p => p.DefectIndex).ToList();
+                                int pairCount = Math.Min(orderedDps.Count, codes.Count);
+                                for (int i = 0; i < pairCount; i++)
                                 {
-                                    dp.VrsState = VrsHistoryService.MapResultCodeToVrsState(code);
+                                    orderedDps[i].VrsState = VrsHistoryService.MapResultCodeToVrsState(codes[i]);
                                 }
                             }
                         }
