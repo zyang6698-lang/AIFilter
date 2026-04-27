@@ -417,11 +417,12 @@ namespace DeepSightAI
                 }
             }
 
-            // 处理 B 面完成的特殊逻辑
-            if (statusInfo.Status == DeepSightModel.TaskStatus.Completed && statusInfo.Side == "B")
+            // 处理 A/B 面完成的特殊逻辑（两面统计逻辑独立一致）
+            if (statusInfo.Status == DeepSightModel.TaskStatus.Completed
+                && (statusInfo.Side == "A" || statusInfo.Side == "B"))
             {
                 string displayMsg = statusInfo.GetFullDisplayMessage();
-                UpdateBSideCompletedRow(targetRow, statusInfo.SerialNumber, ref displayMsg);
+                UpdateSideCompletedRow(targetRow, statusInfo.SerialNumber, statusInfo.Side, ref displayMsg);
             }
             else
             {
@@ -430,53 +431,53 @@ namespace DeepSightAI
         }
 
         /// <summary>
-        /// 更新 B 面完成的行数据（只统计 B 面自身数据，与 A 面逻辑独立一致）
+        /// 更新指定面（A/B）完成的行数据（只统计该面自身数据，A、B 面逻辑独立一致）
         /// </summary>
-        private void UpdateBSideCompletedRow(DataGridViewRow row, string sn, ref string msg)
+        private void UpdateSideCompletedRow(DataGridViewRow row, string sn, string side, ref string msg)
         {
             int count = 0;
             int ok = 0;
             int ng = 0;
             int byPass = 0;
-            int bDefectCount = 0;
+            int defectCount = 0;
 
-            string keyB = $"{sn}_B";
+            string key = $"{sn}_{side}";
 
-            // 统计 B 面缺陷数（dic_Infos 已在 SendPanelInfo 时替换为最新一次数据，直接累加即可）
-            FrmHome.Instance.dic_Infos.TryGetValue(keyB, out List<RootPanelInfoWithIP> bInfos);
-            if (bInfos != null)
+            // 统计该面缺陷数（dic_Infos 已在 SendPanelInfo 时替换为最新一次数据，直接累加即可）
+            FrmHome.Instance.dic_Infos.TryGetValue(key, out List<RootPanelInfoWithIP> infos);
+            if (infos != null)
             {
-                lock (bInfos)
+                lock (infos)
                 {
-                    foreach (var info in bInfos)
+                    foreach (var info in infos)
                     {
                         if (info?.RootInfo?.PcsInfo == null) continue;
                         foreach (var pcsInfo in info.RootInfo.PcsInfo.Values)
                         {
-                            bDefectCount += pcsInfo.DefectInfo?.Count ?? 0;
+                            defectCount += pcsInfo.DefectInfo?.Count ?? 0;
                         }
                     }
                 }
             }
 
-            // 只统计 B 面 AI 结果
-            if (FrmHome.Instance.dic_Results.TryGetValue(keyB, out List<string> bResults))
+            // 只统计该面 AI 结果
+            if (FrmHome.Instance.dic_Results.TryGetValue(key, out List<string> results))
             {
-                count = bResults.Count;
-                ok = bResults.Count(o => o.Contains("0"));
-                ng = bResults.Count(o => o.Contains("1"));
-                byPass = bResults.Count(o => o.Contains("2"));
-                msg = $"{msg}_AVI:{bDefectCount}_OK:{ok} NG:{ng} ByPass:{byPass}";
+                count = results.Count;
+                ok = results.Count(o => o.Contains("0"));
+                ng = results.Count(o => o.Contains("1"));
+                byPass = results.Count(o => o.Contains("2"));
+                msg = $"{msg}_AVI:{defectCount}_OK:{ok} NG:{ng} ByPass:{byPass}";
             }
 
             // 列顺序: SN[0], Side[1], AVI[2], AI[3], Time[4], Status[5]
-            row.Cells[2].Value = bDefectCount;
+            row.Cells[2].Value = defectCount;
             row.Cells[3].Value = count;
             row.Cells[5].Value = msg;
-            FrmHome.Instance.str_SN = keyB;
+            FrmHome.Instance.str_SN = key;
 
-            // B面完成时：仅当 B 面有缺陷图片时触发完整加载，否则仅更新AI结果标签
-            bool hasImages = bInfos != null && bInfos.Any(inf => inf?.RootInfo?.PcsInfo?.Values?.Any(pcs =>
+            // 当前面完成时：仅当有缺陷图片时触发完整加载，否则仅更新AI结果标签
+            bool hasImages = infos != null && infos.Any(inf => inf?.RootInfo?.PcsInfo?.Values?.Any(pcs =>
                 pcs.DefectInfo?.Any(d => d.DefectVrsImages != null && d.DefectVrsImages.Count > 0) == true) == true);
 
             if (hasImages)
