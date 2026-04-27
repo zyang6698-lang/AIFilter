@@ -1,10 +1,13 @@
-﻿using DeepSightModel;
+﻿using DeepSightCommunication;
+using DeepSightModel;
 using DeepSightModel.Configuration;
 using DeepSightTool;
+using DeepSightWorkLib.Services;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -24,7 +27,20 @@ namespace DeepSightAI.SettingPages
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);
             SetStyle(ControlStyles.DoubleBuffer, true);
-            dgvDatabases.ApplyDarkTheme();
+            // 为容器面板开启双缓冲，消除切换 UISwitch 等控件时的页面闪烁
+            EnableDoubleBuffered(tlpMain, tlpRight, tlpBasic, tlpAvi, tlpVrs, tlpMinio, tlpListButtons);
+            HookDetailEvents();
+        }
+
+        private static void EnableDoubleBuffered(params Control[] controls)
+        {
+            var prop = typeof(Control).GetProperty("DoubleBuffered",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (prop == null) return;
+            foreach (var c in controls)
+            {
+                if (c != null) prop.SetValue(c, true, null);
+            }
         }
 
         /// <summary>
@@ -50,76 +66,193 @@ namespace DeepSightAI.SettingPages
         private const int TestTimeoutMs = 3000;
 
         /// <summary>
-        /// 是否正在加载数据（加载期间不触发 CellValueChanged 逻辑）
+        /// 内存中维护的配置列表（左侧列表的数据源；保存时写入文件）
         /// </summary>
-        private bool _isLoading = false;
+        private readonly List<LevelDbConfig> _configs = new List<LevelDbConfig>();
 
         /// <summary>
-        /// 加载配置到 DataGridView
+        /// 加载/切换选项时屏蔽 TextChanged/CheckedChanged 写回
         /// </summary>
+        private bool _isBinding = false;
+
+        /// <summary>
+        /// 当前选中的配置（null 表示无选择）
+        /// </summary>
+        private LevelDbConfig CurrentConfig =>
+            (lstDatabases.SelectedIndex >= 0 && lstDatabases.SelectedIndex < _configs.Count)
+                ? _configs[lstDatabases.SelectedIndex]
+                : null;
+
+        /// <summary>
+        /// 给详情区控件挂载事件，用于实时把编辑写回 _configs
+        /// </summary>
+        private void HookDetailEvents()
+        {
+            txtDbName.TextChanged += (s, e) => WriteBack(c => c.DbName = txtDbName.Text);
+            txtIp.TextChanged += (s, e) => WriteBack(c => { c.IP = txtIp.Text; ResetAviStatus(); });
+            txtPort.TextChanged += (s, e) => WriteBack(c => { c.Port = txtPort.Text; ResetAviStatus(); });
+            txtWriteBackDbName.TextChanged += (s, e) => WriteBack(c => c.WriteBackDbName = txtWriteBackDbName.Text);
+            txtVrsIp.TextChanged += (s, e) => WriteBack(c => { c.VRSIP = txtVrsIp.Text; ResetVrsStatus(); });
+            txtVrsPort.TextChanged += (s, e) => WriteBack(c => { c.VRSPort = txtVrsPort.Text; ResetVrsStatus(); });
+            txtVrsWriteBackDbName.TextChanged += (s, e) => WriteBack(c => c.VRSWriteBackDbName = txtVrsWriteBackDbName.Text);
+            txtVrsWriteBackDbNameV1.TextChanged += (s, e) => WriteBack(c => c.VRSWriteBackDbNameV1 = txtVrsWriteBackDbNameV1.Text);
+            txtVrsHistoryDbName.TextChanged += (s, e) => WriteBack(c => { c.VrsHistoryDbName = txtVrsHistoryDbName.Text; ResetVrsStatus(); });
+            chkIsEnabled.ValueChanged += (s, v) => WriteBack(c => c.IsEnabled = chkIsEnabled.Active);
+            txtMinioIpA.TextChanged += (s, e) => WriteBack(c => { c.MinioIpA = txtMinioIpA.Text; ResetMinioStatus("A"); });
+            txtMinioIpB.TextChanged += (s, e) => WriteBack(c => { c.MinioIpB = txtMinioIpB.Text; ResetMinioStatus("B"); });
+        }
+
+        /// <summary>
+        /// 把详情区编辑写回当前配置；同时刷新列表显示文本
+        /// </summary>
+        private void WriteBack(Action<LevelDbConfig> setter)
+        {
+            if (_isBinding) return;
+            var c = CurrentConfig;
+            if (c == null) return;
+            setter(c);
+            RefreshListItem(lstDatabases.SelectedIndex);
+        }
+
         private void FrLevelDbConfig_Load(object sender, EventArgs e)
         {
-            LoadConfigToGrid();
+            LoadConfigToList();
             // 加载完成后仅对已启用的数据库自动测试
             TestEnabledConnectionsAsync();
         }
 
         /// <summary>
-        /// 从配置管理器加载数据到 DataGridView
+        /// 从配置管理器加载数据到左侧列表
         /// </summary>
-        private void LoadConfigToGrid()
+        private void LoadConfigToList()
         {
-            _isLoading = true;
+            _isBinding = true;
             try
             {
-                dgvDatabases.Rows.Clear();
-                var databases = LevelDbConfigManager.Instance.Databases;
-                foreach (var db in databases)
+                _configs.Clear();
+                lstDatabases.Items.Clear();
+                foreach (var db in LevelDbConfigManager.Instance.Databases)
                 {
-                    int rowIndex = dgvDatabases.Rows.Add();
-                    var row = dgvDatabases.Rows[rowIndex];
-                    row.Cells["colDbName"].Value = db.DbName;
-                    row.Cells["colIP"].Value = db.IP;
-                    row.Cells["colPort"].Value = db.Port;
-                    row.Cells["colWriteBackDbName"].Value = db.WriteBackDbName;
-                    row.Cells["colVRSWriteBackDbName"].Value = db.VRSWriteBackDbName;
-                    row.Cells["colVRSWriteBackDbNameV1"].Value = db.VRSWriteBackDbNameV1;
-                    row.Cells["colConnectionStatus"].Value = "未测试";
-                    row.Cells["colIsEnabled"].Value = db.IsEnabled;
-                    row.Cells["colMinioIpA"].Value = db.MinioIpA;
-                    row.Cells["colMinioStatusA"].Value = "未测试";
-                    row.Cells["colMinioIpB"].Value = db.MinioIpB;
-                    row.Cells["colMinioStatusB"].Value = "未测试";
+                    _configs.Add(db);
+                    lstDatabases.Items.Add(BuildListText(db));
+                }
+                if (_configs.Count > 0)
+                {
+                    lstDatabases.SelectedIndex = 0;
+                }
+                else
+                {
+                    BindDetail(null);
                 }
             }
             finally
             {
-                _isLoading = false;
+                _isBinding = false;
             }
         }
 
         /// <summary>
-        /// 添加新的数据库配置
+        /// 列表项的显示文本
+        /// </summary>
+        private static string BuildListText(LevelDbConfig db)
+        {
+            string mark = db.IsEnabled ? "●" : "○";
+            return $" {mark}  ({db.IP}:{db.Port})";
+        }
+
+        /// <summary>
+        /// 刷新指定索引列表项的显示文本（保留选择）
+        /// </summary>
+        private void RefreshListItem(int index)
+        {
+            if (index < 0 || index >= _configs.Count) return;
+            lstDatabases.Items[index] = BuildListText(_configs[index]);
+            lstDatabases.Invalidate();
+        }
+
+        /// <summary>
+        /// 列表选择变化 -> 把选中配置绑定到详情区
+        /// </summary>
+        private void lstDatabases_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            BindDetail(CurrentConfig);
+        }
+
+        /// <summary>
+        /// 把指定配置绑定到详情区控件（绑定期间屏蔽 TextChanged 写回）
+        /// </summary>
+        private void BindDetail(LevelDbConfig db)
+        {
+            _isBinding = true;
+            try
+            {
+                bool has = db != null;
+                grpBasic.Enabled = grpAvi.Enabled = grpVrs.Enabled = grpMinio.Enabled = has;
+                if (!has)
+                {
+                    txtDbName.Text = txtIp.Text = txtPort.Text = txtWriteBackDbName.Text = "";
+                    txtVrsIp.Text = txtVrsPort.Text = txtVrsWriteBackDbName.Text = txtVrsWriteBackDbNameV1.Text = "";
+                    txtVrsHistoryDbName.Text = txtVrsTestSn.Text = "";
+                    txtMinioIpA.Text = txtMinioIpB.Text = "";
+                    chkIsEnabled.Active = false;
+                    SetAviStatus("未测试", Color.FromArgb(216, 219, 188));
+                    SetVrsStatus("未测试", Color.FromArgb(216, 219, 188));
+                    SetMinioStatus("A", "未测试", Color.FromArgb(216, 219, 188));
+                    SetMinioStatus("B", "未测试", Color.FromArgb(216, 219, 188));
+                    return;
+                }
+                if (string.IsNullOrWhiteSpace(db.VRSIP)) db.VRSIP = string.IsNullOrWhiteSpace(db.IP) ? "127.0.0.1" : db.IP;
+                if (string.IsNullOrWhiteSpace(db.VRSPort)) db.VRSPort = string.IsNullOrWhiteSpace(db.Port) ? "9877" : db.Port;
+                txtDbName.Text = db.DbName ?? "";
+                txtIp.Text = db.IP ?? "";
+                txtPort.Text = db.Port ?? "";
+                txtWriteBackDbName.Text = db.WriteBackDbName ?? "";
+                txtVrsIp.Text = db.VRSIP;
+                txtVrsPort.Text = db.VRSPort;
+                txtVrsWriteBackDbName.Text = db.VRSWriteBackDbName ?? "";
+                txtVrsWriteBackDbNameV1.Text = db.VRSWriteBackDbNameV1 ?? "";
+                txtVrsHistoryDbName.Text = string.IsNullOrWhiteSpace(db.VrsHistoryDbName)
+                    ? VrsHistoryService.DefaultDbName : db.VrsHistoryDbName;
+                txtVrsTestSn.Text = "";
+                chkIsEnabled.Active = db.IsEnabled;
+                txtMinioIpA.Text = db.MinioIpA ?? "";
+                txtMinioIpB.Text = db.MinioIpB ?? "";
+                SetAviStatus("未测试", Color.FromArgb(216, 219, 188));
+                SetVrsStatus("未测试", Color.FromArgb(216, 219, 188));
+                SetMinioStatus("A", "未测试", Color.FromArgb(216, 219, 188));
+                SetMinioStatus("B", "未测试", Color.FromArgb(216, 219, 188));
+            }
+            finally
+            {
+                _isBinding = false;
+            }
+        }
+
+        /// <summary>
+        /// 添加新的数据库配置（追加到列表并选中）
         /// </summary>
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            int rowIndex = dgvDatabases.Rows.Add();
-            var row = dgvDatabases.Rows[rowIndex];
-            row.Cells["colDbName"].Value = "ai_merged_results";
-            row.Cells["colIP"].Value = "127.0.0.1";
-            row.Cells["colPort"].Value = "9877";
-            row.Cells["colWriteBackDbName"].Value = "filter_time_to_airesults";
-            row.Cells["colVRSWriteBackDbName"].Value = "ai_detail_results_tovrs";
-            row.Cells["colVRSWriteBackDbNameV1"].Value = "ai_inference_result";
-            row.Cells["colConnectionStatus"].Value = "未测试";
-            row.Cells["colIsEnabled"].Value = false;
-            row.Cells["colMinioIpA"].Value = "127.0.0.1";
-            row.Cells["colMinioStatusA"].Value = "未测试";
-            row.Cells["colMinioIpB"].Value = "127.0.0.1";
-            row.Cells["colMinioStatusB"].Value = "未测试";
-
-            dgvDatabases.CurrentCell = row.Cells["colDbName"];
-            dgvDatabases.BeginEdit(true);
+            var db = new LevelDbConfig
+            {
+                DbName = "ai_merged_results",
+                IP = "127.0.0.1",
+                Port = "9877",
+                WriteBackDbName = "filter_time_to_airesults",
+                VRSIP = "127.0.0.1",
+                VRSPort = "9877",
+                VRSWriteBackDbName = "ai_detail_results_tovrs",
+                VRSWriteBackDbNameV1 = "ai_inference_result",
+                VrsHistoryDbName = VrsHistoryService.DefaultDbName,
+                EnableVRSWriteBackV1 = true,
+                IsEnabled = false,
+                MinioIpA = "127.0.0.1",
+                MinioIpB = "127.0.0.1"
+            };
+            _configs.Add(db);
+            lstDatabases.Items.Add(BuildListText(db));
+            lstDatabases.SelectedIndex = _configs.Count - 1;
+            txtDbName.Focus();
         }
 
         /// <summary>
@@ -127,58 +260,44 @@ namespace DeepSightAI.SettingPages
         /// </summary>
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            if (dgvDatabases.SelectedRows.Count == 0)
+            int idx = lstDatabases.SelectedIndex;
+            if (idx < 0)
             {
-                MessageBox.Show("请先选择要删除的行", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("请先选择要删除的数据库", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
-
-            if (dgvDatabases.Rows.Count <= 1)
+            if (_configs.Count <= 1)
             {
                 MessageBox.Show("至少保留一个数据库配置", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
+            var result = MessageBox.Show($"确定要删除\"{_configs[idx].DbName}\"吗？", "确认删除", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (result != DialogResult.Yes) return;
 
-            var result = MessageBox.Show("确定要删除选中的数据库配置吗？", "确认删除", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-            if (result == DialogResult.Yes)
+            _isBinding = true;
+            try
             {
-                foreach (DataGridViewRow row in dgvDatabases.SelectedRows)
-                {
-                    if (!row.IsNewRow)
-                        dgvDatabases.Rows.Remove(row);
-                }
+                _configs.RemoveAt(idx);
+                lstDatabases.Items.RemoveAt(idx);
             }
+            finally
+            {
+                _isBinding = false;
+            }
+            if (_configs.Count > 0)
+                lstDatabases.SelectedIndex = Math.Min(idx, _configs.Count - 1);
+            else
+                BindDetail(null);
         }
 
         /// <summary>
-        /// 从 DataGridView 获取配置并保存
+        /// 把内存列表保存到配置文件
         /// </summary>
         public bool SaveConfig()
         {
             try
             {
-                var configList = new LevelDbConfigList();
-                configList.Databases = new List<LevelDbConfig>();
-
-                foreach (DataGridViewRow row in dgvDatabases.Rows)
-                {
-                    if (row.IsNewRow) continue;
-
-                    var config = new LevelDbConfig
-                    {
-                        DbName = row.Cells["colDbName"].Value?.ToString() ?? "ai_merged_results",
-                        IP = row.Cells["colIP"].Value?.ToString() ?? "127.0.0.1",
-                        Port = row.Cells["colPort"].Value?.ToString() ?? "9877",
-                        WriteBackDbName = row.Cells["colWriteBackDbName"].Value?.ToString() ?? "filter_time_to_airesults",
-                        VRSWriteBackDbName = row.Cells["colVRSWriteBackDbName"].Value?.ToString() ?? "ai_detail_results_tovrs",
-                        VRSWriteBackDbNameV1 = row.Cells["colVRSWriteBackDbNameV1"].Value?.ToString() ?? "ai_inference_result",
-                        IsEnabled = row.Cells["colIsEnabled"].Value != null && (bool)row.Cells["colIsEnabled"].Value,
-                        MinioIpA = row.Cells["colMinioIpA"].Value?.ToString() ?? "127.0.0.1",
-                        MinioIpB = row.Cells["colMinioIpB"].Value?.ToString() ?? "127.0.0.1"
-                    };
-                    configList.Databases.Add(config);
-                }
-
+                var configList = new LevelDbConfigList { Databases = new List<LevelDbConfig>(_configs) };
                 return LevelDbConfigManager.Save(configList);
             }
             catch (Exception ex)
@@ -188,231 +307,150 @@ namespace DeepSightAI.SettingPages
             }
         }
 
-        #region 连接测试
+        #region 连接测试 - 状态显示与重置
+
+        private static readonly Color StatusIdleColor = Color.FromArgb(216, 219, 188);
+        private static readonly Color StatusBusyColor = Color.FromArgb(100, 180, 255);
+        private static readonly Color StatusOkColor = Color.FromArgb(0, 200, 83);
+        private static readonly Color StatusFailColor = Color.FromArgb(255, 82, 82);
+        private static readonly Color StatusWarnColor = Color.Orange;
 
         /// <summary>
-        /// 全部测试按钮点击
+        /// 设置 AVI 状态文字与颜色
         /// </summary>
-        private void btnTestAll_Click(object sender, EventArgs e)
+        private void SetAviStatus(string status, Color color)
         {
-            TestAllConnectionsAsync();
+            lblAviStatus.Text = "状态：" + status;
+            lblAviStatus.ForeColor = color;
         }
 
         /// <summary>
-        /// DataGridView 按钮列点击事件（测试连接按钮）
+        /// 设置 VRS 状态文字与颜色
         /// </summary>
-        private void dgvDatabases_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        private void SetVrsStatus(string status, Color color)
         {
-            if (e.RowIndex < 0) return;
-
-            // 点击测试连接按钮
-            if (dgvDatabases.Columns[e.ColumnIndex].Name == "colTestConnection")
-            {
-                TestConnectionAsync(e.RowIndex);
-            }
-            // 点击A面MinIO测试按钮
-            else if (dgvDatabases.Columns[e.ColumnIndex].Name == "colMinioTestA")
-            {
-                TestMinioConnectionAsync(e.RowIndex, "A");
-            }
-            // 点击B面MinIO测试按钮
-            else if (dgvDatabases.Columns[e.ColumnIndex].Name == "colMinioTestB")
-            {
-                TestMinioConnectionAsync(e.RowIndex, "B");
-            }
+            lblVrsStatus.Text = "状态：" + status;
+            lblVrsStatus.ForeColor = color;
         }
 
         /// <summary>
-        /// 当 CheckBox 列的 dirty state 变化时立即提交，以便触发 CellValueChanged
+        /// 设置 MinIO 指定面的状态文字与颜色
         /// </summary>
-        private void dgvDatabases_CurrentCellDirtyStateChanged(object sender, EventArgs e)
+        private void SetMinioStatus(string side, string status, Color color)
         {
-            if (dgvDatabases.IsCurrentCellDirty)
-            {
-                dgvDatabases.CommitEdit(DataGridViewDataErrorContexts.Commit);
-            }
+            var lbl = side == "A" ? lblMinioStatusA : lblMinioStatusB;
+            lbl.Text = "状态：" + status;
+            lbl.ForeColor = color;
         }
 
         /// <summary>
-        /// 单元格值改变事件 - IP/Port改变时自动测试，启用列需验证连接状态
+        /// IP/端口变更后重置 AVI 状态并把当前数据库置为未启用（必须重新测试才能启用）
         /// </summary>
-        private void dgvDatabases_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        private void ResetAviStatus()
         {
-            if (e.RowIndex < 0 || _isLoading) return;
-
-            string colName = dgvDatabases.Columns[e.ColumnIndex].Name;
-
-            // IP 或端口改变时，重置状态并自动测试
-            if (colName == "colIP" || colName == "colPort")
+            SetAviStatus("未测试", StatusIdleColor);
+            var c = CurrentConfig;
+            if (c != null && c.IsEnabled)
             {
-                var row = dgvDatabases.Rows[e.RowIndex];
-                row.Cells["colConnectionStatus"].Value = "未测试";
-                row.Cells["colConnectionStatus"].Style.ForeColor = Color.FromArgb(216, 219, 188);
-                // 连接参数变化后，禁用该行（需要重新测试才能启用）
-                row.Cells["colIsEnabled"].Value = false;
-                TestConnectionAsync(e.RowIndex);
-            }
-
-            // MinIO A IP 改变时，重置A面状态并自动测试
-            if (colName == "colMinioIpA")
-            {
-                var row = dgvDatabases.Rows[e.RowIndex];
-                row.Cells["colMinioStatusA"].Value = "未测试";
-                row.Cells["colMinioStatusA"].Style.ForeColor = Color.FromArgb(216, 219, 188);
-                string minioIp = row.Cells["colMinioIpA"].Value?.ToString() ?? "";
-                if (!string.IsNullOrWhiteSpace(minioIp))
-                    TestMinioConnectionAsync(e.RowIndex, "A");
-            }
-
-            // MinIO B IP 改变时，重置B面状态并自动测试
-            if (colName == "colMinioIpB")
-            {
-                var row = dgvDatabases.Rows[e.RowIndex];
-                row.Cells["colMinioStatusB"].Value = "未测试";
-                row.Cells["colMinioStatusB"].Style.ForeColor = Color.FromArgb(216, 219, 188);
-                string minioIp = row.Cells["colMinioIpB"].Value?.ToString() ?? "";
-                if (!string.IsNullOrWhiteSpace(minioIp))
-                    TestMinioConnectionAsync(e.RowIndex, "B");
-            }
-
-            // 尝试启用时，检查连接状态
-            if (colName == "colIsEnabled")
-            {
-                var row = dgvDatabases.Rows[e.RowIndex];
-                bool isEnabled = row.Cells["colIsEnabled"].Value != null && (bool)row.Cells["colIsEnabled"].Value;
-                if (isEnabled)
-                {
-                    string status = row.Cells["colConnectionStatus"].Value?.ToString() ?? "";
-                    if (status != "已连接 ✓")
-                    {
-                        row.Cells["colIsEnabled"].Value = false;
-                    }
-                }
+                c.IsEnabled = false;
+                _isBinding = true;
+                try { chkIsEnabled.Active = false; }
+                finally { _isBinding = false; }
+                RefreshListItem(lstDatabases.SelectedIndex);
             }
         }
 
-        /// <summary>
-        /// 异步测试所有行的连接（包括 MinIO）
-        /// </summary>
-        private async void TestAllConnectionsAsync()
+        private void ResetVrsStatus()
         {
-            for (int i = 0; i < dgvDatabases.Rows.Count; i++)
-            {
-                if (dgvDatabases.Rows[i].IsNewRow) continue;
-                await TestConnectionCoreAsync(i);
-            }
-            await TestAllMinioConnectionsAsync();
+            SetVrsStatus("未测试", StatusIdleColor);
         }
 
-        /// <summary>
-        /// 仅对已启用的数据库异步测试连接
-        /// </summary>
-        private async void TestEnabledConnectionsAsync()
+        private void ResetMinioStatus(string side)
         {
-            for (int i = 0; i < dgvDatabases.Rows.Count; i++)
-            {
-                var row = dgvDatabases.Rows[i];
-                if (row.IsNewRow) continue;
-                bool isEnabled = row.Cells["colIsEnabled"].Value != null && (bool)row.Cells["colIsEnabled"].Value;
-                if (isEnabled)
-                {
-                    await TestConnectionCoreAsync(i);
-                }
-            }
-        }
-
-        /// <summary>
-        /// 异步测试指定行的连接
-        /// </summary>
-        private async void TestConnectionAsync(int rowIndex)
-        {
-            await TestConnectionCoreAsync(rowIndex);
-        }
-
-        /// <summary>
-        /// 核心连接测试逻辑
-        /// </summary>
-        private async Task TestConnectionCoreAsync(int rowIndex)
-        {
-            if (rowIndex < 0 || rowIndex >= dgvDatabases.Rows.Count) return;
-
-            var row = dgvDatabases.Rows[rowIndex];
-            string ip = row.Cells["colIP"].Value?.ToString() ?? "";
-            string port = row.Cells["colPort"].Value?.ToString() ?? "";
-
-            if (string.IsNullOrWhiteSpace(ip) || string.IsNullOrWhiteSpace(port))
-            {
-                SetConnectionStatus(row, "配置不完整", Color.Orange);
-                return;
-            }
-
-            string url = $"http://{ip}:{port}";
-            SetConnectionStatus(row, "测试中...", Color.FromArgb(100, 180, 255));
-
-            try
-            {
-                bool success = await Task.Run(() =>
-                {
-                    try
-                    {
-                        var request = (HttpWebRequest)WebRequest.Create(url);
-                        request.Method = "POST";
-                        request.Timeout = TestTimeoutMs;
-                        request.ContentType = "application/json";
-
-                        // 发送一个简单的查询请求来测试连通性
-                        string testJson = "{\"uniqueKey\":\"test\",\"db_name\":\"test\",\"operation\":\"get\",\"key\":\"__connection_test__\"}";
-                        byte[] data = System.Text.Encoding.UTF8.GetBytes(testJson);
-                        request.ContentLength = data.Length;
-
-                        using (var reqStream = request.GetRequestStream())
-                        {
-                            reqStream.Write(data, 0, data.Length);
-                        }
-
-                        using (var response = (HttpWebResponse)request.GetResponse())
-                        {
-                            return response.StatusCode == HttpStatusCode.OK;
-                        }
-                    }
-                    catch
-                    {
-                        return false;
-                    }
-                });
-
-                if (success)
-                {
-                    SetConnectionStatus(row, "已连接 ✓", Color.FromArgb(0, 200, 83));
-                }
-                else
-                {
-                    SetConnectionStatus(row, "连接失败 ✗", Color.FromArgb(255, 82, 82));
-                    // 连接失败时自动禁用
-                    row.Cells["colIsEnabled"].Value = false;
-                }
-            }
-            catch (Exception ex)
-            {
-                SetConnectionStatus(row, "连接失败 ✗", Color.FromArgb(255, 82, 82));
-                row.Cells["colIsEnabled"].Value = false;
-                LogTextHelper.Error($"连接测试异常: {url} - {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 设置连接状态单元格的显示文本和颜色
-        /// </summary>
-        private void SetConnectionStatus(DataGridViewRow row, string status, Color color)
-        {
-            row.Cells["colConnectionStatus"].Value = status;
-            row.Cells["colConnectionStatus"].Style.ForeColor = color;
-            row.Cells["colConnectionStatus"].Style.Font = new Font("微软雅黑", 9F, FontStyle.Bold);
+            SetMinioStatus(side, "未测试", StatusIdleColor);
         }
 
         #endregion
 
-        #region MinIO 连接测试
+        #region 连接测试 - 入口
+
+        /// <summary>
+        /// 当前选中数据库的 AVI 测试
+        /// </summary>
+        private async void btnAviTest_Click(object sender, EventArgs e)
+        {
+            var c = CurrentConfig;
+            if (c == null) return;
+            await TestAviAsync(c, autoDisableOnFail: false);
+        }
+
+        /// <summary>
+        /// 当前选中数据库的 VRS 测试。
+        /// 测试 SN 为空：仅做连接探测；
+        /// 测试 SN 非空：发起一次按 SN 的 VRS 历史查询，弹窗显示原始 value 与解析结果。
+        /// </summary>
+        private async void btnVrsTest_Click(object sender, EventArgs e)
+        {
+            var c = CurrentConfig;
+            if (c == null) return;
+            string sn = txtVrsTestSn.Text?.Trim();
+            if (string.IsNullOrEmpty(sn))
+            {
+                await TestVrsAsync(c);
+            }
+            else
+            {
+                await TestVrsBySnAsync(c, sn);
+            }
+        }
+
+        private async void btnMinioTestA_Click(object sender, EventArgs e)
+        {
+            var c = CurrentConfig;
+            if (c == null) return;
+            await TestMinioAsync(c, "A");
+        }
+
+        private async void btnMinioTestB_Click(object sender, EventArgs e)
+        {
+            var c = CurrentConfig;
+            if (c == null) return;
+            await TestMinioAsync(c, "B");
+        }
+
+        /// <summary>
+        /// 全部测试：AVI + VRS + MinIO A/B
+        /// </summary>
+        private async void btnTestAll_Click(object sender, EventArgs e)
+        {
+            var c = CurrentConfig;
+            if (c == null) return;
+            await TestAviAsync(c, autoDisableOnFail: false);
+            await TestVrsAsync(c);
+            await TestMinioAsync(c, "A");
+            await TestMinioAsync(c, "B");
+        }
+
+        /// <summary>
+        /// 加载完成后，对每个已启用的数据库自动测试 AVI 连接（失败时自动取消启用）
+        /// </summary>
+        private async void TestEnabledConnectionsAsync()
+        {
+            int saved = lstDatabases.SelectedIndex;
+            for (int i = 0; i < _configs.Count; i++)
+            {
+                var c = _configs[i];
+                if (!c.IsEnabled) continue;
+                lstDatabases.SelectedIndex = i;
+                await TestAviAsync(c, autoDisableOnFail: true);
+            }
+            if (saved >= 0 && saved < _configs.Count)
+                lstDatabases.SelectedIndex = saved;
+        }
+
+        #endregion
+
+        #region 连接测试 - 核心实现
 
         /// <summary>
         /// MinIO 默认端口
@@ -420,101 +458,197 @@ namespace DeepSightAI.SettingPages
         private static readonly string MinioDefaultPort = MinioSettings.Instance.DefaultPort;
 
         /// <summary>
-        /// 异步测试指定行的 MinIO 连接
+        /// 测试 AVI 连接（http://{IP}:{Port}），结果只更新当前选中行的状态显示
         /// </summary>
-        /// <param name="rowIndex">行索引</param>
-        /// <param name="side">面别：A 或 B</param>
-        private async void TestMinioConnectionAsync(int rowIndex, string side)
+        private async Task TestAviAsync(LevelDbConfig c, bool autoDisableOnFail)
         {
-            await TestMinioConnectionCoreAsync(rowIndex, side);
-        }
-
-        /// <summary>
-        /// 全部测试时也测试 MinIO
-        /// </summary>
-        private async Task TestAllMinioConnectionsAsync()
-        {
-            for (int i = 0; i < dgvDatabases.Rows.Count; i++)
+            if (string.IsNullOrWhiteSpace(c.IP) || string.IsNullOrWhiteSpace(c.Port))
             {
-                if (dgvDatabases.Rows[i].IsNewRow) continue;
-                var row = dgvDatabases.Rows[i];
-                string ipA = row.Cells["colMinioIpA"].Value?.ToString() ?? "";
-                string ipB = row.Cells["colMinioIpB"].Value?.ToString() ?? "";
-                if (!string.IsNullOrWhiteSpace(ipA))
-                    await TestMinioConnectionCoreAsync(i, "A");
-                if (!string.IsNullOrWhiteSpace(ipB))
-                    await TestMinioConnectionCoreAsync(i, "B");
-            }
-        }
-
-        /// <summary>
-        /// MinIO 连接测试核心逻辑
-        /// </summary>
-        private async Task TestMinioConnectionCoreAsync(int rowIndex, string side)
-        {
-            if (rowIndex < 0 || rowIndex >= dgvDatabases.Rows.Count) return;
-
-            var row = dgvDatabases.Rows[rowIndex];
-            string ipColName = side == "A" ? "colMinioIpA" : "colMinioIpB";
-            string statusColName = side == "A" ? "colMinioStatusA" : "colMinioStatusB";
-
-            string minioIp = row.Cells[ipColName].Value?.ToString() ?? "";
-
-            if (string.IsNullOrWhiteSpace(minioIp))
-            {
-                SetMinioStatus(row, statusColName, "未配置", Color.Gray);
+                if (CurrentConfig == c) SetAviStatus("配置不完整", StatusWarnColor);
                 return;
             }
+            string url = $"http://{c.IP}:{c.Port}";
+            if (CurrentConfig == c) SetAviStatus("测试中...", StatusBusyColor);
 
-            SetMinioStatus(row, statusColName, "测试中...", Color.FromArgb(100, 180, 255));
+            bool success = await PostLevelDbProbeAsync(url);
+            if (CurrentConfig == c)
+                SetAviStatus(success ? "已连接 ✓" : "连接失败 ✗", success ? StatusOkColor : StatusFailColor);
 
-            try
+            if (!success && autoDisableOnFail && c.IsEnabled)
             {
-                bool success = await Task.Run(() =>
+                c.IsEnabled = false;
+                if (CurrentConfig == c)
                 {
-                    try
-                    {
-                        // 使用 MinIO health 端点测试连通性
-                        string url = $"http://{minioIp}:{MinioDefaultPort}/minio/health/live";
-                        var request = (HttpWebRequest)WebRequest.Create(url);
-                        request.Method = "GET";
-                        request.Timeout = TestTimeoutMs;
+                    _isBinding = true;
+                    try { chkIsEnabled.Active = false; }
+                    finally { _isBinding = false; }
+                }
+                int idx = _configs.IndexOf(c);
+                if (idx >= 0) RefreshListItem(idx);
+            }
+        }
 
-                        using (var response = (HttpWebResponse)request.GetResponse())
-                        {
-                            return response.StatusCode == HttpStatusCode.OK;
-                        }
-                    }
-                    catch
-                    {
-                        return false;
-                    }
-                });
+        /// <summary>
+        /// 测试 VRS 连接（http://{VRSIP}:{VRSPort}）
+        /// </summary>
+        private async Task TestVrsAsync(LevelDbConfig c)
+        {
+            if (string.IsNullOrWhiteSpace(c.VRSIP) || string.IsNullOrWhiteSpace(c.VRSPort))
+            {
+                if (CurrentConfig == c) SetVrsStatus("配置不完整", StatusWarnColor);
+                return;
+            }
+            string url = $"http://{c.VRSIP}:{c.VRSPort}";
+            if (CurrentConfig == c) SetVrsStatus("测试中...", StatusBusyColor);
 
-                if (success)
+            bool success = await PostLevelDbProbeAsync(url);
+            if (CurrentConfig == c)
+                SetVrsStatus(success ? "已连接 ✓" : "连接失败 ✗", success ? StatusOkColor : StatusFailColor);
+        }
+
+        /// <summary>
+        /// 按 SN 测试 VRS 历史查询：发起一次查询，弹窗显示原始 value 与解析结果
+        /// </summary>
+        private async Task TestVrsBySnAsync(LevelDbConfig c, string sn)
+        {
+            if (string.IsNullOrWhiteSpace(c.VRSIP) || string.IsNullOrWhiteSpace(c.VRSPort))
+            {
+                if (CurrentConfig == c) SetVrsStatus("配置不完整", StatusWarnColor);
+                return;
+            }
+            string url = $"http://{c.VRSIP}:{c.VRSPort}";
+            string dbName = string.IsNullOrWhiteSpace(c.VrsHistoryDbName)
+                ? VrsHistoryService.DefaultDbName : c.VrsHistoryDbName;
+
+            if (CurrentConfig == c) SetVrsStatus("查询中...", StatusBusyColor);
+
+            string rawValue = null;
+            string error = null;
+            bool success = await Task.Run(() =>
+            {
+                try
                 {
-                    SetMinioStatus(row, statusColName, "已连接 ✓", Color.FromArgb(0, 200, 83));
+                    var svc = new VrsHistoryService(new HttpClass());
+                    return svc.TryQuery(url, dbName, sn, out rawValue, out error);
+                }
+                catch (Exception ex)
+                {
+                    error = ex.Message;
+                    return false;
+                }
+            });
+
+            VrsHistoryResult parsed = null;
+            string parseError = null;
+            if (success && !string.IsNullOrEmpty(rawValue))
+            {
+                try
+                {
+                    parsed = VrsHistoryService.Parse(sn, rawValue);
+                    if (parsed == null) parseError = "解析返回 null";
+                }
+                catch (Exception ex)
+                {
+                    parseError = ex.Message;
+                }
+            }
+
+            if (CurrentConfig == c)
+            {
+                SetVrsStatus(success ? "查询完成" : "查询失败 ✗", success ? StatusOkColor : StatusFailColor);
+            }
+
+            ShowVrsTestResult(url, dbName, sn, success, error, rawValue, parsed, parseError);
+        }
+
+        /// <summary>
+        /// 弹窗显示 VRS 历史查询结果（精简：仅显示连接、获取、解析三段简要状态）
+        /// </summary>
+        private static void ShowVrsTestResult(string url, string dbName, string sn, bool success,
+            string error, string rawValue, VrsHistoryResult parsed, string parseError)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine($"URL: {url}");
+            sb.AppendLine($"db_name: {dbName}    SN: {sn}");
+            sb.AppendLine();
+            if (!success)
+            {
+                sb.AppendLine($"获取失败：{error ?? "未知错误"}");
+            }
+            else
+            {
+                int rawLen = rawValue?.Length ?? 0;
+                sb.AppendLine($"获取成功：value 长度 {rawLen}");
+                if (parsed == null)
+                {
+                    sb.AppendLine($"解析失败：{parseError ?? "未知"}");
                 }
                 else
                 {
-                    SetMinioStatus(row, statusColName, "连接失败 ✗", Color.FromArgb(255, 82, 82));
+                    sb.AppendLine($"解析成功：A 面 {parsed.AsideInfo.Count} 项, B 面 {parsed.BsideInfo.Count} 项, 报点 {parsed.Entries.Count} 条");
                 }
             }
-            catch (Exception ex)
-            {
-                SetMinioStatus(row, statusColName, "连接失败 ✗", Color.FromArgb(255, 82, 82));
-                LogTextHelper.Error($"MinIO {side}面连接测试异常: {minioIp} - {ex.Message}");
-            }
+
+            MessageBox.Show(sb.ToString(), success ? "VRS 查询结果" : "VRS 查询失败",
+                MessageBoxButtons.OK, success ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
         }
 
         /// <summary>
-        /// 设置 MinIO 状态单元格的显示文本和颜色
+        /// 测试 MinIO 指定面的连接（GET /minio/health/live）
         /// </summary>
-        private void SetMinioStatus(DataGridViewRow row, string statusColName, string status, Color color)
+        private async Task TestMinioAsync(LevelDbConfig c, string side)
         {
-            row.Cells[statusColName].Value = status;
-            row.Cells[statusColName].Style.ForeColor = color;
-            row.Cells[statusColName].Style.Font = new Font("微软雅黑", 9F, FontStyle.Bold);
+            string ip = side == "A" ? c.MinioIpA : c.MinioIpB;
+            if (string.IsNullOrWhiteSpace(ip))
+            {
+                if (CurrentConfig == c) SetMinioStatus(side, "未配置", Color.Gray);
+                return;
+            }
+            if (CurrentConfig == c) SetMinioStatus(side, "测试中...", StatusBusyColor);
+
+            string url = $"http://{ip}:{MinioDefaultPort}/minio/health/live";
+            bool success = await Task.Run(() =>
+            {
+                try
+                {
+                    var request = (HttpWebRequest)WebRequest.Create(url);
+                    request.Method = "GET";
+                    request.Timeout = TestTimeoutMs;
+                    using (var response = (HttpWebResponse)request.GetResponse())
+                        return response.StatusCode == HttpStatusCode.OK;
+                }
+                catch { return false; }
+            });
+
+            if (CurrentConfig == c)
+                SetMinioStatus(side, success ? "已连接 ✓" : "连接失败 ✗", success ? StatusOkColor : StatusFailColor);
+            if (!success)
+                LogTextHelper.Error($"MinIO {side}面连接测试失败: {url}");
+        }
+
+        /// <summary>
+        /// 向 LevelDB HTTP 服务发送一个查询探测请求，用于判断是否可达
+        /// </summary>
+        private static Task<bool> PostLevelDbProbeAsync(string url)
+        {
+            return Task.Run(() =>
+            {
+                try
+                {
+                    var request = (HttpWebRequest)WebRequest.Create(url);
+                    request.Method = "POST";
+                    request.Timeout = TestTimeoutMs;
+                    request.ContentType = "application/json";
+                    string testJson = "{\"uniqueKey\":\"test\",\"db_name\":\"test\",\"operation\":\"get\",\"key\":\"__connection_test__\"}";
+                    byte[] data = System.Text.Encoding.UTF8.GetBytes(testJson);
+                    request.ContentLength = data.Length;
+                    using (var reqStream = request.GetRequestStream())
+                        reqStream.Write(data, 0, data.Length);
+                    using (var response = (HttpWebResponse)request.GetResponse())
+                        return response.StatusCode == HttpStatusCode.OK;
+                }
+                catch { return false; }
+            });
         }
 
         #endregion

@@ -60,7 +60,10 @@ namespace DeepSightWorkLib.Services
             var vrsWriteBackDbName = !string.IsNullOrEmpty(info.SourceVRSWriteBackDbName)
                 ? info.SourceVRSWriteBackDbName
                 : "ai_detail_results_tovrs";
-            var targetUrl = info.SourceDbUrl;
+            var aviTargetUrl = info.SourceDbUrl;
+            var vrsTargetUrl = !string.IsNullOrEmpty(info.SourceVRSDbUrl)
+                ? info.SourceVRSDbUrl
+                : aviTargetUrl;
 
             RootAIResult data = new RootAIResult
             {
@@ -71,11 +74,11 @@ namespace DeepSightWorkLib.Services
                 Operation = "put",
                 OpMode = info.Side == "A" ? "all_ow" : "ap",
                 Key = info.Key,
-                TargetUrl = targetUrl,
-                VRSTargetUrl = targetUrl,
+                TargetUrl = aviTargetUrl,
+                VRSTargetUrl = vrsTargetUrl,
                 VRSDbName = vrsWriteBackDbName
             };
-            LogTextHelper.Info($"SN:{info.SN} Side:{info.Side} 回写AVI DB:{writeBackDbName}, VRS DB:{vrsWriteBackDbName}, URL:{targetUrl}");
+            LogTextHelper.Info($"SN:{info.SN} Side:{info.Side} 回写AVI DB:{writeBackDbName}@{aviTargetUrl}, VRS DB:{vrsWriteBackDbName}@{vrsTargetUrl}");
 
             List<AIDetailResultItem> aIDetailResults = new List<AIDetailResultItem>();
             List<ResultInfo> results = new List<ResultInfo>();

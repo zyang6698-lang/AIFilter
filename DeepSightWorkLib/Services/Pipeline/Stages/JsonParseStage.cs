@@ -64,6 +64,7 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
             var writeBackDbName = aviCtx.WriteBackDbName;
             var dbUrl = aviCtx.DbUrl;
             var vrsWriteBackDbName = aviCtx.VrsWriteBackDbName;
+            var vrsDbUrl = aviCtx.VrsDbUrl;
 
             TaskStatusSender.SendQueued(sn, side);
             string json = _minioService.ReadJsonSync("deepiresults", path, ip);
@@ -123,6 +124,7 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
                 DirectReportFlags = DirectReportFlags,
                 AllDefectCodes = AllDefectCodes,
                 SourceDbUrl = dbUrl,
+                SourceVRSDbUrl = vrsDbUrl,
                 SourceWriteBackDbName = writeBackDbName,
                 SourceVRSWriteBackDbName = vrsWriteBackDbName,
                 DirectReportDefectIndices = convertResult.DirectReportDefectIndices,

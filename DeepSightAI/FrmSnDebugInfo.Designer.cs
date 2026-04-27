@@ -63,7 +63,9 @@
             this.tabControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
             this.tabControl.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
-            this.tabControl.ItemSize = new System.Drawing.Size(146, 36);
+            this.tabControl.Alignment = System.Windows.Forms.TabAlignment.Left;
+            // Alignment=Left 时: ItemSize.Width=Tab高度, ItemSize.Height=Tab宽度
+            this.tabControl.ItemSize = new System.Drawing.Size(38, 175);
             this.tabControl.Font = new System.Drawing.Font("微软雅黑", 10F);
             this.tabControl.Location = new System.Drawing.Point(0, 0);
             this.tabControl.Name = "tabControl";

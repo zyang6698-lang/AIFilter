@@ -11,12 +11,15 @@ using System.Linq;
 namespace DeepSightWorkLib.Services
 {
     /// <summary>
-    /// 从 LevelDB 的 vrs_history_result 表按 SN 读取并解析 VRS 历史结果。
+    /// 从 LevelDB 的 VRS 历史结果表按 SN 读取并解析 VRS 历史结果。
     /// 遍历所有启用的 LevelDbConfig，命中即返回。
     /// </summary>
     public class VrsHistoryService
     {
-        private const string DbName = "vrs_history_result";
+        /// <summary>
+        /// 当配置中未指定时使用的兜底库名
+        /// </summary>
+        public const string DefaultDbName = "vrs_history_result";
 
         private readonly HttpClass _httpDb;
 
@@ -46,9 +49,12 @@ namespace DeepSightWorkLib.Services
 
             foreach (var config in configs)
             {
+                var dbName = string.IsNullOrWhiteSpace(config.VrsHistoryDbName)
+                    ? DefaultDbName
+                    : config.VrsHistoryDbName;
                 try
                 {
-                    if (TryQuery(config.Url, sn, out string rawValue))
+                    if (TryQuery(config.VRSUrl, dbName, sn, out string rawValue, out _))
                     {
                         var parsed = Parse(sn, rawValue);
                         if (parsed != null)
@@ -60,7 +66,7 @@ namespace DeepSightWorkLib.Services
                 }
                 catch (Exception ex)
                 {
-                    LogTextHelper.Error($"VrsHistoryService 查询 SN={sn} DB={config.DbName} 异常: {ex}");
+                    LogTextHelper.Error($"VrsHistoryService 查询 SN={sn} DB={dbName} 异常: {ex}");
                 }
             }
 
@@ -68,26 +74,48 @@ namespace DeepSightWorkLib.Services
         }
 
         /// <summary>
-        /// 向指定 URL 的 LevelDB 发起 get 请求，解析响应并返回 value 字符串
+        /// 向指定 URL 的 LevelDB 发起 get 请求并返回 value 字符串。供测试入口使用。
         /// </summary>
-        private bool TryQuery(string url, string sn, out string rawValue)
+        public bool TryQuery(string url, string dbName, string sn, out string rawValue, out string error)
         {
             rawValue = null;
+            error = null;
+
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                error = "URL 为空";
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(dbName))
+            {
+                error = "db_name 为空";
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(sn))
+            {
+                error = "SN 为空";
+                return false;
+            }
 
             var req = new RootDbInfo
             {
                 uniqueKey = Guid.NewGuid().ToString(),
-                db_name = DbName,
+                db_name = dbName,
                 operation = "get",
-                is_select_range = "false",
-                op_mode = "all",
+                op_mode = "last",
                 key = sn
             };
 
             if (!_httpDb.HttpPostMethod(url, req, 0, out string response))
+            {
+                error = "HTTP 请求失败";
                 return false;
+            }
             if (string.IsNullOrEmpty(response))
+            {
+                error = "响应为空";
                 return false;
+            }
 
             // 错误响应预检（参考 AviReaderService.DoAviJsonTyped）
             try
@@ -100,6 +128,7 @@ namespace DeepSightWorkLib.Services
                     if (!string.IsNullOrEmpty(s) && s.StartsWith("err"))
                     {
                         LogTextHelper.Warn($"VrsHistoryService: LevelDB 返回错误响应 {s}, SN={sn}");
+                        error = $"LevelDB 返回错误：{s}";
                         return false;
                     }
                 }
@@ -112,41 +141,22 @@ namespace DeepSightWorkLib.Services
                 MissingMemberHandling = MissingMemberHandling.Ignore
             };
 
-            var resp = JsonConvert.DeserializeObject<AviResponse>(response, settings);
-            if (resp?.DataList == null || resp.DataList.Count == 0)
-                return false;
-
-            foreach (var item in resp.DataList)
+            var resp = JsonConvert.DeserializeObject<VRSResultResponse>(response, settings);
+            rawValue = resp?.Value;
+            if (string.IsNullOrEmpty(rawValue))
             {
-                string valueStr = null;
-                if (item is string str)
-                {
-                    if (str == "end_range_send") continue;
-                    try
-                    {
-                        var di = JsonConvert.DeserializeObject<AviDataItem>(str, settings);
-                        valueStr = di?.Value;
-                    }
-                    catch { }
-                }
-                else if (item is JObject jo)
-                {
-                    valueStr = jo["value"]?.ToString();
-                }
-
-                if (!string.IsNullOrEmpty(valueStr))
-                {
-                    rawValue = valueStr;
-                    return true;
-                }
+                error = "未在响应中获取到 value 字段";
+                return false;
             }
 
-            return false;
+            return true;
         }
 
         /// <summary>
-        /// 解析 vrs_history_result 的 value JSON。
-        /// 示例：{"AsideInfo":["A_0_1_0_ok", ...],"BsideInfo":["B_1_1_0_ok"]}
+        /// 解析 vrs_history_result 的 value 字段。
+        /// value 可能是单个 JSON，也可能是分号(;)分隔的多段 JSON（多次 VRS 写入的累积快照），
+        /// 每段格式：{"AsideInfo":["A_0_1_0_ok", ...],"BsideInfo":["B_1_1_0_ok", ...]}
+        /// 取最后一个非空数据块（最新 VRS 快照）作为结果。
         /// </summary>
         public static VrsHistoryResult Parse(string sn, string valueJson)
         {
@@ -155,11 +165,26 @@ namespace DeepSightWorkLib.Services
 
             try
             {
-                var jo = JObject.Parse(valueJson);
+                var blocks = InferenceResultParser.ParseValueBlocks(valueJson);
+                if (blocks == null || blocks.Count == 0)
+                {
+                    LogTextHelper.Warn($"VrsHistoryService.Parse 未解析到任何数据块 SN={sn}");
+                    return null;
+                }
+
+                var latest = blocks[blocks.Count - 1];
                 var result = new VrsHistoryResult { Sn = sn };
 
-                CollectTokens(jo["AsideInfo"], result.AsideInfo);
-                CollectTokens(jo["BsideInfo"], result.BsideInfo);
+                if (latest.AsideInfo != null)
+                {
+                    foreach (var s in latest.AsideInfo)
+                        if (!string.IsNullOrEmpty(s)) result.AsideInfo.Add(s);
+                }
+                if (latest.BsideInfo != null)
+                {
+                    foreach (var s in latest.BsideInfo)
+                        if (!string.IsNullOrEmpty(s)) result.BsideInfo.Add(s);
+                }
 
                 foreach (var token in result.AsideInfo)
                 {
@@ -178,19 +203,6 @@ namespace DeepSightWorkLib.Services
             {
                 LogTextHelper.Error($"VrsHistoryService.Parse 解析异常 SN={sn}: {ex}");
                 return null;
-            }
-        }
-
-        private static void CollectTokens(JToken arr, List<string> target)
-        {
-            if (arr == null || arr.Type != JTokenType.Array) return;
-            foreach (var t in arr)
-            {
-                if (t.Type == JTokenType.String)
-                {
-                    var s = t.Value<string>();
-                    if (!string.IsNullOrEmpty(s)) target.Add(s);
-                }
             }
         }
 

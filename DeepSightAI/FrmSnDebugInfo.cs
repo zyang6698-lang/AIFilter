@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using System.Reflection;
 using System.Windows.Forms;
 
 namespace DeepSightAI
@@ -27,24 +28,80 @@ namespace DeepSightAI
         /// <summary>
         /// Tab数据状态：用于控制Tab标签背景色
         /// </summary>
-        private enum TabDataStatus { Empty, HasData, Error }
+        private enum TabDataStatus { Empty, HasData, Warning, Error }
         private readonly Dictionary<TabPage, TabDataStatus> _tabStatusMap = new Dictionary<TabPage, TabDataStatus>();
+
+        /// <summary>
+        /// 大JSON阈值（字节）：超过则启用懒加载并跳过重格式化
+        /// </summary>
+        private const int LargeJsonThreshold = 200 * 1024;
+
+        /// <summary>
+        /// 懒加载下立即展开的层数（0=只渲染首层）
+        /// </summary>
+        private const int LazyEagerDepth = 1;
+
+        /// <summary>
+        /// TabControl 标签栏深色背景色（与窗体主背景一致）
+        /// </summary>
+        private static readonly Color TabStripBackColor = Color.FromArgb(29, 48, 60);
 
         public FrmSnDebugInfo(string sn, SnDebugInfo debugInfo)
         {
             InitializeComponent();
             Text = $"SN调试信息 - {sn}";
 
+            EnableTabControlDarkBackground();
+            SetupTreeViewsCopySupport();
             LoadData(sn, debugInfo);
+        }
+
+        /// <summary>
+        /// 通过反射启用TabControl的UserPaint，使标签栏背景可自绘为深色
+        /// </summary>
+        private void EnableTabControlDarkBackground()
+        {
+            var setStyle = typeof(Control).GetMethod("SetStyle",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            setStyle?.Invoke(tabControl, new object[]
+            {
+                ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint
+                    | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw,
+                true
+            });
+            tabControl.BackColor = TabStripBackColor;
+            tabControl.Paint += TabControl_Paint;
+        }
+
+        /// <summary>
+        /// 自绘TabControl：填充深色背景 + 重绘所有tab项
+        /// </summary>
+        private void TabControl_Paint(object sender, PaintEventArgs e)
+        {
+            // 整个控件区域填充为深色，覆盖默认浅灰色tab strip背景
+            using (var brush = new SolidBrush(TabStripBackColor))
+                e.Graphics.FillRectangle(brush, tabControl.ClientRectangle);
+
+            // 重绘每一个tab项
+            for (int i = 0; i < tabControl.TabPages.Count; i++)
+            {
+                var bounds = tabControl.GetTabRect(i);
+                var state = i == tabControl.SelectedIndex
+                    ? DrawItemState.Selected
+                    : DrawItemState.None;
+                var args = new DrawItemEventArgs(e.Graphics, tabControl.Font, bounds, i, state);
+                TabControl_DrawItem(sender, args);
+            }
         }
 
         private void TabControl_SelectedIndexChanged(object sender, EventArgs e)
         {
             _lastSearchIndex = 0;
             _lastSearchNode = null;
+            tabControl.Invalidate(); // UserPaint模式下需主动刷新以更新选中态
         }
 
-        #region TabControl 箭头流程绘制
+        #region TabControl 绘制
 
         private void TabControl_DrawItem(object sender, DrawItemEventArgs e)
         {
@@ -53,26 +110,35 @@ namespace DeepSightAI
             var tabPage = tabControl.TabPages[e.Index];
             var bounds = e.Bounds;
             bool isSelected = (tabControl.SelectedIndex == e.Index);
-            int count = tabControl.TabPages.Count;
-            int arrowW = 10;
-
-            // 根据状态选择颜色
             Color bgColor = GetTabBgColor(tabPage, isSelected);
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
 
-            // 构建箭头多边形
+            bool isVertical = tabControl.Alignment == TabAlignment.Left
+                              || tabControl.Alignment == TabAlignment.Right;
+
+            if (isVertical)
+                DrawVerticalTab(e.Graphics, bounds, tabPage, isSelected, bgColor);
+            else
+                DrawHorizontalTab(e.Graphics, bounds, e.Index, tabControl.TabPages.Count, tabPage, isSelected, bgColor);
+        }
+
+        /// <summary>
+        /// 横向箭头流程绘制（保留原样式）
+        /// </summary>
+        private void DrawHorizontalTab(Graphics g, Rectangle bounds, int index, int count, TabPage tabPage, bool isSelected, Color bgColor)
+        {
+            int arrowW = 10;
             var pts = new List<Point>();
-            if (e.Index == 0)
+            if (index == 0)
             {
-                // 第一个: 左平右箭头
                 pts.Add(new Point(bounds.Left, bounds.Top));
                 pts.Add(new Point(bounds.Right - arrowW, bounds.Top));
                 pts.Add(new Point(bounds.Right, bounds.Top + bounds.Height / 2));
                 pts.Add(new Point(bounds.Right - arrowW, bounds.Bottom));
                 pts.Add(new Point(bounds.Left, bounds.Bottom));
             }
-            else if (e.Index == count - 1)
+            else if (index == count - 1)
             {
-                // 最后一个: 左凹右平
                 pts.Add(new Point(bounds.Left, bounds.Top));
                 pts.Add(new Point(bounds.Right, bounds.Top));
                 pts.Add(new Point(bounds.Right, bounds.Bottom));
@@ -81,7 +147,6 @@ namespace DeepSightAI
             }
             else
             {
-                // 中间: 左凹右箭头
                 pts.Add(new Point(bounds.Left, bounds.Top));
                 pts.Add(new Point(bounds.Right - arrowW, bounds.Top));
                 pts.Add(new Point(bounds.Right, bounds.Top + bounds.Height / 2));
@@ -91,42 +156,87 @@ namespace DeepSightAI
             }
 
             using (var brush = new LinearGradientBrush(bounds,
-                ControlPaint.Light(bgColor, 0.15f), bgColor,
-                LinearGradientMode.Vertical))
+                ControlPaint.Light(bgColor, 0.15f), bgColor, LinearGradientMode.Vertical))
             {
-                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-                e.Graphics.FillPolygon(brush, pts.ToArray());
+                g.FillPolygon(brush, pts.ToArray());
             }
 
-            // 选中时画高亮边框
             if (isSelected)
             {
                 using (var pen = new Pen(Color.FromArgb(100, 180, 255), 1.5f))
-                {
-                    e.Graphics.DrawPolygon(pen, pts.ToArray());
-                }
+                    g.DrawPolygon(pen, pts.ToArray());
             }
 
-            // 绘制文字
             var textRect = bounds;
-            if (e.Index > 0) { textRect.X += arrowW; textRect.Width -= arrowW; }
-            if (e.Index < count - 1) { textRect.Width -= arrowW; }
+            if (index > 0) { textRect.X += arrowW; textRect.Width -= arrowW; }
+            if (index < count - 1) { textRect.Width -= arrowW; }
 
-            // 状态小圆点
             int dotSize = 7;
             int dotX = textRect.Left + 4;
             int dotY = textRect.Top + (textRect.Height - dotSize) / 2;
-            Color dotColor = GetStatusDotColor(tabPage);
-            using (var dotBrush = new SolidBrush(dotColor))
-            {
-                e.Graphics.FillEllipse(dotBrush, dotX, dotY, dotSize, dotSize);
-            }
+            using (var dotBrush = new SolidBrush(GetStatusDotColor(tabPage)))
+                g.FillEllipse(dotBrush, dotX, dotY, dotSize, dotSize);
 
-            // 文字偏移（给圆点留空间）
             var txtRect = new Rectangle(textRect.X + dotSize + 6, textRect.Y, textRect.Width - dotSize - 8, textRect.Height);
-            TextRenderer.DrawText(e.Graphics, tabPage.Text, tabControl.Font, txtRect,
+            TextRenderer.DrawText(g, tabPage.Text, tabControl.Font, txtRect,
                 isSelected ? Color.White : Color.FromArgb(200, 210, 220),
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+        }
+
+        /// <summary>
+        /// 纵向侧栏式绘制：左侧高亮条 + 状态点 + 文字（圆角矩形渐变背景）
+        /// </summary>
+        private void DrawVerticalTab(Graphics g, Rectangle bounds, TabPage tabPage, bool isSelected, Color bgColor)
+        {
+            // 内缩留白，避免标签紧贴
+            var rect = new Rectangle(bounds.Left + 2, bounds.Top + 2, bounds.Width - 4, bounds.Height - 4);
+
+            // 圆角矩形背景渐变
+            using (var path = CreateRoundedRect(rect, 5))
+            using (var brush = new LinearGradientBrush(rect,
+                ControlPaint.Light(bgColor, 0.20f), bgColor, LinearGradientMode.Horizontal))
+            {
+                g.FillPath(brush, path);
+
+                if (isSelected)
+                {
+                    using (var pen = new Pen(Color.FromArgb(100, 180, 255), 1.4f))
+                        g.DrawPath(pen, path);
+                }
+            }
+
+            // 左侧 3px 高亮条（选中态/状态色）
+            Color barColor = isSelected
+                ? Color.FromArgb(120, 200, 255)
+                : GetStatusDotColor(tabPage);
+            var barRect = new Rectangle(rect.Left + 1, rect.Top + 4, 3, rect.Height - 8);
+            using (var barBrush = new SolidBrush(barColor))
+                g.FillRectangle(barBrush, barRect);
+
+            // 状态点
+            int dotSize = 7;
+            int dotX = rect.Left + 12;
+            int dotY = rect.Top + (rect.Height - dotSize) / 2;
+            using (var dotBrush = new SolidBrush(GetStatusDotColor(tabPage)))
+                g.FillEllipse(dotBrush, dotX, dotY, dotSize, dotSize);
+
+            // 文字
+            var txtRect = new Rectangle(dotX + dotSize + 6, rect.Top, rect.Right - (dotX + dotSize + 6) - 4, rect.Height);
+            TextRenderer.DrawText(g, tabPage.Text, tabControl.Font, txtRect,
+                isSelected ? Color.White : Color.FromArgb(200, 210, 220),
+                TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+        }
+
+        private static GraphicsPath CreateRoundedRect(Rectangle rect, int radius)
+        {
+            var path = new GraphicsPath();
+            int d = radius * 2;
+            path.AddArc(rect.Left, rect.Top, d, d, 180, 90);
+            path.AddArc(rect.Right - d, rect.Top, d, d, 270, 90);
+            path.AddArc(rect.Right - d, rect.Bottom - d, d, d, 0, 90);
+            path.AddArc(rect.Left, rect.Bottom - d, d, d, 90, 90);
+            path.CloseFigure();
+            return path;
         }
 
         private Color GetTabBgColor(TabPage tab, bool isSelected)
@@ -138,6 +248,8 @@ namespace DeepSightAI
             {
                 case TabDataStatus.HasData:
                     return isSelected ? Color.FromArgb(35, 100, 60) : Color.FromArgb(28, 68, 45);
+                case TabDataStatus.Warning:
+                    return isSelected ? Color.FromArgb(150, 105, 35) : Color.FromArgb(110, 78, 25);
                 case TabDataStatus.Error:
                     return isSelected ? Color.FromArgb(140, 45, 45) : Color.FromArgb(100, 35, 35);
                 default:
@@ -153,6 +265,7 @@ namespace DeepSightAI
             switch (status)
             {
                 case TabDataStatus.HasData: return Color.FromArgb(80, 220, 100);
+                case TabDataStatus.Warning: return Color.FromArgb(255, 190, 70);
                 case TabDataStatus.Error: return Color.FromArgb(255, 80, 60);
                 default: return Color.FromArgb(100, 110, 120);
             }
@@ -200,21 +313,25 @@ namespace DeepSightAI
 
             LoadJsonToTreeView(tvLevelDbJson, tabLevelDb, debugInfo.RawLevelDbJson);
 
+            // 推理结果解析的统计计数（用于全OK/全NG警告判断）
+            int analysisOkCount = 0;
+            int analysisNgCount = 0;
+
             // 其余按AB侧分开显示（已排序A在前）
             var sbOther = new System.Text.StringBuilder();
 
             {
-                // PanelInfo JSON - 按面添加到TreeView
-                LoadSideJsonToTreeView(tvPanelInfoJson, debugInfo.PanelInfoJson);
+                // PanelInfo JSON - 按面添加到TreeView（启用大文件懒加载）
+                LoadLargeSideJsonToTreeView(tvPanelInfoJson, debugInfo.PanelInfoJson);
 
-                // VB Inference JSON
-                LoadSideJsonToTreeView(tvVbInferenceJson, debugInfo.VbInferenceJson);
+                // VB Inference JSON（启用大文件懒加载）
+                LoadLargeSideJsonToTreeView(tvVbInferenceJson, debugInfo.VbInferenceJson);
 
-                // 推理返回JSON
-                LoadSideJsonToTreeView(tvInferenceReturnJson, debugInfo.InferenceReturnJson);
+                // 推理返回JSON（启用大文件懒加载）
+                LoadLargeSideJsonToTreeView(tvInferenceReturnJson, debugInfo.InferenceReturnJson);
 
                 // 推理结果解析
-                LoadInferenceAnalysis(debugInfo);
+                LoadInferenceAnalysis(debugInfo, out analysisOkCount, out analysisNgCount);
 
                 // 回写AVI JSON
                 LoadJsonToTreeView(tvAviWriteBackJson, tabAviWriteBack, debugInfo.AviWriteBackJson);
@@ -232,7 +349,8 @@ namespace DeepSightAI
                 sbOther.AppendLine($"PCS数量:         {debugInfo.PcsCount}");
                 sbOther.AppendLine($"图片数量:        {debugInfo.ImageCount}");
                 sbOther.AppendLine($"数据源DB:        {debugInfo.SourceDbName}");
-                sbOther.AppendLine($"数据源URL:       {debugInfo.SourceDbUrl}");
+                sbOther.AppendLine($"AVI侧URL:        {debugInfo.SourceDbUrl}");
+                sbOther.AppendLine($"VRS侧URL:        {debugInfo.SourceVRSDbUrl}");
                 sbOther.AppendLine($"Minio路径:       {debugInfo.MinioPath}");
                 sbOther.AppendLine($"数据获取时间:    {debugInfo.CreateTime:yyyy-MM-dd HH:mm:ss.fff}");
 
@@ -259,7 +377,13 @@ namespace DeepSightAI
             _tabStatusMap[tabPanelInfo] = !string.IsNullOrEmpty(debugInfo.PanelInfoJson) ? TabDataStatus.HasData : TabDataStatus.Empty;
             _tabStatusMap[tabVbJson] = !string.IsNullOrEmpty(debugInfo.VbInferenceJson) ? TabDataStatus.HasData : TabDataStatus.Empty;
             _tabStatusMap[tabInferReturn] = !string.IsNullOrEmpty(debugInfo.InferenceReturnJson) ? TabDataStatus.HasData : TabDataStatus.Empty;
-            _tabStatusMap[tabInferAnalysis] = !string.IsNullOrEmpty(debugInfo.InferenceReturnJson) ? TabDataStatus.HasData : TabDataStatus.Empty;
+            // 推理结果解析：所有结果均为OK或均为NG时显示警告色
+            int analysisTotal = analysisOkCount + analysisNgCount;
+            bool allSameResult = analysisTotal > 0 && (analysisOkCount == 0 || analysisNgCount == 0);
+            if (allSameResult)
+                _tabStatusMap[tabInferAnalysis] = TabDataStatus.Warning;
+            else
+                _tabStatusMap[tabInferAnalysis] = !string.IsNullOrEmpty(debugInfo.InferenceReturnJson) ? TabDataStatus.HasData : TabDataStatus.Empty;
             _tabStatusMap[tabAviWriteBack] = !string.IsNullOrEmpty(debugInfo.AviWriteBackJson) ? TabDataStatus.HasData : TabDataStatus.Empty;
             _tabStatusMap[tabVrsWriteBack] = !string.IsNullOrEmpty(debugInfo.VrsWriteBackJson) ? TabDataStatus.HasData : TabDataStatus.Empty;
             _tabStatusMap[tabVrsV1WriteBack] = !string.IsNullOrEmpty(debugInfo.VrsV1WriteBackJson) ? TabDataStatus.HasData : TabDataStatus.Empty;
@@ -271,8 +395,12 @@ namespace DeepSightAI
         /// <summary>
         /// 加载推理结果解析 - 使用TreeView展示，支持折叠/展开
         /// </summary>
-        private void LoadInferenceAnalysis(SnDebugInfo debugInfo)
+        /// <param name="analysisOk">输出：推理结果中OK的数量</param>
+        /// <param name="analysisNg">输出：推理结果中NG的数量</param>
+        private void LoadInferenceAnalysis(SnDebugInfo debugInfo, out int analysisOk, out int analysisNg)
         {
+            analysisOk = 0;
+            analysisNg = 0;
             tvInferAnalysis.Nodes.Clear();
 
             if (string.IsNullOrEmpty(debugInfo.InferenceReturnJson))
@@ -507,6 +635,10 @@ namespace DeepSightAI
                 tvInferAnalysis.Nodes.Add(nodeStat);
                 nodeStat.ExpandAll();
 
+                // 输出统计结果
+                analysisOk = okCount;
+                analysisNg = ngCount;
+
                 // 存储用于复制
                 _tabRawJsonMap[tabInferAnalysis] = BuildAnalysisText(tvInferAnalysis);
             }
@@ -586,37 +718,6 @@ namespace DeepSightAI
                 tv.Nodes.Add(new TreeNode(json));
                 _tabRawJsonMap[tab] = json;
             }
-        }
-
-        /// <summary>
-        /// 按面别将JSON添加到TreeView
-        /// </summary>
-        private void LoadSideJsonToTreeView(TreeView tv, string json)
-        {
-            var sideNode = new TreeNode
-            {
-                ForeColor = Color.FromArgb(100, 200, 255)
-            };
-
-            if (!string.IsNullOrEmpty(json))
-            {
-                try
-                {
-                    var token = JToken.Parse(json);
-                    AddJTokenNodes(sideNode, token);
-                }
-                catch
-                {
-                    sideNode.Nodes.Add(new TreeNode(json));
-                }
-            }
-            else
-            {
-                sideNode.Nodes.Add(new TreeNode("暂无数据"));
-            }
-
-            tv.Nodes.Add(sideNode);
-            tv.ExpandAll();
         }
 
         /// <summary>
@@ -726,13 +827,21 @@ namespace DeepSightAI
                 var json = jsonSelector(debugInfo);
                 if (!string.IsNullOrEmpty(json))
                 {
-                    try
-                    {
-                        sb.AppendLine(JToken.Parse(json).ToString(Newtonsoft.Json.Formatting.Indented));
-                    }
-                    catch
+                    // 大JSON跳过格式化，直接使用原始字符串避免再分配大内存
+                    if (json.Length > LargeJsonThreshold)
                     {
                         sb.AppendLine(json);
+                    }
+                    else
+                    {
+                        try
+                        {
+                            sb.AppendLine(JToken.Parse(json).ToString(Newtonsoft.Json.Formatting.Indented));
+                        }
+                        catch
+                        {
+                            sb.AppendLine(json);
+                        }
                     }
                 }
                 else
@@ -742,6 +851,250 @@ namespace DeepSightAI
                 sb.AppendLine();
             }
             _tabRawJsonMap[tab] = sb.ToString();
+        }
+
+        /// <summary>
+        /// 大JSON懒加载：仅渲染前几层，深层节点放占位符 + JToken Tag，BeforeExpand时再展开
+        /// </summary>
+        private void LoadLargeSideJsonToTreeView(TreeView tv, string json)
+        {
+            tv.Nodes.Clear();
+            var sideNode = new TreeNode { ForeColor = Color.FromArgb(100, 200, 255) };
+
+            if (string.IsNullOrEmpty(json))
+            {
+                sideNode.Text = "暂无数据";
+                tv.Nodes.Add(sideNode);
+                return;
+            }
+
+            bool isLarge = json.Length > LargeJsonThreshold;
+            try
+            {
+                var token = JToken.Parse(json);
+                if (isLarge)
+                {
+                    sideNode.Text = $"JSON  ({json.Length / 1024.0:F1} KB) — 大文件，按需展开";
+                    tv.BeginUpdate();
+                    try { AddJTokenNodesLazy(sideNode, token, 0); }
+                    finally { tv.EndUpdate(); }
+                    tv.Nodes.Add(sideNode);
+                    sideNode.Expand();
+                }
+                else
+                {
+                    AddJTokenNodes(sideNode, token);
+                    tv.Nodes.Add(sideNode);
+                    tv.ExpandAll();
+                }
+            }
+            catch
+            {
+                // 解析失败：截断显示，避免一次性塞超长字符串到节点
+                var preview = json.Length > 4096 ? json.Substring(0, 4096) + " ... (已截断)" : json;
+                sideNode.Nodes.Add(new TreeNode(preview));
+                tv.Nodes.Add(sideNode);
+            }
+        }
+
+        /// <summary>
+        /// 懒加载版的JToken→TreeNode转换：超过 LazyEagerDepth 的容器节点不立即展开
+        /// </summary>
+        private void AddJTokenNodesLazy(TreeNode parentNode, JToken token, int depth)
+        {
+            switch (token.Type)
+            {
+                case JTokenType.Object:
+                    foreach (var prop in ((JObject)token).Properties())
+                    {
+                        if (prop.Value.Type == JTokenType.Object)
+                        {
+                            var childCount = ((JObject)prop.Value).Count;
+                            var node = new TreeNode($"{prop.Name}  {{ {childCount} }}")
+                            { ForeColor = Color.FromArgb(150, 200, 255) };
+                            AttachLazyOrExpand(node, prop.Value, depth);
+                            parentNode.Nodes.Add(node);
+                        }
+                        else if (prop.Value.Type == JTokenType.Array)
+                        {
+                            var arr = (JArray)prop.Value;
+                            var node = new TreeNode($"{prop.Name}  [ {arr.Count} ]")
+                            { ForeColor = Color.FromArgb(200, 180, 100) };
+                            AttachLazyOrExpand(node, prop.Value, depth);
+                            parentNode.Nodes.Add(node);
+                        }
+                        else
+                        {
+                            var valStr = prop.Value.Type == JTokenType.Null ? "null" : prop.Value.ToString();
+                            var node = new TreeNode($"{prop.Name}: {valStr}")
+                            { ForeColor = GetValueColor(prop.Value) };
+                            parentNode.Nodes.Add(node);
+                        }
+                    }
+                    break;
+
+                case JTokenType.Array:
+                    var array = (JArray)token;
+                    for (int i = 0; i < array.Count; i++)
+                    {
+                        var item = array[i];
+                        if (item.Type == JTokenType.Object)
+                        {
+                            var childCount = ((JObject)item).Count;
+                            var node = new TreeNode($"[{i}]  {{ {childCount} }}")
+                            { ForeColor = Color.FromArgb(150, 200, 255) };
+                            AttachLazyOrExpand(node, item, depth);
+                            parentNode.Nodes.Add(node);
+                        }
+                        else if (item.Type == JTokenType.Array)
+                        {
+                            var innerArr = (JArray)item;
+                            var node = new TreeNode($"[{i}]  [ {innerArr.Count} ]")
+                            { ForeColor = Color.FromArgb(200, 180, 100) };
+                            AttachLazyOrExpand(node, item, depth);
+                            parentNode.Nodes.Add(node);
+                        }
+                        else
+                        {
+                            var valStr = item.Type == JTokenType.Null ? "null" : item.ToString();
+                            var node = new TreeNode($"[{i}]: {valStr}")
+                            { ForeColor = GetValueColor(item) };
+                            parentNode.Nodes.Add(node);
+                        }
+                    }
+                    break;
+
+                default:
+                    parentNode.Nodes.Add(new TreeNode(token.ToString()));
+                    break;
+            }
+        }
+
+        private void AttachLazyOrExpand(TreeNode node, JToken token, int currentDepth)
+        {
+            if (currentDepth < LazyEagerDepth)
+            {
+                AddJTokenNodesLazy(node, token, currentDepth + 1);
+            }
+            else
+            {
+                node.Tag = token;
+                node.Nodes.Add(new TreeNode("加载中...") { ForeColor = Color.FromArgb(128, 128, 128) });
+            }
+        }
+
+        private void TreeView_BeforeExpandLazy(object sender, TreeViewCancelEventArgs e)
+        {
+            if (e.Node?.Tag is JToken token)
+            {
+                var tv = (TreeView)sender;
+                tv.BeginUpdate();
+                try
+                {
+                    e.Node.Nodes.Clear();
+                    AddJTokenNodesLazy(e.Node, token, 0);
+                    e.Node.Tag = null;
+                }
+                finally
+                {
+                    tv.EndUpdate();
+                }
+            }
+        }
+
+        #endregion
+
+        #region TreeView 选中复制支持
+
+        /// <summary>
+        /// 为所有TreeView挂载右键菜单 + Ctrl+C复制 + 右键自动选中
+        /// </summary>
+        private void SetupTreeViewsCopySupport()
+        {
+            var trees = new[]
+            {
+                tvLevelDbJson, tvPanelInfoJson, tvVbInferenceJson, tvInferenceReturnJson,
+                tvInferAnalysis, tvAviWriteBackJson, tvVrsWriteBackJson, tvVrsV1WriteBackJson
+            };
+
+            foreach (var tv in trees)
+            {
+                tv.ContextMenuStrip = BuildTreeContextMenu(tv);
+                tv.MouseDown += TreeView_MouseDownSelect;
+                tv.KeyDown += TreeView_KeyDownCopy;
+            }
+
+            // PanelInfo / VB推理JSON / 推理返回JSON 启用大文件懒加载展开
+            tvPanelInfoJson.BeforeExpand += TreeView_BeforeExpandLazy;
+            tvVbInferenceJson.BeforeExpand += TreeView_BeforeExpandLazy;
+            tvInferenceReturnJson.BeforeExpand += TreeView_BeforeExpandLazy;
+        }
+
+        private ContextMenuStrip BuildTreeContextMenu(TreeView tv)
+        {
+            var menu = new ContextMenuStrip
+            {
+                BackColor = Color.FromArgb(40, 60, 75),
+                ForeColor = Color.White
+            };
+
+            var miCopy = new ToolStripMenuItem("复制节点文本") { ShortcutKeyDisplayString = "Ctrl+C" };
+            miCopy.Click += (s, e) => CopySelectedNodeText(tv, false);
+
+            var miCopySub = new ToolStripMenuItem("复制节点(含子节点)");
+            miCopySub.Click += (s, e) => CopySelectedNodeText(tv, true);
+
+            var miExpand = new ToolStripMenuItem("展开当前节点");
+            miExpand.Click += (s, e) => tv.SelectedNode?.ExpandAll();
+
+            var miCollapse = new ToolStripMenuItem("折叠当前节点");
+            miCollapse.Click += (s, e) => tv.SelectedNode?.Collapse();
+
+            menu.Items.Add(miCopy);
+            menu.Items.Add(miCopySub);
+            menu.Items.Add(new ToolStripSeparator());
+            menu.Items.Add(miExpand);
+            menu.Items.Add(miCollapse);
+            return menu;
+        }
+
+        private void TreeView_MouseDownSelect(object sender, MouseEventArgs e)
+        {
+            var tv = (TreeView)sender;
+            var node = tv.GetNodeAt(e.X, e.Y);
+            if (node != null) tv.SelectedNode = node;
+        }
+
+        private void TreeView_KeyDownCopy(object sender, KeyEventArgs e)
+        {
+            if (e.Control && e.KeyCode == Keys.C)
+            {
+                e.SuppressKeyPress = true;
+                CopySelectedNodeText((TreeView)sender, false);
+            }
+        }
+
+        private void CopySelectedNodeText(TreeView tv, bool includeChildren)
+        {
+            var node = tv.SelectedNode;
+            if (node == null) return;
+
+            string text;
+            if (includeChildren && node.Nodes.Count > 0)
+            {
+                var sb = new System.Text.StringBuilder();
+                AppendNodeText(sb, node, 0);
+                text = sb.ToString();
+            }
+            else
+            {
+                text = node.Text;
+            }
+
+            if (!string.IsNullOrEmpty(text))
+            {
+                try { Clipboard.SetText(text); } catch { /* 剪贴板被占用时忽略 */ }
+            }
         }
 
         #endregion

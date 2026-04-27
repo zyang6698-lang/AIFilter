@@ -47,7 +47,7 @@ namespace DeepSightWorkLib.Services
         public string WriteBackDbName { get; set; }
 
         /// <summary>
-        /// 源数据库服务器 URL
+        /// AVI 侧数据库服务器 URL（用于 AVI 源读取与 AVI 回写）
         /// </summary>
         public string DbUrl { get; set; }
 
@@ -55,5 +55,10 @@ namespace DeepSightWorkLib.Services
         /// VRS 回写目标数据库名称
         /// </summary>
         public string VrsWriteBackDbName { get; set; }
+
+        /// <summary>
+        /// VRS 侧数据库服务器 URL（用于 VRS 回写与 VRS V1.0 回写）
+        /// </summary>
+        public string VrsDbUrl { get; set; }
     }
 }

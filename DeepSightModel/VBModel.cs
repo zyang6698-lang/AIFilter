@@ -66,9 +66,14 @@ namespace DeepSightModel
 
         #region 源数据库追踪（多DB回写支持）
         /// <summary>
-        /// 数据来源的 LevelDB 服务器 URL（IP:Port），用于回写时定位目标服务器
+        /// AVI 侧 LevelDB 服务器 URL（IP:Port），用于 AVI 源读取与 AVI 回写
         /// </summary>
         public string SourceDbUrl { get; set; }
+
+        /// <summary>
+        /// VRS 侧 LevelDB 服务器 URL（IP:Port），用于 VRS 回写与 VRS V1.0 回写
+        /// </summary>
+        public string SourceVRSDbUrl { get; set; }
 
         /// <summary>
         /// 回写目标数据库名称（对应 LevelDbConfig.WriteBackDbName）

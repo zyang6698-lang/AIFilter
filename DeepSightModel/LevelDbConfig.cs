@@ -18,13 +18,13 @@ namespace DeepSightModel
         public string DbName { get; set; } = "ai_merged_results";
 
         /// <summary>
-        /// 数据库服务器 IP（仅存储纯IP/主机名，不含 http:// 前缀）
+        /// AVI 侧数据库服务器 IP（同时用于 AVI 源读取与 AVI 回写；仅存储纯IP/主机名）
         /// </summary>
         [JsonProperty("ip")]
         public string IP { get; set; } = "127.0.0.1";
 
         /// <summary>
-        /// 数据库服务器端口
+        /// AVI 侧数据库服务器端口（同时用于 AVI 源读取与 AVI 回写）
         /// </summary>
         [JsonProperty("port")]
         public string Port { get; set; } = "9877";
@@ -34,6 +34,20 @@ namespace DeepSightModel
         /// </summary>
         [JsonProperty("write_back_db_name")]
         public string WriteBackDbName { get; set; } = "filter_time_to_airesults";
+
+        /// <summary>
+        /// VRS 侧数据库服务器 IP（同时用于 VRS 回写与 VRS V1.0 回写；
+        /// 默认 null 表示沿用 AVI 侧 IP）
+        /// </summary>
+        [JsonProperty("vrs_ip")]
+        public string VRSIP { get; set; } = null;
+
+        /// <summary>
+        /// VRS 侧数据库服务器端口（同时用于 VRS 回写与 VRS V1.0 回写；
+        /// 默认 null 表示沿用 AVI 侧 Port）
+        /// </summary>
+        [JsonProperty("vrs_port")]
+        public string VRSPort { get; set; } = null;
 
         /// <summary>
         /// VRS回写目标数据库名称（写入VRS详细结果时使用的db_name）
@@ -46,6 +60,18 @@ namespace DeepSightModel
         /// </summary>
         [JsonProperty("vrs_write_back_db_name_v1")]
         public string VRSWriteBackDbNameV1 { get; set; } = "ai_inference_result";
+
+        /// <summary>
+        /// VRS 历史结果库名称（按 SN 查询 VRS 历史判定结果时使用的 db_name）
+        /// </summary>
+        [JsonProperty("vrs_history_db_name")]
+        public string VrsHistoryDbName { get; set; } = "vrs_history_result";
+
+        /// <summary>
+        /// 是否启用 VRS V1.0 回写（默认开启）
+        /// </summary>
+        [JsonProperty("enable_vrs_write_back_v1")]
+        public bool EnableVRSWriteBackV1 { get; set; } = true;
 
         /// <summary>
         /// 是否启用该数据库
@@ -66,10 +92,25 @@ namespace DeepSightModel
         public string MinioIpB { get; set; } = "127.0.0.1";
 
         /// <summary>
-        /// 获取完整的 URL（自动加上 http:// 前缀）
+        /// AVI 侧完整 URL（自动加 http:// 前缀；用于 AVI 源读取 + AVI 回写）
         /// </summary>
         [JsonIgnore]
         public string Url => $"http://{IP}:{Port}";
+
+        /// <summary>
+        /// VRS 侧完整 URL（自动加 http:// 前缀；用于 VRS 回写 + VRS V1.0 回写；
+        /// 当 VRSIP/VRSPort 为空时回落到 AVI 侧）
+        /// </summary>
+        [JsonIgnore]
+        public string VRSUrl
+        {
+            get
+            {
+                var ip = string.IsNullOrWhiteSpace(VRSIP) ? IP : VRSIP;
+                var port = string.IsNullOrWhiteSpace(VRSPort) ? Port : VRSPort;
+                return $"http://{ip}:{port}";
+            }
+        }
 
         /// <summary>
         /// 用于显示的友好名称

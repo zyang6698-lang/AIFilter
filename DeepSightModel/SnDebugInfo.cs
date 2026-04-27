@@ -59,9 +59,14 @@ namespace DeepSightModel
         public string SourceDbName { get; set; }
 
         /// <summary>
-        /// 数据来源DB URL
+        /// 数据来源DB URL（AVI 侧）
         /// </summary>
         public string SourceDbUrl { get; set; }
+
+        /// <summary>
+        /// VRS 侧 DB URL（用于 VRS 回写与 VRS V1.0 回写）
+        /// </summary>
+        public string SourceVRSDbUrl { get; set; }
 
         /// <summary>
         /// Minio路径

@@ -342,11 +342,13 @@ namespace DeepSightWorkLib.Services
                     var writeBackDbName = config.WriteBackDbName ?? "filter_time_to_airesults";
                     var vrsWriteBackDbName = config.VRSWriteBackDbName ?? "ai_detail_results_tovrs";
                     var dbUrl = config.Url ?? "";
+                    var vrsDbUrl = config.VRSUrl ?? dbUrl;
                     // 存储原始LevelDB JSON到调试缓存
                     var debugInfo = SnDebugInfoCache.GetOrCreate(serialNumber, side);
                     debugInfo.RawLevelDbJson = rawLevelDbJson;
                     debugInfo.SourceDbName = config.DbName;
-                    debugInfo.SourceDbUrl = config.Url;
+                    debugInfo.SourceDbUrl = dbUrl;
+                    debugInfo.SourceVRSDbUrl = vrsDbUrl;
 
                     var processingContext = new AviProcessingContext
                     {
@@ -359,10 +361,11 @@ namespace DeepSightWorkLib.Services
                         MinioPath = path,
                         WriteBackDbName = writeBackDbName,
                         DbUrl = dbUrl,
-                        VrsWriteBackDbName = vrsWriteBackDbName
+                        VrsWriteBackDbName = vrsWriteBackDbName,
+                        VrsDbUrl = vrsDbUrl
                     };
                     _readJsonByMinio(processingContext);
-                    LogTextHelper.Info($"SN:{serialNumber} Side:{side} 通过Minio读取Json完成, 回写DB:{writeBackDbName}, VRS回写DB:{vrsWriteBackDbName}, URL:{dbUrl}");
+                    LogTextHelper.Info($"SN:{serialNumber} Side:{side} 通过Minio读取Json完成, AVI回写DB:{writeBackDbName}@{dbUrl}, VRS回写DB:{vrsWriteBackDbName}@{vrsDbUrl}");
                 }
                 catch (Exception ex)
                 {
