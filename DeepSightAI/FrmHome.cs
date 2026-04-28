@@ -39,7 +39,7 @@ namespace DeepSightAI
         #region 字段
 
         // 公共数据（线程安全）
-        public ConcurrentDictionary<string, List<RootPanelInfoWithIP>> dic_Infos = new ConcurrentDictionary<string, List<RootPanelInfoWithIP>>();
+        public ConcurrentDictionary<string, List<PanelInfoView>> dic_Infos = new ConcurrentDictionary<string, List<PanelInfoView>>();
         public ConcurrentDictionary<string, List<string>> dic_Results = new ConcurrentDictionary<string, List<string>>();
         /// <summary>推理后的缺陷ROI信息（来源于PostProcessService推理结果）</summary>
         public ConcurrentDictionary<string, List<Roi>> dic_DetectRois = new ConcurrentDictionary<string, List<Roi>>();
@@ -47,7 +47,7 @@ namespace DeepSightAI
         public ConcurrentDictionary<string, List<DetectInfo>> dic_DetectInfos = new ConcurrentDictionary<string, List<DetectInfo>>();
 
         // 面板信息
-        private List<RootPanelInfoWithIP> info = null;
+        private List<PanelInfoView> info = null;
         private List<DisPlayInfo> disInfosList = new List<DisPlayInfo>();
 
         // 图片路径与缺陷信息
@@ -565,74 +565,59 @@ namespace DeepSightAI
 
                     for (int i = 0; i < info.Count; i++)
                     {
-
-                        for (int j = 0; j < info[i].RootInfo.PcsInfo.Count; j++)
+                        var p = info[i];
+                        if (p?.Defects == null) continue;
+                        foreach (var d in p.Defects)
                         {
-                            if (info[i].RootInfo.PcsInfo.TryGetValue((j + 1).ToString(), out PcsInfo pcsInfo))
+                            disInfosList.Add(new DisPlayInfo()
                             {
-                                for (int k = 0; k < pcsInfo.DefectInfo.Count; k++)
+                                defect_code = d.DefectCode,
+                                defect_index = d.DefectIndex.ToString(),
+                                product_serial = p.ProductSerial,
+                                pcs_index = d.PcsIndex.ToString(),
+                                defect_location = d.DefectLocation,
+                                sn = SN,
+                                process_time = p.EndTime,
+                                ai_infer_result = d.AiInferResult,
+                                station_name = p.StationName,
+                                dateil = "",
+                                side_index = p.SideIndex,
+                                lot_id = p.LotId,
+                                lot_batch = p.LotBatch,
+                            });
+                            if (!string.IsNullOrEmpty(d.DefectVrsImage))
+                            {
+                                imagePaths.Add($"{p.Head}/{d.DefectVrsImage}:{p.IP}");
+                                // 使用推理后的ROI数据（来自PostProcessService的InferDetails.Location）
+                                if (inferRois != null && roiIndex < inferRois.Count
+                                    && (inferRois[roiIndex].Width > 0 || inferRois[roiIndex].Height > 0))
                                 {
-                                    disInfosList.Add(new DisPlayInfo()
-                                    {
-                                        defect_code = pcsInfo.DefectInfo[k].DefectCode,
-                                        defect_index = pcsInfo.DefectInfo[k].DefectIndex.ToString(),
-                                        product_serial = info[i].RootInfo.ProductSerial,
-                                        pcs_index = pcsInfo.DefectInfo[k].PcsIndex.ToString(),
-                                        defect_location = pcsInfo.DefectInfo[k].DefectLocation,
-                                        sn = SN,//info[i].rootInfo.SerialNumber,
-                                        process_time = info[i].RootInfo.EndTime,
-                                        ai_infer_result = pcsInfo.DefectInfo[k].AiInferResult,
-                                        station_name = info[i].RootInfo.StationName,
-                                        dateil = "",
-                                        side_index = info[i].RootInfo.SideIndex,
-                                        lot_id = info[i].RootInfo.LotId,
-                                        lot_batch = info[i].RootInfo.LotBatch,
-                                    });
-                                    if (pcsInfo.DefectInfo[k].DefectVrsImages != null && pcsInfo.DefectInfo[k].DefectVrsImages.Count > 0)
-                                    {
-                                        imagePaths.Add($"{info[i].Head}/{pcsInfo.DefectInfo[k].DefectVrsImages[0].ToString()}:{info[i].IP}");
-                                        // 使用推理后的ROI数据（来自PostProcessService的InferDetails.Location）
-                                        if (inferRois != null && roiIndex < inferRois.Count
-                                            && (inferRois[roiIndex].Width > 0 || inferRois[roiIndex].Height > 0))
-                                        {
-                                            defectRois.Add(inferRois[roiIndex]);
-                                        }
-                                        else
-                                        {
-                                            defectRois.Add(pcsInfo.DefectInfo[k].DefectRoi);
-                                        }
-                                        roiIndex++;
-                                    }
-                                    // 收集DetectInfo（用于图片放大和单图测试）
-                                    if (inferDetectInfos != null && detectInfoIndex < inferDetectInfos.Count)
-                                    {
-                                        detectInfoList.Add(inferDetectInfos[detectInfoIndex]);
-                                        detectInfoIndex++;
-                                    }
-                                    else
-                                    {
-                                        detectInfoList.Add(null);
-                                    }
-                                    // 保持与缺陷一一对齐，空则占位为""，便于显示时按索引做主/备回退
-                                    if (pcsInfo.DefectInfo[k].DefectVrsGerberImages != null && pcsInfo.DefectInfo[k].DefectVrsGerberImages.Count > 0)
-                                    {
-                                        imagePaths_Gerber.Add($"{info[i].Head}/{pcsInfo.DefectInfo[k].DefectVrsGerberImages[0].ToString()}:{info[i].IP}");
-                                    }
-                                    else
-                                    {
-                                        imagePaths_Gerber.Add("");
-                                    }
-                                    if (pcsInfo.DefectInfo[k].DefectVrsOkImages != null && pcsInfo.DefectInfo[k].DefectVrsOkImages.Count > 0)
-                                    {
-                                        imagePaths_Template.Add($"{info[i].Head}/{pcsInfo.DefectInfo[k].DefectVrsOkImages[0].ToString()}:{info[i].IP}");
-                                    }
-                                    else
-                                    {
-                                        imagePaths_Template.Add("");
-                                    }
-                                    index++;
+                                    defectRois.Add(inferRois[roiIndex]);
                                 }
+                                else
+                                {
+                                    defectRois.Add(d.DefectRoi);
+                                }
+                                roiIndex++;
                             }
+                            // 收集DetectInfo（用于图片放大和单图测试）
+                            if (inferDetectInfos != null && detectInfoIndex < inferDetectInfos.Count)
+                            {
+                                detectInfoList.Add(inferDetectInfos[detectInfoIndex]);
+                                detectInfoIndex++;
+                            }
+                            else
+                            {
+                                detectInfoList.Add(null);
+                            }
+                            // 保持与缺陷一一对齐，空则占位为""，便于显示时按索引做主/备回退
+                            imagePaths_Gerber.Add(string.IsNullOrEmpty(d.DefectVrsGerberImage)
+                                ? ""
+                                : $"{p.Head}/{d.DefectVrsGerberImage}:{p.IP}");
+                            imagePaths_Template.Add(string.IsNullOrEmpty(d.DefectVrsOkImage)
+                                ? ""
+                                : $"{p.Head}/{d.DefectVrsOkImage}:{p.IP}");
+                            index++;
                         }
                     }
                     totalPages = Math.Max(1, (int)Math.Ceiling((double)index / DefectControlCount));

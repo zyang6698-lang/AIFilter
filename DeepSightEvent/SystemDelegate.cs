@@ -47,7 +47,7 @@ namespace DeepSightEvent
     /// <param name="sn">产品码</param>
     /// <param name="side">面别（A/B）</param>
     /// <param name="info">产品缺陷信息</param>
-    public delegate void SendDefectPanelInfo(string sn, string side, RootPanelInfoWithIP info);
+    public delegate void SendDefectPanelInfo(string sn, string side, PanelInfoView info);
     /// <summary>
     /// 发送缺陷结果
     /// </summary>

@@ -228,9 +228,7 @@ namespace DeepSightWorkLib.Services
             {
                 MachineTemplateInfo = new MachineTemplateInfo
                 {
-                    MachineName = string.IsNullOrEmpty(panelInfo.LineName)
-    ? DefaultValues.LineName
-    : panelInfo.LineName,
+                    MachineName = string.IsNullOrEmpty(panelInfo.LineName) ? DefaultValues.LineName : panelInfo.LineName,
                     product = panelInfo.ProductSerial,
                     Side = panelInfo.SideIndex
                 },

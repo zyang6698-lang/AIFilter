@@ -25,7 +25,7 @@ namespace DeepSightWorkLib.Services.Pipeline
         #region JSON解析结果（阶段2: JSON解析后设置）
 
         /// <summary>
-        /// 图片加载模型（含 VBModel 和 RootPanelInfo）
+        /// 图片加载模型（含 VBModel 和 PanelView）
         /// </summary>
         public ImageLoadModel LoadModel { get; set; }
 

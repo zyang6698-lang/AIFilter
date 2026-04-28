@@ -129,7 +129,7 @@ namespace DeepSightEvent
         /// <param name="sn">产品码</param>
         /// <param name="side">面别（A/B）</param>
         /// <param name="info">Panel信息</param>
-        public static void SendPanelInfo(string sn, string side, RootPanelInfoWithIP info)
+        public static void SendPanelInfo(string sn, string side, PanelInfoView info)
         {
             if (EventSendDefectPanelInfoToUI != null)
             {

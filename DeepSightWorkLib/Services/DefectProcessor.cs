@@ -69,7 +69,7 @@ namespace DeepSightWorkLib.Services
             {
                 SN = info.SN,
                 Side = info.Side,
-                VRSDbKey=info.panelInfo.SerialNumber,
+                VRSDbKey=info.PanelSerialNumber,
                 AVIDbName = writeBackDbName,
                 Operation = "put",
                 OpMode = info.Side == "A" ? "all_ow" : "ap",
@@ -136,7 +136,7 @@ namespace DeepSightWorkLib.Services
             {
                 ResultInfos = results,
                 SerialNumber = info.SN,
-                PanelJsonPath = info.panelInfo.LocalDescribePath,
+                PanelJsonPath = info.LocalDescribePath,
             };
 
             JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };

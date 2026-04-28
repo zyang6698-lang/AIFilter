@@ -24,7 +24,38 @@ namespace DeepSightModel
         public RootVBInfo VbInfo;
         //2025/08/21/增加minio路径信息
         public string  minioPath;
-        public RootPanelInfo panelInfo { get; set; }
+
+        #region 来源 PanelInfo 的扁平字段（JsonParseStage 解析后填充，避免下游直接依赖 RootPanelInfo DTO）
+        /// <summary>
+        /// 产品料号（来源 RootPanelInfo.ProductSerial）
+        /// </summary>
+        public string ProductSerial { get; set; }
+
+        /// <summary>
+        /// AVI 生成时间（原始字符串，来源 RootPanelInfo.AviCreateTime；下游负责解析）
+        /// </summary>
+        public string AviCreateTime { get; set; }
+
+        /// <summary>
+        /// 批次号（来源 RootPanelInfo.LotId）
+        /// </summary>
+        public string LotId { get; set; }
+
+        /// <summary>
+        /// 线体名称（来源 RootPanelInfo.LineName）
+        /// </summary>
+        public string LineName { get; set; }
+
+        /// <summary>
+        /// PanelInfo 本地描述文件路径（来源 RootPanelInfo.LocalDescribePath，用于回写 PanelJsonPath）
+        /// </summary>
+        public string LocalDescribePath { get; set; }
+
+        /// <summary>
+        /// 面板序列号（来源 RootPanelInfo.SerialNumber，仅用作 VRSDbKey；与 VBModel.SN 含义不同）
+        /// </summary>
+        public string PanelSerialNumber { get; set; }
+        #endregion
 
         /// <summary>
         /// 直报缺陷的原始 DefectIndex 列表（这些缺陷跳过AI推理，结果标记为bypass）
@@ -171,8 +202,8 @@ namespace DeepSightModel
 
 
         /// <summary>
-        /// 用于发送PanelInfo的对象
+        /// 面板信息 UI 投影（仅给 ImageLoadStage 通过 SystemEvent.SendPanelInfo 发往 UI 使用）
         /// </summary>
-        public RootPanelInfoWithIP RootPanelInfo { get; set; }
+        public PanelInfoView PanelView { get; set; }
     }
 }

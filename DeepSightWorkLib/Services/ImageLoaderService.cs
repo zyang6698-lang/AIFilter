@@ -80,7 +80,7 @@ namespace DeepSightWorkLib.Services
         /// 返回的五个列表索引对齐：AllImageKeys[i]、AllGerberKeys[i]、AllTempKeys[i]、DirectReportFlags[i]、AllDefectCodes[i] 对应同一个缺陷。
         /// </summary>
         public (List<string> AllImageKeys, List<string> AllGerberKeys, List<string> AllTempKeys, List<bool> DirectReportFlags, List<string> AllDefectCodes)
-            GetAllImageKeysWithDirectReportFlags(RootPanelInfoWithIP info)
+            GetAllImageKeysWithDirectReportFlags(RootPanelInfo panel, string ip, string head)
         {
             var allImageKeys = new List<string>();
             var allGerberKeys = new List<string>();
@@ -90,13 +90,12 @@ namespace DeepSightWorkLib.Services
 
             try
             {
-                if (info == null || info.RootInfo == null || string.IsNullOrWhiteSpace(info.IP))
+                if (panel == null || string.IsNullOrWhiteSpace(ip))
                 {
                     LogTextHelper.Warn("GetAllImageKeysWithDirectReportFlags: 参数为空或 IP 缺失！");
                     return (allImageKeys, allGerberKeys, allTempKeys, flags, allDefectCodes);
                 }
 
-                var panel = info.RootInfo;
                 if (panel.PcsInfo == null || panel.PcsInfo.Count == 0)
                     return (allImageKeys, allGerberKeys, allTempKeys, flags, allDefectCodes);
 
@@ -115,9 +114,9 @@ namespace DeepSightWorkLib.Services
                             .IsDirectReportByProduct(defect.DefectCode, panel.ProductSerial);
 
                         // VRS 图片路径（如果有多张取第一张，与 AddImages 逻辑保持一致）
-                        string imgKey = BuildFirstImageKey(defect.DefectVrsImages, info.IP, info.Head);
-                        string gerberKey = BuildFirstImageKey(defect.DefectVrsGerberImages, info.IP, info.Head);
-                        string tempKey = BuildFirstImageKey(defect.DefectVrsOkImages, info.IP, info.Head);
+                        string imgKey = BuildFirstImageKey(defect.DefectVrsImages, ip, head);
+                        string gerberKey = BuildFirstImageKey(defect.DefectVrsGerberImages, ip, head);
+                        string tempKey = BuildFirstImageKey(defect.DefectVrsOkImages, ip, head);
 
                         allImageKeys.Add(imgKey);
                         allGerberKeys.Add(gerberKey);

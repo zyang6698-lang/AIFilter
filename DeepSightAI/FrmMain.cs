@@ -199,13 +199,13 @@ namespace DeepSightAI
             }
         }
 
-        private void SystemEvent_EventSendDefectPanelInfoToUI(string sn, string side, RootPanelInfoWithIP info)
+        private void SystemEvent_EventSendDefectPanelInfoToUI(string sn, string side, PanelInfoView info)
         {
             try
             {
                 // ── 数据存储（线程安全，可在后台线程执行） ──
                 string key = $"{sn}_{side}";
-                var infoList = FrmHome.Instance.dic_Infos.GetOrAdd(key, _ => new List<RootPanelInfoWithIP>());
+                var infoList = FrmHome.Instance.dic_Infos.GetOrAdd(key, _ => new List<PanelInfoView>());
                 lock (infoList)
                 {
                     // 每次新处理到来时替换旧数据，避免同一SN被多次处理时AVI计数累加翻倍
@@ -214,18 +214,11 @@ namespace DeepSightAI
                 }
 
                 // 计算 AVI 计数：仅统计本次处理的 info，不累积历史数据
-                int aviCount = 0;
-                if (info?.RootInfo?.PcsInfo != null)
-                {
-                    foreach (var pcs in info.RootInfo.PcsInfo.Values)
-                    {
-                        aviCount += pcs.DefectInfo?.Count ?? 0;
-                    }
-                }
+                int aviCount = info?.Defects?.Count ?? 0;
                 _pendingAviUpdates[key] = (sn, side, aviCount);
 
                 // ── 机台注册（配置写入，非 UI 操作，可在后台线程执行） ──
-                string machineName = string.IsNullOrEmpty(info?.RootInfo?.LineName) ? DefaultValues.LineName : info?.RootInfo?.LineName;
+                string machineName = string.IsNullOrEmpty(info?.LineName) ? DefaultValues.LineName : info?.LineName;
                 if (!string.IsNullOrEmpty(machineName))
                 {
                     bool registryExists = Machine.machineRegistry?.Machines?.Any(m => m.MachineName == machineName) ?? false;
@@ -271,8 +264,7 @@ namespace DeepSightAI
                 }
 
                 // ── 图片刷新标记（仅当有缺陷图片时） ──
-                bool hasImages = info?.RootInfo?.PcsInfo?.Values?.Any(pcs =>
-                    pcs.DefectInfo?.Any(d => d.DefectVrsImages != null && d.DefectVrsImages.Count > 0) == true) == true;
+                bool hasImages = info?.Defects?.Any(d => !string.IsNullOrEmpty(d.DefectVrsImage)) == true;
                 if (hasImages)
                 {
                     // 原子写入：多次写入只保留最新的 key，Timer 中取最后值
@@ -444,18 +436,14 @@ namespace DeepSightAI
             string key = $"{sn}_{side}";
 
             // 统计该面缺陷数（dic_Infos 已在 SendPanelInfo 时替换为最新一次数据，直接累加即可）
-            FrmHome.Instance.dic_Infos.TryGetValue(key, out List<RootPanelInfoWithIP> infos);
+            FrmHome.Instance.dic_Infos.TryGetValue(key, out List<PanelInfoView> infos);
             if (infos != null)
             {
                 lock (infos)
                 {
                     foreach (var info in infos)
                     {
-                        if (info?.RootInfo?.PcsInfo == null) continue;
-                        foreach (var pcsInfo in info.RootInfo.PcsInfo.Values)
-                        {
-                            defectCount += pcsInfo.DefectInfo?.Count ?? 0;
-                        }
+                        defectCount += info?.Defects?.Count ?? 0;
                     }
                 }
             }
@@ -477,8 +465,8 @@ namespace DeepSightAI
             FrmHome.Instance.str_SN = key;
 
             // 当前面完成时：仅当有缺陷图片时触发完整加载，否则仅更新AI结果标签
-            bool hasImages = infos != null && infos.Any(inf => inf?.RootInfo?.PcsInfo?.Values?.Any(pcs =>
-                pcs.DefectInfo?.Any(d => d.DefectVrsImages != null && d.DefectVrsImages.Count > 0) == true) == true);
+            bool hasImages = infos != null && infos.Any(inf =>
+                inf?.Defects?.Any(d => !string.IsNullOrEmpty(d.DefectVrsImage)) == true);
 
             if (hasImages)
             {

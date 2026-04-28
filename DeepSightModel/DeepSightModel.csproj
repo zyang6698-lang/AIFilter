@@ -100,6 +100,7 @@
     <Compile Include="InferenceResultModel.cs" />
     <Compile Include="InferenceTaskModel.cs" />
     <Compile Include="PanelInfo.cs" />
+    <Compile Include="PanelInfoView.cs" />
     <Compile Include="ProductModeConfig.cs" />
     <Compile Include="ProductState.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

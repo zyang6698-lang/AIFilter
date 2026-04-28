@@ -48,7 +48,6 @@ namespace DeepSightWorkLib.Services
         {
             VBModel vBModel = resultModel.VBModel;
             string msg = resultModel.RawJsonResult;
-            RootPanelInfo panelInfo = vBModel.panelInfo;
 
             try
             {
@@ -102,26 +101,23 @@ namespace DeepSightWorkLib.Services
                     return;
                 }
 
-                LogTextHelper.Info($"开始处理: SN={vBModel.SN}, Side={panelInfo.SideIndex}");
+                LogTextHelper.Info($"开始处理: SN={vBModel.SN}, Side={vBModel.Side}");
 
-                // 从 PanelInfo 中自动发现缺陷名称（AVI 上报的 DefectCode）
-                if (panelInfo.PcsInfo != null)
+                // 自动发现 AVI 上报的 DefectCode（已在 JsonParseStage 收集到 AllDefectCodes）
+                if (vBModel.AllDefectCodes != null)
                 {
-                    foreach (var pcsEntry in panelInfo.PcsInfo.Values)
+                    var profileName = KeyDefectConfigManager.Instance.GetProfileNameForProduct(vBModel.ProductSerial);
+                    foreach (var defectCode in vBModel.AllDefectCodes)
                     {
-                        if (pcsEntry?.DefectInfo == null) continue;
-                        foreach (var defect in pcsEntry.DefectInfo)
-                        {
-                            if (!string.IsNullOrEmpty(defect.DefectCode))
-                                KeyDefectConfigManager.Instance.AutoDiscoverDefect(defect.DefectCode, KeyDefectConfigManager.Instance.GetProfileNameForProduct(panelInfo.ProductSerial));
-                        }
+                        if (!string.IsNullOrEmpty(defectCode))
+                            KeyDefectConfigManager.Instance.AutoDiscoverDefect(defectCode, profileName);
                     }
                 }
 
                 var obj = JsonConvert.DeserializeObject<RootVBOutInfo>(msg);
                 if (obj == null)
                 {
-                    LogTextHelper.Error($"算法返回结果反序列化失败 for Side {panelInfo.SideIndex}，原始消息: {msg}");
+                    LogTextHelper.Error($"算法返回结果反序列化失败 for Side {vBModel.Side}，原始消息: {msg}");
                     return;
                 }
 
@@ -210,7 +206,7 @@ namespace DeepSightWorkLib.Services
                         // 重点缺陷标记 & 自动发现（根据料号对应的 profile）
                         if (defect.AIStatus == 2 && !string.IsNullOrEmpty(defect.DefectName))
                         {
-                            var profileName = KeyDefectConfigManager.Instance.GetProfileNameForProduct(panelInfo.ProductSerial);
+                            var profileName = KeyDefectConfigManager.Instance.GetProfileNameForProduct(vBModel.ProductSerial);
                             KeyDefectConfigManager.Instance.AutoDiscoverDefect(defect.DefectName, profileName);
                             if (KeyDefectConfigManager.Instance.IsKeyDefect(defect.DefectName, profileName))
                             {
@@ -229,7 +225,7 @@ namespace DeepSightWorkLib.Services
                         CheckKeyDefectAlarm(vBModel.SN);
                     }
 
-                    LogTextHelper.Info($"处理完成: SN={vBModel.SN}, Side={panelInfo.SideIndex}, " +
+                    LogTextHelper.Info($"处理完成: SN={vBModel.SN}, Side={vBModel.Side}, " +
                         $"总缺陷={defects.Count}, 直报={directReportCount}, AI推理={inferableCount}, " +
                         $"AviState={aviState}, AiState={aiState}, KeyDefects={keyDefectInThisSide}");
                 }
@@ -252,18 +248,18 @@ namespace DeepSightWorkLib.Services
                     {
                         aviState = 2;
                         aiState = 3;
-                        LogTextHelper.Info($"处理完成(AI无缺陷,有{directReportCount}个直报): SN={vBModel.SN}, Side={panelInfo.SideIndex}");
+                        LogTextHelper.Info($"处理完成(AI无缺陷,有{directReportCount}个直报): SN={vBModel.SN}, Side={vBModel.Side}");
                     }
                     else
                     {
                         aviState = 1;
                         aiState = 1;
-                        LogTextHelper.Info($"处理完成(无缺陷): SN={vBModel.SN}, Side={panelInfo.SideIndex}");
+                        LogTextHelper.Info($"处理完成(无缺陷): SN={vBModel.SN}, Side={vBModel.Side}");
                     }
                 }
                 else
                 {
-                    LogTextHelper.Warn($"算法处理失败 for Side {panelInfo.SideIndex}，错误码: {code}，错误信息：{message}");
+                    LogTextHelper.Warn($"算法处理失败 for Side {vBModel.Side}，错误码: {code}，错误信息：{message}");
                 }
 
                 // 不论什么情况都保存（所有缺陷包含完整图片路径）

@@ -53,10 +53,7 @@ namespace DeepSightWorkLib.Tests
                 SourceDbUrl = "http://localhost:8080",
                 SourceWriteBackDbName = "my_writeback_db",
                 SourceVRSWriteBackDbName = "my_vrs_db",
-                panelInfo = new RootPanelInfo
-                {
-                    LocalDescribePath = "/path/to/panel.json"
-                }
+                LocalDescribePath = "/path/to/panel.json"
             };
         }
 

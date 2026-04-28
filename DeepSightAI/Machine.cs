@@ -145,9 +145,9 @@ namespace DeepSightAI
                 FrmSplash.Instance.bar_step.Value = 100;
                 FrmMain.Instance.Activate();
 
-                // 注册告警通知器
+                // 注册告警通知器（Toast 仅 Error 及以上弹窗；Warning 仅进 FrmAlarm 表格与文件）
                 AlarmService.Instance.RegisterNotifier(
-                    new ToastNotifier(FrmMain.Instance, AlarmLevel.Warning));
+                    new ToastNotifier(FrmMain.Instance, AlarmLevel.Error));
                 AlarmService.Instance.RegisterNotifier(
                     new FileNotifier());
 

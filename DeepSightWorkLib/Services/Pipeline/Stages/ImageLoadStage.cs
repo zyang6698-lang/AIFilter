@@ -71,7 +71,7 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
             LogImageLoadResult(loadModel);
 
             // 向 UI 发送面板信息
-            SystemEvent.SendPanelInfo(model.SN, model.Side, loadModel.RootPanelInfo);
+            SystemEvent.SendPanelInfo(model.SN, model.Side, loadModel.PanelView);
             TaskStatusSender.SendImagesLoaded(model.SN, model.Side, model.Mats.Count);
 
             LogTextHelper.Info($"图片加载完成，SN:{model.SN}，实际加载:{model.Mats.Count}张");

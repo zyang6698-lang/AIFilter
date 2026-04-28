@@ -2,6 +2,8 @@ using DeepSightCommunication.Interfaces;
 using DeepSightDB;
 using DeepSightEvent;
 using DeepSightModel;
+using DeepSightModel.Alarm;
+using DeepSightModel.Configuration;
 using DeepSightTool;
 using DeepSightWorkLib.Interfaces;
 using Newtonsoft.Json;
@@ -75,11 +77,17 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
                 return ctx;
             }
 
-            var obj = JsonConvert.DeserializeObject<RootPanelInfo>(json);
-            if (obj == null)
+            var panelInfo = JsonConvert.DeserializeObject<RootPanelInfo>(json);
+            if (panelInfo == null)
             {
                 ctx.SetError("JSON解析", $"JSON反序列化为RootPanelInfo失败，路径={path}");
                 return ctx;
+            }
+
+            // line_name 正常情况下不应为空；为空时降级为默认值并告警，提示运维确认 AVI 机台配置
+            if (string.IsNullOrEmpty(panelInfo.LineName))
+            {
+                RaiseLineNameMissingAlarm(sn, side, path);
             }
 
             LogTextHelper.Info($"{sn} {side} 开始将json转为vbinfo");
@@ -91,17 +99,13 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
             convertContext.MinioPort = port;
             convertContext.Head = head;
 
-            var convertResult = _panelDataConverter.Convert(obj, convertContext);
-
-            RootPanelInfoWithIP rootobj = new RootPanelInfoWithIP()
-            {
-                IP = ip,
-                Head = head,
-                RootInfo = obj,
-            };
+            var convertResult = _panelDataConverter.Convert(panelInfo, convertContext);
 
             var (AllImageKeys, AllGerberKeys, AllTempKeys, DirectReportFlags, AllDefectCodes)
-                = _imageLoaderService.GetAllImageKeysWithDirectReportFlags(rootobj);
+                = _imageLoaderService.GetAllImageKeysWithDirectReportFlags(panelInfo, ip, head);
+
+            // 构造 UI 投影模型（缺陷展平顺序与 GetAllImageKeysWithDirectReportFlags 一致：foreach PcsInfo → DefectInfo）
+            var panelView = BuildPanelView(sn, side, ip, head, panelInfo);
             var (ImageKeys, GerberKeys, TempKeys)
                 = ImageLoaderService.DeriveFilteredKeys(AllImageKeys, AllGerberKeys, AllTempKeys, DirectReportFlags);
 
@@ -114,7 +118,12 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
                 PcsIndex = convertResult.PcsIndexList,
                 VbInfo = convertResult.VBInfo,
                 minioPath = head,
-                panelInfo = obj,
+                ProductSerial = panelInfo.ProductSerial,
+                AviCreateTime = panelInfo.AviCreateTime,
+                LotId = panelInfo.LotId,
+                LineName = string.IsNullOrEmpty(panelInfo.LineName) ? DefaultValues.LineName : panelInfo.LineName,
+                LocalDescribePath = panelInfo.LocalDescribePath,
+                PanelSerialNumber = panelInfo.SerialNumber,
                 ImageKeys = ImageKeys,
                 ImageKeys_Gerber = GerberKeys,
                 ImageKeys_Temp = TempKeys,
@@ -132,16 +141,86 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
             };
 
             // 存储调试信息到缓存
-            StoreDebugInfo(sn, side, json, convertResult, ImageKeys, head, obj);
+            StoreDebugInfo(sn, side, json, convertResult, ImageKeys, head, panelInfo);
 
             ctx.LoadModel = new ImageLoadModel
             {
                 Model = model,
-                RootPanelInfo = rootobj
+                PanelView = panelView
             };
 
             LogTextHelper.Info($"{sn} {side} JSON解析完成，待加载图片数量:{ImageKeys.Count}");
             return ctx;
+        }
+
+        /// <summary>
+        /// 将 RootPanelInfo + IP/Head 投影为 PanelInfoView，缺陷按 PcsInfo 字典遍历顺序展平
+        /// </summary>
+        private static PanelInfoView BuildPanelView(string sn, string side, string ip, string head, RootPanelInfo panelInfo)
+        {
+            var view = new PanelInfoView
+            {
+                SN = sn,
+                Side = side,
+                ProductSerial = panelInfo.ProductSerial,
+                LineName = string.IsNullOrEmpty(panelInfo.LineName) ? DefaultValues.LineName : panelInfo.LineName,
+                StationName = panelInfo.StationName,
+                LotId = panelInfo.LotId,
+                LotBatch = panelInfo.LotBatch,
+                SideIndex = panelInfo.SideIndex,
+                EndTime = panelInfo.EndTime,
+                Head = head,
+                IP = ip,
+                Defects = new List<DefectInfoView>()
+            };
+
+            if (panelInfo.PcsInfo == null) return view;
+
+            foreach (var kvp in panelInfo.PcsInfo)
+            {
+                var pcs = kvp.Value;
+                if (pcs?.DefectInfo == null) continue;
+                foreach (var d in pcs.DefectInfo)
+                {
+                    if (d == null) continue;
+                    view.Defects.Add(new DefectInfoView
+                    {
+                        DefectCode = d.DefectCode,
+                        DefectIndex = d.DefectIndex,
+                        PcsIndex = d.PcsIndex,
+                        DefectLocation = d.DefectLocation,
+                        AiInferResult = d.AiInferResult,
+                        DefectRoi = d.DefectRoi,
+                        DefectVrsImage = d.DefectVrsImages != null && d.DefectVrsImages.Count > 0 ? d.DefectVrsImages[0] : null,
+                        DefectVrsGerberImage = d.DefectVrsGerberImages != null && d.DefectVrsGerberImages.Count > 0 ? d.DefectVrsGerberImages[0] : null,
+                        DefectVrsOkImage = d.DefectVrsOkImages != null && d.DefectVrsOkImages.Count > 0 ? d.DefectVrsOkImages[0] : null,
+                    });
+                }
+            }
+            return view;
+        }
+
+        /// <summary>
+        /// line_name 缺失告警：日志 + 结构化告警（30s 冷却由 AlarmService 内置处理）
+        /// </summary>
+        private static void RaiseLineNameMissingAlarm(string sn, string side, string path)
+        {
+            string warnMsg = $"linename为空，使用默认值{DefaultValues.LineName}，请确认AVI机台配置";
+            LogTextHelper.Warn($"{sn} {side} {warnMsg}");
+            try
+            {
+                AlarmService.Instance.RaiseAlarm(
+                    AlarmLevel.Warning,
+                    AlarmCategory.System,
+                    "JsonParseStage.LineName",
+                    warnMsg,
+                    $"SN={sn}, Side={side}, Path={path}",
+                    sn);
+            }
+            catch (Exception alarmEx)
+            {
+                LogTextHelper.Warn($"LineName 告警发起异常: {alarmEx.Message}");
+            }
         }
 
         private void StoreDebugInfo(string sn, string side, string json,

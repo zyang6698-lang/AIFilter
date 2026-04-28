@@ -24,8 +24,8 @@ namespace DeepSightAI
         /// 构造函数
         /// </summary>
         /// <param name="uiContext">主窗体或任意 UI 线程上的 Control</param>
-        /// <param name="minLevel">最低触发等级（默认 Warning 以上弹窗）</param>
-        public ToastNotifier(Control uiContext, AlarmLevel minLevel = AlarmLevel.Warning)
+        /// <param name="minLevel">最低触发等级（默认 Error 及以上才弹窗，Warning 不弹）</param>
+        public ToastNotifier(Control uiContext, AlarmLevel minLevel = AlarmLevel.Error)
         {
             _uiContext = uiContext ?? throw new ArgumentNullException(nameof(uiContext));
             MinLevel = minLevel;

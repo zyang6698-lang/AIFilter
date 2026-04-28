@@ -528,11 +528,10 @@ namespace DeepSightWorkLib
         /// <param name="aiState">AI 状态 (1: OK, 2: NG, 3: Bypass)</param>
         private void SavePanelSideToDatabase(VBModel vbModel, List<DetectInfo> detectPoints, int aviState, int aiState)
         {
-            RootPanelInfo panelInfo = vbModel.panelInfo;
-            if (!DateTime.TryParse(panelInfo.AviCreateTime, out DateTime aviCreationTime))
+            if (!DateTime.TryParse(vbModel.AviCreateTime, out DateTime aviCreationTime))
             {
                 aviCreationTime = DateTime.Now;
-                LogTextHelper.Info($"无法解析 AviCreateTime '{panelInfo.AviCreateTime}'。将使用当前时间 '{aviCreationTime}' 作为备用。");
+                LogTextHelper.Info($"无法解析 AviCreateTime '{vbModel.AviCreateTime}'。将使用当前时间 '{aviCreationTime}' 作为备用。");
             }
 
             // 聚合所有 DetectInfo 的 DrawInfo 到 SideData 级别
@@ -550,12 +549,12 @@ namespace DeepSightWorkLib
                 }
             }
 
-            LogTextHelper.Info($"存储 SN={vbModel.SN}, Side={panelInfo.SideIndex}, AviState={aviState}, AiState={aiState}, DefectCount={detectPoints?.Count ?? 0} 到数据库...");
+            LogTextHelper.Info($"存储 SN={vbModel.SN}, Side={vbModel.Side}, AviState={aviState}, AiState={aiState}, DefectCount={detectPoints?.Count ?? 0} 到数据库...");
             var record = new PanelSideRecord()
             {
                 Data = new SideData()
                 {
-                    Side = panelInfo.SideIndex,
+                    Side = vbModel.Side,
                     DetectPoints = detectPoints,
                     AviState = aviState,
                     AiState = aiState,
@@ -564,15 +563,15 @@ namespace DeepSightWorkLib
                     FinalState = 0,
                     DrawInfo = drawInfoJson
                 },
-                ProductSerial = panelInfo.ProductSerial,
+                ProductSerial = vbModel.ProductSerial,
                 DetectionDate = DateTime.Now,
                 AviCreationTime = aviCreationTime,
-                LotNumber = panelInfo.LotId,
+                LotNumber = vbModel.LotId,
                 SerialNumber = vbModel.SN,
-                MachineId = string.IsNullOrEmpty(panelInfo.LineName)
+                MachineId = string.IsNullOrEmpty(vbModel.LineName)
     ? DefaultValues.LineName
-    : panelInfo.LineName,
-                Side = panelInfo.SideIndex,
+    : vbModel.LineName,
+                Side = vbModel.Side,
             };
             BoardStatCache.Update(record);
 
@@ -586,11 +585,11 @@ namespace DeepSightWorkLib
                     Width = dp.Width,
                     Height = dp.Height
                 }).ToList();
-                SystemEvent.SendRoiInfo(vbModel.SN, panelInfo.SideIndex, rois);
+                SystemEvent.SendRoiInfo(vbModel.SN, vbModel.Side, rois);
             }
 
             // 将DetectInfo信息发送到UI（用于图片放大和单图测试）
-            SystemEvent.SendDetectInfo(vbModel.SN, panelInfo.SideIndex, detectPoints ?? new List<DetectInfo>());
+            SystemEvent.SendDetectInfo(vbModel.SN, vbModel.Side, detectPoints ?? new List<DetectInfo>());
 
             List<PanelSideRecord> batchToFlush = null;
             lock (_panelRecordLock)

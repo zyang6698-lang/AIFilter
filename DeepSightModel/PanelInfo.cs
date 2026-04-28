@@ -290,11 +290,4 @@ namespace DeepSightModel
         public float PcsScale { get; set; }
     }
 
-    //527增加 ip字段
-    public class RootPanelInfoWithIP
-    {
-        public string IP { get; set; }
-        public string Head { get; set; }
-        public RootPanelInfo RootInfo { get; set; }
-    }
 }
