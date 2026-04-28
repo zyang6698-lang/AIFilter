@@ -112,7 +112,10 @@ namespace DeepSightModel.Configuration
         /// 默认 AVI 名称
         /// </summary>
         public const string AviName = "AVI";
-
+        /// <summary>
+        /// 默认产线名称
+        /// </summary>
+        public const string LineName = "Line1";
         /// <summary>
         /// 等待标志文件名
         /// </summary>

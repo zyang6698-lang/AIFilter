@@ -569,7 +569,9 @@ namespace DeepSightWorkLib
                 AviCreationTime = aviCreationTime,
                 LotNumber = panelInfo.LotId,
                 SerialNumber = vbModel.SN,
-                MachineId = panelInfo.MachineName,
+                MachineId = string.IsNullOrEmpty(panelInfo.LineName)
+    ? DefaultValues.LineName
+    : panelInfo.LineName,
                 Side = panelInfo.SideIndex,
             };
             BoardStatCache.Update(record);

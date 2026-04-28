@@ -225,7 +225,7 @@ namespace DeepSightAI
                 _pendingAviUpdates[key] = (sn, side, aviCount);
 
                 // ── 机台注册（配置写入，非 UI 操作，可在后台线程执行） ──
-                string machineName = info?.RootInfo?.MachineName;
+                string machineName = string.IsNullOrEmpty(info?.RootInfo?.LineName) ? DefaultValues.LineName : info?.RootInfo?.LineName;
                 if (!string.IsNullOrEmpty(machineName))
                 {
                     bool registryExists = Machine.machineRegistry?.Machines?.Any(m => m.MachineName == machineName) ?? false;
@@ -293,9 +293,8 @@ namespace DeepSightAI
             timer.Elapsed += Timer_Elapsed;
             timer.Interval = 1000;
             timer.Start();
-            string filePath = Assembly.GetExecutingAssembly().Location;
-            DateTime lastWriteTime = File.GetLastWriteTime(filePath);
-            this.lbl_title.Text = "AI过滤软件 ~ " + lastWriteTime.ToString("MMdd");
+            string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            this.lbl_title.Text = "AI过滤软件 ~ V" + version;
 
             // 启动 UI 批量刷新定时器（200ms ≈ 5FPS，足够流畅且不卡顿）
             _uiRefreshTimer = new System.Windows.Forms.Timer();
@@ -330,8 +329,9 @@ namespace DeepSightAI
         {
             var dgv = FrmHome.Instance.dataGridViewData;
 
-            // 列顺序: SN[0], Side[1], AVI[2], AI[3], Time[4], Status[5]
-            dgv.Rows.Insert(0, new object[] { sn, side, "0", "0", "", "排队中" });
+            // 列顺序: SN[0], Side[1], AVI[2], AI[3], Time[4], QueueTime[5], Status[6]
+            string queueTime = DateTime.Now.ToString("HH:mm:ss");
+            dgv.Rows.Insert(0, new object[] { sn, side, "0", "0", "", queueTime, "排队中" });
             dgv.Rows[0].DefaultCellStyle.ForeColor = Color.Yellow;
         }
 
@@ -426,7 +426,7 @@ namespace DeepSightAI
             }
             else
             {
-                targetRow.Cells[5].Value = statusInfo.GetFullDisplayMessage();
+                targetRow.Cells[6].Value = statusInfo.GetFullDisplayMessage();
             }
         }
 
@@ -470,10 +470,10 @@ namespace DeepSightAI
                 msg = $"{msg}_AVI:{defectCount}_OK:{ok} NG:{ng} ByPass:{byPass}";
             }
 
-            // 列顺序: SN[0], Side[1], AVI[2], AI[3], Time[4], Status[5]
+            // 列顺序: SN[0], Side[1], AVI[2], AI[3], Time[4], QueueTime[5], Status[6]
             row.Cells[2].Value = defectCount;
             row.Cells[3].Value = count;
-            row.Cells[5].Value = msg;
+            row.Cells[6].Value = msg;
             FrmHome.Instance.str_SN = key;
 
             // 当前面完成时：仅当有缺陷图片时触发完整加载，否则仅更新AI结果标签
@@ -513,7 +513,7 @@ namespace DeepSightAI
                 // 从底部向上查找可移除的终态行
                 for (int i = dgv.Rows.Count - 1; i >= 0 && dgv.Rows.Count > MAX_ROWS; i--)
                 {
-                    string status = dgv.Rows[i].Cells[5].Value?.ToString() ?? "";
+                    string status = dgv.Rows[i].Cells[6].Value?.ToString() ?? "";
                     if (IsTerminalStatus(status))
                     {
                         string snToRemove = dgv.Rows[i].Cells[0].Value?.ToString() ?? "空值";

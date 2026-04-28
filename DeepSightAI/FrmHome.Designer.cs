@@ -71,6 +71,7 @@
             this.AVI = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.AI = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Time = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.QueueTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Status = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.table_main.SuspendLayout();
             this.panel_show.SuspendLayout();
@@ -209,6 +210,7 @@
             this.AVI,
             this.AI,
             this.Time,
+            this.QueueTime,
             this.Status});
             this.dataGridViewData.ContextMenuStrip = this.contextMenuStripData;
             dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
@@ -726,7 +728,17 @@
             this.Time.ReadOnly = true;
             this.Time.ToolTipText = "推理阶段用时";
             this.Time.Width = 125;
-            // 
+            //
+            // QueueTime
+            //
+            this.QueueTime.HeaderText = "入队时间";
+            this.QueueTime.MinimumWidth = 6;
+            this.QueueTime.Name = "QueueTime";
+            this.QueueTime.ReadOnly = true;
+            this.QueueTime.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.QueueTime.ToolTipText = "发送到任务队列的时间";
+            this.QueueTime.Width = 90;
+            //
             // Status
             // 
             this.Status.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
@@ -820,6 +832,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn AVI;
         private System.Windows.Forms.DataGridViewTextBoxColumn AI;
         private System.Windows.Forms.DataGridViewTextBoxColumn Time;
+        private System.Windows.Forms.DataGridViewTextBoxColumn QueueTime;
         private System.Windows.Forms.DataGridViewTextBoxColumn Status;
     }
 }
