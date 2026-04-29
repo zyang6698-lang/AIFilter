@@ -437,7 +437,7 @@ namespace DeepSightAI
                     catch { /* 忽略解析失败 */ }
                 }
 
-                // 3. 解析PanelInfo获取PCS与缺陷的映射
+                // 3. 解析PanelInfo获取PCS与缺陷的映射（pcs_info + panel_info 全局点）
                 var allPanelDefects = new List<(string DefectCode, int PcsIndex, int DefectIndex)>();
                 string productSerial = debugInfo.ProductSerial ?? "";
                 if (!string.IsNullOrEmpty(debugInfo.PanelInfoJson))
@@ -445,15 +445,13 @@ namespace DeepSightAI
                     try
                     {
                         var panelInfo = Newtonsoft.Json.JsonConvert.DeserializeObject<RootPanelInfo>(debugInfo.PanelInfoJson);
-                        if (panelInfo?.PcsInfo != null)
+                        if (panelInfo != null)
                         {
                             productSerial = panelInfo.ProductSerial ?? productSerial;
-                            foreach (var pcsEntry in panelInfo.PcsInfo.Values)
-                            {
-                                if (pcsEntry?.DefectInfo == null) continue;
-                                foreach (var defect in pcsEntry.DefectInfo)
-                                    allPanelDefects.Add((defect.DefectCode ?? "", defect.PcsIndex, defect.DefectIndex));
-                            }
+                            CollectPanelDefects(panelInfo.PcsInfo?.Values, allPanelDefects);
+                            CollectPanelDefects(
+                                panelInfo.PanelInfo != null ? new[] { panelInfo.PanelInfo } : null,
+                                allPanelDefects);
                         }
                     }
                     catch { /* 忽略解析失败 */ }
@@ -1266,6 +1264,19 @@ namespace DeepSightAI
         }
 
         #endregion
+
+        private static void CollectPanelDefects(
+            IEnumerable<PcsInfo> source,
+            List<(string DefectCode, int PcsIndex, int DefectIndex)> dest)
+        {
+            if (source == null) return;
+            foreach (var pcsEntry in source)
+            {
+                if (pcsEntry?.DefectInfo == null) continue;
+                foreach (var defect in pcsEntry.DefectInfo)
+                    dest.Add((defect.DefectCode ?? "", defect.PcsIndex, defect.DefectIndex));
+            }
+        }
     }
 }
 

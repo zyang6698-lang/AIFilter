@@ -50,8 +50,11 @@ namespace DeepSightModel
         [JsonProperty("panel_id")]
         public int PanelId { get; set; }
 
+        /// <summary>
+        /// 全局点信息（panel_info），结构与单个 PcsInfo 一致；可能为空
+        /// </summary>
         [JsonProperty("panel_info")]
-        public object PanelInfo { get; set; }
+        public PcsInfo PanelInfo { get; set; }
 
         [JsonProperty("panel_source_image")]
         public PanelSourceImage PanelSourceImage { get; set; }

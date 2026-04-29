@@ -33,6 +33,10 @@ namespace DeepSightModel
         public int VrsState { get; set; }
         public int FinalState { get; set; }
         /// <summary>
+        /// 是否为全局点（来源于 RootPanelInfo.PanelInfo，即 panel_info；false 表示来源于 pcs_info）
+        /// </summary>
+        public bool IsGlobal { get; set; }
+        /// <summary>
         /// 是否为重点缺陷（运行时标记，不持久化到数据库）
         /// </summary>
         [Newtonsoft.Json.JsonIgnore]
@@ -70,6 +74,7 @@ namespace DeepSightModel
                 VVSStatus = VVSStatus,
                 VrsState = VrsState,
                 FinalState = FinalState,
+                IsGlobal = IsGlobal,
                 IsKeyDefect = IsKeyDefect,
                 DisplaySN = DisplaySN
             };

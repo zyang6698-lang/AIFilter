@@ -178,12 +178,54 @@ namespace DeepSightEvent
                 _history.TryDequeue(out _);
             }
 
+            // 统一落日志（被冷却抑制的告警不再重复 log，避免日志风暴；
+            // 抑制次数已累加到 LatestAlarm.OccurrenceCount，由 FrmAlarm 表格展示）
+            WriteAlarmLog(alarm);
+
             // 触发事件
             try { OnAlarmRaised?.Invoke(alarm); }
             catch (Exception ex) { LogTextHelper.Error($"[AlarmService] OnAlarmRaised handler error: {ex.Message}"); }
 
             // 分发到各通知渠道
             DispatchToNotifiers(alarm);
+        }
+
+        /// <summary>
+        /// 把告警同步落一行日志，等级映射到 LogTextHelper
+        /// 调用点不再需要双写 (LogTextHelper.Xxx + RaiseAlarm)，集中在此处一次输出
+        /// </summary>
+        private static void WriteAlarmLog(AlarmInfo alarm)
+        {
+            try
+            {
+                var sb = new System.Text.StringBuilder(128);
+                sb.Append("[Alarm][").Append(alarm.Level).Append("][")
+                  .Append(alarm.Category).Append('/').Append(alarm.Source).Append("] ")
+                  .Append(alarm.Message);
+                if (!string.IsNullOrEmpty(alarm.RelatedSN))
+                    sb.Append(" SN=").Append(alarm.RelatedSN);
+                if (!string.IsNullOrEmpty(alarm.Detail))
+                    sb.Append(" | ").Append(alarm.Detail);
+                string line = sb.ToString();
+
+                switch (alarm.Level)
+                {
+                    case AlarmLevel.Critical:
+                    case AlarmLevel.Error:
+                        LogTextHelper.Error(line);
+                        break;
+                    case AlarmLevel.Warning:
+                        LogTextHelper.Warn(line);
+                        break;
+                    default:
+                        LogTextHelper.Info(line);
+                        break;
+                }
+            }
+            catch
+            {
+                // 日志失败不影响告警分发
+            }
         }
 
         private void DispatchToNotifiers(AlarmInfo alarm)

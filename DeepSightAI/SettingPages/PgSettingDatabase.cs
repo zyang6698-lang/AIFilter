@@ -89,11 +89,9 @@ namespace DeepSightAI.SettingPages
         private void HookDetailEvents()
         {
             txtDbName.TextChanged += (s, e) => WriteBack(c => c.DbName = txtDbName.Text);
-            txtIp.TextChanged += (s, e) => WriteBack(c => { c.IP = txtIp.Text; ResetAviStatus(); });
-            txtPort.TextChanged += (s, e) => WriteBack(c => { c.Port = txtPort.Text; ResetAviStatus(); });
+            txtIp.TextChanged += (s, e) => WriteBack(c => { c.IP = txtIp.Text; ResetAviStatus(); ResetVrsStatus(); });
+            txtPort.TextChanged += (s, e) => WriteBack(c => { c.Port = txtPort.Text; ResetAviStatus(); ResetVrsStatus(); });
             txtWriteBackDbName.TextChanged += (s, e) => WriteBack(c => c.WriteBackDbName = txtWriteBackDbName.Text);
-            txtVrsIp.TextChanged += (s, e) => WriteBack(c => { c.VRSIP = txtVrsIp.Text; ResetVrsStatus(); });
-            txtVrsPort.TextChanged += (s, e) => WriteBack(c => { c.VRSPort = txtVrsPort.Text; ResetVrsStatus(); });
             txtVrsWriteBackDbName.TextChanged += (s, e) => WriteBack(c => c.VRSWriteBackDbName = txtVrsWriteBackDbName.Text);
             txtVrsWriteBackDbNameV1.TextChanged += (s, e) => WriteBack(c => c.VRSWriteBackDbNameV1 = txtVrsWriteBackDbNameV1.Text);
             txtVrsHistoryDbName.TextChanged += (s, e) => WriteBack(c => { c.VrsHistoryDbName = txtVrsHistoryDbName.Text; ResetVrsStatus(); });
@@ -191,7 +189,7 @@ namespace DeepSightAI.SettingPages
                 if (!has)
                 {
                     txtDbName.Text = txtIp.Text = txtPort.Text = txtWriteBackDbName.Text = "";
-                    txtVrsIp.Text = txtVrsPort.Text = txtVrsWriteBackDbName.Text = txtVrsWriteBackDbNameV1.Text = "";
+                    txtVrsWriteBackDbName.Text = txtVrsWriteBackDbNameV1.Text = "";
                     txtVrsHistoryDbName.Text = txtVrsTestSn.Text = "";
                     txtMinioIpA.Text = txtMinioIpB.Text = "";
                     chkIsEnabled.Active = false;
@@ -201,14 +199,10 @@ namespace DeepSightAI.SettingPages
                     SetMinioStatus("B", "未测试", Color.FromArgb(216, 219, 188));
                     return;
                 }
-                if (string.IsNullOrWhiteSpace(db.VRSIP)) db.VRSIP = string.IsNullOrWhiteSpace(db.IP) ? "127.0.0.1" : db.IP;
-                if (string.IsNullOrWhiteSpace(db.VRSPort)) db.VRSPort = string.IsNullOrWhiteSpace(db.Port) ? "9877" : db.Port;
                 txtDbName.Text = db.DbName ?? "";
                 txtIp.Text = db.IP ?? "";
                 txtPort.Text = db.Port ?? "";
                 txtWriteBackDbName.Text = db.WriteBackDbName ?? "";
-                txtVrsIp.Text = db.VRSIP;
-                txtVrsPort.Text = db.VRSPort;
                 txtVrsWriteBackDbName.Text = db.VRSWriteBackDbName ?? "";
                 txtVrsWriteBackDbNameV1.Text = db.VRSWriteBackDbNameV1 ?? "";
                 txtVrsHistoryDbName.Text = string.IsNullOrWhiteSpace(db.VrsHistoryDbName)
@@ -239,8 +233,6 @@ namespace DeepSightAI.SettingPages
                 IP = "127.0.0.1",
                 Port = "9877",
                 WriteBackDbName = "filter_time_to_airesults",
-                VRSIP = "127.0.0.1",
-                VRSPort = "9877",
                 VRSWriteBackDbName = "ai_detail_results_tovrs",
                 VRSWriteBackDbNameV1 = "ai_inference_result",
                 VrsHistoryDbName = VrsHistoryService.DefaultDbName,
@@ -489,16 +481,16 @@ namespace DeepSightAI.SettingPages
         }
 
         /// <summary>
-        /// 测试 VRS 连接（http://{VRSIP}:{VRSPort}）
+        /// 测试 VRS 连接（VRS 复用 AVI 的 IP/Port，URL 取自 c.VRSUrl）
         /// </summary>
         private async Task TestVrsAsync(LevelDbConfig c)
         {
-            if (string.IsNullOrWhiteSpace(c.VRSIP) || string.IsNullOrWhiteSpace(c.VRSPort))
+            if (string.IsNullOrWhiteSpace(c.IP) || string.IsNullOrWhiteSpace(c.Port))
             {
                 if (CurrentConfig == c) SetVrsStatus("配置不完整", StatusWarnColor);
                 return;
             }
-            string url = $"http://{c.VRSIP}:{c.VRSPort}";
+            string url = c.VRSUrl;
             if (CurrentConfig == c) SetVrsStatus("测试中...", StatusBusyColor);
 
             bool success = await PostLevelDbProbeAsync(url);
@@ -511,12 +503,12 @@ namespace DeepSightAI.SettingPages
         /// </summary>
         private async Task TestVrsBySnAsync(LevelDbConfig c, string sn)
         {
-            if (string.IsNullOrWhiteSpace(c.VRSIP) || string.IsNullOrWhiteSpace(c.VRSPort))
+            if (string.IsNullOrWhiteSpace(c.IP) || string.IsNullOrWhiteSpace(c.Port))
             {
                 if (CurrentConfig == c) SetVrsStatus("配置不完整", StatusWarnColor);
                 return;
             }
-            string url = $"http://{c.VRSIP}:{c.VRSPort}";
+            string url = c.VRSUrl;
             string dbName = string.IsNullOrWhiteSpace(c.VrsHistoryDbName)
                 ? VrsHistoryService.DefaultDbName : c.VrsHistoryDbName;
 

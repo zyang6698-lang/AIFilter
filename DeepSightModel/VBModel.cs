@@ -93,6 +93,12 @@ namespace DeepSightModel
         /// 用于后处理时填充 DetectInfo.DefectName，确保直报缺陷落库信息完整。
         /// </summary>
         public List<string> AllDefectCodes { get; set; }
+
+        /// <summary>
+        /// 每个缺陷是否为全局点的标记列表（与 AllDefectXxxKeys 索引对齐，
+        /// true=来源 RootPanelInfo.PanelInfo（panel_info），false=来源 PcsInfo（pcs_info））
+        /// </summary>
+        public List<bool> GlobalFlags { get; set; }
         #endregion
 
         #region 源数据库追踪（多DB回写支持）

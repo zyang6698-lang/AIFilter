@@ -17,10 +17,12 @@ namespace DeepSightWorkLib.Services
         public const string CodeInitFailed        = "AI_ENGINE_INIT_FAILED";
         public const string CodeShowViewFailed    = "AI_ENGINE_SHOW_VIEW_FAILED";
         public const string CodeSolutionListEmpty = "AI_ENGINE_SOLUTION_LIST_EMPTY";
+        public const string CodeInferException    = "AI_ENGINE_INFER_EXCEPTION";
 
         private const string SourceInit         = "AI_Engine.Init";
         private const string SourceShowView    = "AI_Engine.ShowView";
         private const string SourceSolutionList = "AI_Engine.SolutionList";
+        private const string SourceInfer        = "AI_Engine.Infer";
 
         #endregion
 
@@ -67,6 +69,18 @@ namespace DeepSightWorkLib.Services
                   reason ?? "(无原因)");
         }
 
+        /// <summary>
+        /// 推理执行过程中抛出未捕获异常（DefectMethodWithImages2 调用链）
+        /// </summary>
+        public static void ReportInferException(string sn, string side, Exception ex)
+        {
+            string detail = ex?.ToString() ?? "(无异常详情)";
+            Raise(SourceInfer, CodeInferException,
+                  $"算法调用异常 SN={sn} Side={side}",
+                  detail,
+                  relatedSN: sn);
+        }
+
         #region 测试入口
 
         // 测试计数器：保证多次点击"测试告警"时 message 唯一，绕过 AlarmService 冷却
@@ -103,7 +117,7 @@ namespace DeepSightWorkLib.Services
 
         #region 内部
 
-        private static void Raise(string source, string code, string message, string detail)
+        private static void Raise(string source, string code, string message, string detail, string relatedSN = null)
         {
             try
             {
@@ -114,7 +128,8 @@ namespace DeepSightWorkLib.Services
                     AlarmCategory.AI,
                     source,
                     message,
-                    fullDetail);
+                    fullDetail,
+                    relatedSN);
             }
             catch (Exception raiseEx)
             {

@@ -170,7 +170,7 @@ namespace DeepSightWorkLib.Services
         }
 
         /// <summary>
-        /// 处理 PCS 信息
+        /// 处理 PCS 信息（先 pcs_info，后 panel_info 全局点；两者结构一致，统一参与推理）
         /// </summary>
         private void ProcessPcsInfo(
             RootPanelInfo panelInfo,
@@ -183,12 +183,39 @@ namespace DeepSightWorkLib.Services
             List<int> directReportPcsList)
         {
             int defectCount = 0;
-            foreach (var item in panelInfo.PcsInfo)
+            defectCount += AppendPcsInfoSource(panelInfo.PcsInfo?.Values, panelInfo, context, isSwitch, vBInfo,
+                defectList, pcsList, directReportDefectList, directReportPcsList);
+            defectCount += AppendPcsInfoSource(
+                panelInfo.PanelInfo != null ? new[] { panelInfo.PanelInfo } : null,
+                panelInfo, context, isSwitch, vBInfo,
+                defectList, pcsList, directReportDefectList, directReportPcsList);
+            LogTextHelper.Info($"SN:{context.SN}_{panelInfo.SideIndex}面报点数据为:{defectCount}");
+        }
+
+        /// <summary>
+        /// 处理一组 PcsInfo 源（pcs_info 的值集合或 panel_info 单元素），将其缺陷追加到推理与索引列表
+        /// </summary>
+        private int AppendPcsInfoSource(
+            IEnumerable<PcsInfo> source,
+            RootPanelInfo panelInfo,
+            PanelConvertContext context,
+            bool isSwitch,
+            RootVBInfo vBInfo,
+            List<int> defectList,
+            List<int> pcsList,
+            List<int> directReportDefectList,
+            List<int> directReportPcsList)
+        {
+            int defectCount = 0;
+            if (source == null) return 0;
+
+            foreach (var pcs in source)
             {
-                for (int j = 0; j < item.Value.DefectInfo.Count; j++)
+                if (pcs?.DefectInfo == null) continue;
+                for (int j = 0; j < pcs.DefectInfo.Count; j++)
                 {
                     defectCount++;
-                    var defect = item.Value.DefectInfo[j];
+                    var defect = pcs.DefectInfo[j];
 
                     // 检查是否为直报缺陷（根据料号对应的 profile）
                     if (KeyDefectConfigManager.Instance.IsDirectReportByProduct(defect.DefectCode, panelInfo.ProductSerial))
@@ -212,8 +239,7 @@ namespace DeepSightWorkLib.Services
                     pcsList.Add(defect.PcsIndex);
                 }
             }
-            LogTextHelper.Info($"SN:{context.SN}_{panelInfo.SideIndex}面报点数据为:{defectCount}");
-
+            return defectCount;
         }
 
         /// <summary>

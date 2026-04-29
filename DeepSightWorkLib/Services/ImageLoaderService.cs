@@ -77,9 +77,10 @@ namespace DeepSightWorkLib.Services
 
         /// <summary>
         /// 构建所有缺陷（包含直报）的三类图片路径、直报标记列表和 AVI 原始报码。
-        /// 返回的五个列表索引对齐：AllImageKeys[i]、AllGerberKeys[i]、AllTempKeys[i]、DirectReportFlags[i]、AllDefectCodes[i] 对应同一个缺陷。
+        /// 返回的六个列表索引对齐：AllImageKeys[i]、AllGerberKeys[i]、AllTempKeys[i]、DirectReportFlags[i]、AllDefectCodes[i]、GlobalFlags[i] 对应同一个缺陷。
+        /// 迭代顺序：先 PcsInfo（pcs_info），后 PanelInfo（panel_info，全局点）。
         /// </summary>
-        public (List<string> AllImageKeys, List<string> AllGerberKeys, List<string> AllTempKeys, List<bool> DirectReportFlags, List<string> AllDefectCodes)
+        public (List<string> AllImageKeys, List<string> AllGerberKeys, List<string> AllTempKeys, List<bool> DirectReportFlags, List<string> AllDefectCodes, List<bool> GlobalFlags)
             GetAllImageKeysWithDirectReportFlags(RootPanelInfo panel, string ip, string head)
         {
             var allImageKeys = new List<string>();
@@ -87,51 +88,67 @@ namespace DeepSightWorkLib.Services
             var allTempKeys = new List<string>();
             var flags = new List<bool>();
             var allDefectCodes = new List<string>();
+            var globalFlags = new List<bool>();
 
             try
             {
                 if (panel == null || string.IsNullOrWhiteSpace(ip))
                 {
                     LogTextHelper.Warn("GetAllImageKeysWithDirectReportFlags: 参数为空或 IP 缺失！");
-                    return (allImageKeys, allGerberKeys, allTempKeys, flags, allDefectCodes);
+                    return (allImageKeys, allGerberKeys, allTempKeys, flags, allDefectCodes, globalFlags);
                 }
 
-                if (panel.PcsInfo == null || panel.PcsInfo.Count == 0)
-                    return (allImageKeys, allGerberKeys, allTempKeys, flags, allDefectCodes);
-
-                foreach (var kvp in panel.PcsInfo)
-                {
-                    var pcs = kvp.Value;
-                    if (pcs == null || pcs.DefectInfo == null || pcs.DefectInfo.Count == 0)
-                        continue;
-
-                    for (int j = 0; j < pcs.DefectInfo.Count; j++)
-                    {
-                        var defect = pcs.DefectInfo[j];
-                        if (defect == null) continue;
-
-                        bool isDirectReport = KeyDefectConfigManager.Instance
-                            .IsDirectReportByProduct(defect.DefectCode, panel.ProductSerial);
-
-                        // VRS 图片路径（如果有多张取第一张，与 AddImages 逻辑保持一致）
-                        string imgKey = BuildFirstImageKey(defect.DefectVrsImages, ip, head);
-                        string gerberKey = BuildFirstImageKey(defect.DefectVrsGerberImages, ip, head);
-                        string tempKey = BuildFirstImageKey(defect.DefectVrsOkImages, ip, head);
-
-                        allImageKeys.Add(imgKey);
-                        allGerberKeys.Add(gerberKey);
-                        allTempKeys.Add(tempKey);
-                        flags.Add(isDirectReport);
-                        allDefectCodes.Add(defect.DefectCode ?? "");
-                    }
-                }
+                AppendDefects(panel.PcsInfo?.Values, panel.ProductSerial, ip, head, isGlobal: false,
+                    allImageKeys, allGerberKeys, allTempKeys, flags, allDefectCodes, globalFlags);
+                AppendDefects(panel.PanelInfo != null ? new[] { panel.PanelInfo } : null,
+                    panel.ProductSerial, ip, head, isGlobal: true,
+                    allImageKeys, allGerberKeys, allTempKeys, flags, allDefectCodes, globalFlags);
             }
             catch (Exception ex)
             {
                 LogTextHelper.Error("GetAllImageKeysWithDirectReportFlags 异常：" + ex);
             }
 
-            return (allImageKeys, allGerberKeys, allTempKeys, flags, allDefectCodes);
+            return (allImageKeys, allGerberKeys, allTempKeys, flags, allDefectCodes, globalFlags);
+        }
+
+        /// <summary>
+        /// 将一组 PcsInfo（pcs_info 的值集合或 panel_info 单元素）的缺陷追加到对齐列表中
+        /// </summary>
+        private static void AppendDefects(
+            IEnumerable<PcsInfo> source,
+            string productSerial, string ip, string head, bool isGlobal,
+            List<string> allImageKeys, List<string> allGerberKeys, List<string> allTempKeys,
+            List<bool> flags, List<string> allDefectCodes, List<bool> globalFlags)
+        {
+            if (source == null) return;
+
+            foreach (var pcs in source)
+            {
+                if (pcs == null || pcs.DefectInfo == null || pcs.DefectInfo.Count == 0)
+                    continue;
+
+                for (int j = 0; j < pcs.DefectInfo.Count; j++)
+                {
+                    var defect = pcs.DefectInfo[j];
+                    if (defect == null) continue;
+
+                    bool isDirectReport = KeyDefectConfigManager.Instance
+                        .IsDirectReportByProduct(defect.DefectCode, productSerial);
+
+                    // VRS 图片路径（如果有多张取第一张，与 AddImages 逻辑保持一致）
+                    string imgKey = BuildFirstImageKey(defect.DefectVrsImages, ip, head);
+                    string gerberKey = BuildFirstImageKey(defect.DefectVrsGerberImages, ip, head);
+                    string tempKey = BuildFirstImageKey(defect.DefectVrsOkImages, ip, head);
+
+                    allImageKeys.Add(imgKey);
+                    allGerberKeys.Add(gerberKey);
+                    allTempKeys.Add(tempKey);
+                    flags.Add(isDirectReport);
+                    allDefectCodes.Add(defect.DefectCode ?? "");
+                    globalFlags.Add(isGlobal);
+                }
+            }
         }
 
         /// <summary>

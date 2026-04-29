@@ -101,10 +101,10 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
 
             var convertResult = _panelDataConverter.Convert(panelInfo, convertContext);
 
-            var (AllImageKeys, AllGerberKeys, AllTempKeys, DirectReportFlags, AllDefectCodes)
+            var (AllImageKeys, AllGerberKeys, AllTempKeys, DirectReportFlags, AllDefectCodes, GlobalFlags)
                 = _imageLoaderService.GetAllImageKeysWithDirectReportFlags(panelInfo, ip, head);
 
-            // 构造 UI 投影模型（缺陷展平顺序与 GetAllImageKeysWithDirectReportFlags 一致：foreach PcsInfo → DefectInfo）
+            // 构造 UI 投影模型（缺陷展平顺序与 GetAllImageKeysWithDirectReportFlags 一致：先 PcsInfo 后 PanelInfo）
             var panelView = BuildPanelView(sn, side, ip, head, panelInfo);
             var (ImageKeys, GerberKeys, TempKeys)
                 = ImageLoaderService.DeriveFilteredKeys(AllImageKeys, AllGerberKeys, AllTempKeys, DirectReportFlags);
@@ -132,6 +132,7 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
                 AllDefectTempKeys = AllTempKeys,
                 DirectReportFlags = DirectReportFlags,
                 AllDefectCodes = AllDefectCodes,
+                GlobalFlags = GlobalFlags,
                 SourceDbUrl = dbUrl,
                 SourceVRSDbUrl = vrsDbUrl,
                 SourceWriteBackDbName = writeBackDbName,
@@ -154,7 +155,7 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
         }
 
         /// <summary>
-        /// 将 RootPanelInfo + IP/Head 投影为 PanelInfoView，缺陷按 PcsInfo 字典遍历顺序展平
+        /// 将 RootPanelInfo + IP/Head 投影为 PanelInfoView，缺陷展平顺序：先 PcsInfo，后 PanelInfo（全局点）
         /// </summary>
         private static PanelInfoView BuildPanelView(string sn, string side, string ip, string head, RootPanelInfo panelInfo)
         {
@@ -174,16 +175,21 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
                 Defects = new List<DefectInfoView>()
             };
 
-            if (panelInfo.PcsInfo == null) return view;
+            AppendDefectViews(view.Defects, panelInfo.PcsInfo?.Values);
+            AppendDefectViews(view.Defects, panelInfo.PanelInfo != null ? new[] { panelInfo.PanelInfo } : null);
+            return view;
+        }
 
-            foreach (var kvp in panelInfo.PcsInfo)
+        private static void AppendDefectViews(List<DefectInfoView> dest, IEnumerable<PcsInfo> source)
+        {
+            if (source == null) return;
+            foreach (var pcs in source)
             {
-                var pcs = kvp.Value;
                 if (pcs?.DefectInfo == null) continue;
                 foreach (var d in pcs.DefectInfo)
                 {
                     if (d == null) continue;
-                    view.Defects.Add(new DefectInfoView
+                    dest.Add(new DefectInfoView
                     {
                         DefectCode = d.DefectCode,
                         DefectIndex = d.DefectIndex,
@@ -197,7 +203,6 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
                     });
                 }
             }
-            return view;
         }
 
         /// <summary>
@@ -239,20 +244,8 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
                 debugInfo.LotNumber = obj.LotId ?? obj.LotBatch;
 
                 var defectCodes = new List<string>();
-                if (obj.PcsInfo != null)
-                {
-                    foreach (var pcs in obj.PcsInfo.Values)
-                    {
-                        if (pcs?.DefectInfo != null)
-                        {
-                            foreach (var d in pcs.DefectInfo)
-                            {
-                                if (!string.IsNullOrEmpty(d.DefectCode))
-                                    defectCodes.Add(d.DefectCode);
-                            }
-                        }
-                    }
-                }
+                CollectDefectCodes(obj.PcsInfo?.Values, defectCodes);
+                CollectDefectCodes(obj.PanelInfo != null ? new[] { obj.PanelInfo } : null, defectCodes);
                 var summary = new System.Text.StringBuilder();
                 if (defectCodes.Count > 0)
                     summary.Append($"AVI报点{defectCodes.Count}个: {string.Join(",", defectCodes.Distinct())}");
@@ -267,6 +260,20 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
             catch (Exception debugEx)
             {
                 LogTextHelper.Warn($"存储SN调试信息异常: {debugEx.Message}");
+            }
+        }
+
+        private static void CollectDefectCodes(IEnumerable<PcsInfo> source, List<string> defectCodes)
+        {
+            if (source == null) return;
+            foreach (var pcs in source)
+            {
+                if (pcs?.DefectInfo == null) continue;
+                foreach (var d in pcs.DefectInfo)
+                {
+                    if (!string.IsNullOrEmpty(d.DefectCode))
+                        defectCodes.Add(d.DefectCode);
+                }
             }
         }
     }

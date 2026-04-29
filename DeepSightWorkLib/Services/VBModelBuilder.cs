@@ -37,6 +37,7 @@ namespace DeepSightWorkLib.Services
             var originalVVSResults = new Dictionary<int, int>();
             var originalDetectInfos = new Dictionary<int, DetectInfo>();
             var directReportFlags = new List<bool>();
+            var globalFlags = new List<bool>();
 
             // 全量路径（包含直报），用于后续保存完整缺陷信息
             var allDefectImageKeys = new List<string>();
@@ -68,6 +69,7 @@ namespace DeepSightWorkLib.Services
                 bool isDirectReport = KeyDefectConfigManager.Instance.IsDirectReportByProduct(
                     aviDefectCode, context.ProductSerial);
                 directReportFlags.Add(isDirectReport);
+                globalFlags.Add(defect.IsGlobal);
 
                 if (isDirectReport || string.IsNullOrEmpty(defect.ImagePath))
                     continue;
@@ -109,7 +111,8 @@ namespace DeepSightWorkLib.Services
                 AllDefectGerberKeys = allDefectGerberKeys,
                 AllDefectTempKeys = allDefectTempKeys,
                 DirectReportFlags = directReportFlags,
-                AllDefectCodes = allDefectCodes
+                AllDefectCodes = allDefectCodes,
+                GlobalFlags = globalFlags
             };
         }
 

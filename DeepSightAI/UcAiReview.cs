@@ -46,6 +46,23 @@ namespace DeepSightAI
         private int _aiNgVvsOkPcsCount = 0;     // AI-NG & 人工OK PCS数
         private int _aiNgVvsNgPcsCount = 0;     // AI-NG & 人工NG PCS数
 
+        // VRS 报点级状态计数（动态计算，统计口径与 VVS 一致）
+        private int _vrsOkCount = 0;
+        private int _vrsNgCount = 0;
+        private int _vrsNotSetCount = 0;
+
+        // 报点级别 VRS 交叉统计（动态计算）
+        private int _aiOkVrsOkPointCount = 0;
+        private int _aiOkVrsNgPointCount = 0;
+        private int _aiNgVrsOkPointCount = 0;
+        private int _aiNgVrsNgPointCount = 0;
+
+        // PCS级别 VRS 交叉统计（动态计算）
+        private int _aiOkVrsOkPcsCount = 0;
+        private int _aiOkVrsNgPcsCount = 0;
+        private int _aiNgVrsOkPcsCount = 0;
+        private int _aiNgVrsNgPcsCount = 0;
+
         // 按Lot分组的统计数据（包含所有面板，用于计算统计指标）
         private Dictionary<string, LotStatistics> _lotStatistics = new Dictionary<string, LotStatistics>();
 
@@ -175,6 +192,11 @@ namespace DeepSightAI
 
                 // 默认不加载任何数据到表格，提示用户选择Lot
                 RefreshDataGridView();
+
+                // 新查询：清空左下复判详情，避免显示上一次查询的统计
+                _currentReviewLot = null;
+                _currentReviewSnItem = null;
+                RefreshReviewDetailDisplay();
             }
             catch (Exception ex)
             {
@@ -231,6 +253,19 @@ namespace DeepSightAI
 
                 // 更新表格显示
                 RefreshDataGridView();
+
+                // 筛选条件变更（如切换 A/B 面）后，刷新左下复判详情统计；
+                // 退出单SN模式，重新计算并显示当前 Lot 的最新统计
+                _currentReviewSnItem = null;
+                if (!string.IsNullOrEmpty(_currentReviewLot) && _lotStatistics.ContainsKey(_currentReviewLot))
+                {
+                    UpdateVvsStatusSummary();
+                }
+                else
+                {
+                    _currentReviewLot = null;
+                }
+                RefreshReviewDetailDisplay();
             }
             catch (Exception ex)
             {
@@ -780,6 +815,8 @@ namespace DeepSightAI
                 // 切换到Lot视图，退出单SN模式
                 _currentReviewLot = e.Node.Name;
                 _currentReviewSnItem = null;
+                // 重新计算 VVS/VRS 统计，保证切换 Lot 或筛选后显示最新数据
+                UpdateVvsStatusSummary();
                 RefreshReviewDetailDisplay();
             }
             // 如果是子分类节点（第二层，如按Side分组），加载该分类的数据
@@ -791,6 +828,7 @@ namespace DeepSightAI
                 // 切换到Lot视图，退出单SN模式
                 _currentReviewLot = lotNumber;
                 _currentReviewSnItem = null;
+                UpdateVvsStatusSummary();
                 RefreshReviewDetailDisplay();
             }
         }
@@ -1450,7 +1488,7 @@ namespace DeepSightAI
 
 
         /// <summary>
-        /// 统计当前VVS状态和其他统计指标（包含报点级别和PCS级别的交叉统计）
+        /// 统计当前VVS/VRS状态和其他统计指标（包含报点级别和PCS级别的交叉统计）
         /// </summary>
         private void UpdateVvsStatusSummary()
         {
@@ -1467,9 +1505,21 @@ namespace DeepSightAI
             _aiNgVvsOkPcsCount = 0;
             _aiNgVvsNgPcsCount = 0;
 
+            _vrsOkCount = 0;
+            _vrsNgCount = 0;
+            _vrsNotSetCount = 0;
+            _aiOkVrsOkPointCount = 0;
+            _aiOkVrsNgPointCount = 0;
+            _aiNgVrsOkPointCount = 0;
+            _aiNgVrsNgPointCount = 0;
+            _aiOkVrsOkPcsCount = 0;
+            _aiOkVrsNgPcsCount = 0;
+            _aiNgVrsOkPcsCount = 0;
+            _aiNgVrsNgPcsCount = 0;
+
             if (string.IsNullOrEmpty(_currentReviewLot)) return;
 
-            // VVS 状态统计需要从当前数据实时计算（因为用户可能会修改 VVS 状态）
+            // VVS/VRS 状态统计需要从当前数据实时计算（因为用户可能会修改 VVS 状态）
             foreach (var item in _allDefectItems)
             {
                 if (item.LotNumber != _currentReviewLot) continue;
@@ -1488,28 +1538,66 @@ namespace DeepSightAI
                     else if (isAiOkPoint && hp.VVSStatus == 2) _aiOkVvsNgPointCount++;
                     else if (isAiNgPoint && hp.VVSStatus == 1) _aiNgVvsOkPointCount++;
                     else if (isAiNgPoint && hp.VVSStatus == 2) _aiNgVvsNgPointCount++;
+
+                    // VRS 报点级统计（NG 包含 2=NG 与 5=NG不接收）
+                    bool isVrsOkPoint = IsVrsOkPoint(hp.VrsState);
+                    bool isVrsNgPoint = IsVrsNgPoint(hp.VrsState);
+                    if (isVrsOkPoint) _vrsOkCount++;
+                    else if (isVrsNgPoint) _vrsNgCount++;
+                    else if (hp.VrsState == 0) _vrsNotSetCount++;
+
+                    if (isAiOkPoint && isVrsOkPoint) _aiOkVrsOkPointCount++;
+                    else if (isAiOkPoint && isVrsNgPoint) _aiOkVrsNgPointCount++;
+                    else if (isAiNgPoint && isVrsOkPoint) _aiNgVrsOkPointCount++;
+                    else if (isAiNgPoint && isVrsNgPoint) _aiNgVrsNgPointCount++;
                 }
 
-                // PCS级别交叉统计：按 PcsIndex 分组，同一 PcsIndex 为同一片 PCS（需有VVS结果才计入）
+                // PCS级别交叉统计：按 PcsIndex 分组，同一 PcsIndex 为同一片 PCS（需有结果才计入）
                 var pcsGroups = item.HeatPoints.GroupBy(hp => hp.PcsIndex);
                 foreach (var pcsGroup in pcsGroups)
                 {
                     var pts = pcsGroup.ToList();
-                    bool hasVvsResult = pts.Any(p => p.VVSStatus != 0);
-                    if (!hasVvsResult) continue;
 
                     // 根据该 PCS 内各点的 AIStatus 判断 PCS 的 AI 状态
                     bool pcsAiOk = pts.All(p => p.AIStatus == 1);
                     bool pcsAiNg = pts.Any(p => p.AIStatus == 2);
-                    // 有任意一点 VVS 判定为 NG，则该 PCS 为人工 NG
-                    bool pcsVvsOk = pts.All(p => p.VVSStatus == 0 || p.VVSStatus == 1);
 
-                    if (pcsAiOk && pcsVvsOk) _aiOkVvsOkPcsCount++;
-                    else if (pcsAiOk && !pcsVvsOk) _aiOkVvsNgPcsCount++;
-                    else if (pcsAiNg && pcsVvsOk) _aiNgVvsOkPcsCount++;
-                    else if (pcsAiNg && !pcsVvsOk) _aiNgVvsNgPcsCount++;
+                    // VVS PCS 级别（需有VVS结果才计入）
+                    bool hasVvsResult = pts.Any(p => p.VVSStatus != 0);
+                    if (hasVvsResult)
+                    {
+                        // 有任意一点 VVS 判定为 NG，则该 PCS 为人工 NG
+                        bool pcsVvsOk = pts.All(p => p.VVSStatus == 0 || p.VVSStatus == 1);
+                        if (pcsAiOk && pcsVvsOk) _aiOkVvsOkPcsCount++;
+                        else if (pcsAiOk && !pcsVvsOk) _aiOkVvsNgPcsCount++;
+                        else if (pcsAiNg && pcsVvsOk) _aiNgVvsOkPcsCount++;
+                        else if (pcsAiNg && !pcsVvsOk) _aiNgVvsNgPcsCount++;
+                    }
+
+                    // VRS PCS 级别（需有VRS结果才计入）
+                    bool hasVrsResult = pts.Any(p => p.VrsState != 0);
+                    if (hasVrsResult)
+                    {
+                        // 有任意一点 VRS 判定为 NG(2/5)，则该 PCS 为 VRS NG
+                        bool pcsVrsNg = pts.Any(p => IsVrsNgPoint(p.VrsState));
+                        bool pcsVrsOk = !pcsVrsNg;
+                        if (pcsAiOk && pcsVrsOk) _aiOkVrsOkPcsCount++;
+                        else if (pcsAiOk && pcsVrsNg) _aiOkVrsNgPcsCount++;
+                        else if (pcsAiNg && pcsVrsOk) _aiNgVrsOkPcsCount++;
+                        else if (pcsAiNg && pcsVrsNg) _aiNgVrsNgPcsCount++;
+                    }
                 }
             }
+        }
+
+        private static bool IsVrsOkPoint(int vrsState)
+        {
+            return vrsState == 1;
+        }
+
+        private static bool IsVrsNgPoint(int vrsState)
+        {
+            return vrsState == 2 || vrsState == 5;
         }
 
         /// <summary>
@@ -1553,14 +1641,20 @@ namespace DeepSightAI
             sb.AppendLine($"  AI-OK报点数: {aiOkPoints}");
             sb.AppendLine($"    AI-OK&人工OK: {_aiOkVvsOkPointCount}");
             sb.AppendLine($"    AI-OK&人工NG: {_aiOkVvsNgPointCount}");
+            sb.AppendLine($"    AI-OK&VRS-OK: {_aiOkVrsOkPointCount}");
+            sb.AppendLine($"    AI-OK&VRS-NG: {_aiOkVrsNgPointCount}");
             sb.AppendLine($"  AI-NG报点数: {aiNgPoints}");
             sb.AppendLine($"    AI-NG&人工OK: {_aiNgVvsOkPointCount}");
             sb.AppendLine($"    AI-NG&人工NG: {_aiNgVvsNgPointCount}");
+            sb.AppendLine($"    AI-NG&VRS-OK: {_aiNgVrsOkPointCount}");
+            sb.AppendLine($"    AI-NG&VRS-NG: {_aiNgVrsNgPointCount}");
             sb.AppendLine($"  AI-异常报点数: {aiExceptionPoints}");
             sb.AppendLine($"  AI-未检测报点数: {aiUninspectedPoints}");
             sb.AppendLine($"  AI过滤率: {FormatPercent(aiOkPoints, totalPoints)}");
-            sb.AppendLine($"  AI漏失率: {FormatPercent(_aiOkVvsNgPointCount, totalPoints)}");
-            sb.AppendLine($"  AI准确率: {FormatPercent(_aiOkVvsOkPointCount + _aiNgVvsNgPointCount, totalPoints)}");
+            sb.AppendLine($"  AI漏失率(VVS): {FormatPercent(_aiOkVvsNgPointCount, totalPoints)}");
+            sb.AppendLine($"  AI准确率(VVS): {FormatPercent(_aiOkVvsOkPointCount + _aiNgVvsNgPointCount, totalPoints)}");
+            sb.AppendLine($"  AI漏失率(VRS): {FormatPercent(_aiOkVrsNgPointCount, totalPoints)}");
+            sb.AppendLine($"  AI准确率(VRS): {FormatPercent(_aiOkVrsOkPointCount + _aiNgVrsNgPointCount, totalPoints)}");
             sb.AppendLine();
 
             // 5. PCS统计
@@ -1575,15 +1669,21 @@ namespace DeepSightAI
             sb.AppendLine($"  AI-OK PCS数: {aiOkPcs}");
             sb.AppendLine($"    AI-OK&人工OK: {_aiOkVvsOkPcsCount}");
             sb.AppendLine($"    AI-OK&人工NG: {_aiOkVvsNgPcsCount}");
+            sb.AppendLine($"    AI-OK&VRS-OK: {_aiOkVrsOkPcsCount}");
+            sb.AppendLine($"    AI-OK&VRS-NG: {_aiOkVrsNgPcsCount}");
             sb.AppendLine($"  AI-NG PCS数: {aiNgPcs}");
             sb.AppendLine($"    AI-NG&人工OK: {_aiNgVvsOkPcsCount}");
             sb.AppendLine($"    AI-NG&人工NG: {_aiNgVvsNgPcsCount}");
+            sb.AppendLine($"    AI-NG&VRS-OK: {_aiNgVrsOkPcsCount}");
+            sb.AppendLine($"    AI-NG&VRS-NG: {_aiNgVrsNgPcsCount}");
             sb.AppendLine($"  AI-异常 PCS数: {aiExceptionPcs}");
             sb.AppendLine($"  AI-未检测 PCS数: {aiUninspectedPcs}");
             sb.AppendLine($"  AI PCS过滤率: {FormatPercent(aiOkPcs, totalPcs)}");
             sb.AppendLine($"  AI PCS通过率: {FormatPercent(aviOkPcs + aiOkPcs, totalPcs)}");
-            sb.AppendLine($"  AI PCS漏失率: {FormatPercent(_aiOkVvsNgPcsCount, totalPcs)}");
-            sb.AppendLine($"  AI PCS准确率: {FormatPercent(_aiOkVvsOkPcsCount + _aiNgVvsNgPcsCount, totalPcs)}");
+            sb.AppendLine($"  AI PCS漏失率(VVS): {FormatPercent(_aiOkVvsNgPcsCount, totalPcs)}");
+            sb.AppendLine($"  AI PCS准确率(VVS): {FormatPercent(_aiOkVvsOkPcsCount + _aiNgVvsNgPcsCount, totalPcs)}");
+            sb.AppendLine($"  AI PCS漏失率(VRS): {FormatPercent(_aiOkVrsNgPcsCount, totalPcs)}");
+            sb.AppendLine($"  AI PCS准确率(VRS): {FormatPercent(_aiOkVrsOkPcsCount + _aiNgVrsNgPcsCount, totalPcs)}");
             sb.AppendLine();
 
             // 6. & 7. Panel通过率
@@ -1595,7 +1695,14 @@ namespace DeepSightAI
             sb.AppendLine($"VVS已判定总数: {_vvsOkCount + _vvsNgCount}");
             sb.AppendLine($"VVS未判定数量: {_vvsNotSetCount}");
             sb.AppendLine($"VVS判定OK数: {_vvsOkCount}");
-            sb.Append($"VVS判定NG数: {_vvsNgCount}");
+            sb.AppendLine($"VVS判定NG数: {_vvsNgCount}");
+            sb.AppendLine();
+
+            // 12-15. VRS状态统计（统计口径与VVS一致）
+            sb.AppendLine($"VRS已判定总数: {_vrsOkCount + _vrsNgCount}");
+            sb.AppendLine($"VRS未判定数量: {_vrsNotSetCount}");
+            sb.AppendLine($"VRS判定OK数: {_vrsOkCount}");
+            sb.Append($"VRS判定NG数: {_vrsNgCount}");
 
             label_ReviewDetail.Text = sb.ToString();
         }

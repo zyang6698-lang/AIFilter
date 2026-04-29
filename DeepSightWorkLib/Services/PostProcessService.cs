@@ -286,12 +286,14 @@ namespace DeepSightWorkLib.Services
             var allTempKeys = vBModel.AllDefectTempKeys;
             var flags = vBModel.DirectReportFlags;
             var allDefectCodes = vBModel.AllDefectCodes;
+            var globalFlags = vBModel.GlobalFlags;
 
             if (allImageKeys != null && allImageKeys.Count > 0)
             {
                 for (int i = 0; i < allImageKeys.Count; i++)
                 {
                     bool isDirectReport = flags != null && i < flags.Count && flags[i];
+                    bool isGlobal = globalFlags != null && i < globalFlags.Count && globalFlags[i];
                     DetectInfo defect = null;
                     if (vBModel.OriginalDetectInfos != null
                         && vBModel.OriginalDetectInfos.TryGetValue(i, out var originalDetectInfo)
@@ -310,6 +312,7 @@ namespace DeepSightWorkLib.Services
                         ? defect.DefectName
                         : allDefectCodes?.ElementAtOrDefault(i) ?? "";
                     defect.AIStatus = isDirectReport ? 3 : 0;
+                    defect.IsGlobal = isGlobal || defect.IsGlobal;
                     defects.Add(defect);
                 }
             }

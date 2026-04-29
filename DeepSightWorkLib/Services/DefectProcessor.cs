@@ -1,5 +1,3 @@
-using DeepSightEvent;
-using DeepSightDisplay;
 using DeepSightModel;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -298,7 +296,7 @@ namespace DeepSightWorkLib.Services
             catch (Exception ex)
             {
                 stageResult.Success = false;
-                SystemEvent.SendAlarmMsg("算法调用异常" + ex.ToString());
+                AiEngineAlarm.ReportInferException(vBModel.SN, vBModel.Side, ex);
             }
             return stageResult;
         }

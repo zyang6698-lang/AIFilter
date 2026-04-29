@@ -54,10 +54,6 @@
             this.txtWriteBackDbName = new Sunny.UI.UITextBox();
             this.grpVrs = new Sunny.UI.UIGroupBox();
             this.tlpVrs = new System.Windows.Forms.TableLayoutPanel();
-            this.lblVrsIp = new Sunny.UI.UILabel();
-            this.txtVrsIp = new Sunny.UI.UITextBox();
-            this.lblVrsPort = new Sunny.UI.UILabel();
-            this.txtVrsPort = new Sunny.UI.UITextBox();
             this.lblVrsStatus = new Sunny.UI.UILabel();
             this.btnVrsTest = new Sunny.UI.UIButton();
             this.lblVrsWriteBackDbName = new Sunny.UI.UILabel();
@@ -589,10 +585,6 @@
             this.tlpVrs.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 150F));
             this.tlpVrs.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tlpVrs.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 110F));
-            this.tlpVrs.Controls.Add(this.lblVrsIp, 0, 0);
-            this.tlpVrs.Controls.Add(this.txtVrsIp, 1, 0);
-            this.tlpVrs.Controls.Add(this.lblVrsPort, 2, 0);
-            this.tlpVrs.Controls.Add(this.txtVrsPort, 3, 0);
             this.tlpVrs.Controls.Add(this.lblVrsStatus, 4, 0);
             this.tlpVrs.Controls.Add(this.btnVrsTest, 5, 0);
             this.tlpVrs.Controls.Add(this.lblVrsWriteBackDbName, 0, 1);
@@ -614,79 +606,7 @@
             this.tlpVrs.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tlpVrs.Size = new System.Drawing.Size(830, 296);
             this.tlpVrs.TabIndex = 0;
-            // 
-            // lblVrsIp
-            // 
-            this.lblVrsIp.BackColor = System.Drawing.Color.Transparent;
-            this.lblVrsIp.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblVrsIp.Font = new System.Drawing.Font("微软雅黑", 10F);
-            this.lblVrsIp.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.lblVrsIp.Location = new System.Drawing.Point(3, 0);
-            this.lblVrsIp.Name = "lblVrsIp";
-            this.lblVrsIp.Size = new System.Drawing.Size(144, 55);
-            this.lblVrsIp.Style = Sunny.UI.UIStyle.Custom;
-            this.lblVrsIp.StyleCustomMode = true;
-            this.lblVrsIp.TabIndex = 0;
-            this.lblVrsIp.Text = "VRS IP：";
-            this.lblVrsIp.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // txtVrsIp
-            // 
-            this.txtVrsIp.Cursor = System.Windows.Forms.Cursors.IBeam;
-            this.txtVrsIp.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtVrsIp.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
-            this.txtVrsIp.Font = new System.Drawing.Font("微软雅黑", 10F);
-            this.txtVrsIp.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.txtVrsIp.Location = new System.Drawing.Point(153, 6);
-            this.txtVrsIp.Margin = new System.Windows.Forms.Padding(3, 6, 3, 6);
-            this.txtVrsIp.MinimumSize = new System.Drawing.Size(1, 16);
-            this.txtVrsIp.Name = "txtVrsIp";
-            this.txtVrsIp.Padding = new System.Windows.Forms.Padding(5);
-            this.txtVrsIp.RectColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(80)))), ((int)(((byte)(95)))));
-            this.txtVrsIp.ShowText = false;
-            this.txtVrsIp.Size = new System.Drawing.Size(184, 43);
-            this.txtVrsIp.Style = Sunny.UI.UIStyle.Custom;
-            this.txtVrsIp.StyleCustomMode = true;
-            this.txtVrsIp.TabIndex = 1;
-            this.txtVrsIp.TextAlignment = System.Drawing.ContentAlignment.MiddleLeft;
-            this.txtVrsIp.Watermark = "127.0.0.1";
-            // 
-            // lblVrsPort
-            // 
-            this.lblVrsPort.BackColor = System.Drawing.Color.Transparent;
-            this.lblVrsPort.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblVrsPort.Font = new System.Drawing.Font("微软雅黑", 10F);
-            this.lblVrsPort.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.lblVrsPort.Location = new System.Drawing.Point(343, 0);
-            this.lblVrsPort.Name = "lblVrsPort";
-            this.lblVrsPort.Size = new System.Drawing.Size(94, 55);
-            this.lblVrsPort.Style = Sunny.UI.UIStyle.Custom;
-            this.lblVrsPort.StyleCustomMode = true;
-            this.lblVrsPort.TabIndex = 2;
-            this.lblVrsPort.Text = "端口：";
-            this.lblVrsPort.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // txtVrsPort
-            // 
-            this.txtVrsPort.Cursor = System.Windows.Forms.Cursors.IBeam;
-            this.txtVrsPort.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtVrsPort.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
-            this.txtVrsPort.Font = new System.Drawing.Font("微软雅黑", 10F);
-            this.txtVrsPort.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.txtVrsPort.Location = new System.Drawing.Point(443, 6);
-            this.txtVrsPort.Margin = new System.Windows.Forms.Padding(3, 6, 3, 6);
-            this.txtVrsPort.MinimumSize = new System.Drawing.Size(1, 16);
-            this.txtVrsPort.Name = "txtVrsPort";
-            this.txtVrsPort.Padding = new System.Windows.Forms.Padding(5);
-            this.txtVrsPort.RectColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(80)))), ((int)(((byte)(95)))));
-            this.txtVrsPort.ShowText = false;
-            this.txtVrsPort.Size = new System.Drawing.Size(144, 43);
-            this.txtVrsPort.Style = Sunny.UI.UIStyle.Custom;
-            this.txtVrsPort.StyleCustomMode = true;
-            this.txtVrsPort.TabIndex = 3;
-            this.txtVrsPort.TextAlignment = System.Drawing.ContentAlignment.MiddleLeft;
-            this.txtVrsPort.Watermark = "9877";
-            // 
+            //
             // lblVrsStatus
             // 
             this.lblVrsStatus.BackColor = System.Drawing.Color.Transparent;
@@ -1113,10 +1033,6 @@
         private Sunny.UI.UIButton btnAviTest;
         private Sunny.UI.UIGroupBox grpVrs;
         private System.Windows.Forms.TableLayoutPanel tlpVrs;
-        private Sunny.UI.UILabel lblVrsIp;
-        private Sunny.UI.UITextBox txtVrsIp;
-        private Sunny.UI.UILabel lblVrsPort;
-        private Sunny.UI.UITextBox txtVrsPort;
         private Sunny.UI.UILabel lblVrsWriteBackDbName;
         private Sunny.UI.UITextBox txtVrsWriteBackDbName;
         private Sunny.UI.UILabel lblVrsWriteBackDbNameV1;
