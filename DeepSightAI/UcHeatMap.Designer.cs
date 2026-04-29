@@ -37,7 +37,6 @@ namespace DeepSightAI
             this.btn_loadArryImage = new DeepSightAI.StyledButton();
             this.btn_Select = new DeepSightAI.StyledButton();
             this.btnClip = new DeepSightAI.StyledButton();
-            this.queryControl = new DeepSightAI.UcDefectQuery();
             this.flowLayoutPanel_Defects = new System.Windows.Forms.FlowLayoutPanel();
             this.tableLayoutPanel6.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -98,16 +97,14 @@ namespace DeepSightAI
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33F));
             this.tableLayoutPanel1.Controls.Add(this.btn_loadArryImage, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.btn_Select, 2, 0);
-            this.tableLayoutPanel1.Controls.Add(this.queryControl, 0, 1);
-            this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel_Defects, 0, 2);
+            this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel_Defects, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this.btnClip, 1, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(2, 2);
             this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 3;
+            this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 32F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 252F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(305, 720);
             this.tableLayoutPanel1.TabIndex = 3;
@@ -144,26 +141,9 @@ namespace DeepSightAI
             this.btnClip.TabIndex = 140;
             this.btnClip.Text = "裁剪";
             this.btnClip.Click += new System.EventHandler(this.btnClip_Click);
-            // 
-            // queryControl
-            // 
-            this.queryControl.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.tableLayoutPanel1.SetColumnSpan(this.queryControl, 3);
-            this.queryControl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.queryControl.IsDateChecked = true;
-            this.queryControl.Location = new System.Drawing.Point(2, 34);
-            this.queryControl.LotNumber = "";
-            this.queryControl.MachineID = "";
-            this.queryControl.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.queryControl.Name = "queryControl";
-            this.queryControl.PartNumber = "";
-            this.queryControl.SelectedDefectName = "";
-            this.queryControl.SelectedSide = "";
-            this.queryControl.Size = new System.Drawing.Size(301, 248);
-            this.queryControl.TabIndex = 1;
-            // 
+            //
             // flowLayoutPanel_Defects
-            // 
+            //
             this.flowLayoutPanel_Defects.AutoScroll = true;
             this.flowLayoutPanel_Defects.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.tableLayoutPanel1.SetColumnSpan(this.flowLayoutPanel_Defects, 3);
@@ -206,6 +186,5 @@ namespace DeepSightAI
         private DeepSightAI.StyledButton btn_Select;
         private DeepSightAI.StyledButton btnClip;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel_Details;
-        private UcDefectQuery queryControl;
     }
 }

@@ -60,8 +60,6 @@ namespace DeepSightAI
             this.table_menu = new System.Windows.Forms.TableLayoutPanel();
             this.panel_search = new System.Windows.Forms.Panel();
             this.btnSearch = new System.Windows.Forms.PictureBox();
-            this.panel9 = new System.Windows.Forms.Panel();
-            this.btnModel = new System.Windows.Forms.Button();
             this.panel8 = new System.Windows.Forms.Panel();
             this.toolStripDropDownButton1 = new System.Windows.Forms.ToolStripDropDownButton();
             this.btnModelB = new System.Windows.Forms.ToolStripMenuItem();
@@ -96,7 +94,6 @@ namespace DeepSightAI
             this.table_menu.SuspendLayout();
             this.panel_search.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.btnSearch)).BeginInit();
-            this.panel9.SuspendLayout();
             this.toolStrip.SuspendLayout();
             this.panel_r.SuspendLayout();
             this.pnlTitleBar.SuspendLayout();
@@ -421,7 +418,7 @@ namespace DeepSightAI
             // 
             // table_menu
             // 
-            this.table_menu.ColumnCount = 9;
+            this.table_menu.ColumnCount = 8;
             this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 53F));
             this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 53F));
             this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 53F));
@@ -429,7 +426,6 @@ namespace DeepSightAI
             this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 53F));
             this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 53F));
             this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 53F));
-            this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 267F));
             this.table_menu.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.table_menu.Controls.Add(this.panel_home, 0, 0);
             this.table_menu.Controls.Add(this.panel_tool, 1, 0);
@@ -438,8 +434,7 @@ namespace DeepSightAI
             this.table_menu.Controls.Add(this.panel_search, 4, 0);
             this.table_menu.Controls.Add(this.panel_start, 5, 0);
             this.table_menu.Controls.Add(this.panel_login, 6, 0);
-            this.table_menu.Controls.Add(this.panel9, 7, 0);
-            this.table_menu.Controls.Add(this.panel8, 8, 0);
+            this.table_menu.Controls.Add(this.panel8, 7, 0);
             this.table_menu.Dock = System.Windows.Forms.DockStyle.Top;
             this.table_menu.Location = new System.Drawing.Point(0, 79);
             this.table_menu.Margin = new System.Windows.Forms.Padding(0);
@@ -475,37 +470,7 @@ namespace DeepSightAI
             this.btnSearch.TabStop = false;
             this.btnSearch.Tag = "\"2\"";
             this.btnSearch.Click += new System.EventHandler(this.btnSearch_Click);
-            // 
-            // panel9
-            // 
-            this.panel9.Controls.Add(this.btnModel);
-            this.panel9.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel9.Location = new System.Drawing.Point(378, 5);
-            this.panel9.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.panel9.Name = "panel9";
-            this.panel9.Size = new System.Drawing.Size(259, 55);
-            this.panel9.TabIndex = 25;
-            // 
-            // btnModel
-            // 
-            this.btnModel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.btnModel.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.btnModel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btnModel.FlatAppearance.BorderSize = 0;
-            this.btnModel.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
-            this.btnModel.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
-            this.btnModel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnModel.Font = new System.Drawing.Font("幼圆", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.btnModel.ForeColor = System.Drawing.Color.White;
-            this.btnModel.Location = new System.Drawing.Point(0, 0);
-            this.btnModel.Margin = new System.Windows.Forms.Padding(7);
-            this.btnModel.Name = "btnModel";
-            this.btnModel.Size = new System.Drawing.Size(259, 55);
-            this.btnModel.TabIndex = 109;
-            this.btnModel.Text = "生产模式";
-            this.btnModel.UseVisualStyleBackColor = false;
-            this.btnModel.Click += new System.EventHandler(this.btnModel_Click);
-            // 
+            //
             // panel8
             // 
             this.panel8.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -729,7 +694,6 @@ namespace DeepSightAI
             this.table_menu.ResumeLayout(false);
             this.panel_search.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.btnSearch)).EndInit();
-            this.panel9.ResumeLayout(false);
             this.toolStrip.ResumeLayout(false);
             this.toolStrip.PerformLayout();
             this.panel_r.ResumeLayout(false);
@@ -764,10 +728,8 @@ namespace DeepSightAI
         private System.Windows.Forms.TableLayoutPanel table_menu;
         public System.Windows.Forms.ToolStripStatusLabel lblPageInfo;
         private System.Windows.Forms.PictureBox btnLogin;
-        private System.Windows.Forms.Panel panel9;
         private System.Windows.Forms.PictureBox btnAlarm;
         public System.Windows.Forms.PictureBox btnTool;
-        public System.Windows.Forms.Button btnModel;
         public System.Windows.Forms.ToolStripDropDownButton toolStripDropDownButton1;
         private System.Windows.Forms.ToolStripMenuItem btnModelB;
         private System.Windows.Forms.ToolStripMenuItem btnModelC;

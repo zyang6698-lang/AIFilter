@@ -12,7 +12,7 @@ namespace DeepSightAI
     public partial class FrmSetting : Form
     {
         /// <summary>
-        /// 6 个配置页索引常量，与 uiTabControl 中 TabPage 顺序保持一致
+        /// 配置页索引常量，与 uiTabControl 中 TabPage 顺序保持一致
         /// </summary>
         private const int PageBase = 0;
         private const int PageAI = 1;
@@ -20,6 +20,7 @@ namespace DeepSightAI
         private const int PageDb = 3;
         private const int PageKeyDefect = 4;
         private const int PageShortcut = 5;
+        private const int PageToolbox = 6;
 
         public FrmSetting()
         {
@@ -31,6 +32,7 @@ namespace DeepSightAI
             navNodeDb = uiNavMenu.CreateNode("数据库配置", PageDb);
             navNodeKeyDefect = uiNavMenu.CreateNode("重点缺陷管理", PageKeyDefect);
             navNodeShortcut = uiNavMenu.CreateNode("快捷键配置", PageShortcut);
+            navNodeToolbox = uiNavMenu.CreateNode("工具箱", PageToolbox);
 
             Load += FrSetting_Load;
         }
@@ -86,6 +88,7 @@ namespace DeepSightAI
         private System.Windows.Forms.TreeNode navNodeDb;
         private System.Windows.Forms.TreeNode navNodeKeyDefect;
         private System.Windows.Forms.TreeNode navNodeShortcut;
+        private System.Windows.Forms.TreeNode navNodeToolbox;
 
         public void Language(int language)
         {
@@ -98,6 +101,7 @@ namespace DeepSightAI
                 navNodeDb.Text = "数据库配置";
                 navNodeKeyDefect.Text = "重点缺陷管理";
                 navNodeShortcut.Text = "快捷键配置";
+                navNodeToolbox.Text = "工具箱";
             }
             else
             {
@@ -108,6 +112,7 @@ namespace DeepSightAI
                 navNodeDb.Text = "Database";
                 navNodeKeyDefect.Text = "Key Defect";
                 navNodeShortcut.Text = "Shortcuts";
+                navNodeToolbox.Text = "Toolbox";
             }
             uiNavMenu.Invalidate();
         }
@@ -123,6 +128,7 @@ namespace DeepSightAI
                 uiTabControl.AddPage(PgSettingDatabase.Instance);
                 uiTabControl.AddPage(PgSettingKeyDefect.Instance);
                 uiTabControl.AddPage(PgSettingShortcut.Instance);
+                uiTabControl.AddPage(PgSettingToolbox.Instance);
             }
             catch (Exception ex)
             {

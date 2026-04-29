@@ -267,11 +267,11 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="UcAiReview.cs">
-      <SubType>UserControl</SubType>
+    <Compile Include="FrmAiReview.cs">
+      <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UcAiReview.Designer.cs">
-      <DependentUpon>UcAiReview.cs</DependentUpon>
+    <Compile Include="FrmAiReview.Designer.cs">
+      <DependentUpon>FrmAiReview.cs</DependentUpon>
     </Compile>
     <Compile Include="UcStatisticsToolbox.cs">
       <SubType>UserControl</SubType>
@@ -320,12 +320,6 @@
       <DependentUpon>FrmAlarm.cs</DependentUpon>
     </Compile>
     <Compile Include="ToastNotifier.cs" />
-    <Compile Include="FrmChart.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FrmChart.Designer.cs">
-      <DependentUpon>FrmChart.cs</DependentUpon>
-    </Compile>
     <Compile Include="FrmLotHistory.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -416,6 +410,9 @@
     <Compile Include="SettingPages\PgSettingShortcut.Designer.cs">
       <DependentUpon>PgSettingShortcut.cs</DependentUpon>
     </Compile>
+    <Compile Include="SettingPages\PgSettingToolbox.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="SettingPages\UcMachineStatusCard.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -476,8 +473,8 @@
     <Compile Include="UcValidationTestResult.Designer.cs">
       <DependentUpon>UcValidationTestResult.cs</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="UcAiReview.resx">
-      <DependentUpon>UcAiReview.cs</DependentUpon>
+    <EmbeddedResource Include="FrmAiReview.resx">
+      <DependentUpon>FrmAiReview.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UcConsistencyTestDashboard.resx">
       <DependentUpon>UcConsistencyTestDashboard.cs</DependentUpon>
@@ -511,9 +508,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FrmAlarm.resx">
       <DependentUpon>FrmAlarm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FrmChart.resx">
-      <DependentUpon>FrmChart.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FrmHome.resx">
       <DependentUpon>FrmHome.cs</DependentUpon>

@@ -729,9 +729,14 @@ namespace DeepSightAI
         /// <param name="exportPath">导出目标目录</param>
         /// <param name="exportOriginal">是否导出原图</param>
         /// <param name="exportTemplate">是否导出模板图</param>
-        public void ExportImages(string exportPath, bool exportOriginal, bool exportTemplate)
+        /// <param name="exportGerber">是否导出 Gerber 图</param>
+        public void ExportImages(string exportPath, bool exportOriginal, bool exportTemplate, bool exportGerber)
         {
             if (_filteredHeatPoints == null || _filteredHeatPoints.Count == 0)
+                return;
+
+            // 三种图片类型都未选择时，跳过图片和 .dpst 文件导出（仅由调用方生成 CSV）
+            if (!exportOriginal && !exportTemplate && !exportGerber)
                 return;
 
             // 生成随机起始id，后续每张图递增
@@ -777,6 +782,22 @@ namespace DeepSightAI
                         }
                     }
 
+                    // 从Minio加载Gerber图
+                    Bitmap gerberImage = null;
+                    if (exportGerber)
+                    {
+                        string gerberPath = hp.GerberImagePath;
+                        if (!string.IsNullOrEmpty(gerberPath))
+                        {
+                            gerberImage = LoadImageFromMinioPath(gerberPath);
+                            if (gerberImage != null)
+                            {
+                                string fileName = nameWithoutExt + "_2.png";
+                                gerberImage.Save(Path.Combine(exportPath, fileName), ImageFormat.Png);
+                            }
+                        }
+                    }
+
                     // 如果需要dpst但没加载原图，补充加载一次用于获取尺寸
                     if (originalImage == null && !exportOriginal)
                     {
@@ -785,12 +806,14 @@ namespace DeepSightAI
 
                     // 导出.dpst文件（与原图同名）
                     ExportDpstFile(exportPath, baseName, currentId, originalImage,
-                        exportTemplate ? templateImage : null);
+                        exportTemplate ? templateImage : null,
+                        exportGerber ? gerberImage : null);
                     currentId++;
 
                     // 释放临时图片
                     originalImage?.Dispose();
                     templateImage?.Dispose();
+                    gerberImage?.Dispose();
                 }
                 catch (Exception ex)
                 {
@@ -847,7 +870,7 @@ namespace DeepSightAI
         /// 导出.dpst文件（与原图同名，扩展名为.dpst）
         /// </summary>
         private void ExportDpstFile(string exportPath, string baseName, long id,
-            Image originalImage, Image templateImage)
+            Image originalImage, Image templateImage, Image gerberImage)
         {
             try
             {
@@ -869,6 +892,15 @@ namespace DeepSightAI
                     channels.Add(GetImageChannels(templateImage));
                     localList.Add(templateFileName);
                     sourceList.Add(templateFileName);
+                }
+
+                // 如果有Gerber图，追加到列表
+                if (gerberImage != null)
+                {
+                    string gerberFileName = nameWithoutExt + "_2.png";
+                    channels.Add(GetImageChannels(gerberImage));
+                    localList.Add(gerberFileName);
+                    sourceList.Add(gerberFileName);
                 }
 
                 var dpst = new DpstInfo

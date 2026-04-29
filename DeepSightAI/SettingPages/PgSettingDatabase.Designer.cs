@@ -265,7 +265,7 @@
             this.tlpRight.RowCount = 4;
             this.tlpRight.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 89F));
             this.tlpRight.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 170F));
-            this.tlpRight.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 340F));
+            this.tlpRight.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 215F));
             this.tlpRight.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tlpRight.Size = new System.Drawing.Size(846, 604);
             this.tlpRight.TabIndex = 1;
@@ -568,7 +568,7 @@
             this.grpVrs.Name = "grpVrs";
             this.grpVrs.Padding = new System.Windows.Forms.Padding(8, 32, 8, 6);
             this.grpVrs.RectColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(80)))), ((int)(((byte)(95)))));
-            this.grpVrs.Size = new System.Drawing.Size(846, 334);
+            this.grpVrs.Size = new System.Drawing.Size(705, 278);
             this.grpVrs.Style = Sunny.UI.UIStyle.Custom;
             this.grpVrs.StyleCustomMode = true;
             this.grpVrs.TabIndex = 2;
@@ -587,26 +587,24 @@
             this.tlpVrs.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 110F));
             this.tlpVrs.Controls.Add(this.lblVrsStatus, 4, 0);
             this.tlpVrs.Controls.Add(this.btnVrsTest, 5, 0);
-            this.tlpVrs.Controls.Add(this.lblVrsWriteBackDbName, 0, 1);
-            this.tlpVrs.Controls.Add(this.txtVrsWriteBackDbName, 1, 1);
-            this.tlpVrs.Controls.Add(this.lblVrsWriteBackDbNameV1, 0, 2);
-            this.tlpVrs.Controls.Add(this.txtVrsWriteBackDbNameV1, 1, 2);
-            this.tlpVrs.Controls.Add(this.lblVrsHistoryDbName, 0, 3);
-            this.tlpVrs.Controls.Add(this.txtVrsHistoryDbName, 1, 3);
-            this.tlpVrs.Controls.Add(this.lblVrsTestSn, 2, 3);
-            this.tlpVrs.Controls.Add(this.txtVrsTestSn, 3, 3);
+            this.tlpVrs.Controls.Add(this.lblVrsWriteBackDbName, 0, 0);
+            this.tlpVrs.Controls.Add(this.txtVrsWriteBackDbName, 1, 0);
+            this.tlpVrs.Controls.Add(this.lblVrsWriteBackDbNameV1, 0, 1);
+            this.tlpVrs.Controls.Add(this.txtVrsWriteBackDbNameV1, 1, 1);
+            this.tlpVrs.Controls.Add(this.lblVrsHistoryDbName, 0, 2);
+            this.tlpVrs.Controls.Add(this.txtVrsHistoryDbName, 1, 2);
+            this.tlpVrs.Controls.Add(this.lblVrsTestSn, 2, 2);
+            this.tlpVrs.Controls.Add(this.txtVrsTestSn, 3, 2);
             this.tlpVrs.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tlpVrs.Location = new System.Drawing.Point(8, 32);
             this.tlpVrs.Name = "tlpVrs";
-            this.tlpVrs.RowCount = 5;
+            this.tlpVrs.RowCount = 3;
             this.tlpVrs.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 55F));
             this.tlpVrs.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 55F));
             this.tlpVrs.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 55F));
-            this.tlpVrs.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 55F));
-            this.tlpVrs.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tlpVrs.Size = new System.Drawing.Size(830, 296);
+            this.tlpVrs.Size = new System.Drawing.Size(689, 165);
             this.tlpVrs.TabIndex = 0;
-            //
+            // 
             // lblVrsStatus
             // 
             this.lblVrsStatus.BackColor = System.Drawing.Color.Transparent;
@@ -615,7 +613,7 @@
             this.lblVrsStatus.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
             this.lblVrsStatus.Location = new System.Drawing.Point(593, 0);
             this.lblVrsStatus.Name = "lblVrsStatus";
-            this.lblVrsStatus.Size = new System.Drawing.Size(124, 55);
+            this.lblVrsStatus.Size = new System.Drawing.Size(1, 55);
             this.lblVrsStatus.Style = Sunny.UI.UIStyle.Custom;
             this.lblVrsStatus.StyleCustomMode = true;
             this.lblVrsStatus.TabIndex = 4;
@@ -631,7 +629,7 @@
             this.btnVrsTest.FillPressColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(50)))), ((int)(((byte)(70)))));
             this.btnVrsTest.Font = new System.Drawing.Font("宋体", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.btnVrsTest.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.btnVrsTest.Location = new System.Drawing.Point(724, 6);
+            this.btnVrsTest.Location = new System.Drawing.Point(583, 6);
             this.btnVrsTest.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
             this.btnVrsTest.MinimumSize = new System.Drawing.Size(1, 1);
             this.btnVrsTest.Name = "btnVrsTest";
@@ -650,7 +648,7 @@
             this.lblVrsWriteBackDbName.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblVrsWriteBackDbName.Font = new System.Drawing.Font("微软雅黑", 10F);
             this.lblVrsWriteBackDbName.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.lblVrsWriteBackDbName.Location = new System.Drawing.Point(3, 55);
+            this.lblVrsWriteBackDbName.Location = new System.Drawing.Point(3, 0);
             this.lblVrsWriteBackDbName.Name = "lblVrsWriteBackDbName";
             this.lblVrsWriteBackDbName.Size = new System.Drawing.Size(144, 55);
             this.lblVrsWriteBackDbName.Style = Sunny.UI.UIStyle.Custom;
@@ -666,7 +664,7 @@
             this.txtVrsWriteBackDbName.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
             this.txtVrsWriteBackDbName.Font = new System.Drawing.Font("微软雅黑", 10F);
             this.txtVrsWriteBackDbName.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.txtVrsWriteBackDbName.Location = new System.Drawing.Point(153, 61);
+            this.txtVrsWriteBackDbName.Location = new System.Drawing.Point(153, 6);
             this.txtVrsWriteBackDbName.Margin = new System.Windows.Forms.Padding(3, 6, 3, 6);
             this.txtVrsWriteBackDbName.MinimumSize = new System.Drawing.Size(1, 16);
             this.txtVrsWriteBackDbName.Name = "txtVrsWriteBackDbName";
@@ -686,7 +684,7 @@
             this.lblVrsWriteBackDbNameV1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblVrsWriteBackDbNameV1.Font = new System.Drawing.Font("微软雅黑", 10F);
             this.lblVrsWriteBackDbNameV1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.lblVrsWriteBackDbNameV1.Location = new System.Drawing.Point(3, 110);
+            this.lblVrsWriteBackDbNameV1.Location = new System.Drawing.Point(3, 55);
             this.lblVrsWriteBackDbNameV1.Name = "lblVrsWriteBackDbNameV1";
             this.lblVrsWriteBackDbNameV1.Size = new System.Drawing.Size(144, 55);
             this.lblVrsWriteBackDbNameV1.Style = Sunny.UI.UIStyle.Custom;
@@ -702,7 +700,7 @@
             this.txtVrsWriteBackDbNameV1.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
             this.txtVrsWriteBackDbNameV1.Font = new System.Drawing.Font("微软雅黑", 10F);
             this.txtVrsWriteBackDbNameV1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.txtVrsWriteBackDbNameV1.Location = new System.Drawing.Point(153, 116);
+            this.txtVrsWriteBackDbNameV1.Location = new System.Drawing.Point(153, 61);
             this.txtVrsWriteBackDbNameV1.Margin = new System.Windows.Forms.Padding(3, 6, 3, 6);
             this.txtVrsWriteBackDbNameV1.MinimumSize = new System.Drawing.Size(1, 16);
             this.txtVrsWriteBackDbNameV1.Name = "txtVrsWriteBackDbNameV1";
@@ -722,7 +720,7 @@
             this.lblVrsHistoryDbName.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblVrsHistoryDbName.Font = new System.Drawing.Font("微软雅黑", 10F);
             this.lblVrsHistoryDbName.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.lblVrsHistoryDbName.Location = new System.Drawing.Point(3, 165);
+            this.lblVrsHistoryDbName.Location = new System.Drawing.Point(3, 110);
             this.lblVrsHistoryDbName.Name = "lblVrsHistoryDbName";
             this.lblVrsHistoryDbName.Size = new System.Drawing.Size(144, 55);
             this.lblVrsHistoryDbName.Style = Sunny.UI.UIStyle.Custom;
@@ -738,7 +736,7 @@
             this.txtVrsHistoryDbName.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
             this.txtVrsHistoryDbName.Font = new System.Drawing.Font("微软雅黑", 10F);
             this.txtVrsHistoryDbName.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.txtVrsHistoryDbName.Location = new System.Drawing.Point(153, 171);
+            this.txtVrsHistoryDbName.Location = new System.Drawing.Point(153, 116);
             this.txtVrsHistoryDbName.Margin = new System.Windows.Forms.Padding(3, 6, 3, 6);
             this.txtVrsHistoryDbName.MinimumSize = new System.Drawing.Size(1, 16);
             this.txtVrsHistoryDbName.Name = "txtVrsHistoryDbName";
@@ -758,7 +756,7 @@
             this.lblVrsTestSn.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblVrsTestSn.Font = new System.Drawing.Font("微软雅黑", 10F);
             this.lblVrsTestSn.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.lblVrsTestSn.Location = new System.Drawing.Point(343, 165);
+            this.lblVrsTestSn.Location = new System.Drawing.Point(343, 110);
             this.lblVrsTestSn.Name = "lblVrsTestSn";
             this.lblVrsTestSn.Size = new System.Drawing.Size(94, 55);
             this.lblVrsTestSn.Style = Sunny.UI.UIStyle.Custom;
@@ -774,7 +772,7 @@
             this.txtVrsTestSn.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
             this.txtVrsTestSn.Font = new System.Drawing.Font("微软雅黑", 10F);
             this.txtVrsTestSn.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.txtVrsTestSn.Location = new System.Drawing.Point(443, 171);
+            this.txtVrsTestSn.Location = new System.Drawing.Point(443, 116);
             this.txtVrsTestSn.Margin = new System.Windows.Forms.Padding(3, 6, 3, 6);
             this.txtVrsTestSn.MinimumSize = new System.Drawing.Size(1, 16);
             this.txtVrsTestSn.Name = "txtVrsTestSn";

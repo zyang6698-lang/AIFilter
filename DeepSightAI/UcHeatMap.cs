@@ -58,17 +58,30 @@ namespace DeepSightAI
 
         #region Initialization
 
+        /// <summary>
+        /// 外部注入的缺陷查询控件（与 UcAiReview 共用，避免重复 UI 与重复查询）
+        /// </summary>
+        private UcDefectQuery queryControl;
+
         public UcHeatMap()
         {
             InitializeComponent();
             InitializeLayout();
-            InitializeQueryControl();
             this.VisibleChanged += HeatMapControl2_VisibleChanged;
         }
 
-        private void InitializeQueryControl()
+        /// <summary>
+        /// 绑定外部查询控件（由父容器在创建后调用）
+        /// </summary>
+        public void BindQuerySource(UcDefectQuery query)
         {
-            // 订阅查询控件的事件
+            if (query == null) return;
+            if (queryControl != null)
+            {
+                queryControl.QueryClicked -= HeatMapQueryControl_QueryClicked;
+                queryControl.FilterChanged -= QueryControl_FilterChanged;
+            }
+            queryControl = query;
             queryControl.QueryClicked += HeatMapQueryControl_QueryClicked;
             queryControl.FilterChanged += QueryControl_FilterChanged;
         }

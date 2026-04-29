@@ -21,8 +21,6 @@ namespace DeepSightAI
 {
     public partial class FrmMain : Form
     {
-        public bool IsAllow = false;
-
         private DateTime _lastResetDate = DateTime.Now.Date;
 
         #region UI 批量刷新 — 缓冲区 & Timer
@@ -634,7 +632,7 @@ namespace DeepSightAI
                     (FrmSetting.Instance, panel2),
                     (FrmLotHistory.Instance,  panel3),
                     (FrmAlarm.Instance,   panel4),
-                    (FrmChart.Instance,   panel5),
+                    (FrmAiReview.Instance, panel5),
                 };
 
                 foreach (var (form, panel) in formPanelMap)
@@ -753,7 +751,7 @@ namespace DeepSightAI
         }
         private void btnTool_Click(object sender, EventArgs e)
         {
-            if (!IsAllow)
+            if (Machine.master.IsStart)
             {
                 return;
             }
@@ -761,7 +759,7 @@ namespace DeepSightAI
         }
         private void btnAlarm_Click(object sender, EventArgs e)
         {
-            if (!IsAllow)
+            if (Machine.master.IsStart)
             {
                 return;
             }
@@ -769,7 +767,7 @@ namespace DeepSightAI
         }
         private void btnChart_Click(object sender, EventArgs e)
         {
-            if (!IsAllow)
+            if (Machine.master.IsStart)
             {
                 return;
             }
@@ -1048,22 +1046,6 @@ namespace DeepSightAI
                 LogTextHelper.Error($"重置清空任务队列异常: {ex.Message}");
             }
         }
-        private async void btnModel_Click(object sender, EventArgs e)
-        {
-            //ATS增加模式切换
-            if (this.btnModel.Text == "生产模式")
-            {
-                this.btnModel.Text = "设定模式";
-                IsAllow = true;
-            }
-            else if (this.btnModel.Text == "设定模式")
-            {
-                this.btnModel.Text = "生产模式";
-                IsAllow = false;
-            }
-            return;
-        }
-
         public void btnRunVB_Click(object sender, EventArgs e)
         {
             this.Invoke(new MethodInvoker(() =>
@@ -1082,7 +1064,7 @@ namespace DeepSightAI
 
         private void btnSearch_Click(object sender, EventArgs e)
         {
-            if (!IsAllow)
+            if (Machine.master.IsStart)
             {
                 return;
             }
@@ -1094,7 +1076,7 @@ namespace DeepSightAI
             try
             {
                 // 触发 UcStatisticsToolbox 中的生成推理请求功能
-                FrmChart.Instance.analyticsControl1.TriggerGenerateInference();
+                DeepSightAI.SettingPages.PgSettingToolbox.Instance.TriggerGenerateInference();
             }
             catch (Exception ex)
             {
@@ -1109,10 +1091,10 @@ namespace DeepSightAI
         /// 全局键盘拦截：
         ///   Ctrl+S       → 保存当前配置页（仅在配置界面且按钮可用时）
         ///   Alt+1        → 主界面
-        ///   Alt+2        → 配置界面（需设定模式）
-        ///   Alt+3        → 查询界面（需设定模式）
-        ///   Alt+4        → 报警界面（需设定模式）
-        ///   Alt+5        → 图表界面（需设定模式）
+        ///   Alt+2        → 配置界面（需暂停作业）
+        ///   Alt+3        → 查询界面（需暂停作业）
+        ///   Alt+4        → 报警界面（需暂停作业）
+        ///   Alt+5        → 图表界面（需暂停作业）
         /// </summary>
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
@@ -1134,16 +1116,16 @@ namespace DeepSightAI
                     SwitchFrom(FormMode.MainForm);
                     return true;
                 case Keys.Alt | Keys.D2:
-                    if (IsAllow) SwitchFrom(FormMode.SettingForm);
+                    if (!Machine.master.IsStart) SwitchFrom(FormMode.SettingForm);
                     return true;
                 case Keys.Alt | Keys.D3:
-                    if (IsAllow) SwitchFrom(FormMode.AlarmForm);
+                    if (!Machine.master.IsStart) SwitchFrom(FormMode.AlarmForm);
                     return true;
                 case Keys.Alt | Keys.D4:
-                    if (IsAllow) SwitchFrom(FormMode.ChartForm);
+                    if (!Machine.master.IsStart) SwitchFrom(FormMode.ChartForm);
                     return true;
                 case Keys.Alt | Keys.D5:
-                    if (IsAllow) SwitchFrom(FormMode.SearchForm);
+                    if (!Machine.master.IsStart) SwitchFrom(FormMode.SearchForm);
                     return true;
             }
 

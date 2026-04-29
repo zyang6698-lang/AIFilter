@@ -509,8 +509,8 @@ namespace DeepSightAI
 
         public void dataGridViewData_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            //此标志打开，手动点击才生效，否则，不允许手动点击，只允许自动生产的刷新
-            if (!FrmMain.Instance.IsAllow)
+            //作业运行中时，不允许手动点击，只允许自动生产的刷新
+            if (Machine.master.IsStart)
             {
                 if (e != null)
                 {

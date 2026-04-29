@@ -1,6 +1,6 @@
 ﻿namespace DeepSightAI
 {
-    partial class UcAiReview
+    partial class FrmAiReview
     {
         /// <summary> 
         /// 必需的设计器变量。
@@ -69,6 +69,8 @@
             this.validationTestResultControl1 = new DeepSightAI.UcValidationTestResult();
             this.tabPage_ConsistencyDashboard = new System.Windows.Forms.TabPage();
             this.consistencyTestDashboard1 = new DeepSightAI.UcConsistencyTestDashboard();
+            this.tabPage_HeatMap = new System.Windows.Forms.TabPage();
+            this.heatMapControl1 = new DeepSightAI.UcHeatMap();
             this.contextMenuStrip_Lot = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripMenuItem_AddToDataset = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem_RunTest = new System.Windows.Forms.ToolStripMenuItem();
@@ -89,6 +91,7 @@
             this.tabPage_Details.SuspendLayout();
             this.tabPage_ValidationTest.SuspendLayout();
             this.tabPage_ConsistencyDashboard.SuspendLayout();
+            this.tabPage_HeatMap.SuspendLayout();
             this.contextMenuStrip_Lot.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -208,6 +211,7 @@
             this.tabControl_Main.Controls.Add(this.tabPage_Details);
             this.tabControl_Main.Controls.Add(this.tabPage_ValidationTest);
             this.tabControl_Main.Controls.Add(this.tabPage_ConsistencyDashboard);
+            this.tabControl_Main.Controls.Add(this.tabPage_HeatMap);
             this.tabControl_Main.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl_Main.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
             this.tabControl_Main.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
@@ -603,6 +607,28 @@
             this.consistencyTestDashboard1.Size = new System.Drawing.Size(1550, 1058);
             this.consistencyTestDashboard1.TabIndex = 0;
             // 
+            // tabPage_HeatMap
+            // 
+            this.tabPage_HeatMap.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.tabPage_HeatMap.Controls.Add(this.heatMapControl1);
+            this.tabPage_HeatMap.Location = new System.Drawing.Point(0, 30);
+            this.tabPage_HeatMap.Margin = new System.Windows.Forms.Padding(0);
+            this.tabPage_HeatMap.Name = "tabPage_HeatMap";
+            this.tabPage_HeatMap.Size = new System.Drawing.Size(1550, 1058);
+            this.tabPage_HeatMap.TabIndex = 4;
+            this.tabPage_HeatMap.Text = "热力图";
+            // 
+            // heatMapControl1
+            // 
+            this.heatMapControl1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.heatMapControl1.Location = new System.Drawing.Point(0, 0);
+            this.heatMapControl1.Margin = new System.Windows.Forms.Padding(0);
+            this.heatMapControl1.Name = "heatMapControl1";
+            this.heatMapControl1.offsetX = 0;
+            this.heatMapControl1.offsetY = 0;
+            this.heatMapControl1.Size = new System.Drawing.Size(1550, 1058);
+            this.heatMapControl1.TabIndex = 0;
+            // 
             // contextMenuStrip_Lot
             // 
             this.contextMenuStrip_Lot.ImageScalingSize = new System.Drawing.Size(20, 20);
@@ -631,15 +657,18 @@
             this.toolStripMenuItem_SecondaryInference.Size = new System.Drawing.Size(243, 24);
             this.toolStripMenuItem_SecondaryInference.Text = "运行二次推理";
             // 
-            // UcAiReview
+            // FrmAiReview
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.ClientSize = new System.Drawing.Size(1924, 1088);
             this.Controls.Add(this.panel_Main);
+            this.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Margin = new System.Windows.Forms.Padding(0);
-            this.Name = "UcAiReview";
-            this.Size = new System.Drawing.Size(1924, 1088);
+            this.Name = "FrmAiReview";
+            this.Text = "UcAiReview";
             this.panel_Main.ResumeLayout(false);
             this.splitContainer_Main.Panel1.ResumeLayout(false);
             this.splitContainer_Main.Panel2.ResumeLayout(false);
@@ -657,6 +686,7 @@
             this.tabPage_Details.ResumeLayout(false);
             this.tabPage_ValidationTest.ResumeLayout(false);
             this.tabPage_ConsistencyDashboard.ResumeLayout(false);
+            this.tabPage_HeatMap.ResumeLayout(false);
             this.contextMenuStrip_Lot.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -703,5 +733,7 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem_SecondaryInference;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem_AddToDataset;
         private System.Windows.Forms.CheckBox chk_OnlyAviNg;
+        private System.Windows.Forms.TabPage tabPage_HeatMap;
+        private UcHeatMap heatMapControl1;
     }
 }

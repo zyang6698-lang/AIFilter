@@ -77,7 +77,7 @@
             this.tableLayoutPanel_Main.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel_Main.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tableLayoutPanel_Main.Name = "tableLayoutPanel_Main";
-            this.tableLayoutPanel_Main.Padding = new System.Windows.Forms.Padding(8, 8, 8, 8);
+            this.tableLayoutPanel_Main.Padding = new System.Windows.Forms.Padding(8);
             this.tableLayoutPanel_Main.RowCount = 9;
             this.tableLayoutPanel_Main.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
             this.tableLayoutPanel_Main.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));

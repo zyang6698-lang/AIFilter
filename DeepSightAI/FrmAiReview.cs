@@ -15,8 +15,27 @@ using System.Windows.Forms;
 
 namespace DeepSightAI
 {
-    public partial class UcAiReview : UserControl
+    public partial class FrmAiReview : Form
     {
+        /// <summary>
+        /// 窗体对象实例
+        /// </summary>
+        private static FrmAiReview _instance;
+
+        public static FrmAiReview Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = new FrmAiReview();
+                }
+
+                return _instance;
+            }
+        }
+
+
         #region Fields
 
         private List<DefectReviewItem> _defectItems = new List<DefectReviewItem>();
@@ -75,9 +94,13 @@ namespace DeepSightAI
 
         #region Constructor
 
-        public UcAiReview()
+        public FrmAiReview()
         {
             InitializeComponent();
+            Control.CheckForIllegalCrossThreadCalls = false;
+            SetStyle(ControlStyles.UserPaint, true);
+            SetStyle(ControlStyles.AllPaintingInWmPaint, true); // 禁止擦除背景.
+            SetStyle(ControlStyles.DoubleBuffer, true); // 双缓冲
             InitializeControl();
         }
 
@@ -86,6 +109,9 @@ namespace DeepSightAI
             // 订阅查询控件事件
             UcDefectQuery.QueryClicked += HeatMapQueryControl_QueryClicked;
             UcDefectQuery.FilterChanged += QueryControl_FilterChanged;
+
+            // 将共享的查询控件绑定到热力图，避免重复 UI 与重复查询
+            heatMapControl1.BindQuerySource(UcDefectQuery);
 
             // 订阅DataGridView事件
             dataGridView_Defects.CellDoubleClick += DataGridView_Defects_CellDoubleClick;
@@ -656,15 +682,17 @@ namespace DeepSightAI
                         return;
                     }
 
-                    // 先弹出导出选项对话框，让用户选择导出原图和/或模板图
+                    // 先弹出导出选项对话框，让用户选择导出原图、模板图、Gerber 图
                     bool exportOriginal;
                     bool exportTemplate;
+                    bool exportGerber;
                     using (var optionsDialog = new DlgExportOptions())
                     {
                         if (optionsDialog.ShowDialog() != DialogResult.OK)
                             return;
                         exportOriginal = optionsDialog.ExportOriginalImage;
                         exportTemplate = optionsDialog.ExportTemplateImage;
+                        exportGerber = optionsDialog.ExportGerberImage;
                     }
 
                     using (var dialog = new FolderBrowserDialog())
@@ -733,10 +761,13 @@ namespace DeepSightAI
                             string exportPath = Path.Combine(dialog.SelectedPath, folderName);
                             Directory.CreateDirectory(exportPath);
 
+                            // 在 UI 线程上捕获复判详情文本，供后台线程写入 CSV
+                            string reviewDetailText = label_ReviewDetail?.Text ?? string.Empty;
+
                             await Task.Run(() =>
                             {
                                 // 从Minio加载图片并保存到本地
-                                defectDetailControl1.ExportImages(exportPath, exportOriginal, exportTemplate);
+                                defectDetailControl1.ExportImages(exportPath, exportOriginal, exportTemplate, exportGerber);
 
                                 // 导出表格信息到CSV
                                 var csvPath = Path.Combine(exportPath, $"{currentItem.SerialNumber}_{currentItem.Side}_info.csv");
@@ -762,6 +793,12 @@ namespace DeepSightAI
                                 csvLines.Add($"VVS_OK数,{vvsOkCount}");
                                 csvLines.Add($"VVS_NG数,{vvsNgCount}");
                                 csvLines.Add($"VVS未设置数,{vvsNotSetCount}");
+
+                                // 复判详情（label_ReviewDetail 内容）
+                                csvLines.Add("");
+                                csvLines.Add("复判详情");
+                                csvLines.Add("项目,数值");
+                                AppendReviewDetailToCsv(csvLines, reviewDetailText);
 
                                 // 添加缺陷点详情
                                 csvLines.Add("");
@@ -1441,6 +1478,63 @@ namespace DeepSightAI
                 HeatPoints = sideData.DetectPoints,
                 IsModified = false
             };
+        }
+
+        /// <summary>
+        /// 将复判详情文本（label_ReviewDetail.Text）按"项目,数值"两列形式追加到 CSV
+        /// </summary>
+        private static void AppendReviewDetailToCsv(List<string> csvLines, string reviewDetailText)
+        {
+            if (string.IsNullOrEmpty(reviewDetailText))
+                return;
+
+            var rawLines = reviewDetailText.Replace("\r\n", "\n").Replace("\r", "\n").Split('\n');
+            foreach (var rawLine in rawLines)
+            {
+                if (string.IsNullOrWhiteSpace(rawLine))
+                {
+                    csvLines.Add("");
+                    continue;
+                }
+
+                // 优先按中文冒号切分，其次按英文冒号
+                int sepIdx = rawLine.IndexOf('：');
+                int sepLen = 1;
+                if (sepIdx < 0)
+                {
+                    sepIdx = rawLine.IndexOf(':');
+                    sepLen = 1;
+                }
+
+                string keyCell;
+                string valueCell;
+                if (sepIdx > 0)
+                {
+                    keyCell = rawLine.Substring(0, sepIdx).TrimEnd();
+                    valueCell = rawLine.Substring(sepIdx + sepLen).Trim();
+                }
+                else
+                {
+                    keyCell = rawLine.TrimEnd();
+                    valueCell = string.Empty;
+                }
+
+                csvLines.Add($"{EscapeCsvField(keyCell)},{EscapeCsvField(valueCell)}");
+            }
+        }
+
+        /// <summary>
+        /// CSV 字段转义：包含逗号、引号或换行时，整体加引号并把内部引号双写
+        /// </summary>
+        private static string EscapeCsvField(string field)
+        {
+            if (string.IsNullOrEmpty(field))
+                return string.Empty;
+            if (field.IndexOf(',') >= 0 || field.IndexOf('"') >= 0 || field.IndexOf('\n') >= 0 || field.IndexOf('\r') >= 0)
+            {
+                return "\"" + field.Replace("\"", "\"\"") + "\"";
+            }
+            return field;
         }
 
         /// <summary>
