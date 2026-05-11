@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Xml.Serialization;
 using DeepSightTool;
 
 namespace DeepSightModel.Configuration
@@ -11,6 +10,11 @@ namespace DeepSightModel.Configuration
     /// </summary>
     public class AISolutionConfigManager : JsonConfigBase<SolutionConfig>
     {
+        /// <summary>
+        /// PartNumberImagesLoc 缺省值
+        /// </summary>
+        private const string DefaultPartNumberImagesLoc = @"D:\ATS_AI_INSTALL\TemplateImages";
+
         /// <summary>
         /// 配置文件路径
         /// </summary>
@@ -36,7 +40,7 @@ namespace DeepSightModel.Configuration
                         ProductSerials = new List<string>()
                     }
                 },
-                PartNumberImagesLoc = @"D:\ATS_AI_INSTALL\TemplateImages"
+                PartNumberImagesLoc = DefaultPartNumberImagesLoc
             };
         }
 
@@ -60,17 +64,38 @@ namespace DeepSightModel.Configuration
         }
 
         /// <summary>
-        /// 根据料号获取所属的算法流程配置
+        /// 保存配置（确保 DEFAULT 流程存在、清除旧字段、PartNumberImagesLoc 空值兜底）
+        /// </summary>
+        public override bool Save(SolutionConfig config)
+        {
+            if (config == null)
+            {
+                LogTextHelper.Error("保存 AI 方案配置失败：传入对象为 null");
+                return false;
+            }
+
+            config.EnsureDefaultPipeline();
+            // 保存时清除旧格式字段，只保留新格式
+            config.solus = null;
+
+            // PartNumberImagesLoc 空值兜底
+            if (string.IsNullOrWhiteSpace(config.PartNumberImagesLoc))
+            {
+                config.PartNumberImagesLoc = DefaultPartNumberImagesLoc;
+            }
+
+            return base.Save(config);
+        }
+
+        /// <summary>
+        /// 根据料号获取所属的算法流程配置（读取失败时回退默认配置）
         /// </summary>
         /// <param name="productSerial">料号</param>
         /// <returns>流程配置，未找到返回 null</returns>
         public PipelineFlowConfig GetPipelineByProduct(string productSerial)
         {
-            if (Read(out var config))
-            {
-                return config.FindPipelineByProduct(productSerial);
-            }
-            return null;
+            var config = GetConfig();
+            return config?.FindPipelineByProduct(productSerial);
         }
     }
 }

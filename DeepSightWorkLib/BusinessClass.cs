@@ -481,7 +481,7 @@ namespace DeepSightWorkLib
         /// </summary>
         private void SaveSolutionConfig(SolutionConfig config)
         {
-            var solClass = new DeepSight_Solution();
+            var solClass = new AISolutionConfigManager();
             solClass.Save(config);
         }
 

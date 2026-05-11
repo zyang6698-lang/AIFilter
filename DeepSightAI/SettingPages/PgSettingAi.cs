@@ -424,7 +424,14 @@ namespace DeepSightAI.SettingPages
                 // 先同步右侧表格数据到当前选中的配置
                 SyncProductsToCurrentConfig();
 
-                // 构建新格式 SolutionConfig
+                // 校验：ConfigName 非空、不重名；料号不跨多个 Pipeline
+                if (!ValidatePipelineConfigs(out string validateError))
+                {
+                    MessageBox.Show(validateError, "保存失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
+
+                // 构建新格式 SolutionConfig，PartNumberImagesLoc 空值由 AISolutionConfigManager 兜底
                 SolutionConfig solConfig = new SolutionConfig
                 {
                     Pipelines = new List<PipelineFlowConfig>(),
@@ -456,8 +463,16 @@ namespace DeepSightAI.SettingPages
                     }
                 }
 
-                Machine.solconfig = solConfig;
+                // 先保存到磁盘成功后再更新内存引用，避免内存/磁盘不一致
                 result = Machine.sol_class.Save(solConfig);
+                if (result)
+                {
+                    Machine.solconfig = solConfig;
+                }
+                else
+                {
+                    MessageBox.Show("AI 方案配置保存失败", "保存失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
 
                 if (!ProductModeConfig.Save(newProductConfig))
                 {
@@ -480,6 +495,22 @@ namespace DeepSightAI.SettingPages
                     }
                 }
                 KeyDefectConfigManager.Instance.SaveMappings(mappings);
+
+                // 保存成功后刷新表格，让 EnsureDefaultPipeline 自动补的 DEFAULT 行可见
+                if (result)
+                {
+                    _isUpdating = true;
+                    try
+                    {
+                        dgvPipeline.Rows.Clear();
+                        dgvProducts.Rows.Clear();
+                        InitMethod();
+                    }
+                    finally
+                    {
+                        _isUpdating = false;
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -488,6 +519,47 @@ namespace DeepSightAI.SettingPages
                 MessageBox.Show("保存配置时发生错误。", "异常", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             return result;
+        }
+
+        /// <summary>
+        /// 校验 _pipelineConfigs 的合法性
+        /// </summary>
+        private bool ValidatePipelineConfigs(out string error)
+        {
+            error = null;
+
+            var nameSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var pc in _pipelineConfigs)
+            {
+                if (string.IsNullOrWhiteSpace(pc.ConfigName))
+                {
+                    error = "存在配置名为空的算法流程，请填写后再保存。";
+                    return false;
+                }
+                if (!nameSet.Add(pc.ConfigName.Trim()))
+                {
+                    error = $"算法流程配置名 \"{pc.ConfigName}\" 重复，请修改后再保存。";
+                    return false;
+                }
+            }
+
+            // 同一料号不允许出现在多个 Pipeline 中
+            var productOwner = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var pc in _pipelineConfigs)
+            {
+                foreach (var p in pc.Products)
+                {
+                    if (string.IsNullOrWhiteSpace(p.ProductSerial)) continue;
+                    var serial = p.ProductSerial.Trim();
+                    if (productOwner.TryGetValue(serial, out var ownerName))
+                    {
+                        error = $"料号 \"{serial}\" 同时出现在配置 \"{ownerName}\" 与 \"{pc.ConfigName}\" 中，请仅保留一处。";
+                        return false;
+                    }
+                    productOwner[serial] = pc.ConfigName;
+                }
+            }
+            return true;
         }
 
         /// <summary>

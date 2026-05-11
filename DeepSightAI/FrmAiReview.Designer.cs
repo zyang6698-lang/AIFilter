@@ -65,6 +65,8 @@
             this.label_LotTitle = new System.Windows.Forms.Label();
             this.tabPage_Details = new System.Windows.Forms.TabPage();
             this.defectDetailControl1 = new DeepSightAI.UcDefectDetail();
+            this.tabPage_Pareto = new System.Windows.Forms.TabPage();
+            this.paretoChart1 = new DeepSightAI.UcParetoChart();
             this.tabPage_ValidationTest = new System.Windows.Forms.TabPage();
             this.validationTestResultControl1 = new DeepSightAI.UcValidationTestResult();
             this.tabPage_ConsistencyDashboard = new System.Windows.Forms.TabPage();
@@ -209,6 +211,7 @@
             // 
             this.tabControl_Main.Controls.Add(this.tabPage_Grid);
             this.tabControl_Main.Controls.Add(this.tabPage_Details);
+            this.tabControl_Main.Controls.Add(this.tabPage_Pareto);
             this.tabControl_Main.Controls.Add(this.tabPage_ValidationTest);
             this.tabControl_Main.Controls.Add(this.tabPage_ConsistencyDashboard);
             this.tabControl_Main.Controls.Add(this.tabPage_HeatMap);
@@ -551,9 +554,9 @@
             this.tabPage_Details.Size = new System.Drawing.Size(1550, 1058);
             this.tabPage_Details.TabIndex = 1;
             this.tabPage_Details.Text = "缺陷详情";
-            // 
+            //
             // defectDetailControl1
-            // 
+            //
             this.defectDetailControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.defectDetailControl1.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.defectDetailControl1.Location = new System.Drawing.Point(0, 0);
@@ -561,9 +564,31 @@
             this.defectDetailControl1.Name = "defectDetailControl1";
             this.defectDetailControl1.Size = new System.Drawing.Size(1550, 1058);
             this.defectDetailControl1.TabIndex = 0;
-            // 
+            //
+            // tabPage_Pareto
+            //
+            this.tabPage_Pareto.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.tabPage_Pareto.Controls.Add(this.paretoChart1);
+            this.tabPage_Pareto.Location = new System.Drawing.Point(0, 30);
+            this.tabPage_Pareto.Margin = new System.Windows.Forms.Padding(0);
+            this.tabPage_Pareto.Name = "tabPage_Pareto";
+            this.tabPage_Pareto.Size = new System.Drawing.Size(1550, 1058);
+            this.tabPage_Pareto.TabIndex = 5;
+            this.tabPage_Pareto.Text = "帕累托图";
+            //
+            // paretoChart1
+            //
+            this.paretoChart1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.paretoChart1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.paretoChart1.Font = new System.Drawing.Font("微软雅黑", 9F);
+            this.paretoChart1.Location = new System.Drawing.Point(0, 0);
+            this.paretoChart1.Margin = new System.Windows.Forms.Padding(0);
+            this.paretoChart1.Name = "paretoChart1";
+            this.paretoChart1.Size = new System.Drawing.Size(1550, 1058);
+            this.paretoChart1.TabIndex = 0;
+            //
             // tabPage_ValidationTest
-            // 
+            //
             this.tabPage_ValidationTest.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.tabPage_ValidationTest.Controls.Add(this.validationTestResultControl1);
             this.tabPage_ValidationTest.Location = new System.Drawing.Point(0, 30);
@@ -684,6 +709,7 @@
             this.panel_SnSearch.ResumeLayout(false);
             this.panel_SnSearch.PerformLayout();
             this.tabPage_Details.ResumeLayout(false);
+            this.tabPage_Pareto.ResumeLayout(false);
             this.tabPage_ValidationTest.ResumeLayout(false);
             this.tabPage_ConsistencyDashboard.ResumeLayout(false);
             this.tabPage_HeatMap.ResumeLayout(false);
@@ -735,5 +761,7 @@
         private System.Windows.Forms.CheckBox chk_OnlyAviNg;
         private System.Windows.Forms.TabPage tabPage_HeatMap;
         private UcHeatMap heatMapControl1;
+        private System.Windows.Forms.TabPage tabPage_Pareto;
+        private UcParetoChart paretoChart1;
     }
 }

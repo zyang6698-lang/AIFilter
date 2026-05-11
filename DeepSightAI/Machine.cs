@@ -31,7 +31,7 @@ namespace DeepSightAI
         //常规配置
         internal static SolutionConfig solconfig;
         //其他配置
-        internal static DeepSight_Solution sol_class = new DeepSight_Solution();
+        internal static AISolutionConfigManager sol_class = new AISolutionConfigManager();
 
         //Agent配置
         internal static AVIConfig aviconfig;

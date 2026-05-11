@@ -984,6 +984,9 @@ namespace DeepSightAI
             }
 
             treeView_Lots.EndUpdate();
+
+            // 同步最新 Lot 分组到帕累托图控件
+            paretoChart1?.SetLotData(_lotGroups);
         }
 
         /// <summary>

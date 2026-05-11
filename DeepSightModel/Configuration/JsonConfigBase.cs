@@ -12,6 +12,11 @@ namespace DeepSightModel.Configuration
     public abstract class JsonConfigBase<T> where T : class, new()
     {
         /// <summary>
+        /// 实例级同步锁，保护 Read/Save 的并发访问
+        /// </summary>
+        protected readonly object _syncRoot = new object();
+
+        /// <summary>
         /// 配置文件完整路径
         /// </summary>
         protected abstract string ConfigPath { get; }
@@ -89,43 +94,62 @@ namespace DeepSightModel.Configuration
         /// <returns>是否成功</returns>
         public virtual bool Read(out T config)
         {
-            config = new T();
-            try
+            lock (_syncRoot)
             {
-                if (!File.Exists(ConfigPath))
+                config = new T();
+                try
                 {
+                    if (!File.Exists(ConfigPath))
+                    {
+                        return false;
+                    }
+
+                    var json = File.ReadAllText(ConfigPath);
+                    config = JsonConvert.DeserializeObject<T>(json, JsonSettings) ?? new T();
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error($"读取配置失败: {ConfigPath}", ex);
                     return false;
                 }
-
-                var json = File.ReadAllText(ConfigPath);
-                config = JsonConvert.DeserializeObject<T>(json, JsonSettings) ?? new T();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error($"读取配置失败: {ConfigPath}", ex);
-                return false;
             }
         }
 
         /// <summary>
-        /// 保存配置
+        /// 保存配置（原子写：先写 .tmp，备份原文件为 .bak，再 Replace）
         /// </summary>
         /// <param name="config">配置对象</param>
         /// <returns>是否成功</returns>
         public virtual bool Save(T config)
         {
-            try
+            lock (_syncRoot)
             {
-                ConfigPaths.EnsureConfigDirectory();
-                var json = JsonConvert.SerializeObject(config, JsonSettings);
-                File.WriteAllText(ConfigPath, json);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error($"保存配置失败: {ConfigPath}", ex);
-                return false;
+                var tmpPath = ConfigPath + ".tmp";
+                var bakPath = ConfigPath + ".bak";
+                try
+                {
+                    ConfigPaths.EnsureConfigDirectory();
+                    var json = JsonConvert.SerializeObject(config, JsonSettings);
+
+                    File.WriteAllText(tmpPath, json);
+
+                    if (File.Exists(ConfigPath))
+                    {
+                        File.Replace(tmpPath, ConfigPath, bakPath);
+                    }
+                    else
+                    {
+                        File.Move(tmpPath, ConfigPath);
+                    }
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error($"保存配置失败: {ConfigPath}", ex);
+                    try { if (File.Exists(tmpPath)) File.Delete(tmpPath); } catch { }
+                    return false;
+                }
             }
         }
 

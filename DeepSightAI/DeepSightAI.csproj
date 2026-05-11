@@ -288,6 +288,12 @@
     <Compile Include="UcConsistencyTestDashboard.Designer.cs">
       <DependentUpon>UcConsistencyTestDashboard.cs</DependentUpon>
     </Compile>
+    <Compile Include="UcParetoChart.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UcParetoChart.Designer.cs">
+      <DependentUpon>UcParetoChart.cs</DependentUpon>
+    </Compile>
     <Compile Include="DlgArrayConfig.cs">
       <SubType>Form</SubType>
     </Compile>
