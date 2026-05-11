@@ -440,7 +440,7 @@ namespace DeepSightAI
         {
             // 1. 获取 LevelDB 配置（用于发送请求的目标 DB）
             var dbConfigs = LevelDbConfigManager.Instance.Databases
-                .Where(db => db.IsEnabled && db.DbName == "ai_merged_results")
+                .Where(db => db.IsEnabled )
                 .ToList();
             if (dbConfigs.Count == 0)
             {
