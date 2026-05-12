@@ -356,6 +356,12 @@
     <Compile Include="DlgMinioFolderPicker.Designer.cs">
       <DependentUpon>DlgMinioFolderPicker.cs</DependentUpon>
     </Compile>
+    <Compile Include="DlgGenerateInferenceRequest.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DlgGenerateInferenceRequest.Designer.cs">
+      <DependentUpon>DlgGenerateInferenceRequest.cs</DependentUpon>
+    </Compile>
     <Compile Include="FrmLogin.cs">
       <SubType>Form</SubType>
     </Compile>

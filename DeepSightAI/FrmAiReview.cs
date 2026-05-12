@@ -80,13 +80,10 @@ namespace DeepSightAI
         private int _aiNgVrsNgPointCount = 0;
 
         // VRS 各剩余状态交叉统计（报点级，动态计算）
-        private int _aiOkVrsNotSetPointCount = 0;       // AI-OK & VRS未判定(0)
-        private int _aiOkVrsIgnorePointCount = 0;       // AI-OK & VRS忽略(3)
-        private int _aiOkVrsNoResultPointCount = 0;     // AI-OK & VRS无结果(4)
+        // VRS-无结论 = VRS未判定(0) + VRS忽略(3) + VRS无结果(4)，即未给出明确 OK/NG 结论的报点
+        private int _aiOkVrsNoConclusionPointCount = 0; // AI-OK & VRS无结论(0/3/4)
         private int _aiOkVrsNgRejectPointCount = 0;     // AI-OK & VRS NG不接收(5)
-        private int _aiNgVrsNotSetPointCount = 0;       // AI-NG & VRS未判定(0)
-        private int _aiNgVrsIgnorePointCount = 0;       // AI-NG & VRS忽略(3)
-        private int _aiNgVrsNoResultPointCount = 0;     // AI-NG & VRS无结果(4)
+        private int _aiNgVrsNoConclusionPointCount = 0; // AI-NG & VRS无结论(0/3/4)
         private int _aiNgVrsNgRejectPointCount = 0;     // AI-NG & VRS NG不接收(5)
 
         // PCS级别 VRS 交叉统计（动态计算）
@@ -102,6 +99,18 @@ namespace DeepSightAI
         private int _pendingSaveCount = 0;
         private const int AutoSaveBatchSize = 100;
         private bool _isFlushing = false;
+
+        // 复判详情面板的样式常量（深色背景下使用，由 RichTextBox 的 SelectionFont/SelectionColor 应用）
+        private static readonly Color DetailColorNormal = Color.White;
+        private static readonly Color DetailColorMuted = Color.FromArgb(150, 165, 180);
+        private static readonly Color DetailColorSection = Color.FromArgb(99, 197, 226);
+        private static readonly Color DetailColorKpiTitle = Color.FromArgb(255, 205, 100);
+        private static readonly Color DetailColorBad = Color.FromArgb(255, 107, 107);
+        private static readonly Color DetailColorGood = Color.FromArgb(141, 218, 123);
+        private static readonly Font DetailFontNormal = new Font("微软雅黑", 9F, FontStyle.Regular);
+        private static readonly Font DetailFontSection = new Font("微软雅黑", 10F, FontStyle.Bold);
+        private static readonly Font DetailFontKpiLabel = new Font("微软雅黑", 9F, FontStyle.Bold);
+        private static readonly Font DetailFontKpiValue = new Font("微软雅黑", 14F, FontStyle.Bold);
 
         #endregion
 
@@ -1603,13 +1612,9 @@ namespace DeepSightAI
             _aiOkVrsNgPointCount = 0;
             _aiNgVrsOkPointCount = 0;
             _aiNgVrsNgPointCount = 0;
-            _aiOkVrsNotSetPointCount = 0;
-            _aiOkVrsIgnorePointCount = 0;
-            _aiOkVrsNoResultPointCount = 0;
+            _aiOkVrsNoConclusionPointCount = 0;
             _aiOkVrsNgRejectPointCount = 0;
-            _aiNgVrsNotSetPointCount = 0;
-            _aiNgVrsIgnorePointCount = 0;
-            _aiNgVrsNoResultPointCount = 0;
+            _aiNgVrsNoConclusionPointCount = 0;
             _aiNgVrsNgRejectPointCount = 0;
             _aiOkVrsOkPcsCount = 0;
             _aiOkVrsNgPcsCount = 0;
@@ -1655,9 +1660,9 @@ namespace DeepSightAI
                     {
                         switch (hp.VrsState)
                         {
-                            case 0: _aiOkVrsNotSetPointCount++; break;
-                            case 3: _aiOkVrsIgnorePointCount++; break;
-                            case 4: _aiOkVrsNoResultPointCount++; break;
+                            case 0:
+                            case 3:
+                            case 4: _aiOkVrsNoConclusionPointCount++; break;
                             case 5: _aiOkVrsNgRejectPointCount++; break;
                         }
                     }
@@ -1665,9 +1670,9 @@ namespace DeepSightAI
                     {
                         switch (hp.VrsState)
                         {
-                            case 0: _aiNgVrsNotSetPointCount++; break;
-                            case 3: _aiNgVrsIgnorePointCount++; break;
-                            case 4: _aiNgVrsNoResultPointCount++; break;
+                            case 0:
+                            case 3:
+                            case 4: _aiNgVrsNoConclusionPointCount++; break;
                             case 5: _aiNgVrsNgRejectPointCount++; break;
                         }
                     }
@@ -1740,120 +1745,123 @@ namespace DeepSightAI
             }
 
             var stat = _lotStatistics.TryGetValue(_currentReviewLot, out var s) ? s : new LotStatistics();
+            RenderLotReviewDetail(stat);
+        }
 
-            var sb = new System.Text.StringBuilder();
-            sb.AppendLine("【详情】");
-            sb.AppendLine();
+        /// <summary>
+        /// 向复判详情面板追加一段带样式的文本（颜色/字体）
+        /// </summary>
+        private void AppendDetail(string text, Font font, Color color)
+        {
+            label_ReviewDetail.SelectionStart = label_ReviewDetail.TextLength;
+            label_ReviewDetail.SelectionLength = 0;
+            label_ReviewDetail.SelectionAlignment = HorizontalAlignment.Left;
+            label_ReviewDetail.SelectionFont = font;
+            label_ReviewDetail.SelectionColor = color;
+            label_ReviewDetail.AppendText(text);
+        }
 
-            // 1. 机台号  2. 料号  3. 工单
-            sb.AppendLine($"机台号: {stat.MachineId ?? "-"}");
-            sb.AppendLine($"料号: {stat.ProductSerial ?? "-"}");
-            sb.AppendLine($"工单: {_currentReviewLot}");
-            sb.AppendLine();
-
-            // 4. 报点统计
+        /// <summary>
+        /// 渲染 Lot 聚合视图的复判详情：核心 KPI 卡片置顶，分组明细在下；
+        /// 利用 RichTextBox 富文本能力按重要性分配颜色/字号，使关键指标一眼可见。
+        /// </summary>
+        private void RenderLotReviewDetail(LotStatistics stat)
+        {
             int totalPoints = stat.TotalPointCount;
-            int aiOkPoints = stat.AiOkPointCount;
-            int aiNgPoints = stat.AiNgPointCount;
-            int aiExceptionPoints = stat.AiExceptionPointCount;
-            int aiUninspectedPoints = stat.AiUninspectedPointCount;
+            int totalPcs = stat.TotalPcsCount;
 
             // VRS-NG 中纯状态2(NG) 的数量 = 合并NG - NG不接收(状态5)
             int aiOkVrsNgPureCount = _aiOkVrsNgPointCount - _aiOkVrsNgRejectPointCount;
             int aiNgVrsNgPureCount = _aiNgVrsNgPointCount - _aiNgVrsNgRejectPointCount;
+            int aiOkVrsNoConclusion = _aiOkVrsNoConclusionPointCount + _aiOkVrsNgRejectPointCount;
+            int aiNgVrsNoConclusion = _aiNgVrsNoConclusionPointCount + _aiNgVrsNgRejectPointCount;
 
-            sb.AppendLine($"总报点数: {totalPoints}");
-            sb.AppendLine($"  AI-OK报点数: {aiOkPoints}");
-            sb.AppendLine($"  AI-NG报点数: {aiNgPoints}");
-            sb.AppendLine($"  AI-异常报点数: {aiExceptionPoints}");
-            sb.AppendLine($"  AI-未检测报点数: {aiUninspectedPoints}");
-            sb.AppendLine($"  AI过滤率: {FormatPercent(aiOkPoints, totalPoints)}");
-            sb.AppendLine();
+            label_ReviewDetail.Clear();
 
-            // 报点级 VRS 明细（先 VRS 后 VVS）
-            sb.AppendLine("【VRS明细(报点)】");
-            sb.AppendLine($"  AI-OK&VRS-OK: {_aiOkVrsOkPointCount}");
-            sb.AppendLine($"  AI-OK&VRS-NG: {aiOkVrsNgPureCount}");
-            sb.AppendLine($"  AI-OK&VRS-NG不接收: {_aiOkVrsNgRejectPointCount}");
-            sb.AppendLine($"  AI-OK&VRS-忽略: {_aiOkVrsIgnorePointCount}");
-            sb.AppendLine($"  AI-OK&VRS-无结果: {_aiOkVrsNoResultPointCount}");
-            sb.AppendLine($"  AI-OK&VRS-未判定: {_aiOkVrsNotSetPointCount}");
-            sb.AppendLine($"  AI-NG&VRS-OK: {_aiNgVrsOkPointCount}");
-            sb.AppendLine($"  AI-NG&VRS-NG: {aiNgVrsNgPureCount}");
-            sb.AppendLine($"  AI-NG&VRS-NG不接收: {_aiNgVrsNgRejectPointCount}");
-            sb.AppendLine($"  AI-NG&VRS-忽略: {_aiNgVrsIgnorePointCount}");
-            sb.AppendLine($"  AI-NG&VRS-无结果: {_aiNgVrsNoResultPointCount}");
-            sb.AppendLine($"  AI-NG&VRS-未判定: {_aiNgVrsNotSetPointCount}");
-            sb.AppendLine($"  AI漏失率(VRS): {FormatPercent(_aiOkVrsNgPointCount, totalPoints)}");
-            sb.AppendLine($"  AI准确率(VRS): {FormatPercent(_aiOkVrsOkPointCount + _aiNgVrsNgPointCount, totalPoints)}");
-            sb.AppendLine();
+            // ===== 核心 KPI 卡片（最显眼）=====
+            AppendDetail("◆ 核心指标 (VRS - 报点)\n", DetailFontSection, DetailColorKpiTitle);
+            AppendDetail("  AI 漏失率   ", DetailFontKpiLabel, DetailColorMuted);
+            AppendDetail($"{FormatPercent(_aiOkVrsNgPointCount, totalPoints)}\n", DetailFontKpiValue, DetailColorBad);
+            AppendDetail("  AI 准确率   ", DetailFontKpiLabel, DetailColorMuted);
+            AppendDetail($"{FormatPercent(_aiOkVrsOkPointCount + _aiNgVrsNgPointCount, totalPoints)}\n", DetailFontKpiValue, DetailColorGood);
+            AppendDetail("  Panel通过率 ", DetailFontKpiLabel, DetailColorMuted);
+            AppendDetail($"{FormatPercent(stat.AviOkPanelCount, stat.TotalPanelCount)}\n\n", DetailFontKpiValue, DetailColorGood);
 
-            // 报点级 VVS 明细
-            sb.AppendLine("【VVS明细(报点)】");
-            sb.AppendLine($"  AI-OK&VVS-OK: {_aiOkVvsOkPointCount}");
-            sb.AppendLine($"  AI-OK&VVS-NG: {_aiOkVvsNgPointCount}");
-            sb.AppendLine($"  AI-NG&VVS-OK: {_aiNgVvsOkPointCount}");
-            sb.AppendLine($"  AI-NG&VVS-NG: {_aiNgVvsNgPointCount}");
-            sb.AppendLine($"  AI漏失率(VVS): {FormatPercent(_aiOkVvsNgPointCount, totalPoints)}");
-            sb.AppendLine($"  AI准确率(VVS): {FormatPercent(_aiOkVvsOkPointCount + _aiNgVvsNgPointCount, totalPoints)}");
-            sb.AppendLine();
+            // ===== 基本信息 =====
+            AppendDetail("▶ 基本信息\n", DetailFontSection, DetailColorSection);
+            AppendDetail($"  机台号 : {stat.MachineId ?? "-"}\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  料号   : {stat.ProductSerial ?? "-"}\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  工单   : {_currentReviewLot}\n\n", DetailFontNormal, DetailColorNormal);
 
-            // 5. PCS统计
-            int totalPcs = stat.TotalPcsCount;
-            int aviOkPcs = stat.AviOkPcsCount;
-            int aiOkPcs = stat.AiOkPcsCount;
-            int aiNgPcs = stat.AiNgPcsCount;
-            int aiExceptionPcs = stat.AiExceptionPcsCount;
-            int aiUninspectedPcs = stat.AiUninspectedPcsCount;
+            // ===== 报点统计 =====
+            AppendDetail($"▶ 报点统计  (共 {totalPoints} 点)\n", DetailFontSection, DetailColorSection);
+            AppendDetail($"  AI-OK     : {stat.AiOkPointCount}\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  AI-NG     : {stat.AiNgPointCount}\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  AI-异常   : {stat.AiExceptionPointCount}\n", DetailFontNormal, DetailColorMuted);
+            AppendDetail($"  AI-未检测 : {stat.AiUninspectedPointCount}\n", DetailFontNormal, DetailColorMuted);
+            AppendDetail($"  AI过滤率  : {FormatPercent(stat.AiOkPointCount, totalPoints)}\n\n", DetailFontNormal, DetailColorNormal);
 
-            sb.AppendLine($"总PCS数: {totalPcs}");
-            sb.AppendLine($"  AI-OK PCS数: {aiOkPcs}");
-            sb.AppendLine($"  AI-NG PCS数: {aiNgPcs}");
-            sb.AppendLine($"  AI-异常 PCS数: {aiExceptionPcs}");
-            sb.AppendLine($"  AI-未检测 PCS数: {aiUninspectedPcs}");
-            sb.AppendLine($"  AI PCS过滤率: {FormatPercent(aiOkPcs, totalPcs)}");
-            sb.AppendLine($"  AI PCS通过率: {FormatPercent(aviOkPcs + aiOkPcs, totalPcs)}");
-            sb.AppendLine();
+            // ===== VRS 明细（报点）=====
+            AppendDetail("▶ VRS明细 (报点)\n", DetailFontSection, DetailColorSection);
+            AppendDetail($"  AI-OK & VRS-OK     : {_aiOkVrsOkPointCount}\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  AI-OK & VRS-NG     : {aiOkVrsNgPureCount}\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  AI-OK & VRS-无结论 : {aiOkVrsNoConclusion}\n", DetailFontNormal, DetailColorMuted);
+            AppendDetail($"  AI-NG & VRS-OK     : {_aiNgVrsOkPointCount}\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  AI-NG & VRS-NG     : {aiNgVrsNgPureCount}\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  AI-NG & VRS-无结论 : {aiNgVrsNoConclusion}\n\n", DetailFontNormal, DetailColorMuted);
 
-            // PCS级 VRS 明细
-            sb.AppendLine("【VRS明细(PCS)】");
-            sb.AppendLine($"  AI-OK&VRS-OK: {_aiOkVrsOkPcsCount}");
-            sb.AppendLine($"  AI-OK&VRS-NG: {_aiOkVrsNgPcsCount}");
-            sb.AppendLine($"  AI-NG&VRS-OK: {_aiNgVrsOkPcsCount}");
-            sb.AppendLine($"  AI-NG&VRS-NG: {_aiNgVrsNgPcsCount}");
-            sb.AppendLine($"  AI PCS漏失率(VRS): {FormatPercent(_aiOkVrsNgPcsCount, totalPcs)}");
-            sb.AppendLine($"  AI PCS准确率(VRS): {FormatPercent(_aiOkVrsOkPcsCount + _aiNgVrsNgPcsCount, totalPcs)}");
-            sb.AppendLine();
+            // ===== VVS 明细（报点）=====
+            AppendDetail("▶ VVS明细 (报点)\n", DetailFontSection, DetailColorSection);
+            AppendDetail($"  AI-OK & VVS-OK : {_aiOkVvsOkPointCount}\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  AI-OK & VVS-NG : {_aiOkVvsNgPointCount}\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  AI-NG & VVS-OK : {_aiNgVvsOkPointCount}\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  AI-NG & VVS-NG : {_aiNgVvsNgPointCount}\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  AI漏失率(VVS)  : {FormatPercent(_aiOkVvsNgPointCount, totalPoints)}\n", DetailFontNormal, DetailColorBad);
+            AppendDetail($"  AI准确率(VVS)  : {FormatPercent(_aiOkVvsOkPointCount + _aiNgVvsNgPointCount, totalPoints)}\n\n", DetailFontNormal, DetailColorGood);
 
-            // PCS级 VVS 明细
-            sb.AppendLine("【VVS明细(PCS)】");
-            sb.AppendLine($"  AI-OK&人工OK: {_aiOkVvsOkPcsCount}");
-            sb.AppendLine($"  AI-OK&人工NG: {_aiOkVvsNgPcsCount}");
-            sb.AppendLine($"  AI-NG&人工OK: {_aiNgVvsOkPcsCount}");
-            sb.AppendLine($"  AI-NG&人工NG: {_aiNgVvsNgPcsCount}");
-            sb.AppendLine($"  AI PCS漏失率(VVS): {FormatPercent(_aiOkVvsNgPcsCount, totalPcs)}");
-            sb.AppendLine($"  AI PCS准确率(VVS): {FormatPercent(_aiOkVvsOkPcsCount + _aiNgVvsNgPcsCount, totalPcs)}");
-            sb.AppendLine();
+            // ===== PCS 统计 =====
+            AppendDetail($"▶ PCS统计  (共 {totalPcs} 片)\n", DetailFontSection, DetailColorSection);
+            AppendDetail($"  AI-OK     : {stat.AiOkPcsCount}\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  AI-NG     : {stat.AiNgPcsCount}\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  AI-异常   : {stat.AiExceptionPcsCount}\n", DetailFontNormal, DetailColorMuted);
+            AppendDetail($"  AI-未检测 : {stat.AiUninspectedPcsCount}\n", DetailFontNormal, DetailColorMuted);
+            AppendDetail($"  PCS过滤率 : {FormatPercent(stat.AiOkPcsCount, totalPcs)}\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  PCS通过率 : {FormatPercent(stat.AviOkPcsCount + stat.AiOkPcsCount, totalPcs)}\n\n", DetailFontNormal, DetailColorNormal);
 
-            // 6. & 7. Panel通过率
-            sb.AppendLine($"Panel一次通过率: {FormatPercent(stat.AviOkPanelCount, stat.TotalPanelCount)}");
-            sb.AppendLine($"Panel AI通过率: {FormatPercent(stat.AiPassPanelCount, stat.TotalPanelCount)}");
-            sb.AppendLine();
+            // ===== VRS 明细（PCS）=====
+            AppendDetail("▶ VRS明细 (PCS)\n", DetailFontSection, DetailColorSection);
+            AppendDetail($"  AI-OK & VRS-OK : {_aiOkVrsOkPcsCount}\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  AI-OK & VRS-NG : {_aiOkVrsNgPcsCount}\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  AI-NG & VRS-OK : {_aiNgVrsOkPcsCount}\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  AI-NG & VRS-NG : {_aiNgVrsNgPcsCount}\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  PCS漏失率(VRS) : {FormatPercent(_aiOkVrsNgPcsCount, totalPcs)}\n", DetailFontNormal, DetailColorBad);
+            AppendDetail($"  PCS准确率(VRS) : {FormatPercent(_aiOkVrsOkPcsCount + _aiNgVrsNgPcsCount, totalPcs)}\n\n", DetailFontNormal, DetailColorGood);
 
-            // VRS状态统计（先 VRS 后 VVS）
-            sb.AppendLine($"VRS已判定总数: {_vrsOkCount + _vrsNgCount}");
-            sb.AppendLine($"VRS未判定数量: {_vrsNotSetCount}");
-            sb.AppendLine($"VRS判定OK数: {_vrsOkCount}");
-            sb.AppendLine($"VRS判定NG数: {_vrsNgCount}");
-            sb.AppendLine();
+            // ===== VVS 明细（PCS）=====
+            AppendDetail("▶ VVS明细 (PCS)\n", DetailFontSection, DetailColorSection);
+            AppendDetail($"  AI-OK & 人工OK : {_aiOkVvsOkPcsCount}\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  AI-OK & 人工NG : {_aiOkVvsNgPcsCount}\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  AI-NG & 人工OK : {_aiNgVvsOkPcsCount}\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  AI-NG & 人工NG : {_aiNgVvsNgPcsCount}\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  PCS漏失率(VVS) : {FormatPercent(_aiOkVvsNgPcsCount, totalPcs)}\n", DetailFontNormal, DetailColorBad);
+            AppendDetail($"  PCS准确率(VVS) : {FormatPercent(_aiOkVvsOkPcsCount + _aiNgVvsNgPcsCount, totalPcs)}\n\n", DetailFontNormal, DetailColorGood);
 
-            // VVS状态统计
-            sb.AppendLine($"VVS已判定总数: {_vvsOkCount + _vvsNgCount}");
-            sb.AppendLine($"VVS未判定数量: {_vvsNotSetCount}");
-            sb.AppendLine($"VVS判定OK数: {_vvsOkCount}");
-            sb.Append($"VVS判定NG数: {_vvsNgCount}");
+            // ===== Panel 通过率 =====
+            AppendDetail("▶ Panel 通过率\n", DetailFontSection, DetailColorSection);
+            AppendDetail($"  一次通过率 : {FormatPercent(stat.AviOkPanelCount, stat.TotalPanelCount)}\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  AI通过率   : {FormatPercent(stat.AiPassPanelCount, stat.TotalPanelCount)}\n\n", DetailFontNormal, DetailColorNormal);
 
-            label_ReviewDetail.Text = sb.ToString();
+            // ===== 复判进度 =====
+            AppendDetail("▶ 复判进度\n", DetailFontSection, DetailColorSection);
+            AppendDetail($"  VRS 已判定 : {_vrsOkCount + _vrsNgCount}  (OK {_vrsOkCount} / NG {_vrsNgCount})\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  VRS 未判定 : {_vrsNotSetCount}\n", DetailFontNormal, DetailColorMuted);
+            AppendDetail($"  VVS 已判定 : {_vvsOkCount + _vvsNgCount}  (OK {_vvsOkCount} / NG {_vvsNgCount})\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  VVS 未判定 : {_vvsNotSetCount}", DetailFontNormal, DetailColorMuted);
+
+            // 回到顶部，避免新内容停在底部
+            label_ReviewDetail.SelectionStart = 0;
+            label_ReviewDetail.SelectionLength = 0;
+            label_ReviewDetail.ScrollToCaret();
         }
 
         /// <summary>

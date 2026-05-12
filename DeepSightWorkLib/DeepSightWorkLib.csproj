@@ -177,6 +177,7 @@
     <Compile Include="Services\AviReaderService.cs" />
     <Compile Include="Services\DefectProcessor.cs" />
     <Compile Include="Services\ImageLoaderService.cs" />
+    <Compile Include="Services\InferenceRequestService.cs" />
     <Compile Include="Services\Pipeline\PipelineContext.cs" />
     <Compile Include="Services\Pipeline\ProcessingPipeline.cs" />
     <Compile Include="Services\Pipeline\Stages\JsonParseStage.cs" />
