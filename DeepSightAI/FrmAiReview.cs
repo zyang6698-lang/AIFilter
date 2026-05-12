@@ -10,6 +10,7 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -182,118 +183,102 @@ namespace DeepSightAI
 
         #region Event Handlers
 
-        private async void HeatMapQueryControl_QueryClicked(object sender, EventArgs e)
+        private void HeatMapQueryControl_QueryClicked(object sender, EventArgs e)
         {
-            try
+            // 验证输入
+            if (!UcDefectQuery.ValidateInputs(out string errorMessage))
             {
-                // 验证输入
-                if (!UcDefectQuery.ValidateInputs(out string errorMessage))
-                {
-                    MessageBox.Show(errorMessage, "输入验证", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
-                this.Enabled = false;
-                _defectItems.Clear();
-                _allDefectItems.Clear();
-                _lotGroups.Clear();
-                _lotStatistics.Clear();
-                treeView_Lots.Nodes.Clear();
-                defectDetailControl1.ClearDetails();
-                _currentSelectedLot = null;
-
-                // 获取查询结果（可能涉及数据库 I/O）
-                var queryResult = UcDefectQuery.GetQueryResult();
-
-                // 在后台线程执行统计计算，避免阻塞 UI
-                var panelList = queryResult as IList<PanelDataRecord> ?? queryResult.ToList();
-                var statistics = await Task.Run(() => LotStatisticsCalculator.Calculate(panelList));
-
-                // 回到 UI 线程更新控件
-                _lotStatistics = statistics;
-                bool onlyAviNg = chk_OnlyAviNg.Checked;
-                foreach (var panel in panelList)
-                {
-                    if (panel.Sides == null) continue;
-                    foreach (var side in panel.Sides)
-                    {
-                        if (side == null) continue;
-                        if (!onlyAviNg || side.AviState != 1)
-                            _allDefectItems.Add(CreateDefectReviewItem(panel, side));
-                    }
-                }
-
-                _lotGroups = _allDefectItems
-                    .GroupBy(x => x.LotNumber ?? "未知Lot")
-                    .ToDictionary(g => g.Key, g => g.ToList());
-                BuildLotTreeNodes();
-
-                // 默认不加载任何数据到表格，提示用户选择Lot
-                RefreshDataGridView();
-
-                // 新查询：清空左下复判详情，避免显示上一次查询的统计
-                _currentReviewLot = null;
-                _currentReviewSnItem = null;
-                RefreshReviewDetailDisplay();
+                MessageBox.Show(errorMessage, "输入验证", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error($"查询异常: {ex}");
-                MessageBox.Show("查询失败，请检查日志。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            finally
-            {
-                this.Enabled = true;
-            }
+
+            RunQueryWithProgress("正在加载查询结果...", isFilterChange: false);
         }
 
         /// <summary>
         /// 筛选条件变化事件处理（料号或机台号选择变化时自动筛选）
         /// </summary>
-        private async void QueryControl_FilterChanged(object sender, EventArgs e)
+        private void QueryControl_FilterChanged(object sender, EventArgs e)
         {
-            try
+            RunQueryWithProgress("正在应用筛选条件...", isFilterChange: true);
+        }
+
+        /// <summary>
+        /// 以模态进度对话框包裹查询/筛选后的处理流程，期间禁用所有其他操作。
+        /// </summary>
+        private void RunQueryWithProgress(string title, bool isFilterChange)
+        {
+            using (var dlg = new DlgQueryProgress(title))
             {
-                this.Enabled = false;
-                _defectItems.Clear();
-                _allDefectItems.Clear();
-                _lotGroups.Clear();
-                _lotStatistics.Clear();
-                treeView_Lots.Nodes.Clear();
-                defectDetailControl1.ClearDetails();
-                _currentSelectedLot = null;
+                dlg.WorkAsync = (progress, ct) => ExecuteQueryPipelineAsync(progress, ct, isFilterChange);
+                dlg.ShowDialog(this.FindForm() ?? (Form)this);
 
-                // 获取筛选结果
-                var queryResult = UcDefectQuery.GetQueryResult();
+                if (dlg.Error != null)
+                {
+                    string msg = isFilterChange ? "筛选失败，请检查日志。" : "查询失败，请检查日志。";
+                    MessageBox.Show(msg, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
 
-                // 在后台线程执行统计计算
-                var panelList = queryResult as IList<PanelDataRecord> ?? queryResult.ToList();
-                var statistics = await Task.Run(() => LotStatisticsCalculator.Calculate(panelList));
+        /// <summary>
+        /// 查询/筛选的核心处理流程，UI 操作发生在 UI 线程，重计算工作在 Task.Run 中执行。
+        /// 在关键节点检查 CancellationToken，支持用户中途取消。
+        /// </summary>
+        private async Task ExecuteQueryPipelineAsync(IProgress<string> progress, CancellationToken ct, bool isFilterChange)
+        {
+            progress.Report("正在清理上次结果...");
+            _defectItems.Clear();
+            _allDefectItems.Clear();
+            _lotGroups.Clear();
+            _lotStatistics.Clear();
+            treeView_Lots.Nodes.Clear();
+            defectDetailControl1.ClearDetails();
+            _currentSelectedLot = null;
+            ct.ThrowIfCancellationRequested();
 
-                // 回到 UI 线程更新
-                _lotStatistics = statistics;
-                bool onlyAviNg = chk_OnlyAviNg.Checked;
+            progress.Report("正在筛选数据...");
+            var queryResult = UcDefectQuery.GetQueryResult();
+            var panelList = queryResult as IList<PanelDataRecord> ?? queryResult.ToList();
+            ct.ThrowIfCancellationRequested();
+
+            progress.Report($"正在统计 {panelList.Count} 条记录...");
+            var statistics = await Task.Run(() => LotStatisticsCalculator.Calculate(panelList), ct);
+            _lotStatistics = statistics;
+            ct.ThrowIfCancellationRequested();
+
+            bool onlyAviNg = chk_OnlyAviNg.Checked;
+            progress.Report("正在构建缺陷列表...");
+            var collected = await Task.Run(() =>
+            {
+                var list = new List<DefectReviewItem>();
                 foreach (var panel in panelList)
                 {
+                    ct.ThrowIfCancellationRequested();
                     if (panel.Sides == null) continue;
                     foreach (var side in panel.Sides)
                     {
                         if (side == null) continue;
                         if (!onlyAviNg || side.AviState != 1)
-                            _allDefectItems.Add(CreateDefectReviewItem(panel, side));
+                            list.Add(CreateDefectReviewItem(panel, side));
                     }
                 }
+                return list;
+            }, ct);
+            _allDefectItems.AddRange(collected);
+            ct.ThrowIfCancellationRequested();
 
-                _lotGroups = _allDefectItems
-                    .GroupBy(x => x.LotNumber ?? "未知Lot")
-                    .ToDictionary(g => g.Key, g => g.ToList());
-                BuildLotTreeNodes();
+            progress.Report("正在按 Lot 分组...");
+            _lotGroups = _allDefectItems
+                .GroupBy(x => x.LotNumber ?? "未知Lot")
+                .ToDictionary(g => g.Key, g => g.ToList());
 
-                // 更新表格显示
-                RefreshDataGridView();
+            progress.Report("正在更新界面...");
+            BuildLotTreeNodes();
+            RefreshDataGridView();
 
-                // 筛选条件变更（如切换 A/B 面）后，刷新左下复判详情统计；
-                // 退出单SN模式，重新计算并显示当前 Lot 的最新统计
+            if (isFilterChange)
+            {
                 _currentReviewSnItem = null;
                 if (!string.IsNullOrEmpty(_currentReviewLot) && _lotStatistics.ContainsKey(_currentReviewLot))
                 {
@@ -303,16 +288,13 @@ namespace DeepSightAI
                 {
                     _currentReviewLot = null;
                 }
-                RefreshReviewDetailDisplay();
             }
-            catch (Exception ex)
+            else
             {
-                LogTextHelper.Error($"筛选异常: {ex}");
+                _currentReviewLot = null;
+                _currentReviewSnItem = null;
             }
-            finally
-            {
-                this.Enabled = true;
-            }
+            RefreshReviewDetailDisplay();
         }
 
         private void DataGridView_Defects_CellDoubleClick(object sender, DataGridViewCellEventArgs e)

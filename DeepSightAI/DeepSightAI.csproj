@@ -306,6 +306,12 @@
     <Compile Include="DlgExportOptions.Designer.cs">
       <DependentUpon>DlgExportOptions.cs</DependentUpon>
     </Compile>
+    <Compile Include="DlgQueryProgress.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DlgQueryProgress.Designer.cs">
+      <DependentUpon>DlgQueryProgress.cs</DependentUpon>
+    </Compile>
     <Compile Include="UcDefectDetail.cs">
       <SubType>UserControl</SubType>
     </Compile>

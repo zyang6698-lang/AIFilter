@@ -37,13 +37,13 @@ namespace DeepSightWorkLib.Services
             DatabaseHelper databaseHelper,
             ImageLoaderService imageLoaderService,
             Action<PipelineContext> postToPipeline,
-            SolutionConfig solutionConfig,
+            Func<SolutionConfig> solutionConfigProvider,
             Func<bool> useGerberImageProvider = null)
         {
             _databaseHelper = databaseHelper ?? throw new ArgumentNullException(nameof(databaseHelper));
             _imageLoaderService = imageLoaderService ?? throw new ArgumentNullException(nameof(imageLoaderService));
             _postToPipeline = postToPipeline ?? throw new ArgumentNullException(nameof(postToPipeline));
-            _vbModelBuilder = new VBModelBuilder(solutionConfig);
+            _vbModelBuilder = new VBModelBuilder(solutionConfigProvider ?? throw new ArgumentNullException(nameof(solutionConfigProvider)));
             _useGerberImageProvider = useGerberImageProvider ?? (() => false);
         }
 

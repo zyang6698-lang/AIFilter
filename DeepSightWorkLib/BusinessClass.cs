@@ -269,7 +269,7 @@ namespace DeepSightWorkLib
                 dbHelper,
                 _imageLoaderService,
                 ctx => _pipeline?.Post(ctx, out _),
-                SolConfig,
+                () => SolConfig,
                 () => SysConfig.UseGerberImage);
 
             // 将验证测试服务注入到后处理服务

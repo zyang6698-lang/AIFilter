@@ -11,18 +11,31 @@ namespace DeepSightAI
 {
     /// <summary>
     /// 帕累托图控件：以 Lot 为基准，展示缺陷按发生频次排序的柱状图与累计百分比折线
-    /// 仅使用查询结果中存在 VRS 结果（VrsState != 0）的报点数据
+    /// 数据来源可切换：VRS 结果（VrsState != 0）或 AI 结果（AIStatus != 0）
     /// </summary>
     public partial class UcParetoChart : UserControl
     {
         private Dictionary<string, List<DefectReviewItem>> _lotGroups = new Dictionary<string, List<DefectReviewItem>>();
 
+        private const string DataSourceVrs = "VRS结果";
+        private const string DataSourceAi = "AI结果";
+
         public UcParetoChart()
         {
             InitializeComponent();
             InitializeChartConfig();
+            InitializeDataSourceCombo();
             cmb_Lot.SelectedIndexChanged += Cmb_Lot_SelectedIndexChanged;
+            cmb_DataSource.SelectedIndexChanged += (s, e) => RefreshChart();
             btn_Refresh.Click += (s, e) => RefreshChart();
+        }
+
+        private void InitializeDataSourceCombo()
+        {
+            cmb_DataSource.Items.Clear();
+            cmb_DataSource.Items.Add(DataSourceVrs);
+            cmb_DataSource.Items.Add(DataSourceAi);
+            cmb_DataSource.SelectedIndex = 0;
         }
 
         private void InitializeChartConfig()
@@ -133,7 +146,8 @@ namespace DeepSightAI
         }
 
         /// <summary>
-        /// 根据当前选中的 Lot 刷新帕累托图：仅统计带 VRS 结果（VrsState != 0）的报点
+        /// 根据当前选中的 Lot 与数据来源刷新帕累托图
+        /// VRS：仅统计 VrsState != 0 的报点；AI：仅统计 AIStatus != 0 的报点
         /// </summary>
         private void RefreshChart()
         {
@@ -146,19 +160,22 @@ namespace DeepSightAI
                     return;
                 }
 
-                var vrsPoints = items
+                bool useAi = (cmb_DataSource.SelectedItem as string) == DataSourceAi;
+                string sourceTag = useAi ? "AI" : "VRS";
+
+                var points = items
                     .Where(it => it?.HeatPoints != null)
                     .SelectMany(it => it.HeatPoints)
-                    .Where(hp => hp != null && hp.VrsState != 0)
+                    .Where(hp => hp != null && (useAi ? hp.AIStatus != 0 : hp.VrsState != 0))
                     .ToList();
 
-                if (vrsPoints.Count == 0)
+                if (points.Count == 0)
                 {
-                    ClearChart($"Lot: {lot} 无 VRS 结果数据");
+                    ClearChart($"Lot: {lot} 无 {sourceTag} 结果数据");
                     return;
                 }
 
-                var grouped = vrsPoints
+                var grouped = points
                     .GroupBy(hp => string.IsNullOrEmpty(hp.DefectName) ? "(未命名)" : hp.DefectName)
                     .Select(g => new { Name = g.Key, Count = g.Count() })
                     .OrderByDescending(x => x.Count)
@@ -171,7 +188,9 @@ namespace DeepSightAI
                 lineSeries.Points.Clear();
 
                 int cumulative = 0;
-                int ngPoints = vrsPoints.Count(p => p.VrsState == 2 || p.VrsState == 5);
+                int ngPoints = useAi
+                    ? points.Count(p => p.AIStatus == 2)
+                    : points.Count(p => p.VrsState == 2 || p.VrsState == 5);
                 for (int i = 0; i < grouped.Count; i++)
                 {
                     var item = grouped[i];
@@ -183,7 +202,7 @@ namespace DeepSightAI
                 }
 
                 chart_Pareto.ChartAreas[0].RecalculateAxesScale();
-                label_Status.Text = $"Lot: {lot}  缺陷类别: {grouped.Count}  总报点: {total}  VRS NG: {ngPoints}";
+                label_Status.Text = $"Lot: {lot}  数据来源: {sourceTag}  缺陷类别: {grouped.Count}  总报点: {total}  {sourceTag} NG: {ngPoints}";
             }
             catch (Exception ex)
             {

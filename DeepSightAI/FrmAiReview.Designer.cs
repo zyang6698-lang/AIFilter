@@ -91,6 +91,7 @@
             this.panel_LotList.SuspendLayout();
             this.panel_SnSearch.SuspendLayout();
             this.tabPage_Details.SuspendLayout();
+            this.tabPage_Pareto.SuspendLayout();
             this.tabPage_ValidationTest.SuspendLayout();
             this.tabPage_ConsistencyDashboard.SuspendLayout();
             this.tabPage_HeatMap.SuspendLayout();
@@ -554,9 +555,9 @@
             this.tabPage_Details.Size = new System.Drawing.Size(1550, 1058);
             this.tabPage_Details.TabIndex = 1;
             this.tabPage_Details.Text = "缺陷详情";
-            //
+            // 
             // defectDetailControl1
-            //
+            // 
             this.defectDetailControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.defectDetailControl1.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.defectDetailControl1.Location = new System.Drawing.Point(0, 0);
@@ -564,9 +565,9 @@
             this.defectDetailControl1.Name = "defectDetailControl1";
             this.defectDetailControl1.Size = new System.Drawing.Size(1550, 1058);
             this.defectDetailControl1.TabIndex = 0;
-            //
+            // 
             // tabPage_Pareto
-            //
+            // 
             this.tabPage_Pareto.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.tabPage_Pareto.Controls.Add(this.paretoChart1);
             this.tabPage_Pareto.Location = new System.Drawing.Point(0, 30);
@@ -575,9 +576,9 @@
             this.tabPage_Pareto.Size = new System.Drawing.Size(1550, 1058);
             this.tabPage_Pareto.TabIndex = 5;
             this.tabPage_Pareto.Text = "帕累托图";
-            //
+            // 
             // paretoChart1
-            //
+            // 
             this.paretoChart1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.paretoChart1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.paretoChart1.Font = new System.Drawing.Font("微软雅黑", 9F);
@@ -586,9 +587,9 @@
             this.paretoChart1.Name = "paretoChart1";
             this.paretoChart1.Size = new System.Drawing.Size(1550, 1058);
             this.paretoChart1.TabIndex = 0;
-            //
+            // 
             // tabPage_ValidationTest
-            //
+            // 
             this.tabPage_ValidationTest.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.tabPage_ValidationTest.Controls.Add(this.validationTestResultControl1);
             this.tabPage_ValidationTest.Location = new System.Drawing.Point(0, 30);

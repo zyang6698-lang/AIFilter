@@ -1,6 +1,7 @@
 using DeepSightDB;
 using DeepSightModel;
 using DeepSightModel.Configuration;
+using DeepSightTool;
 using OpenCvSharp;
 using System;
 using System.Collections.Generic;
@@ -14,12 +15,12 @@ namespace DeepSightWorkLib.Services
     /// </summary>
     public class VBModelBuilder
     {
-        private readonly SolutionConfig _solutionConfig;
+        private readonly Func<SolutionConfig> _solutionConfigProvider;
         private static MinioSettings MinioSettingsConfig => MinioSettings.Instance;
 
-        public VBModelBuilder(SolutionConfig solutionConfig)
+        public VBModelBuilder(Func<SolutionConfig> solutionConfigProvider)
         {
-            _solutionConfig = solutionConfig;
+            _solutionConfigProvider = solutionConfigProvider ?? throw new ArgumentNullException(nameof(solutionConfigProvider));
         }
 
         /// <summary>
@@ -133,11 +134,14 @@ namespace DeepSightWorkLib.Services
         private RootVBInfo BuildVBInfo(VBModelBuildContext context, List<string> imageKeys, List<DetectInfo> filteredDefects)
         {
             // 从配置中查找料号所属的算法流程，找不到则使用 DEFAULT
-            var pipeline = _solutionConfig?.FindPipelineByProduct(context.ProductSerial)
-                ?? _solutionConfig?.GetDefaultPipeline();
+            var solutionConfig = _solutionConfigProvider?.Invoke();
+            var pipeline = solutionConfig?.FindPipelineByProduct(context.ProductSerial)
+                ?? solutionConfig?.GetDefaultPipeline();
 
             string solution = context.SideName == "A" ? (pipeline?.Asolution ?? "default") : (pipeline?.Bsolution ?? "default");
             string flow = context.SideName == "A" ? (pipeline?.Aflow ?? "1") : (pipeline?.Bflow ?? "1");
+
+            LogTextHelper.Info($"[测试推理]选择方案: SN={context.SerialNumber}_{context.SideName},料号={context.ProductSerial},流程={pipeline?.Name ?? "<null>"},方案={solution},flow={flow}");
 
             var vbInfo = new RootVBInfo
             {

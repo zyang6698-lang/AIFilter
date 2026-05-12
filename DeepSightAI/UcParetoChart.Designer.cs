@@ -18,6 +18,8 @@ namespace DeepSightAI
         private void InitializeComponent()
         {
             this.panel_Top = new System.Windows.Forms.Panel();
+            this.cmb_DataSource = new System.Windows.Forms.ComboBox();
+            this.label_DataSource = new System.Windows.Forms.Label();
             this.btn_Refresh = new DeepSightAI.StyledButton();
             this.cmb_Lot = new System.Windows.Forms.ComboBox();
             this.label_LotTitle = new System.Windows.Forms.Label();
@@ -33,6 +35,8 @@ namespace DeepSightAI
             //
             this.panel_Top.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.panel_Top.Controls.Add(this.btn_Refresh);
+            this.panel_Top.Controls.Add(this.cmb_DataSource);
+            this.panel_Top.Controls.Add(this.label_DataSource);
             this.panel_Top.Controls.Add(this.cmb_Lot);
             this.panel_Top.Controls.Add(this.label_LotTitle);
             this.panel_Top.Dock = System.Windows.Forms.DockStyle.Top;
@@ -72,12 +76,33 @@ namespace DeepSightAI
             this.btn_Refresh.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btn_Refresh.Font = new System.Drawing.Font("微软雅黑", 9F);
             this.btn_Refresh.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.btn_Refresh.Location = new System.Drawing.Point(425, 8);
+            this.btn_Refresh.Location = new System.Drawing.Point(760, 8);
             this.btn_Refresh.Name = "btn_Refresh";
             this.btn_Refresh.Size = new System.Drawing.Size(80, 28);
             this.btn_Refresh.TabIndex = 1;
             this.btn_Refresh.Text = "刷新";
             this.btn_Refresh.UseVisualStyleBackColor = false;
+            //
+            // label_DataSource
+            //
+            this.label_DataSource.AutoSize = true;
+            this.label_DataSource.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold);
+            this.label_DataSource.ForeColor = System.Drawing.Color.White;
+            this.label_DataSource.Location = new System.Drawing.Point(430, 12);
+            this.label_DataSource.Name = "label_DataSource";
+            this.label_DataSource.Text = "数据来源:";
+            //
+            // cmb_DataSource
+            //
+            this.cmb_DataSource.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(35)))), ((int)(((byte)(55)))), ((int)(((byte)(70)))));
+            this.cmb_DataSource.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmb_DataSource.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.cmb_DataSource.Font = new System.Drawing.Font("微软雅黑", 10F);
+            this.cmb_DataSource.ForeColor = System.Drawing.Color.White;
+            this.cmb_DataSource.Location = new System.Drawing.Point(515, 9);
+            this.cmb_DataSource.Name = "cmb_DataSource";
+            this.cmb_DataSource.Size = new System.Drawing.Size(230, 26);
+            this.cmb_DataSource.TabIndex = 2;
             //
             // panel_Bottom
             //
@@ -135,6 +160,8 @@ namespace DeepSightAI
         private System.Windows.Forms.Label label_LotTitle;
         private System.Windows.Forms.ComboBox cmb_Lot;
         private DeepSightAI.StyledButton btn_Refresh;
+        private System.Windows.Forms.Label label_DataSource;
+        private System.Windows.Forms.ComboBox cmb_DataSource;
         private System.Windows.Forms.Panel panel_Bottom;
         private System.Windows.Forms.Label label_Status;
         private System.Windows.Forms.DataVisualization.Charting.Chart chart_Pareto;
