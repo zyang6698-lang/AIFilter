@@ -21,9 +21,9 @@ namespace DeepSightWorkLib.Services
         /// </summary>
         public const string DefaultDbName = "vrs_history_result";
 
-        private readonly HttpClass _httpDb;
+        private readonly LevelDbHttpClient _httpDb;
 
-        public VrsHistoryService(HttpClass httpDb)
+        public VrsHistoryService(LevelDbHttpClient httpDb)
         {
             _httpDb = httpDb ?? throw new ArgumentNullException(nameof(httpDb));
         }
@@ -106,7 +106,7 @@ namespace DeepSightWorkLib.Services
                 key = sn
             };
 
-            if (!_httpDb.HttpPostMethod(url, req, 0, out string response))
+            if (!_httpDb.PostJson(url, req, LevelDbOperation.Read, out string response, "VRS历史查询"))
             {
                 error = "HTTP 请求失败";
                 return false;

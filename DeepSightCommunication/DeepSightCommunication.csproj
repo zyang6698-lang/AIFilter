@@ -150,9 +150,9 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="HttpClass.cs" />
-    <Compile Include="Interfaces\IHttpService.cs" />
+    <Compile Include="Interfaces\ILevelDbHttpClient.cs" />
     <Compile Include="Interfaces\IMinioService.cs" />
+    <Compile Include="LevelDbHttpClient.cs" />
     <Compile Include="MinioClass.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

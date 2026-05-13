@@ -21,7 +21,7 @@ namespace DeepSightWorkLib.Services
     /// </summary>
     public class AviReaderService
     {
-        private readonly HttpClass _httpDb;
+        private readonly LevelDbHttpClient _httpDb;
         private const string FixedTimeFormat = "yyyyMMddHHmmssfff";
         private readonly ConcurrentDictionary<string, DateTime> _processingSnSet;
         // delegate to call ReadJsonByMinio implemented elsewhere (BusinessClass)
@@ -32,7 +32,7 @@ namespace DeepSightWorkLib.Services
         /// </summary>
         private readonly ConcurrentDictionary<string, DateTime> _fetchTimeByDb = new ConcurrentDictionary<string, DateTime>();
 
-        public AviReaderService(HttpClass httpDb, ConcurrentDictionary<string, DateTime> processingSnSet, Action<AviProcessingContext> readJsonByMinio)
+        public AviReaderService(LevelDbHttpClient httpDb, ConcurrentDictionary<string, DateTime> processingSnSet, Action<AviProcessingContext> readJsonByMinio)
         {
             _httpDb = httpDb ?? throw new ArgumentNullException(nameof(httpDb));
             _processingSnSet = processingSnSet ?? throw new ArgumentNullException(nameof(processingSnSet));
@@ -125,7 +125,7 @@ namespace DeepSightWorkLib.Services
                 range_start = dbFetchTime.ToString(FixedTimeFormat),
                 range_end = DateTime.Now.Date.AddDays(1).AddTicks(-1).ToString(FixedTimeFormat),
             };
-            return _httpDb.HttpPostMethod(config.Url, getInfo, 0, out result);
+            return _httpDb.PostJson(config.Url, getInfo, LevelDbOperation.Read, out result, "AVI读取");
         }
 
         /// <summary>

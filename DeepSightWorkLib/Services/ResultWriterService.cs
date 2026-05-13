@@ -17,9 +17,9 @@ namespace DeepSightWorkLib.Services
         private const string StatusCodeNg = "1";
         private const string StatusCodeOther = "2";
 
-        private readonly HttpClass _httpDb;
+        private readonly LevelDbHttpClient _httpDb;
 
-        public ResultWriterService(HttpClass httpDb)
+        public ResultWriterService(LevelDbHttpClient httpDb)
         {
             _httpDb = httpDb ?? throw new ArgumentNullException(nameof(httpDb));
         }
@@ -108,7 +108,7 @@ namespace DeepSightWorkLib.Services
             CacheDebugJson(r.SN, r.Side, d => d.VrsWriteBackJson = JsonConvert.SerializeObject(dbInfo, Formatting.Indented));
 
             LogTextHelper.Info($"SN:{r.SN} Side:{r.Side} 回写VRS到 URL:{url}, DB:{r.VRSDbName}");
-            bool ok = _httpDb.HttpPostMethod(url, dbInfo, 1, out _);
+            bool ok = _httpDb.PostJson(url, dbInfo, LevelDbOperation.Write, out _, "VRS回写");
             LogTextHelper.Info($"SN:{r.SN} Side:{r.Side} VRS回写{(ok ? "成功" : "失败")}");
         }
 
@@ -152,7 +152,7 @@ namespace DeepSightWorkLib.Services
             CacheDebugJson(r.SN, r.Side, d => d.VrsV1WriteBackJson = JsonConvert.SerializeObject(dbInfo, Formatting.Indented));
 
             LogTextHelper.Info($"SN:{r.SN} Side:{r.Side} 回写VRS V1.0到 URL:{r.VRSTargetUrl}, DB:{dbNameV1}");
-            bool ok = _httpDb.HttpPostMethod(r.VRSTargetUrl, dbInfo, 1, out _);
+            bool ok = _httpDb.PostJson(r.VRSTargetUrl, dbInfo, LevelDbOperation.Write, out _, "VRS V1.0回写");
             LogTextHelper.Info($"SN:{r.SN} Side:{r.Side} VRS V1.0回写{(ok ? "成功" : "失败")}");
         }
 
@@ -168,7 +168,7 @@ namespace DeepSightWorkLib.Services
             TaskStatusSender.SendWritingResults(r.SN, r.Side);
             LogTextHelper.Info($"SN:{r.SN} Side:{r.Side} 回写AVI到 URL:{url}, DB:{r.AVIDbName}");
 
-            if (_httpDb.HttpPostMethod(url, r, 1, out _))
+            if (_httpDb.PostJson(url, r, LevelDbOperation.Write, out _, "AVI回写"))
             {
                 TaskStatusSender.SendCompleted(r.SN, r.Side);
                 LogTextHelper.Info($"SN:{r.SN} Side:{r.Side} AVI回写成功");

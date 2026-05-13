@@ -430,7 +430,7 @@ namespace DeepSightAI
         {
             try
             {
-                var svc = new VrsHistoryService(new HttpClass());
+                var svc = new VrsHistoryService(new LevelDbHttpClient());
 
                 // 相同 SN 只查询一次
                 var vrsCache = new Dictionary<string, VrsHistoryResult>(StringComparer.OrdinalIgnoreCase);

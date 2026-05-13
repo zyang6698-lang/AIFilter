@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -10,14 +8,24 @@ using DeepSightCommunication.Interfaces;
 using DeepSightEvent;
 using DeepSightTool;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace DeepSightCommunication
 {
     /// <summary>
-    /// HTTP 服务实现类，用于与 LevelDB 等后端服务通信
+    /// LevelDB 操作类型，用于日志与告警内容区分
     /// </summary>
-    public class HttpClass : IHttpService
+    public enum LevelDbOperation
+    {
+        /// <summary>读取数据（get / list 等）</summary>
+        Read,
+        /// <summary>写入数据（put / 回写等）</summary>
+        Write
+    }
+
+    /// <summary>
+    /// LevelDB HTTP 客户端：通过 HTTP POST 与 LevelDB 后端服务通信
+    /// </summary>
+    public class LevelDbHttpClient : ILevelDbHttpClient
     {
         /// <summary>
         /// HTTP 请求超时时间（毫秒）
@@ -41,29 +49,24 @@ namespace DeepSightCommunication
         };
 
         /// <summary>
-        /// http操作LevelDB（同步方法）
+        /// 同步发送 LevelDB 请求
         /// </summary>
-        /// <param name="url">请求地址</param>
-        /// <param name="info">请求参数</param>
-        /// <param name="type">请求类型 0：请求数据  1：回写数据</param>
-        /// <param name="outInfo">输出响应内容</param>
-        /// <returns>是否成功</returns>
-        public bool HttpPostMethod(string url, object info, int type, out string outInfo)
+        public bool PostJson(string url, object payload, LevelDbOperation operation, out string response, string scene = null)
         {
-            bool result = false;
-            outInfo = string.Empty;
+            response = string.Empty;
+            string tag = BuildLogTag(operation, scene);
 
             try
             {
-                string infoJson = JsonConvert.SerializeObject(info, Formatting.None, _jsonSettings);
-                LogTextHelper.Info(string.Format("AI-->DB {1}:{0}", infoJson, type == 0 ? "请求数据" : "回写数据"));
+                string payloadJson = JsonConvert.SerializeObject(payload, Formatting.None, _jsonSettings);
+                LogTextHelper.Info($"AI-->DB [{tag}]:{payloadJson}");
 
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
                 request.Method = "POST";
                 request.Timeout = HttpTimeoutMs;
                 request.ContentType = "application/json";
 
-                byte[] data = Encoding.UTF8.GetBytes(infoJson);
+                byte[] data = Encoding.UTF8.GetBytes(payloadJson);
                 request.ContentLength = data.Length;
 
                 using (Stream reqStream = request.GetRequestStream())
@@ -71,44 +74,38 @@ namespace DeepSightCommunication
                     reqStream.Write(data, 0, data.Length);
                 }
 
-                // 修复：使用 using 确保 response 和 stream 正确释放
-                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
-                using (Stream responseStream = response.GetResponseStream())
+                using (HttpWebResponse webResponse = (HttpWebResponse)request.GetResponse())
+                using (Stream responseStream = webResponse.GetResponseStream())
                 using (StreamReader reader = new StreamReader(responseStream, Encoding.UTF8))
                 {
-                    outInfo = reader.ReadToEnd();
+                    response = reader.ReadToEnd();
                 }
 
-                LogTextHelper.Info($"DB-->AI:{outInfo}");
-                result = true;
+                LogTextHelper.Info($"DB-->AI [{tag}]:{response}");
+                return true;
             }
             catch (Exception ex)
             {
-                outInfo = string.Empty;
-                result = false;
-                LogTextHelper.Error("LevelDB拉取数据异常" + ex.ToString());
-                SystemEvent.SendAlarmMsg("LevelDB拉取数据异常,详情请见LOG");
+                response = string.Empty;
+                LogTextHelper.Error($"LevelDB {tag} 异常: {ex}");
+                SystemEvent.SendAlarmMsg($"LevelDB {tag} 异常,详情请见LOG");
+                return false;
             }
-
-            return result;
         }
 
         /// <summary>
-        /// http操作LevelDB（真正的异步方法）
+        /// 异步发送 LevelDB 请求
         /// </summary>
-        /// <param name="url">请求地址</param>
-        /// <param name="info">请求参数</param>
-        /// <param name="type">请求类型 0：请求数据  1：回写数据</param>
-        /// <returns>HTTP 请求结果</returns>
-        public async Task<HttpResult> HttpPostAsync(string url, object info, int type)
+        public async Task<HttpResult> PostJsonAsync(string url, object payload, LevelDbOperation operation, string scene = null)
         {
             var result = new HttpResult();
+            string tag = BuildLogTag(operation, scene);
 
             try
             {
-                string infoJson = JsonConvert.SerializeObject(info, Formatting.None, _jsonSettings);
+                string payloadJson = JsonConvert.SerializeObject(payload, Formatting.None, _jsonSettings);
 
-                using (var content = new StringContent(infoJson, Encoding.UTF8, "application/json"))
+                using (var content = new StringContent(payloadJson, Encoding.UTF8, "application/json"))
                 using (var response = await _httpClient.PostAsync(url, content).ConfigureAwait(false))
                 {
                     result.Response = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -116,7 +113,7 @@ namespace DeepSightCommunication
 
                     if (!response.IsSuccessStatusCode)
                     {
-                        LogTextHelper.Warn($"HTTP请求返回非成功状态码: {response.StatusCode}");
+                        LogTextHelper.Warn($"LevelDB {tag} 返回非成功状态码: {response.StatusCode}");
                     }
                 }
             }
@@ -124,24 +121,37 @@ namespace DeepSightCommunication
             {
                 result.Success = false;
                 result.Response = "请求超时";
-                LogTextHelper.Error($"HTTP请求超时: {url}");
+                LogTextHelper.Error($"LevelDB {tag} 请求超时: {url}");
             }
             catch (Exception ex)
             {
                 result.Success = false;
                 result.Response = ex.Message;
-                LogTextHelper.Error($"HTTP请求失败: {ex.Message}");
+                LogTextHelper.Error($"LevelDB {tag} 请求失败: {ex.Message}");
             }
 
             return result;
         }
+
+        /// <summary>
+        /// 构造日志标签：业务场景优先，其次根据操作类型给出默认描述
+        /// </summary>
+        private static string BuildLogTag(LevelDbOperation operation, string scene)
+        {
+            if (!string.IsNullOrWhiteSpace(scene)) return scene;
+            return operation == LevelDbOperation.Write ? "回写数据" : "请求数据";
+        }
     }
 
-   
-    //Http返回结果对象
+    /// <summary>
+    /// HTTP 返回结果对象
+    /// </summary>
     public class HttpResult
     {
+        /// <summary>是否成功</summary>
         public bool Success { get; set; }
+
+        /// <summary>响应内容</summary>
         public string Response { get; set; }
     }
 }

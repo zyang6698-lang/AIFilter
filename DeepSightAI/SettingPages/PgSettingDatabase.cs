@@ -520,7 +520,7 @@ namespace DeepSightAI.SettingPages
             {
                 try
                 {
-                    var svc = new VrsHistoryService(new HttpClass());
+                    var svc = new VrsHistoryService(new LevelDbHttpClient());
                     return svc.TryQuery(url, dbName, sn, out rawValue, out error);
                 }
                 catch (Exception ex)

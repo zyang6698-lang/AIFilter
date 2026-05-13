@@ -19,11 +19,11 @@ namespace DeepSightWorkLib.Services
     /// </summary>
     public class InferenceRequestService
     {
-        private readonly HttpClass _http;
+        private readonly LevelDbHttpClient _http;
 
-        public InferenceRequestService(HttpClass http = null)
+        public InferenceRequestService(LevelDbHttpClient http = null)
         {
-            _http = http ?? new HttpClass();
+            _http = http ?? new LevelDbHttpClient();
         }
 
         #region 按 MinIO 目录方式
@@ -120,7 +120,7 @@ namespace DeepSightWorkLib.Services
                             value = valueStr
                         };
 
-                        if (_http.HttpPostMethod(dbConfig.Url, dbInfo, 1, out string _))
+                        if (_http.PostJson(dbConfig.Url, dbInfo, LevelDbOperation.Write, out string _, "推理请求写入"))
                         {
                             success++;
                             LogTextHelper.Info($"推理请求发送成功: SN={sn}, DB={dbConfig.DisplayName}");
@@ -167,7 +167,7 @@ namespace DeepSightWorkLib.Services
                 operation = "list",
                 op_mode = "prefix_keys"
             };
-            if (!_http.HttpPostMethod(config.Url, req, 0, out string rawResp) || string.IsNullOrWhiteSpace(rawResp))
+            if (!_http.PostJson(config.Url, req, LevelDbOperation.Read, out string rawResp, "lot_panel列表") || string.IsNullOrWhiteSpace(rawResp))
             {
                 errorMessage = "读取 lot_panel 数据库失败";
                 return false;
@@ -226,7 +226,7 @@ namespace DeepSightWorkLib.Services
             };
 
             string rawResp = string.Empty;
-            bool ok = await Task.Run(() => _http.HttpPostMethod(config.Url, req, 0, out rawResp));
+            bool ok = await Task.Run(() => _http.PostJson(config.Url, req, LevelDbOperation.Read, out rawResp, "按lot读取SN"));
             if (!ok || string.IsNullOrWhiteSpace(rawResp))
             {
                 LogTextHelper.Warn($"按 lot 读取 SN 失败: lot={lot}");
@@ -304,7 +304,7 @@ namespace DeepSightWorkLib.Services
                     string snResp = string.Empty;
                     bool ok = await Task.Run(() =>
                     {
-                        bool r = _http.HttpPostMethod(config.Url, req, 0, out string resp);
+                        bool r = _http.PostJson(config.Url, req, LevelDbOperation.Read, out string resp, "AVI_results_db读取");
                         snResp = resp;
                         return r;
                     });

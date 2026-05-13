@@ -128,9 +128,9 @@ namespace DeepSightWorkLib
         public IDefectService DefectService { get; private set; }
 
         /// <summary>
-        /// HTTP 服务（接口类型，支持依赖注入）
+        /// LevelDB HTTP 客户端（接口类型，支持依赖注入）
         /// </summary>
-        public IHttpService HttpService { get; private set; }
+        public ILevelDbHttpClient HttpService { get; private set; }
 
         /// <summary>
         /// Minio 服务（接口类型，支持依赖注入）
@@ -196,7 +196,7 @@ namespace DeepSightWorkLib
         /// </summary>
         public BusinessClass() : this(
             new DefectClass(),
-            new HttpClass(),
+            new LevelDbHttpClient(),
             new MinioClass(),
             null,
             null) // DatabaseHelper 和 PanelDataConverter 使用默认实现
@@ -207,13 +207,13 @@ namespace DeepSightWorkLib
         /// 依赖注入构造函数（支持测试和自定义实现）
         /// </summary>
         /// <param name="defectService">缺陷检测服务</param>
-        /// <param name="httpService">HTTP 服务</param>
+        /// <param name="httpService">LevelDB HTTP 客户端</param>
         /// <param name="minioService">Minio 服务</param>
         /// <param name="databaseService">数据库服务（可选，为 null 时使用默认实现）</param>
         /// <param name="panelDataConverter">Panel数据转换服务（可选，为 null 时使用默认实现）</param>
         public BusinessClass(
             IDefectService defectService,
-            IHttpService httpService,
+            ILevelDbHttpClient httpService,
             IMinioService minioService,
             IDatabaseService databaseService,
             IPanelDataConverter panelDataConverter = null)
@@ -242,7 +242,7 @@ namespace DeepSightWorkLib
             }
 
             // 需要具体类型的实例来初始化服务
-            var httpInstance = httpService as HttpClass ?? new HttpClass();
+            var httpInstance = httpService as LevelDbHttpClient ?? new LevelDbHttpClient();
             var defectInstance = defectService as DefectClass ?? new DefectClass();
 
             // 初始化拆分后的服务（使用 QueueManager 中的队列）
@@ -259,7 +259,7 @@ namespace DeepSightWorkLib
         {
             this.IsStart = false;
 
-            var httpInstance = HttpService as HttpClass ?? new HttpClass();
+            var httpInstance = HttpService as LevelDbHttpClient ?? new LevelDbHttpClient();
             _resultWriterService = new ResultWriterService(httpInstance);
 
             // 初始化模型验证测试服务
