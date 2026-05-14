@@ -278,6 +278,17 @@ namespace DeepSightAI
         /// </summary>
         private async void QueryControl_FilterChanged(object sender, EventArgs e)
         {
+            await RefreshForCurrentQueryAsync();
+        }
+
+        /// <summary>
+        /// 根据 queryControl 当前 QueryResult 重建热力图。
+        /// 供父窗体在两段式加载第二阶段（cmb_Lot 选中 Lot 后加载明细）显式触发。
+        /// </summary>
+        public async Task RefreshForCurrentQueryAsync()
+        {
+            if (queryControl == null) return;
+
             // 根据筛选条件重新加载热力图数据
             _heatPoints.Clear();
             _heatMapManager.ClearHeatPoints();

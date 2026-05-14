@@ -40,6 +40,18 @@ namespace DeepSightDB
         public int Timeout { get; set; } = 30;
 
         /// <summary>
+        /// 命令执行超时时间（秒），默认 30。建表 / 建索引等 DDL 可临时调大。
+        /// </summary>
+        public int CommandTimeout { get; set; } = 30;
+
+        /// <summary>
+        /// idle_in_transaction_session_timeout（毫秒），由 PG 服务端兜底自动断开
+        /// 长时间未提交 / 未回滚的事务连接，避免客户端崩溃后表锁被永久持有。
+        /// 0 表示不启用。
+        /// </summary>
+        public int IdleInTransactionSessionTimeoutMs { get; set; } = 60000;
+
+        /// <summary>
         /// 最大连接池大小
         /// </summary>
         public int MaxPoolSize { get; set; } = 100;
@@ -89,11 +101,14 @@ namespace DeepSightDB
             // - No Reset On Close=true: 关闭连接时不重置连接状态，提高性能
             // - Write Buffer Size: 增大写缓冲区
             // - Read Buffer Size: 增大读缓冲区
-            // - Socket Receive Buffer Size / Socket Send Buffer Size: 增大 Socket 缓冲区
             // - Tcp Keepalive: 保持连接活跃
             // - Keepalive: 连接保活间隔（秒）
+            // - Command Timeout: 单条命令超时（秒）
+            // 说明：idle_in_transaction_session_timeout 在 Npgsql 4.x 下不能通过连接串下发，
+            //      由 DatabaseHelper 在 Open() 后用 SET 语句应用（见 ApplySessionSettings）。
             return $"Host={Host};Port={Port};Database={Database};Username={Username};Password={Password};" +
-                   $"Timeout={Timeout};Maximum Pool Size={MaxPoolSize};Minimum Pool Size={MinPoolSize};" +
+                   $"Timeout={Timeout};Command Timeout={CommandTimeout};" +
+                   $"Maximum Pool Size={MaxPoolSize};Minimum Pool Size={MinPoolSize};" +
                    $"Pooling={Pooling};No Reset On Close={NoResetOnClose};" +
                    $"Write Buffer Size={WriteBufferSize};Read Buffer Size={ReadBufferSize};" +
                    $"Tcp Keepalive={TcpKeepalive};Keepalive={KeepaliveInterval};";

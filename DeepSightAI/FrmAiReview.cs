@@ -39,10 +39,9 @@ namespace DeepSightAI
 
         #region Fields
 
-        private List<DefectReviewItem> _defectItems = new List<DefectReviewItem>();
+        private List<DefectReviewItem> _defectItems = new List<DefectReviewItem>(); // 当前 Lot 数据缓存（业务逻辑用）
         private List<DefectReviewItem> _allDefectItems = new List<DefectReviewItem>(); // 存储所有查询结果
         private Dictionary<string, List<DefectReviewItem>> _lotGroups = new Dictionary<string, List<DefectReviewItem>>(); // 按Lot分组
-        private SortableBindingList<DefectReviewItem> _bindingList;
         private string _currentSelectedLot = null; // 当前选中的Lot
 
         // 复判详情相关字段
@@ -131,61 +130,35 @@ namespace DeepSightAI
             // 订阅查询控件事件
             UcDefectQuery.QueryClicked += HeatMapQueryControl_QueryClicked;
             UcDefectQuery.FilterChanged += QueryControl_FilterChanged;
+            // Lot 下拉框选择变化 → 切换 DGV 显示对应 Lot 的明细
+            UcDefectQuery.LotComboBox.SelectedIndexChanged += LotComboBox_SelectedIndexChanged;
 
             // 将共享的查询控件绑定到热力图，避免重复 UI 与重复查询
             heatMapControl1.BindQuerySource(UcDefectQuery);
 
-            // 订阅DataGridView事件
-            dataGridView_Defects.CellDoubleClick += DataGridView_Defects_CellDoubleClick;
-            dataGridView_Defects.CellValueChanged += DataGridView_Defects_CellValueChanged;
+            // 订阅缺陷列表面板事件
+            ucDefectListPanel.ItemDoubleClicked += UcDefectListPanel_ItemDoubleClicked;
+            ucDefectListPanel.RunTestClicked += ToolStripMenuItem_RunTest_Click;
+            ucDefectListPanel.SecondaryInferenceClicked += ToolStripMenuItem_SecondaryInference_Click;
+            ucDefectListPanel.AddToDatasetClicked += ToolStripMenuItem_AddToDataset_Click;
 
             // 订阅详情控件的切换下一行事件
             defectDetailControl1.SelectNextRowRequested += DefectDetailControl_SelectNextRowRequested;
 
             // 订阅VVS复判完成事件 - 当某SN所有缺陷点都完成VVS复判时自动更新人工判定状态
             defectDetailControl1.SnVvsCompleted += DefectDetailControl_SnVvsCompleted;
-            
+
             // 订阅VVS状态改变事件 - 用于更新左下角复判详情显示
             defectDetailControl1.VvsStatusChanged += DefectDetailControl_VvsStatusChanged;
 
             // 订阅单图测试事件
             defectDetailControl1.SingleImageTestRequested += DefectDetailControl_SingleImageTestRequested;
 
-            // 订阅TreeView事件
-            treeView_Lots.AfterSelect += TreeView_Lots_AfterSelect;
-            treeView_Lots.BeforeExpand += TreeView_Lots_BeforeExpand;
-            treeView_Lots.NodeMouseDoubleClick += TreeView_Lots_NodeMouseDoubleClick;
-            treeView_Lots.MouseUp += TreeView_Lots_MouseUp;
-
-            // 订阅SN搜索事件
-            btn_SnSearch.Click += Btn_SnSearch_Click;
-            txt_SnFilter.KeyDown += Txt_SnFilter_KeyDown;
-
-            // 订阅复选框变化事件
-            chk_OnlyAviNg.CheckedChanged += (s, ev) => QueryControl_FilterChanged(s, ev);
-
-            // 订阅右键菜单事件
-            toolStripMenuItem_RunTest.Click += ToolStripMenuItem_RunTest_Click;
-            toolStripMenuItem_SecondaryInference.Click += ToolStripMenuItem_SecondaryInference_Click;
-            toolStripMenuItem_AddToDataset.Click += ToolStripMenuItem_AddToDataset_Click;
-
             // 订阅页面切换事件 - 页面跳转时自动保存
             tabControl_Main.SelectedIndexChanged += TabControl_Main_SelectedIndexChanged;
 
             // 订阅导出事件 - DefectDetailControl中的导出按钮
             defectDetailControl1.ExportRequested += DefectDetailControl_ExportRequested;
-
-            // 初始化绑定列表（使用支持排序的SortableBindingList）
-            _bindingList = new SortableBindingList<DefectReviewItem>(_defectItems);
-            dataGridView_Defects.DataSource = _bindingList;
-
-            // 设置DataGridView样式
-            SetupDataGridViewStyle();
-        }
-
-        private void SetupDataGridViewStyle()
-        {
-            dataGridView_Defects.ApplyDarkTheme();
         }
 
         #endregion
@@ -241,10 +214,22 @@ namespace DeepSightAI
             _allDefectItems.Clear();
             _lotGroups.Clear();
             _lotStatistics.Clear();
-            treeView_Lots.Nodes.Clear();
             defectDetailControl1.ClearDetails();
             _currentSelectedLot = null;
             ct.ThrowIfCancellationRequested();
+
+            // 两段式加载：按日期查询第一阶段仅取了 Lot 列表，明细推迟到用户选 Lot 后再加载
+            if (UcDefectQuery.IsLotListOnly)
+            {
+                progress.Report("已加载 Lot 列表，请从下拉框选择具体 Lot 加载明细...");
+                ucDefectListPanel.ClearItems("请从下拉框选择 Lot 加载明细");
+                _defectItems.Clear();
+                paretoChart1?.Clear("请从下拉框选择 Lot 加载明细");
+                _currentReviewLot = null;
+                _currentReviewSnItem = null;
+                RefreshReviewDetailDisplay();
+                return;
+            }
 
             progress.Report("正在筛选数据...");
             var queryResult = UcDefectQuery.GetQueryResult();
@@ -256,7 +241,7 @@ namespace DeepSightAI
             _lotStatistics = statistics;
             ct.ThrowIfCancellationRequested();
 
-            bool onlyAviNg = chk_OnlyAviNg.Checked;
+            bool onlyAviNg = UcDefectQuery.OnlyAviNg;
             progress.Report("正在构建缺陷列表...");
             var collected = await Task.Run(() =>
             {
@@ -283,20 +268,17 @@ namespace DeepSightAI
                 .ToDictionary(g => g.Key, g => g.ToList());
 
             progress.Report("正在更新界面...");
+            // 先把 DGV 复位到"等待选 Lot"占位状态；BuildLotTreeNodes 内若命中单 Lot 会通过 SwitchToLot 填充明细
+            string placeholder = _lotGroups.Count == 0 ? "未查询到任何数据" : "请从下拉框选择 Lot 加载明细";
+            ucDefectListPanel.ClearItems(placeholder);
+            _defectItems.Clear();
             BuildLotTreeNodes();
-            RefreshDataGridView();
 
-            if (isFilterChange)
+            // 若 BuildLotTreeNodes 内的 SyncLotComboBox 已通过 SwitchToLot 选定了 Lot 并刷新过详情，则直接保留
+            if (!string.IsNullOrEmpty(_currentReviewLot) && _lotStatistics.ContainsKey(_currentReviewLot))
             {
-                _currentReviewSnItem = null;
-                if (!string.IsNullOrEmpty(_currentReviewLot) && _lotStatistics.ContainsKey(_currentReviewLot))
-                {
-                    UpdateVvsStatusSummary();
-                }
-                else
-                {
-                    _currentReviewLot = null;
-                }
+                if (!isFilterChange) _currentReviewSnItem = null;
+                UpdateVvsStatusSummary();
             }
             else
             {
@@ -306,50 +288,18 @@ namespace DeepSightAI
             RefreshReviewDetailDisplay();
         }
 
-        private void DataGridView_Defects_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        private void UcDefectListPanel_ItemDoubleClicked(DefectReviewItem selectedItem)
         {
-            // 忽略双击列头
-            if (e.RowIndex < 0)
-                return;
-
-            var selectedItem = dataGridView_Defects.Rows[e.RowIndex].DataBoundItem as DefectReviewItem;
-            if (selectedItem != null)
-            {
-                // 先切换到详情页，确保面板布局正确后再加载图片
-                tabControl_Main.SelectedTab = tabPage_Details;
-                defectDetailControl1.DisplayDefectDetails(selectedItem);
-                EnterSnReviewMode(selectedItem);
-            }
-        }
-
-        private void DataGridView_Defects_CellValueChanged(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex < 0 || e.ColumnIndex != col_ManualStatus.Index)
-                return;
-
-            // 标记为已修改
-            var item = dataGridView_Defects.Rows[e.RowIndex].DataBoundItem as DefectReviewItem;
-            if (item != null)
-            {
-                item.IsModified = true;
-            }
+            if (selectedItem == null) return;
+            // 先切换到详情页，确保面板布局正确后再加载图片
+            tabControl_Main.SelectedTab = tabPage_Details;
+            defectDetailControl1.DisplayDefectDetails(selectedItem);
+            EnterSnReviewMode(selectedItem);
         }
 
         private void DefectDetailControl_SelectNextRowRequested(object sender, EventArgs e)
         {
-            // 切换到表格的下一行
-            if (dataGridView_Defects.Rows.Count == 0)
-                return;
-
-            int currentRowIndex = dataGridView_Defects.CurrentCell?.RowIndex ?? -1;
-            int nextRowIndex = (currentRowIndex + 1) % dataGridView_Defects.Rows.Count;
-
-            // 选中下一行并显示详情
-            dataGridView_Defects.ClearSelection();
-            dataGridView_Defects.Rows[nextRowIndex].Selected = true;
-            dataGridView_Defects.CurrentCell = dataGridView_Defects.Rows[nextRowIndex].Cells[0];
-
-            var selectedItem = dataGridView_Defects.Rows[nextRowIndex].DataBoundItem as DefectReviewItem;
+            var selectedItem = ucDefectListPanel.SelectNextRow();
             if (selectedItem != null)
             {
                 defectDetailControl1.DisplayDefectDetails(selectedItem);
@@ -416,7 +366,7 @@ namespace DeepSightAI
             targetItem.DefectChange = $"{originalCount} -> {e.NgCount}";
 
             // 刷新DataGridView显示
-            _bindingList.ResetBindings();
+            ucDefectListPanel.ResetBindings();
             
             // 更新左下角复判详情
             UpdateVvsStatusSummary();
@@ -673,11 +623,7 @@ namespace DeepSightAI
                 if (tabControl_Main.SelectedTab == tabPage_Details)
                 {
                     // 获取当前选中的行
-                    DefectReviewItem currentItem = null;
-                    if (dataGridView_Defects.CurrentCell != null && dataGridView_Defects.CurrentCell.RowIndex >= 0)
-                    {
-                        currentItem = dataGridView_Defects.Rows[dataGridView_Defects.CurrentCell.RowIndex].DataBoundItem as DefectReviewItem;
-                    }
+                    DefectReviewItem currentItem = ucDefectListPanel.CurrentItem;
 
                     if (currentItem == null)
                     {
@@ -842,163 +788,98 @@ namespace DeepSightAI
         }
 
         /// <summary>
-        /// TreeView节点选择事件 - 加载选中Lot的数据到表格
+        /// Lot 下拉框选择变化事件 - 切换显示对应 Lot 的明细。
+        /// 仅在 _lotGroups 中包含该 Lot 时生效，手动输入未查询过的 Lot 不会误触发。
         /// </summary>
-        private void TreeView_Lots_AfterSelect(object sender, TreeViewEventArgs e)
+        private async void LotComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (e.Node == null) return;
+            string lotNumber = UcDefectQuery?.LotNumber?.Trim();
+            if (string.IsNullOrEmpty(lotNumber)) return;
 
-            // 如果是Lot节点（第一层），加载该Lot的数据
-            if (e.Node.Level == 0)
+            // 已加载明细：直接切换显示
+            if (_lotGroups.ContainsKey(lotNumber))
             {
-                LoadLotData(e.Node.Name);
-                // 切换到Lot视图，退出单SN模式
-                _currentReviewLot = e.Node.Name;
-                _currentReviewSnItem = null;
-                // 重新计算 VVS/VRS 统计，保证切换 Lot 或筛选后显示最新数据
-                UpdateVvsStatusSummary();
-                RefreshReviewDetailDisplay();
+                SwitchToLot(lotNumber);
+                return;
             }
-            // 如果是子分类节点（第二层，如按Side分组），加载该分类的数据
-            else if (e.Node.Level == 1 && e.Node.Parent != null)
-            {
-                string lotNumber = e.Node.Parent.Name;
-                string category = e.Node.Name; // 如 "A面", "B面" 等
-                LoadLotDataByCategory(lotNumber, category);
-                // 切换到Lot视图，退出单SN模式
-                _currentReviewLot = lotNumber;
-                _currentReviewSnItem = null;
-                UpdateVvsStatusSummary();
-                RefreshReviewDetailDisplay();
-            }
+
+            // 未加载明细（两段式查询第一阶段刚选中 Lot）：触发明细查询
+            // cmb_Lot.Text 此时已为目标 Lot，QueryDataAsync 走 Lot 号分支取明细
+            await UcDefectQuery.QueryDataAsync();
+            RunQueryWithProgress("正在加载 Lot 明细...", isFilterChange: false);
         }
 
         /// <summary>
-        /// TreeView节点展开前事件 - 用于延迟加载子节点
+        /// 切换到指定 Lot：加载明细到 DGV、刷新帕累托/热力图与左侧详情面板。
         /// </summary>
-        private void TreeView_Lots_BeforeExpand(object sender, TreeViewCancelEventArgs e)
+        private void SwitchToLot(string lotNumber)
         {
-            // 如果节点包含占位符子节点，则加载真实子节点
-            if (e.Node.Nodes.Count == 1 && e.Node.Nodes[0].Text == "加载中...")
-            {
-                e.Node.Nodes.Clear();
-                LoadLotSubCategories(e.Node);
-            }
+            if (string.IsNullOrEmpty(lotNumber)) return;
+            if (!_lotGroups.TryGetValue(lotNumber, out var lotItems)) return;
+
+            LoadLotData(lotNumber);
+            _currentReviewLot = lotNumber;
+            _currentReviewSnItem = null;
+
+            // 联动帕累托图与热力图（两段式第二阶段没有 QueryClicked 事件，需显式驱动）
+            paretoChart1?.ShowLot(lotNumber, lotItems);
+            _ = heatMapControl1?.RefreshForCurrentQueryAsync();
+
+            UpdateVvsStatusSummary();
+            RefreshReviewDetailDisplay();
         }
 
         /// <summary>
-        /// TreeView节点双击事件 - 显示该Lot下所有缺陷图片并跳转到图片显示
-        /// </summary>
-        private void TreeView_Lots_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
-        {
-            if (e.Node == null) return;
-
-            List<DefectReviewItem> itemsToDisplay = null;
-            string displayTitle = string.Empty;
-
-            // 如果是Lot节点（第一层），显示该Lot的所有缺陷图片
-            if (e.Node.Level == 0)
-            {
-                string lotNumber = e.Node.Name;
-                if (_lotGroups.TryGetValue(lotNumber, out var items))
-                {
-                    itemsToDisplay = items;
-                    displayTitle = $"Lot: {lotNumber}";
-                }
-            }
-            // 如果是子分类节点（第二层，如按Side分组），显示该分类的缺陷图片
-            else if (e.Node.Level == 1 && e.Node.Parent != null)
-            {
-                string lotNumber = e.Node.Parent.Name;
-                string category = e.Node.Name;
-                if (_lotGroups.TryGetValue(lotNumber, out var items))
-                {
-                    itemsToDisplay = items.Where(x => x.Side == category).ToList();
-                    displayTitle = $"Lot: {lotNumber} - {category}面";
-                }
-            }
-
-            if (itemsToDisplay != null && itemsToDisplay.Count > 0)
-            {
-                // 检查是否有缺陷图片
-                int totalHeatPoints = itemsToDisplay.Sum(item => item.HeatPoints?.Count ?? 0);
-
-                if (totalHeatPoints > 0)
-                {
-                    // 更新复判详情显示（使用第一个项目的信息）
-                    var firstItem = itemsToDisplay.FirstOrDefault();
-                    if (firstItem != null)
-                    {
-                        _currentReviewLot = firstItem.LotNumber;
-                        _currentReviewTime = firstItem.DetectionDate;
-                        // TreeView 双击进入的是 Lot 级聚合视图，退出单SN模式
-                        _currentReviewSnItem = null;
-                        // 更新统计数据（包括VVS状态和统计指标）
-                        UpdateVvsStatusSummary();
-                        RefreshReviewDetailDisplay();
-                    }
-
-                    // 先切换到详情页，确保面板布局正确后再加载图片
-                    tabControl_Main.SelectedTab = tabPage_Details;
-                    // 使用新的重载方法，传递原始items列表（保持HeatPoints引用），以便按SN分组检查VVS状态
-                    defectDetailControl1.DisplayDefectDetails(itemsToDisplay, displayTitle);
-                }
-                else
-                {
-                    MessageBox.Show($"{displayTitle} 下没有缺陷图片。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-            }
-        }
-
-
-
-        /// <summary>
-        /// 构建Lot分组的TreeView节点
+        /// 查询完成后同步 Lot 列表到查询控件下拉框，便于通过 cmb_Lot 选择切换 Lot。
         /// </summary>
         private void BuildLotTreeNodes()
         {
-            treeView_Lots.BeginUpdate();
-            treeView_Lots.Nodes.Clear();
-
-            foreach (var lotGroup in _lotGroups.OrderBy(x => x.Key))
-            {
-                var lotNode = new TreeNode
-                {
-                    Name = lotGroup.Key,
-                    Text = $"{lotGroup.Key} ({lotGroup.Value.Count}条)",
-                    ForeColor = Color.White
-                };
-
-                // 添加占位符子节点，用于延迟加载
-                lotNode.Nodes.Add(new TreeNode("加载中..."));
-                treeView_Lots.Nodes.Add(lotNode);
-            }
-
-            treeView_Lots.EndUpdate();
-
-            // 同步最新 Lot 分组到帕累托图控件
-            paretoChart1?.SetLotData(_lotGroups);
+            SyncLotComboBox();
         }
 
         /// <summary>
-        /// 加载Lot的子分类节点（按Side分组）
+        /// 把当前 _lotGroups 的 Lot 列表写入 UcDefectQuery 的下拉框，并自动选中"当前 Lot"。
+        /// 仅一个 Lot 时直接选中并触发切换；多个 Lot 时保留用户操作空间。
         /// </summary>
-        private void LoadLotSubCategories(TreeNode lotNode)
+        private void SyncLotComboBox()
         {
-            string lotNumber = lotNode.Name;
-            if (!_lotGroups.TryGetValue(lotNumber, out var items)) return;
+            if (UcDefectQuery == null) return;
 
-            // 按Side分组
-            var sideGroups = items.GroupBy(x => x.Side ?? "未知").OrderBy(g => g.Key);
-            foreach (var sideGroup in sideGroups)
+            // 两段式查询第一阶段：cmb_Lot 已由 UcDefectQuery 填好完整 Lot 列表，不再覆盖
+            if (UcDefectQuery.IsLotListOnly) return;
+
+            var lots = _lotGroups.Keys.OrderBy(k => k).ToList();
+            var combo = UcDefectQuery.LotComboBox;
+
+            // 临时摘下事件，避免 SetLotItems / 自动选中过程触发 SelectedIndexChanged 重入
+            combo.SelectedIndexChanged -= LotComboBox_SelectedIndexChanged;
+            try
             {
-                var sideNode = new TreeNode
+                // 若 cmb_Lot 已包含本次 Lot 集的全部项（两段式后二次明细查询），保留更大的列表
+                bool cmbContainsAll = lots.Count > 0 && lots.All(l => combo.Items.Contains(l));
+                if (!cmbContainsAll)
                 {
-                    Name = sideGroup.Key,
-                    Text = $"{sideGroup.Key}面 ({sideGroup.Count()}条)",
-                    ForeColor = Color.LightGray
-                };
-                lotNode.Nodes.Add(sideNode);
+                    UcDefectQuery.SetLotItems(lots);
+                }
+
+                // 单 Lot 场景（按 Lot 号查询或日期只命中一个 Lot）：自动选中并切换
+                if (lots.Count == 1)
+                {
+                    if (!string.Equals(combo.Text, lots[0], StringComparison.Ordinal))
+                    {
+                        combo.SelectedItem = lots[0];
+                    }
+                    SwitchToLot(lots[0]);
+                }
+                // 多 Lot 场景：若用户输入的 Lot 正好在结果集中，则保持选中
+                else if (lots.Count > 1 && !string.IsNullOrEmpty(combo.Text) && lots.Contains(combo.Text))
+                {
+                    SwitchToLot(combo.Text);
+                }
+            }
+            finally
+            {
+                combo.SelectedIndexChanged += LotComboBox_SelectedIndexChanged;
             }
         }
 
@@ -1011,140 +892,33 @@ namespace DeepSightAI
 
             _currentSelectedLot = lotNumber;
             RefreshDataGridView(items);
-
-            label_LotTitle.Text = $"Lot: {lotNumber} ({items.Count}条)";
         }
 
         /// <summary>
-        /// 按Lot和子分类加载数据到表格
+        /// 取当前激活 Lot 的明细数据。优先使用 UcDefectQuery.LotNumber（用户选择/输入的 Lot），
+        /// 回退到 _currentSelectedLot（左侧 TreeView 选中的 Lot，过渡期保留）。
         /// </summary>
-        private void LoadLotDataByCategory(string lotNumber, string category)
+        /// <param name="dataKindHint">数据类型提示词（如"可测试"/"可推理"），用于错误提示拼接，可为 null。</param>
+        private bool TryGetActiveLotData(string dataKindHint, out string lotNumber, out List<DefectReviewItem> lotItems)
         {
-            if (!_lotGroups.TryGetValue(lotNumber, out var items)) return;
+            lotNumber = (UcDefectQuery?.LotNumber ?? string.Empty).Trim();
+            if (string.IsNullOrEmpty(lotNumber))
+                lotNumber = _currentSelectedLot;
 
-            var filteredItems = items.Where(x => x.Side == category).ToList();
-
-            _currentSelectedLot = lotNumber;
-            RefreshDataGridView(filteredItems);
-
-            label_LotTitle.Text = $"Lot: {lotNumber} - {category}面 ({filteredItems.Count}条)";
-        }
-
-        /// <summary>
-        /// SN搜索按钮点击事件
-        /// </summary>
-        private void Btn_SnSearch_Click(object sender, EventArgs e)
-        {
-            FilterBySn();
-        }
-
-        /// <summary>
-        /// SN输入框回车事件
-        /// </summary>
-        private void Txt_SnFilter_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Enter)
+            if (string.IsNullOrEmpty(lotNumber))
             {
-                FilterBySn();
-                e.Handled = true;
-                e.SuppressKeyPress = true;
-            }
-        }
-
-        /// <summary>
-        /// 根据SN筛选数据
-        /// </summary>
-        private void FilterBySn()
-        {
-            string filterText = txt_SnFilter.Text.Trim();
-
-            // 如果搜索框为空，恢复当前Lot的所有数据
-            if (string.IsNullOrEmpty(filterText))
-            {
-                if (!string.IsNullOrEmpty(_currentSelectedLot))
-                {
-                    LoadLotData(_currentSelectedLot);
-                }
-                else
-                {
-                    // 如果没有选中Lot，搜索所有数据
-                    SearchAllData(filterText);
-                }
-                return;
+                MessageBox.Show("请先选择一个 Lot。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                lotItems = null;
+                return false;
             }
 
-            // 确定搜索范围：当前选中的Lot或所有数据
-            List<DefectReviewItem> searchSource;
-            if (!string.IsNullOrEmpty(_currentSelectedLot) && _lotGroups.TryGetValue(_currentSelectedLot, out var lotItems))
+            if (!_lotGroups.TryGetValue(lotNumber, out lotItems) || lotItems.Count == 0)
             {
-                searchSource = lotItems;
+                string suffix = string.IsNullOrEmpty(dataKindHint) ? "数据" : $"{dataKindHint}的数据";
+                MessageBox.Show($"Lot {lotNumber} 中没有{suffix}。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
             }
-            else
-            {
-                searchSource = _allDefectItems;
-            }
-
-            // 模糊搜索SN（支持部分匹配）
-            var filteredItems = searchSource
-                .Where(x => x.SerialNumber != null && x.SerialNumber.IndexOf(filterText, StringComparison.OrdinalIgnoreCase) >= 0)
-                .ToList();
-
-            // 更新表格
-            RefreshDataGridView(filteredItems);
-
-            // 更新标题
-            string scopeText = string.IsNullOrEmpty(_currentSelectedLot) ? "全部" : $"Lot: {_currentSelectedLot}";
-            label_LotTitle.Text = $"{scopeText} - 搜索: {filterText} ({filteredItems.Count}条)";
-
-            // 如果只找到一条，自动选中并可选择显示详情
-            if (filteredItems.Count == 1)
-            {
-                dataGridView_Defects.ClearSelection();
-                dataGridView_Defects.Rows[0].Selected = true;
-                dataGridView_Defects.CurrentCell = dataGridView_Defects.Rows[0].Cells[0];
-            }
-            else if (filteredItems.Count == 0)
-            {
-                MessageBox.Show($"未找到包含 \"{filterText}\" 的序列号。", "搜索结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-        }
-
-        /// <summary>
-        /// 在所有数据中搜索
-        /// </summary>
-        private void SearchAllData(string filterText)
-        {
-            if (string.IsNullOrEmpty(filterText))
-            {
-                // 清空表格，提示用户选择Lot
-                RefreshDataGridView();
-                label_LotTitle.Text = "请选择Lot或输入SN搜索";
-                return;
-            }
-
-            var filteredItems = _allDefectItems
-                .Where(x => x.SerialNumber != null && x.SerialNumber.IndexOf(filterText, StringComparison.OrdinalIgnoreCase) >= 0)
-                .ToList();
-
-            RefreshDataGridView(filteredItems);
-
-            label_LotTitle.Text = $"全局搜索: {filterText} ({filteredItems.Count}条)";
-        }
-
-        /// <summary>
-        /// TreeView 鼠标右键弹起事件 - 显示右键菜单
-        /// </summary>
-        private void TreeView_Lots_MouseUp(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Right)
-            {
-                var node = treeView_Lots.GetNodeAt(e.X, e.Y);
-                if (node != null && node.Level == 0)  // 只对 Lot 节点显示右键菜单
-                {
-                    treeView_Lots.SelectedNode = node;
-                    contextMenuStrip_Lot.Show(treeView_Lots, e.Location);
-                }
-            }
+            return true;
         }
 
         /// <summary>
@@ -1152,20 +926,8 @@ namespace DeepSightAI
         /// </summary>
         private async void ToolStripMenuItem_RunTest_Click(object sender, EventArgs e)
         {
-            var selectedNode = treeView_Lots.SelectedNode;
-            if (selectedNode == null || selectedNode.Level != 0)
-            {
-                MessageBox.Show("请先选择一个Lot节点。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            if (!TryGetActiveLotData("可测试", out string lotNumber, out var lotItems))
                 return;
-            }
-
-            string lotNumber = selectedNode.Name;
-
-            if (!_lotGroups.TryGetValue(lotNumber, out var lotItems) || lotItems.Count == 0)
-            {
-                MessageBox.Show($"Lot {lotNumber} 中没有可测试的数据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
 
             // 确认对话框
             var result = MessageBox.Show(
@@ -1196,7 +958,7 @@ namespace DeepSightAI
             try
             {
                 this.Enabled = false;
-                label_LotTitle.Text = $"正在启动 Lot: {lotNumber} 的测试任务...";
+                LogTextHelper.Info($"正在启动 Lot: {lotNumber} 的测试任务...");
 
                 // 收集所有 SN+Side 组合
                 var serialNumbers = items.Select(i => i.SerialNumber).Distinct().ToList();
@@ -1245,7 +1007,6 @@ namespace DeepSightAI
             finally
             {
                 this.Enabled = true;
-                label_LotTitle.Text = $"Lot: {lotNumber}";
             }
         }
 
@@ -1254,20 +1015,8 @@ namespace DeepSightAI
         /// </summary>
         private void ToolStripMenuItem_AddToDataset_Click(object sender, EventArgs e)
         {
-            var selectedNode = treeView_Lots.SelectedNode;
-            if (selectedNode == null || selectedNode.Level != 0)
-            {
-                MessageBox.Show("请先选择一个Lot节点。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            if (!TryGetActiveLotData(null, out string lotNumber, out var lotItems))
                 return;
-            }
-
-            string lotNumber = selectedNode.Name;
-
-            if (!_lotGroups.TryGetValue(lotNumber, out var lotItems) || lotItems.Count == 0)
-            {
-                MessageBox.Show($"Lot {lotNumber} 中没有数据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
 
             try
             {
@@ -1302,20 +1051,8 @@ namespace DeepSightAI
         /// </summary>
         private async void ToolStripMenuItem_SecondaryInference_Click(object sender, EventArgs e)
         {
-            var selectedNode = treeView_Lots.SelectedNode;
-            if (selectedNode == null || selectedNode.Level != 0)
-            {
-                MessageBox.Show("请先选择一个Lot节点。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            if (!TryGetActiveLotData("可推理", out string lotNumber, out var lotItems))
                 return;
-            }
-
-            string lotNumber = selectedNode.Name;
-
-            if (!_lotGroups.TryGetValue(lotNumber, out var lotItems) || lotItems.Count == 0)
-            {
-                MessageBox.Show($"Lot {lotNumber} 中没有可推理的数据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
 
             // 统计 AI NG 的数量
             int ngCount = lotItems.Count(i => i.AiStatus == "NG");
@@ -1355,7 +1092,7 @@ namespace DeepSightAI
             try
             {
                 this.Enabled = false;
-                label_LotTitle.Text = $"正在启动 Lot: {lotNumber} 的二次推理任务...";
+                LogTextHelper.Info($"正在启动 Lot: {lotNumber} 的二次推理任务...");
 
                 // 根据 items 的时间范围确定查询条件
                 var startDate = items.Min(i => i.DetectionDate).AddMinutes(-1);
@@ -1401,7 +1138,6 @@ namespace DeepSightAI
             finally
             {
                 this.Enabled = true;
-                label_LotTitle.Text = $"Lot: {lotNumber}";
             }
         }
 
@@ -1410,15 +1146,14 @@ namespace DeepSightAI
         #region Data Operations
 
         /// <summary>
-        /// 刷新 DataGridView 的数据绑定
+        /// 刷新缺陷列表面板的数据（同步 _defectItems 缓存并通知 UC 重绘）
         /// </summary>
         private void RefreshDataGridView(List<DefectReviewItem> items = null)
         {
             _defectItems.Clear();
             if (items != null)
                 _defectItems.AddRange(items);
-            _bindingList = new SortableBindingList<DefectReviewItem>(_defectItems);
-            dataGridView_Defects.DataSource = _bindingList;
+            ucDefectListPanel.LoadItems(_defectItems);
         }
 
         /// <summary>
@@ -1433,7 +1168,7 @@ namespace DeepSightAI
             _lotStatistics = LotStatisticsCalculator.Calculate(panelList);
 
             // 构建缺陷明细列表
-            bool onlyAviNg = chk_OnlyAviNg.Checked;
+            bool onlyAviNg = UcDefectQuery.OnlyAviNg;
             foreach (var panel in panelList)
             {
                 if (panel.Sides == null) continue;

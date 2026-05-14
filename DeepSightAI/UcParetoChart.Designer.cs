@@ -21,8 +21,6 @@ namespace DeepSightAI
             this.cmb_DataSource = new System.Windows.Forms.ComboBox();
             this.label_DataSource = new System.Windows.Forms.Label();
             this.btn_Refresh = new DeepSightAI.StyledButton();
-            this.cmb_Lot = new System.Windows.Forms.ComboBox();
-            this.label_LotTitle = new System.Windows.Forms.Label();
             this.panel_Bottom = new System.Windows.Forms.Panel();
             this.label_Status = new System.Windows.Forms.Label();
             this.chart_Pareto = new System.Windows.Forms.DataVisualization.Charting.Chart();
@@ -37,37 +35,12 @@ namespace DeepSightAI
             this.panel_Top.Controls.Add(this.btn_Refresh);
             this.panel_Top.Controls.Add(this.cmb_DataSource);
             this.panel_Top.Controls.Add(this.label_DataSource);
-            this.panel_Top.Controls.Add(this.cmb_Lot);
-            this.panel_Top.Controls.Add(this.label_LotTitle);
             this.panel_Top.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel_Top.Location = new System.Drawing.Point(0, 0);
             this.panel_Top.Name = "panel_Top";
             this.panel_Top.Padding = new System.Windows.Forms.Padding(10, 6, 10, 6);
             this.panel_Top.Size = new System.Drawing.Size(1000, 44);
             this.panel_Top.TabIndex = 0;
-            //
-            // label_LotTitle
-            //
-            this.label_LotTitle.AutoSize = true;
-            this.label_LotTitle.Dock = System.Windows.Forms.DockStyle.Left;
-            this.label_LotTitle.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold);
-            this.label_LotTitle.ForeColor = System.Drawing.Color.White;
-            this.label_LotTitle.Location = new System.Drawing.Point(10, 6);
-            this.label_LotTitle.Name = "label_LotTitle";
-            this.label_LotTitle.Padding = new System.Windows.Forms.Padding(0, 6, 8, 0);
-            this.label_LotTitle.Text = "选择 Lot:";
-            //
-            // cmb_Lot
-            //
-            this.cmb_Lot.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(35)))), ((int)(((byte)(55)))), ((int)(((byte)(70)))));
-            this.cmb_Lot.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmb_Lot.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.cmb_Lot.Font = new System.Drawing.Font("微软雅黑", 10F);
-            this.cmb_Lot.ForeColor = System.Drawing.Color.White;
-            this.cmb_Lot.Location = new System.Drawing.Point(95, 9);
-            this.cmb_Lot.Name = "cmb_Lot";
-            this.cmb_Lot.Size = new System.Drawing.Size(320, 26);
-            this.cmb_Lot.TabIndex = 0;
             //
             // btn_Refresh
             //
@@ -76,7 +49,7 @@ namespace DeepSightAI
             this.btn_Refresh.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btn_Refresh.Font = new System.Drawing.Font("微软雅黑", 9F);
             this.btn_Refresh.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.btn_Refresh.Location = new System.Drawing.Point(760, 8);
+            this.btn_Refresh.Location = new System.Drawing.Point(345, 8);
             this.btn_Refresh.Name = "btn_Refresh";
             this.btn_Refresh.Size = new System.Drawing.Size(80, 28);
             this.btn_Refresh.TabIndex = 1;
@@ -88,7 +61,7 @@ namespace DeepSightAI
             this.label_DataSource.AutoSize = true;
             this.label_DataSource.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold);
             this.label_DataSource.ForeColor = System.Drawing.Color.White;
-            this.label_DataSource.Location = new System.Drawing.Point(430, 12);
+            this.label_DataSource.Location = new System.Drawing.Point(15, 12);
             this.label_DataSource.Name = "label_DataSource";
             this.label_DataSource.Text = "数据来源:";
             //
@@ -99,7 +72,7 @@ namespace DeepSightAI
             this.cmb_DataSource.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.cmb_DataSource.Font = new System.Drawing.Font("微软雅黑", 10F);
             this.cmb_DataSource.ForeColor = System.Drawing.Color.White;
-            this.cmb_DataSource.Location = new System.Drawing.Point(515, 9);
+            this.cmb_DataSource.Location = new System.Drawing.Point(100, 9);
             this.cmb_DataSource.Name = "cmb_DataSource";
             this.cmb_DataSource.Size = new System.Drawing.Size(230, 26);
             this.cmb_DataSource.TabIndex = 2;
@@ -157,8 +130,6 @@ namespace DeepSightAI
         #endregion
 
         private System.Windows.Forms.Panel panel_Top;
-        private System.Windows.Forms.Label label_LotTitle;
-        private System.Windows.Forms.ComboBox cmb_Lot;
         private DeepSightAI.StyledButton btn_Refresh;
         private System.Windows.Forms.Label label_DataSource;
         private System.Windows.Forms.ComboBox cmb_DataSource;

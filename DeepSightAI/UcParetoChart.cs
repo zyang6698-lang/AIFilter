@@ -12,10 +12,12 @@ namespace DeepSightAI
     /// <summary>
     /// 帕累托图控件：以 Lot 为基准，展示缺陷按发生频次排序的柱状图与累计百分比折线
     /// 数据来源可切换：VRS 结果（VrsState != 0）或 AI 结果（AIStatus != 0）
+    /// 当前 Lot 由父窗体通过 ShowLot 注入（与 UcDefectQuery.cmb_Lot 联动）。
     /// </summary>
     public partial class UcParetoChart : UserControl
     {
-        private Dictionary<string, List<DefectReviewItem>> _lotGroups = new Dictionary<string, List<DefectReviewItem>>();
+        private string _currentLot;
+        private List<DefectReviewItem> _currentItems;
 
         private const string DataSourceVrs = "VRS结果";
         private const string DataSourceAi = "AI结果";
@@ -25,7 +27,6 @@ namespace DeepSightAI
             InitializeComponent();
             InitializeChartConfig();
             InitializeDataSourceCombo();
-            cmb_Lot.SelectedIndexChanged += Cmb_Lot_SelectedIndexChanged;
             cmb_DataSource.SelectedIndexChanged += (s, e) => RefreshChart();
             btn_Refresh.Click += (s, e) => RefreshChart();
         }
@@ -109,34 +110,23 @@ namespace DeepSightAI
         }
 
         /// <summary>
-        /// 由父窗体在每次查询/筛选完成后调用，同步最新的 Lot 分组数据
+        /// 由父窗体在切换 Lot 时调用，展示指定 Lot 的帕累托图。
         /// </summary>
-        public void SetLotData(Dictionary<string, List<DefectReviewItem>> lotGroups)
+        public void ShowLot(string lotNumber, List<DefectReviewItem> items)
         {
-            _lotGroups = lotGroups ?? new Dictionary<string, List<DefectReviewItem>>();
-            string prevSelected = cmb_Lot.SelectedItem as string;
-
-            cmb_Lot.BeginUpdate();
-            cmb_Lot.Items.Clear();
-            foreach (var key in _lotGroups.Keys.OrderBy(k => k))
-            {
-                cmb_Lot.Items.Add(key);
-            }
-            cmb_Lot.EndUpdate();
-
-            if (cmb_Lot.Items.Count == 0)
-            {
-                ClearChart("无数据，请先执行查询");
-                return;
-            }
-
-            int idx = prevSelected != null ? cmb_Lot.Items.IndexOf(prevSelected) : -1;
-            cmb_Lot.SelectedIndex = idx >= 0 ? idx : 0;
+            _currentLot = lotNumber;
+            _currentItems = items;
+            RefreshChart();
         }
 
-        private void Cmb_Lot_SelectedIndexChanged(object sender, EventArgs e)
+        /// <summary>
+        /// 清空图表显示，用于切换查询条件或两段式加载第一阶段。
+        /// </summary>
+        public void Clear(string hint = "无数据，请先执行查询")
         {
-            RefreshChart();
+            _currentLot = null;
+            _currentItems = null;
+            ClearChart(hint);
         }
 
         private void ClearChart(string message)
@@ -153,8 +143,9 @@ namespace DeepSightAI
         {
             try
             {
-                string lot = cmb_Lot.SelectedItem as string;
-                if (string.IsNullOrEmpty(lot) || !_lotGroups.TryGetValue(lot, out var items) || items == null)
+                string lot = _currentLot;
+                var items = _currentItems;
+                if (string.IsNullOrEmpty(lot) || items == null)
                 {
                     ClearChart("请选择 Lot");
                     return;

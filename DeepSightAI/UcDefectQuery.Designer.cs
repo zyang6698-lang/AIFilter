@@ -37,7 +37,7 @@
             this.label81 = new System.Windows.Forms.Label();
             this.cmb_PartNumber = new System.Windows.Forms.ComboBox();
             this.label80 = new System.Windows.Forms.Label();
-            this.txt_Lot = new System.Windows.Forms.TextBox();
+            this.cmb_Lot = new System.Windows.Forms.ComboBox();
             this.label_MachineID = new System.Windows.Forms.Label();
             this.cmb_MachineID = new System.Windows.Forms.ComboBox();
             this.label83 = new System.Windows.Forms.Label();
@@ -47,6 +47,7 @@
             this.rbn_Back = new System.Windows.Forms.RadioButton();
             this.label_DefectName = new System.Windows.Forms.Label();
             this.cmb_DefectName = new System.Windows.Forms.ComboBox();
+            this.chk_OnlyAviNg = new System.Windows.Forms.CheckBox();
             this.btn_queryHeatPoint = new DeepSightAI.StyledButton();
             this.tableLayoutPanel_Main.SuspendLayout();
             this.flowLayoutPanel_Side.SuspendLayout();
@@ -65,20 +66,22 @@
             this.tableLayoutPanel_Main.Controls.Add(this.label81, 0, 3);
             this.tableLayoutPanel_Main.Controls.Add(this.cmb_PartNumber, 1, 3);
             this.tableLayoutPanel_Main.Controls.Add(this.label80, 0, 4);
-            this.tableLayoutPanel_Main.Controls.Add(this.txt_Lot, 1, 4);
+            this.tableLayoutPanel_Main.Controls.Add(this.cmb_Lot, 1, 4);
             this.tableLayoutPanel_Main.Controls.Add(this.label_MachineID, 0, 5);
             this.tableLayoutPanel_Main.Controls.Add(this.cmb_MachineID, 1, 5);
             this.tableLayoutPanel_Main.Controls.Add(this.label83, 0, 6);
             this.tableLayoutPanel_Main.Controls.Add(this.flowLayoutPanel_Side, 1, 6);
             this.tableLayoutPanel_Main.Controls.Add(this.label_DefectName, 0, 7);
             this.tableLayoutPanel_Main.Controls.Add(this.cmb_DefectName, 1, 7);
-            this.tableLayoutPanel_Main.Controls.Add(this.btn_queryHeatPoint, 1, 8);
+            this.tableLayoutPanel_Main.Controls.Add(this.chk_OnlyAviNg, 0, 8);
+            this.tableLayoutPanel_Main.Controls.Add(this.btn_queryHeatPoint, 1, 9);
             this.tableLayoutPanel_Main.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel_Main.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel_Main.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tableLayoutPanel_Main.Name = "tableLayoutPanel_Main";
             this.tableLayoutPanel_Main.Padding = new System.Windows.Forms.Padding(8);
-            this.tableLayoutPanel_Main.RowCount = 9;
+            this.tableLayoutPanel_Main.RowCount = 10;
+            this.tableLayoutPanel_Main.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
             this.tableLayoutPanel_Main.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
             this.tableLayoutPanel_Main.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
             this.tableLayoutPanel_Main.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
@@ -88,7 +91,7 @@
             this.tableLayoutPanel_Main.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
             this.tableLayoutPanel_Main.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
             this.tableLayoutPanel_Main.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel_Main.Size = new System.Drawing.Size(349, 315);
+            this.tableLayoutPanel_Main.Size = new System.Drawing.Size(349, 333);
             this.tableLayoutPanel_Main.TabIndex = 0;
             // 
             // label79
@@ -180,14 +183,15 @@
             this.label80.TabIndex = 6;
             this.label80.Text = "Lot：";
             // 
-            // txt_Lot
+            // cmb_Lot
             // 
-            this.txt_Lot.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txt_Lot.Location = new System.Drawing.Point(99, 132);
-            this.txt_Lot.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.txt_Lot.Name = "txt_Lot";
-            this.txt_Lot.Size = new System.Drawing.Size(239, 25);
-            this.txt_Lot.TabIndex = 7;
+            this.cmb_Lot.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.cmb_Lot.FormattingEnabled = true;
+            this.cmb_Lot.Location = new System.Drawing.Point(99, 132);
+            this.cmb_Lot.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.cmb_Lot.Name = "cmb_Lot";
+            this.cmb_Lot.Size = new System.Drawing.Size(239, 23);
+            this.cmb_Lot.TabIndex = 7;
             // 
             // label_MachineID
             // 
@@ -298,6 +302,20 @@
             this.cmb_DefectName.Size = new System.Drawing.Size(239, 23);
             this.cmb_DefectName.TabIndex = 17;
             // 
+            // chk_OnlyAviNg
+            // 
+            this.chk_OnlyAviNg.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.chk_OnlyAviNg.AutoSize = true;
+            this.tableLayoutPanel_Main.SetColumnSpan(this.chk_OnlyAviNg, 2);
+            this.chk_OnlyAviNg.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.chk_OnlyAviNg.Location = new System.Drawing.Point(11, 253);
+            this.chk_OnlyAviNg.Margin = new System.Windows.Forms.Padding(3, 5, 3, 5);
+            this.chk_OnlyAviNg.Name = "chk_OnlyAviNg";
+            this.chk_OnlyAviNg.Size = new System.Drawing.Size(168, 19);
+            this.chk_OnlyAviNg.TabIndex = 18;
+            this.chk_OnlyAviNg.Text = "仅显示 AVI NG 数据";
+            this.chk_OnlyAviNg.UseVisualStyleBackColor = true;
+            // 
             // btn_queryHeatPoint
             // 
             this.btn_queryHeatPoint.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -306,7 +324,7 @@
             this.btn_queryHeatPoint.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btn_queryHeatPoint.Font = new System.Drawing.Font("微软雅黑", 9F);
             this.btn_queryHeatPoint.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
-            this.btn_queryHeatPoint.Location = new System.Drawing.Point(197, 254);
+            this.btn_queryHeatPoint.Location = new System.Drawing.Point(197, 284);
             this.btn_queryHeatPoint.Margin = new System.Windows.Forms.Padding(3, 6, 3, 2);
             this.btn_queryHeatPoint.Name = "btn_queryHeatPoint";
             this.btn_queryHeatPoint.Size = new System.Drawing.Size(141, 32);
@@ -323,7 +341,7 @@
             this.Controls.Add(this.tableLayoutPanel_Main);
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "UcDefectQuery";
-            this.Size = new System.Drawing.Size(349, 315);
+            this.Size = new System.Drawing.Size(349, 333);
             this.tableLayoutPanel_Main.ResumeLayout(false);
             this.tableLayoutPanel_Main.PerformLayout();
             this.flowLayoutPanel_Side.ResumeLayout(false);
@@ -344,7 +362,8 @@
         private System.Windows.Forms.Label label81;
         private System.Windows.Forms.ComboBox cmb_PartNumber;
         private System.Windows.Forms.Label label80;
-        private System.Windows.Forms.TextBox txt_Lot;
+        private System.Windows.Forms.ComboBox cmb_Lot;
+        private System.Windows.Forms.CheckBox chk_OnlyAviNg;
         private System.Windows.Forms.Label label83;
         private System.Windows.Forms.RadioButton rbn_Front;
         private System.Windows.Forms.RadioButton rbn_Back;

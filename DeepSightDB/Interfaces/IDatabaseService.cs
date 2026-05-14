@@ -93,6 +93,15 @@ namespace DeepSightDB.Interfaces
         /// 鑾峰彇鏁版嵁搴撲腑涓嶉噸澶嶇殑Lot鎬绘暟
         /// </summary>
         Task<int> GetTotalLotCount();
+
+        /// <summary>
+        /// 按日期范围获取去重后的 Lot 号列表（可选按料号过滤），按该范围内最新检测时间倒序。
+        /// 用于"先取 Lot 列表，再按需加载明细"的两段式查询。
+        /// </summary>
+        /// <param name="start">开始时间</param>
+        /// <param name="end">结束时间</param>
+        /// <param name="partNumber">料号（可选）</param>
+        Task<List<string>> GetLotNumbersByDateRange(DateTime start, DateTime end, string partNumber = null);
     }
 }
 

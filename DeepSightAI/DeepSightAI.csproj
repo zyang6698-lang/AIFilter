@@ -288,6 +288,12 @@
     <Compile Include="UcConsistencyTestDashboard.Designer.cs">
       <DependentUpon>UcConsistencyTestDashboard.cs</DependentUpon>
     </Compile>
+    <Compile Include="UcDefectListPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UcDefectListPanel.Designer.cs">
+      <DependentUpon>UcDefectListPanel.cs</DependentUpon>
+    </Compile>
     <Compile Include="UcParetoChart.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -493,6 +499,9 @@
     </Compile>
     <EmbeddedResource Include="FrmAiReview.resx">
       <DependentUpon>FrmAiReview.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UcDefectListPanel.resx">
+      <DependentUpon>UcDefectListPanel.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UcConsistencyTestDashboard.resx">
       <DependentUpon>UcConsistencyTestDashboard.cs</DependentUpon>

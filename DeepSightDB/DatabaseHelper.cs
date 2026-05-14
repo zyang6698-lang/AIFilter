@@ -42,6 +42,29 @@ namespace DeepSightDB
         private const string PanelSidesSelectFields = "ps.Side, ps.HeatPoints, ps.AviState, ps.AiState, ps.VvsState, ps.VrsState, ps.FinalState, ps.TestState, ps.LastTestTime, ps.DrawInfo";
 
         /// <summary>
+        /// 连接打开后下发会话级 GUC 设置（Npgsql 4.x 不支持通过连接串的 Options 参数下发）。
+        /// 当前主要用于 idle_in_transaction_session_timeout：服务端兜底自动断开
+        /// 长期空闲未提交的事务连接，避免客户端崩溃后表锁被永久持有。
+        /// </summary>
+        private static void ApplySessionSettings(NpgsqlConnection connection, PostgreSqlConfig config)
+        {
+            if (config == null || config.IdleInTransactionSessionTimeoutMs <= 0) return;
+            try
+            {
+                using (var cmd = new NpgsqlCommand(
+                    $"SET idle_in_transaction_session_timeout = {config.IdleInTransactionSessionTimeoutMs}",
+                    connection))
+                {
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Warn($"应用会话设置 idle_in_transaction_session_timeout 失败（已忽略）：{ex.Message}");
+            }
+        }
+
+        /// <summary>
         /// 使用默认配置的构造函数（保持向后兼容）
         /// </summary>
         public DatabaseHelper() : this(DefaultConfig)
@@ -137,6 +160,7 @@ namespace DeepSightDB
             using (var connection = new NpgsqlConnection(_connectionString))
             {
                 connection.Open();
+                ApplySessionSettings(connection, _config);
 
                 // 初始化预编译命令
                 InitializePreparedCommands(connection);
@@ -284,6 +308,7 @@ namespace DeepSightDB
                 using (var testConnection = new NpgsqlConnection(connectionString))
                 {
                     testConnection.Open();
+                    ApplySessionSettings(testConnection, config);
                     LogTextHelper.Info($"数据库 '{config.Database}' 已存在");
                     return;
                 }
@@ -363,6 +388,7 @@ namespace DeepSightDB
             using (var connection = new NpgsqlConnection(connectionString))
             {
                 connection.Open();
+                ApplySessionSettings(connection, config);
 
                 string createPanelsTable = @"
                 CREATE TABLE IF NOT EXISTS Panels (
@@ -406,44 +432,6 @@ namespace DeepSightDB
                     VRSOKNumber INTEGER NOT NULL
                 );";
 
-                // 创建索引以提升查询性能
-                // PanelSides 的唯一索引，同时支持 INSERT ON CONFLICT
-                string createPanelSidesUniqueIndex = @"
-                CREATE UNIQUE INDEX IF NOT EXISTS idx_panelsides_panelid_side ON PanelSides (PanelId, Side);";
-
-                string createPanelsDetectionDateIndex = @"
-                CREATE INDEX IF NOT EXISTS idx_panels_detectiondate ON Panels (DetectionDate);";
-
-                string createPanelsMachineIdIndex = @"
-                CREATE INDEX IF NOT EXISTS idx_panels_machineid ON Panels (MachineId);";
-
-                string createPanelsLotNumberIndex = @"
-                CREATE INDEX IF NOT EXISTS idx_panels_lotnumber ON Panels (LotNumber);";
-
-                // EmployeeReports 表的索引，优化时间范围查询
-                string createEmployeeReportsStartTimeIndex = @"
-                CREATE INDEX IF NOT EXISTS idx_employeereports_starttime ON EmployeeReports (StartTime);";
-
-                string createEmployeeReportsEndTimeIndex = @"
-                CREATE INDEX IF NOT EXISTS idx_employeereports_endtime ON EmployeeReports (EndTime);";
-
-                // 性能优化索引 - 复合索引支持常用查询模式
-                // 1. 支持按 MachineId + DetectionDate 排序查询 (GetLatestPanelInfoByMachineId)
-                string createPanelsMachineIdDetectionDateIndex = @"
-                CREATE INDEX IF NOT EXISTS idx_panels_machineid_detectiondate ON Panels (MachineId, DetectionDate DESC);";
-
-                // 2. PanelSides 的 PanelId 索引优化 JOIN 查询
-                string createPanelSidesPanelIdIndex = @"
-                CREATE INDEX IF NOT EXISTS idx_panelsides_panelid ON PanelSides (PanelId);";
-
-                // 3. PanelSides 状态字段复合索引，优化聚合查询
-                string createPanelSidesStatesIndex = @"
-                CREATE INDEX IF NOT EXISTS idx_panelsides_states ON PanelSides (PanelId, AviState, FinalState);";
-
-                // 4. ProductSerial 索引，优化按料号查询
-                string createPanelsProductSerialIndex = @"
-                CREATE INDEX IF NOT EXISTS idx_panels_productserial ON Panels (ProductSerial) WHERE ProductSerial IS NOT NULL;";
-
                 using (var command = new NpgsqlCommand())
                 {
                     command.Connection = connection;
@@ -453,30 +441,68 @@ namespace DeepSightDB
                     command.ExecuteNonQuery();
                     command.CommandText = createEmployeeReportsTable;
                     command.ExecuteNonQuery();
+                }
+            }
 
-                    // 创建索引
-                    command.CommandText = createPanelSidesUniqueIndex;
-                    command.ExecuteNonQuery();
-                    command.CommandText = createPanelsDetectionDateIndex;
-                    command.ExecuteNonQuery();
-                    command.CommandText = createPanelsMachineIdIndex;
-                    command.ExecuteNonQuery();
-                    command.CommandText = createPanelsLotNumberIndex;
-                    command.ExecuteNonQuery();
-                    command.CommandText = createEmployeeReportsStartTimeIndex;
-                    command.ExecuteNonQuery();
-                    command.CommandText = createEmployeeReportsEndTimeIndex;
-                    command.ExecuteNonQuery();
+            // 单独创建索引：使用 CONCURRENTLY 避免长时间锁表阻塞业务写入；
+            // 每条独立执行 + 独立 try/catch，单条失败不影响其它索引和启动流程。
+            // 注意：CREATE INDEX CONCURRENTLY 不能在事务块内执行，必须用 auto-commit 的简单查询。
+            CreateIndexesConcurrently(config);
+        }
 
-                    // 性能优化索引
-                    command.CommandText = createPanelsMachineIdDetectionDateIndex;
-                    command.ExecuteNonQuery();
-                    command.CommandText = createPanelSidesPanelIdIndex;
-                    command.ExecuteNonQuery();
-                    command.CommandText = createPanelSidesStatesIndex;
-                    command.ExecuteNonQuery();
-                    command.CommandText = createPanelsProductSerialIndex;
-                    command.ExecuteNonQuery();
+        /// <summary>
+        /// 使用 CREATE INDEX CONCURRENTLY 创建所有业务索引。
+        /// 单条失败仅记录警告，不抛出，保证启动不被表锁 / 长事务阻断。
+        /// </summary>
+        private static void CreateIndexesConcurrently(PostgreSqlConfig config)
+        {
+            // (索引名, DDL) 列表
+            var indexes = new (string Name, string Sql)[]
+            {
+                ("idx_panelsides_panelid_side",
+                    "CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS idx_panelsides_panelid_side ON PanelSides (PanelId, Side)"),
+                ("idx_panels_detectiondate",
+                    "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_panels_detectiondate ON Panels (DetectionDate)"),
+                ("idx_panels_machineid",
+                    "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_panels_machineid ON Panels (MachineId)"),
+                ("idx_panels_lotnumber",
+                    "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_panels_lotnumber ON Panels (LotNumber)"),
+                ("idx_employeereports_starttime",
+                    "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_employeereports_starttime ON EmployeeReports (StartTime)"),
+                ("idx_employeereports_endtime",
+                    "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_employeereports_endtime ON EmployeeReports (EndTime)"),
+                ("idx_panels_machineid_detectiondate",
+                    "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_panels_machineid_detectiondate ON Panels (MachineId, DetectionDate DESC)"),
+                ("idx_panelsides_panelid",
+                    "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_panelsides_panelid ON PanelSides (PanelId)"),
+                ("idx_panelsides_states",
+                    "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_panelsides_states ON PanelSides (PanelId, AviState, FinalState)"),
+                ("idx_panels_productserial",
+                    "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_panels_productserial ON Panels (ProductSerial) WHERE ProductSerial IS NOT NULL"),
+            };
+
+            // 用独立连接执行，避免与上面的连接共享事务上下文。
+            using (var connection = new NpgsqlConnection(config.GetConnectionString()))
+            {
+                connection.Open();
+                ApplySessionSettings(connection, config);
+
+                foreach (var (name, sql) in indexes)
+                {
+                    try
+                    {
+                        using (var cmd = new NpgsqlCommand(sql, connection))
+                        {
+                            // 单独把索引创建的命令超时调大（10 分钟），适配大表场景
+                            cmd.CommandTimeout = 600;
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // 不抛出：索引建不出来通常是表锁或重复数据，记录后让应用先启动起来。
+                        LogTextHelper.Warn($"创建索引 {name} 失败（已跳过，不影响启动）：{ex.Message}");
+                    }
                 }
             }
         }
@@ -1289,6 +1315,57 @@ namespace DeepSightDB
                 catch (Exception ex)
                 {
                     LogTextHelper.Error($"获取机台ID列表失败: {ex.Message}");
+                    tcs.SetException(ex);
+                }
+            });
+            return tcs.Task;
+        }
+
+        /// <summary>
+        /// 按日期范围获取去重后的 Lot 号列表（可选按料号过滤），按该范围内最新检测时间倒序。
+        /// </summary>
+        public Task<List<string>> GetLotNumbersByDateRange(DateTime start, DateTime end, string partNumber = null)
+        {
+            var tcs = new TaskCompletionSource<List<string>>();
+            _dbQueue.Add(connection =>
+            {
+                try
+                {
+                    var lots = new List<string>();
+                    var sqlBuilder = new System.Text.StringBuilder(@"
+                        SELECT LotNumber
+                        FROM Panels
+                        WHERE DetectionDate >= @Start AND DetectionDate <= @End
+                          AND LotNumber IS NOT NULL AND LotNumber <> ''");
+                    if (!string.IsNullOrWhiteSpace(partNumber))
+                    {
+                        sqlBuilder.Append(" AND ProductSerial = @PartNumber");
+                    }
+                    sqlBuilder.Append(@"
+                        GROUP BY LotNumber
+                        ORDER BY MAX(DetectionDate) DESC");
+
+                    using (var cmd = new NpgsqlCommand(sqlBuilder.ToString(), connection))
+                    {
+                        cmd.Parameters.AddWithValue("@Start", start);
+                        cmd.Parameters.AddWithValue("@End", end);
+                        if (!string.IsNullOrWhiteSpace(partNumber))
+                        {
+                            cmd.Parameters.AddWithValue("@PartNumber", partNumber);
+                        }
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                lots.Add(reader.GetString(0));
+                            }
+                        }
+                    }
+                    tcs.SetResult(lots);
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error($"按日期范围获取Lot列表失败: {ex.Message}");
                     tcs.SetException(ex);
                 }
             });

@@ -637,6 +637,9 @@ namespace DeepSightWorkLib
 
         public Task<int> GetTotalLotCount() =>
             _databaseHelper.GetTotalLotCount();
+
+        public Task<List<string>> GetLotNumbersByDateRange(DateTime start, DateTime end, string partNumber = null) =>
+            _databaseHelper.GetLotNumbersByDateRange(start, end, partNumber);
         #endregion
 
         #region 统计信息
