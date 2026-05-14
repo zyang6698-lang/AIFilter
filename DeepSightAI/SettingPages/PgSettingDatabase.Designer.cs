@@ -264,7 +264,7 @@
             this.tlpRight.Name = "tlpRight";
             this.tlpRight.RowCount = 4;
             this.tlpRight.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 89F));
-            this.tlpRight.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 170F));
+            this.tlpRight.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 220F));
             this.tlpRight.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 215F));
             this.tlpRight.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tlpRight.Size = new System.Drawing.Size(846, 604);
@@ -298,8 +298,6 @@
             this.tlpBasic.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 280F));
             this.tlpBasic.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 30F));
             this.tlpBasic.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tlpBasic.Controls.Add(this.lblDbName, 0, 0);
-            this.tlpBasic.Controls.Add(this.txtDbName, 1, 0);
             this.tlpBasic.Controls.Add(this.chkIsEnabled, 3, 0);
             this.tlpBasic.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tlpBasic.Location = new System.Drawing.Point(8, 32);
@@ -375,7 +373,7 @@
             this.grpAvi.Name = "grpAvi";
             this.grpAvi.Padding = new System.Windows.Forms.Padding(8, 32, 8, 6);
             this.grpAvi.RectColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(80)))), ((int)(((byte)(95)))));
-            this.grpAvi.Size = new System.Drawing.Size(846, 164);
+            this.grpAvi.Size = new System.Drawing.Size(846, 214);
             this.grpAvi.Style = Sunny.UI.UIStyle.Custom;
             this.grpAvi.StyleCustomMode = true;
             this.grpAvi.TabIndex = 1;
@@ -386,20 +384,23 @@
             // 
             this.tlpAvi.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.tlpAvi.ColumnCount = 6;
-            this.tlpAvi.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 100F));
+            this.tlpAvi.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 120F));
             this.tlpAvi.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 190F));
             this.tlpAvi.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 70F));
             this.tlpAvi.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 120F));
             this.tlpAvi.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tlpAvi.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 110F));
-            this.tlpAvi.Controls.Add(this.lblIp, 0, 0);
-            this.tlpAvi.Controls.Add(this.txtIp, 1, 0);
-            this.tlpAvi.Controls.Add(this.lblPort, 2, 0);
-            this.tlpAvi.Controls.Add(this.txtPort, 3, 0);
-            this.tlpAvi.Controls.Add(this.lblAviStatus, 4, 0);
-            this.tlpAvi.Controls.Add(this.btnAviTest, 5, 0);
-            this.tlpAvi.Controls.Add(this.lblWriteBackDbName, 0, 1);
-            this.tlpAvi.Controls.Add(this.txtWriteBackDbName, 1, 1);
+            this.tlpAvi.Controls.Add(this.lblDbName, 0, 0);
+            this.tlpAvi.Controls.Add(this.txtDbName, 1, 0);
+            this.tlpAvi.Controls.Add(this.lblIp, 0, 1);
+            this.tlpAvi.Controls.Add(this.txtIp, 1, 1);
+            this.tlpAvi.Controls.Add(this.lblPort, 2, 1);
+            this.tlpAvi.Controls.Add(this.txtPort, 3, 1);
+            this.tlpAvi.Controls.Add(this.lblAviStatus, 4, 1);
+            this.tlpAvi.Controls.Add(this.btnAviTest, 5, 1);
+            this.tlpAvi.Controls.Add(this.lblWriteBackDbName, 0, 2);
+            this.tlpAvi.Controls.Add(this.txtWriteBackDbName, 1, 2);
+            this.tlpAvi.SetColumnSpan(this.txtDbName, 3);
             this.tlpAvi.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tlpAvi.Location = new System.Drawing.Point(8, 32);
             this.tlpAvi.Name = "tlpAvi";
@@ -407,7 +408,7 @@
             this.tlpAvi.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 55F));
             this.tlpAvi.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 55F));
             this.tlpAvi.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tlpAvi.Size = new System.Drawing.Size(830, 126);
+            this.tlpAvi.Size = new System.Drawing.Size(830, 176);
             this.tlpAvi.TabIndex = 0;
             // 
             // lblIp

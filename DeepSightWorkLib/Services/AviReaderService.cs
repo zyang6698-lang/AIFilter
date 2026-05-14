@@ -28,7 +28,8 @@ namespace DeepSightWorkLib.Services
         private readonly Action<AviProcessingContext> _readJsonByMinio;
 
         /// <summary>
-        /// 每个数据库的 fetchTime（key 为 DbName，value 为上次获取的时间）
+        /// 每个数据库源的 fetchTime（key 为 Url+DbName，value 为上次获取的时间）
+        /// 避免多个现场使用相同 DbName 时互相覆盖读取游标。
         /// </summary>
         private readonly ConcurrentDictionary<string, DateTime> _fetchTimeByDb = new ConcurrentDictionary<string, DateTime>();
 
@@ -39,20 +40,26 @@ namespace DeepSightWorkLib.Services
             _readJsonByMinio = readJsonByMinio ?? throw new ArgumentNullException(nameof(readJsonByMinio));
         }
 
-        /// <summary>
-        /// 获取指定数据库的 fetchTime
-        /// </summary>
-        public DateTime GetFetchTime(string dbName)
+        private static string BuildFetchTimeKey(LevelDbConfig config)
         {
-            return _fetchTimeByDb.GetOrAdd(dbName, DateTime.MinValue);
+            if (config == null) throw new ArgumentNullException(nameof(config));
+            return $"{config.Url}|{config.DbName}";
         }
 
         /// <summary>
-        /// 设置指定数据库的 fetchTime
+        /// 获取指定数据库源的 fetchTime
         /// </summary>
-        public void SetFetchTime(string dbName, DateTime time)
+        public DateTime GetFetchTime(LevelDbConfig config)
         {
-            _fetchTimeByDb[dbName] = time;
+            return _fetchTimeByDb.GetOrAdd(BuildFetchTimeKey(config), DateTime.MinValue);
+        }
+
+        /// <summary>
+        /// 设置指定数据库源的 fetchTime
+        /// </summary>
+        public void SetFetchTime(LevelDbConfig config, DateTime time)
+        {
+            _fetchTimeByDb[BuildFetchTimeKey(config)] = time;
         }
 
         /// <summary>
@@ -67,10 +74,10 @@ namespace DeepSightWorkLib.Services
 
             foreach (var config in configs)
             {
-                _fetchTimeByDb[config.DbName] = now;
+                _fetchTimeByDb[BuildFetchTimeKey(config)] = now;
             }
 
-            LogTextHelper.Info($"已重置 {configs.Count} 个数据库的 fetchTime 为: {now}");
+            LogTextHelper.Info($"已重置 {configs.Count} 个数据库源的 fetchTime 为: {now:yyyy-MM-dd HH:mm:ss.fff}");
         }
 
         /// <summary>
@@ -114,7 +121,9 @@ namespace DeepSightWorkLib.Services
         /// </summary>
         public bool ReadAVI(LevelDbConfig config, out string result)
         {
-            var dbFetchTime = GetFetchTime(config.DbName);
+            var dbFetchTime = GetFetchTime(config);
+            string rangeStart = dbFetchTime.ToString(FixedTimeFormat);
+            string rangeEnd = DateTime.Now.Date.AddDays(1).AddTicks(-1).ToString(FixedTimeFormat);
             RootDbInfo getInfo = new RootDbInfo
             {
                 uniqueKey = Guid.NewGuid().ToString(),
@@ -122,10 +131,15 @@ namespace DeepSightWorkLib.Services
                 operation = "get",
                 is_select_range = "true",
                 op_mode = "all",
-                range_start = dbFetchTime.ToString(FixedTimeFormat),
-                range_end = DateTime.Now.Date.AddDays(1).AddTicks(-1).ToString(FixedTimeFormat),
+                range_start = rangeStart,
+                range_end = rangeEnd,
             };
-            return _httpDb.PostJson(config.Url, getInfo, LevelDbOperation.Read, out result, "AVI读取");
+            bool success = _httpDb.PostJson(config.Url, getInfo, LevelDbOperation.Read, out result, "AVI读取");
+            if (!success)
+            {
+                LogTextHelper.Warn($"AVI读取失败: DbName={config.DbName}, Url={config.Url}, RangeStart={rangeStart}, RangeEnd={rangeEnd}");
+            }
+            return success;
         }
 
         /// <summary>
@@ -255,7 +269,7 @@ namespace DeepSightWorkLib.Services
             result: out DateTime dt))
             {
                 // 更新当前数据库的 fetchTime
-                SetFetchTime(config.DbName, dt.AddMilliseconds(1));
+                SetFetchTime(config, dt.AddMilliseconds(1));
             }
             // 第二层：反序列化 value 字符串
             var valueData = JsonConvert.DeserializeObject<AviValueData>(dataItem.Value, settings);

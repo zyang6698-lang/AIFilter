@@ -1,11 +1,16 @@
 ﻿using DeepSightCommunication;
+using DeepSightDB;
 using DeepSightModel;
 using DeepSightModel.Configuration;
 using DeepSightTool;
 using DeepSightWorkLib.Services;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
@@ -367,13 +372,13 @@ namespace DeepSightAI.SettingPages
         #region 连接测试 - 入口
 
         /// <summary>
-        /// 当前选中数据库的 AVI 测试
+        /// 当前选中数据库的 AVI 测试：查询最近 100 条数据并以表格形式展示
         /// </summary>
         private async void btnAviTest_Click(object sender, EventArgs e)
         {
             var c = CurrentConfig;
             if (c == null) return;
-            await TestAviAsync(c, autoDisableOnFail: false);
+            await TestAviAndShowLatestAsync(c);
         }
 
         /// <summary>
@@ -641,6 +646,270 @@ namespace DeepSightAI.SettingPages
                 }
                 catch { return false; }
             });
+        }
+
+        #endregion
+
+        #region AVI 最近数据查询与展示
+
+        /// <summary>
+        /// AVI 测试：查询最近 100 条数据并弹窗展示
+        /// </summary>
+        private async Task TestAviAndShowLatestAsync(LevelDbConfig c)
+        {
+            if (string.IsNullOrWhiteSpace(c.IP) || string.IsNullOrWhiteSpace(c.Port))
+            {
+                if (CurrentConfig == c) SetAviStatus("配置不完整", StatusWarnColor);
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(c.DbName))
+            {
+                if (CurrentConfig == c) SetAviStatus("数据库名为空", StatusWarnColor);
+                return;
+            }
+
+            string url = c.Url;
+            string dbName = c.DbName;
+            if (CurrentConfig == c) SetAviStatus("查询中...", StatusBusyColor);
+
+            string rawResp = null;
+            string error = null;
+            bool ok = await Task.Run(() =>
+            {
+                try
+                {
+                    var http = new LevelDbHttpClient();
+                    var req = new RootDbInfo
+                    {
+                        uniqueKey = Guid.NewGuid().ToString(),
+                        db_name = dbName,
+                        operation = "get",
+                        is_select_range = "true",
+                        op_mode = "all",
+                        range_start = DateTime.Now.AddDays(-7).ToString("yyyyMMddHHmmssfff"),
+                        range_end = DateTime.Now.Date.AddDays(1).AddTicks(-1).ToString("yyyyMMddHHmmssfff"),
+                    };
+                    return http.PostJson(url, req, LevelDbOperation.Read, out rawResp, "AVI测试查询");
+                }
+                catch (Exception ex)
+                {
+                    error = ex.Message;
+                    return false;
+                }
+            });
+
+            if (!ok)
+            {
+                if (CurrentConfig == c) SetAviStatus("连接失败 ✗", StatusFailColor);
+                MessageBox.Show("AVI 测试失败：" + (error ?? "请求失败"), "AVI 测试",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var rows = ParseLatestAviRows(rawResp, 100, out string parseErr);
+            if (CurrentConfig == c)
+            {
+                if (parseErr != null) SetAviStatus("已连接 ✓ 解析告警", StatusWarnColor);
+                else SetAviStatus($"已连接 ✓ 共 {rows.Count} 行", StatusOkColor);
+            }
+            ShowAviLatestDialog(url, dbName, rows, parseErr);
+        }
+
+        /// <summary>
+        /// 解析 AVI 响应 JSON，按 Key（时间戳）倒序取前 N 条并展平为表格行
+        /// </summary>
+        private static List<AviTestRow> ParseLatestAviRows(string jsonInfo, int maxCount, out string error)
+        {
+            error = null;
+            var list = new List<AviTestRow>();
+            if (string.IsNullOrEmpty(jsonInfo)) return list;
+
+            try
+            {
+                var preCheck = JObject.Parse(jsonInfo);
+                var resultToken = preCheck["result"];
+                if (resultToken != null && resultToken.Type == JTokenType.String)
+                {
+                    var resultStr = resultToken.Value<string>();
+                    if (!string.IsNullOrEmpty(resultStr) && resultStr.StartsWith("err"))
+                    {
+                        error = $"LevelDB 错误响应：{resultStr}";
+                        return list;
+                    }
+                }
+
+                var settings = new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Ignore,
+                    MissingMemberHandling = MissingMemberHandling.Ignore
+                };
+                var response = JsonConvert.DeserializeObject<AviResponse>(jsonInfo, settings);
+                if (response?.DataList == null || response.DataList.Count == 0) return list;
+
+                var items = new List<AviDataItem>();
+                foreach (var item in response.DataList)
+                {
+                    if (item is string strItem)
+                    {
+                        if (strItem == "end_range_send") continue;
+                        var di = JsonConvert.DeserializeObject<AviDataItem>(strItem, settings);
+                        if (di != null) items.Add(di);
+                    }
+                    else if (item is JObject jObj)
+                    {
+                        var di = jObj.ToObject<AviDataItem>();
+                        if (di != null) items.Add(di);
+                    }
+                }
+
+                var latest = items
+                    .Where(x => !string.IsNullOrEmpty(x.Key))
+                    .OrderByDescending(x => x.Key, StringComparer.Ordinal)
+                    .Take(maxCount);
+
+                foreach (var di in latest)
+                {
+                    string timeText = di.Key;
+                    if (DateTime.TryParseExact(di.Key, "yyyyMMddHHmmssfff",
+                        CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt))
+                    {
+                        timeText = dt.ToString("yyyy-MM-dd HH:mm:ss.fff");
+                    }
+
+                    AviValueData val = null;
+                    try { val = JsonConvert.DeserializeObject<AviValueData>(di.Value, settings); }
+                    catch { }
+
+                    if (val?.ResultsInfo != null && val.ResultsInfo.Count > 0)
+                    {
+                        foreach (var ri in val.ResultsInfo)
+                        {
+                            list.Add(new AviTestRow
+                            {
+                                Time = timeText,
+                                SerialNumber = val.SerialNumber ?? "",
+                                Side = ri?.Side ?? "",
+                                MinioIp = ri?.MinioIp ?? "",
+                                MinioPort = ri == null ? "" : ri.MinioPort.ToString(),
+                                ResultPath = ri?.ResultPath ?? "",
+                            });
+                        }
+                    }
+                    else
+                    {
+                        list.Add(new AviTestRow
+                        {
+                            Time = timeText,
+                            SerialNumber = val?.SerialNumber ?? "",
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+                LogTextHelper.Error($"解析 AVI 测试响应失败: {ex}");
+            }
+
+            return list;
+        }
+
+        /// <summary>
+        /// 弹窗展示 AVI 最近数据（DataGridView）
+        /// </summary>
+        private static void ShowAviLatestDialog(string url, string dbName, List<AviTestRow> rows, string parseError)
+        {
+            Color bg = Color.FromArgb(29, 48, 60);
+            Color fg = Color.FromArgb(216, 219, 188);
+            Color border = Color.FromArgb(60, 80, 95);
+            Color header = Color.FromArgb(0, 64, 82);
+            Color altRow = Color.FromArgb(35, 56, 70);
+
+            using (var dlg = new Form
+            {
+                Text = $"AVI 测试 - {dbName} ({url}) - 共 {rows.Count} 行",
+                StartPosition = FormStartPosition.CenterParent,
+                Size = new Size(1000, 560),
+                BackColor = bg,
+                ForeColor = fg,
+                Font = new Font("微软雅黑", 9F),
+                MinimizeBox = false,
+                MaximizeBox = true,
+                ShowIcon = false,
+            })
+            {
+                var top = new Label
+                {
+                    Dock = DockStyle.Top,
+                    Height = 28,
+                    BackColor = header,
+                    ForeColor = fg,
+                    Font = new Font("微软雅黑", 10F, FontStyle.Bold),
+                    TextAlign = ContentAlignment.MiddleLeft,
+                    Padding = new Padding(10, 0, 0, 0),
+                    Text = parseError != null
+                        ? $"  解析告警：{parseError}"
+                        : $"  最近 {rows.Count} 条记录（按时间倒序）"
+                };
+
+                var dgv = new DataGridView
+                {
+                    Dock = DockStyle.Fill,
+                    BackgroundColor = bg,
+                    BorderStyle = BorderStyle.None,
+                    GridColor = border,
+                    AllowUserToAddRows = false,
+                    AllowUserToDeleteRows = false,
+                    ReadOnly = true,
+                    RowHeadersVisible = false,
+                    EnableHeadersVisualStyles = false,
+                    SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                    MultiSelect = false,
+                    AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+                    Font = new Font("微软雅黑", 9F),
+                    ColumnHeadersHeight = 30,
+                };
+                dgv.DefaultCellStyle.BackColor = bg;
+                dgv.DefaultCellStyle.ForeColor = fg;
+                dgv.DefaultCellStyle.SelectionBackColor = header;
+                dgv.DefaultCellStyle.SelectionForeColor = fg;
+                dgv.AlternatingRowsDefaultCellStyle.BackColor = altRow;
+                dgv.AlternatingRowsDefaultCellStyle.ForeColor = fg;
+                dgv.ColumnHeadersDefaultCellStyle.BackColor = header;
+                dgv.ColumnHeadersDefaultCellStyle.ForeColor = fg;
+                dgv.ColumnHeadersDefaultCellStyle.Font = new Font("微软雅黑", 9.5F, FontStyle.Bold);
+                dgv.ColumnHeadersDefaultCellStyle.SelectionBackColor = header;
+                dgv.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
+
+                dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "Time", HeaderText = "时间", FillWeight = 18 });
+                dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "SerialNumber", HeaderText = "SN", FillWeight = 18 });
+                dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "Side", HeaderText = "面", FillWeight = 5 });
+                dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "MinioIp", HeaderText = "MinioIP", FillWeight = 14 });
+                dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "MinioPort", HeaderText = "MinioPort", FillWeight = 8 });
+                dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "ResultPath", HeaderText = "结果路径", FillWeight = 37 });
+
+                foreach (var r in rows)
+                {
+                    dgv.Rows.Add(r.Time, r.SerialNumber, r.Side, r.MinioIp, r.MinioPort, r.ResultPath);
+                }
+
+                dlg.Controls.Add(dgv);
+                dlg.Controls.Add(top);
+                dlg.ShowDialog();
+            }
+        }
+
+        /// <summary>
+        /// 用于在 DataGridView 中展示一条 AVI 数据
+        /// </summary>
+        private class AviTestRow
+        {
+            public string Time { get; set; }
+            public string SerialNumber { get; set; }
+            public string Side { get; set; }
+            public string MinioIp { get; set; }
+            public string MinioPort { get; set; }
+            public string ResultPath { get; set; }
         }
 
         #endregion
