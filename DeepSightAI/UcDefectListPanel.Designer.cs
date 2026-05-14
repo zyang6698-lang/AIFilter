@@ -35,11 +35,15 @@ namespace DeepSightAI
             this.tableLayoutPanel_GridTop = new System.Windows.Forms.TableLayoutPanel();
             this.txt_SnFilter = new System.Windows.Forms.TextBox();
             this.btn_SnSearch = new DeepSightAI.StyledButton();
-            this.btn_AddToDataset = new DeepSightAI.StyledButton();
-            this.btn_RunTest = new DeepSightAI.StyledButton();
-            this.btn_SecondaryInference = new DeepSightAI.StyledButton();
+            this.btn_ImageDetail = new DeepSightAI.StyledButton();
+            this.btn_MoreActions = new DeepSightAI.StyledButton();
+            this.contextMenu_Actions = new System.Windows.Forms.ContextMenuStrip();
+            this.menuItem_AddToDataset = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuItem_RunTest = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuItem_SecondaryInference = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView_Defects)).BeginInit();
             this.tableLayoutPanel_GridTop.SuspendLayout();
+            this.contextMenu_Actions.SuspendLayout();
             this.SuspendLayout();
             //
             // dataGridView_Defects
@@ -125,18 +129,16 @@ namespace DeepSightAI
             // tableLayoutPanel_GridTop
             //
             this.tableLayoutPanel_GridTop.BackColor = System.Drawing.Color.FromArgb(29, 48, 60);
-            this.tableLayoutPanel_GridTop.ColumnCount = 6;
+            this.tableLayoutPanel_GridTop.ColumnCount = 5;
             this.tableLayoutPanel_GridTop.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 240F));
             this.tableLayoutPanel_GridTop.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 70F));
             this.tableLayoutPanel_GridTop.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel_GridTop.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 160F));
-            this.tableLayoutPanel_GridTop.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 130F));
-            this.tableLayoutPanel_GridTop.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 130F));
+            this.tableLayoutPanel_GridTop.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 110F));
+            this.tableLayoutPanel_GridTop.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 120F));
             this.tableLayoutPanel_GridTop.Controls.Add(this.txt_SnFilter, 0, 0);
             this.tableLayoutPanel_GridTop.Controls.Add(this.btn_SnSearch, 1, 0);
-            this.tableLayoutPanel_GridTop.Controls.Add(this.btn_AddToDataset, 3, 0);
-            this.tableLayoutPanel_GridTop.Controls.Add(this.btn_RunTest, 4, 0);
-            this.tableLayoutPanel_GridTop.Controls.Add(this.btn_SecondaryInference, 5, 0);
+            this.tableLayoutPanel_GridTop.Controls.Add(this.btn_ImageDetail, 3, 0);
+            this.tableLayoutPanel_GridTop.Controls.Add(this.btn_MoreActions, 4, 0);
             this.tableLayoutPanel_GridTop.Dock = System.Windows.Forms.DockStyle.Top;
             this.tableLayoutPanel_GridTop.Margin = new System.Windows.Forms.Padding(0);
             this.tableLayoutPanel_GridTop.Name = "tableLayoutPanel_GridTop";
@@ -171,47 +173,65 @@ namespace DeepSightAI
             this.btn_SnSearch.Text = "搜索";
             this.btn_SnSearch.UseVisualStyleBackColor = false;
             //
-            // btn_AddToDataset
+            // contextMenu_Actions（深色主题菜单）
             //
-            this.btn_AddToDataset.BackColor = System.Drawing.Color.FromArgb(0, 64, 82);
-            this.btn_AddToDataset.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btn_AddToDataset.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btn_AddToDataset.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btn_AddToDataset.Font = new System.Drawing.Font("微软雅黑", 9F);
-            this.btn_AddToDataset.ForeColor = System.Drawing.Color.FromArgb(216, 219, 188);
-            this.btn_AddToDataset.Margin = new System.Windows.Forms.Padding(2);
-            this.btn_AddToDataset.Name = "btn_AddToDataset";
-            this.btn_AddToDataset.TabIndex = 2;
-            this.btn_AddToDataset.Text = "添加到一致性数据集";
-            this.btn_AddToDataset.UseVisualStyleBackColor = false;
+            this.contextMenu_Actions.BackColor = System.Drawing.Color.FromArgb(35, 55, 70);
+            this.contextMenu_Actions.Font = new System.Drawing.Font("微软雅黑", 9F);
+            this.contextMenu_Actions.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+                this.menuItem_AddToDataset,
+                this.menuItem_RunTest,
+                this.menuItem_SecondaryInference });
+            this.contextMenu_Actions.Name = "contextMenu_Actions";
+            this.contextMenu_Actions.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
             //
-            // btn_RunTest
+            // menuItem_AddToDataset
             //
-            this.btn_RunTest.BackColor = System.Drawing.Color.FromArgb(0, 64, 82);
-            this.btn_RunTest.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btn_RunTest.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btn_RunTest.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btn_RunTest.Font = new System.Drawing.Font("微软雅黑", 9F);
-            this.btn_RunTest.ForeColor = System.Drawing.Color.FromArgb(216, 219, 188);
-            this.btn_RunTest.Margin = new System.Windows.Forms.Padding(2);
-            this.btn_RunTest.Name = "btn_RunTest";
-            this.btn_RunTest.TabIndex = 3;
-            this.btn_RunTest.Text = "模型一致性测试";
-            this.btn_RunTest.UseVisualStyleBackColor = false;
+            this.menuItem_AddToDataset.BackColor = System.Drawing.Color.FromArgb(35, 55, 70);
+            this.menuItem_AddToDataset.ForeColor = System.Drawing.Color.FromArgb(216, 219, 188);
+            this.menuItem_AddToDataset.Name = "menuItem_AddToDataset";
+            this.menuItem_AddToDataset.Text = "添加到一致性数据集";
             //
-            // btn_SecondaryInference
+            // menuItem_RunTest
             //
-            this.btn_SecondaryInference.BackColor = System.Drawing.Color.FromArgb(0, 64, 82);
-            this.btn_SecondaryInference.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btn_SecondaryInference.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btn_SecondaryInference.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btn_SecondaryInference.Font = new System.Drawing.Font("微软雅黑", 9F);
-            this.btn_SecondaryInference.ForeColor = System.Drawing.Color.FromArgb(216, 219, 188);
-            this.btn_SecondaryInference.Margin = new System.Windows.Forms.Padding(2);
-            this.btn_SecondaryInference.Name = "btn_SecondaryInference";
-            this.btn_SecondaryInference.TabIndex = 4;
-            this.btn_SecondaryInference.Text = "运行二次推理";
-            this.btn_SecondaryInference.UseVisualStyleBackColor = false;
+            this.menuItem_RunTest.BackColor = System.Drawing.Color.FromArgb(35, 55, 70);
+            this.menuItem_RunTest.ForeColor = System.Drawing.Color.FromArgb(216, 219, 188);
+            this.menuItem_RunTest.Name = "menuItem_RunTest";
+            this.menuItem_RunTest.Text = "模型一致性测试";
+            //
+            // menuItem_SecondaryInference
+            //
+            this.menuItem_SecondaryInference.BackColor = System.Drawing.Color.FromArgb(35, 55, 70);
+            this.menuItem_SecondaryInference.ForeColor = System.Drawing.Color.FromArgb(216, 219, 188);
+            this.menuItem_SecondaryInference.Name = "menuItem_SecondaryInference";
+            this.menuItem_SecondaryInference.Text = "运行二次推理";
+            //
+            // btn_ImageDetail
+            //
+            this.btn_ImageDetail.BackColor = System.Drawing.Color.FromArgb(0, 100, 120);
+            this.btn_ImageDetail.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btn_ImageDetail.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.btn_ImageDetail.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btn_ImageDetail.Font = new System.Drawing.Font("微软雅黑", 9F);
+            this.btn_ImageDetail.ForeColor = System.Drawing.Color.FromArgb(180, 230, 240);
+            this.btn_ImageDetail.Margin = new System.Windows.Forms.Padding(2);
+            this.btn_ImageDetail.Name = "btn_ImageDetail";
+            this.btn_ImageDetail.TabIndex = 2;
+            this.btn_ImageDetail.Text = "🖼 图片详情";
+            this.btn_ImageDetail.UseVisualStyleBackColor = false;
+            //
+            // btn_MoreActions
+            //
+            this.btn_MoreActions.BackColor = System.Drawing.Color.FromArgb(0, 64, 82);
+            this.btn_MoreActions.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btn_MoreActions.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.btn_MoreActions.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btn_MoreActions.Font = new System.Drawing.Font("微软雅黑", 9F);
+            this.btn_MoreActions.ForeColor = System.Drawing.Color.FromArgb(216, 219, 188);
+            this.btn_MoreActions.Margin = new System.Windows.Forms.Padding(2);
+            this.btn_MoreActions.Name = "btn_MoreActions";
+            this.btn_MoreActions.TabIndex = 3;
+            this.btn_MoreActions.Text = "更多操作 ▾";
+            this.btn_MoreActions.UseVisualStyleBackColor = false;
             //
             // UcDefectListPanel
             //
@@ -227,6 +247,7 @@ namespace DeepSightAI
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView_Defects)).EndInit();
             this.tableLayoutPanel_GridTop.ResumeLayout(false);
             this.tableLayoutPanel_GridTop.PerformLayout();
+            this.contextMenu_Actions.ResumeLayout(false);
             this.ResumeLayout(false);
         }
 
@@ -247,8 +268,11 @@ namespace DeepSightAI
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel_GridTop;
         private System.Windows.Forms.TextBox txt_SnFilter;
         private DeepSightAI.StyledButton btn_SnSearch;
-        private DeepSightAI.StyledButton btn_AddToDataset;
-        private DeepSightAI.StyledButton btn_RunTest;
-        private DeepSightAI.StyledButton btn_SecondaryInference;
+        private DeepSightAI.StyledButton btn_ImageDetail;
+        private DeepSightAI.StyledButton btn_MoreActions;
+        private System.Windows.Forms.ContextMenuStrip contextMenu_Actions;
+        private System.Windows.Forms.ToolStripMenuItem menuItem_AddToDataset;
+        private System.Windows.Forms.ToolStripMenuItem menuItem_RunTest;
+        private System.Windows.Forms.ToolStripMenuItem menuItem_SecondaryInference;
     }
 }

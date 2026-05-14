@@ -141,6 +141,7 @@ namespace DeepSightAI
             ucDefectListPanel.RunTestClicked += ToolStripMenuItem_RunTest_Click;
             ucDefectListPanel.SecondaryInferenceClicked += ToolStripMenuItem_SecondaryInference_Click;
             ucDefectListPanel.AddToDatasetClicked += ToolStripMenuItem_AddToDataset_Click;
+            ucDefectListPanel.ImageDetailClicked += UcDefectListPanel_ImageDetailClicked;
 
             // 订阅详情控件的切换下一行事件
             defectDetailControl1.SelectNextRowRequested += DefectDetailControl_SelectNextRowRequested;
@@ -295,6 +296,32 @@ namespace DeepSightAI
             tabControl_Main.SelectedTab = tabPage_Details;
             defectDetailControl1.DisplayDefectDetails(selectedItem);
             EnterSnReviewMode(selectedItem);
+        }
+
+        /// <summary>
+        /// 点击"图片详情"按钮：加载当前 Lot 的全部缺陷图片到详情页展示。
+        /// </summary>
+        private void UcDefectListPanel_ImageDetailClicked(object sender, EventArgs e)
+        {
+            // 优先使用当前已加载到 DGV 的条目；若 DGV 为空则回退到 _allDefectItems 中当前 Lot 的数据
+            List<DefectReviewItem> items = _defectItems?.Count > 0
+                ? _defectItems
+                : (_allDefectItems?.Count > 0 && !string.IsNullOrEmpty(_currentReviewLot)
+                    ? _allDefectItems.Where(x => x.LotNumber == _currentReviewLot).ToList()
+                    : null);
+
+            if (items == null || items.Count == 0)
+            {
+                MessageBox.Show("暂无缺陷数据，请先查询并选择 Lot。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            string lotTitle = string.IsNullOrEmpty(_currentReviewLot)
+                ? $"全部 ({items.Count} 条)"
+                : $"Lot: {_currentReviewLot}  ({items.Count} 条)";
+
+            tabControl_Main.SelectedTab = tabPage_Details;
+            defectDetailControl1.DisplayDefectDetails(items, lotTitle);
         }
 
         private void DefectDetailControl_SelectNextRowRequested(object sender, EventArgs e)
@@ -824,6 +851,11 @@ namespace DeepSightAI
             // 联动帕累托图与热力图（两段式第二阶段没有 QueryClicked 事件，需显式驱动）
             paretoChart1?.ShowLot(lotNumber, lotItems);
             _ = heatMapControl1?.RefreshForCurrentQueryAsync();
+
+            // 同步加载图片详情（切换 Lot 时自动填充详情页）
+            defectDetailControl1.DisplayDefectDetails(
+                _defectItems,
+                $"Lot: {lotNumber}  ({_defectItems.Count} 条)");
 
             UpdateVvsStatusSummary();
             RefreshReviewDetailDisplay();

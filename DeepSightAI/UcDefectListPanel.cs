@@ -27,14 +27,17 @@ namespace DeepSightAI
         /// <summary>双击某行时触发（用于跳转到缺陷详情页）</summary>
         public event Action<DefectReviewItem> ItemDoubleClicked;
 
-        /// <summary>点击"模型一致性测试"按钮时触发</summary>
+        /// <summary>点击"模型一致性测试"菜单项时触发</summary>
         public event EventHandler RunTestClicked;
 
-        /// <summary>点击"运行二次推理"按钮时触发</summary>
+        /// <summary>点击"运行二次推理"菜单项时触发</summary>
         public event EventHandler SecondaryInferenceClicked;
 
-        /// <summary>点击"添加到数据集"按钮时触发</summary>
+        /// <summary>点击"添加到数据集"菜单项时触发</summary>
         public event EventHandler AddToDatasetClicked;
+
+        /// <summary>点击"图片详情"按钮时触发</summary>
+        public event EventHandler ImageDetailClicked;
 
         #endregion
 
@@ -55,9 +58,18 @@ namespace DeepSightAI
             // 工具栏按钮事件
             btn_SnSearch.Click += (s, e) => FilterBySn();
             txt_SnFilter.KeyDown += OnSnFilterKeyDown;
-            btn_RunTest.Click += (s, e) => RunTestClicked?.Invoke(this, EventArgs.Empty);
-            btn_SecondaryInference.Click += (s, e) => SecondaryInferenceClicked?.Invoke(this, EventArgs.Empty);
-            btn_AddToDataset.Click += (s, e) => AddToDatasetClicked?.Invoke(this, EventArgs.Empty);
+
+            // 图片详情按钮
+            btn_ImageDetail.Click += (s, e) => ImageDetailClicked?.Invoke(this, EventArgs.Empty);
+
+            // 更多操作下拉菜单
+            btn_MoreActions.Click += (s, e) =>
+            {
+                contextMenu_Actions.Show(btn_MoreActions, 0, btn_MoreActions.Height);
+            };
+            menuItem_RunTest.Click += (s, e) => RunTestClicked?.Invoke(this, EventArgs.Empty);
+            menuItem_SecondaryInference.Click += (s, e) => SecondaryInferenceClicked?.Invoke(this, EventArgs.Empty);
+            menuItem_AddToDataset.Click += (s, e) => AddToDatasetClicked?.Invoke(this, EventArgs.Empty);
         }
 
         #endregion
