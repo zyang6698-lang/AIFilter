@@ -270,6 +270,10 @@ namespace DeepSightAI
             timePickerEnd.Value = DateTime.Today;
             timePicker.Checked = true;
 
+            // 切换日期时清空 Lot 列表，避免残留的 Lot 文本导致按 Lot 号查询而忽略新日期
+            timePicker.ValueChanged += TimePicker_ValueChanged;
+            timePickerEnd.ValueChanged += TimePicker_ValueChanged;
+
             // 绑定料号、机台号、缺陷名称下拉框的选择变化事件
             cmb_PartNumber.SelectedIndexChanged += Cmb_PartNumber_SelectedIndexChanged;
             cmb_MachineID.SelectedIndexChanged += Cmb_MachineID_SelectedIndexChanged;
@@ -282,6 +286,16 @@ namespace DeepSightAI
 
             // "仅显示 AVI NG" 变化时也按筛选变化处理
             chk_OnlyAviNg.CheckedChanged += Chk_OnlyAviNg_CheckedChanged;
+        }
+
+        /// <summary>
+        /// 日期选择器值变化时清空 Lot 列表和文本，
+        /// 防止下次查询因 Lot 非空而走 Lot 号分支忽略新日期。
+        /// </summary>
+        private void TimePicker_ValueChanged(object sender, EventArgs e)
+        {
+            cmb_Lot.Items.Clear();
+            cmb_Lot.Text = string.Empty;
         }
 
         private void Chk_OnlyAviNg_CheckedChanged(object sender, EventArgs e)
@@ -332,10 +346,35 @@ namespace DeepSightAI
         /// <summary>
         /// 料号下拉框选择变化事件处理
         /// </summary>
-        private void Cmb_PartNumber_SelectedIndexChanged(object sender, EventArgs e)
+        private async void Cmb_PartNumber_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // 当选中非"全部"选项时，触发筛选变化事件
-            if (!_suppressFilterChanged && QueryResult != null && QueryResult.Count > 0)
+            if (_suppressFilterChanged) return;
+
+            // 两段式查询模式（IsLotListOnly = true）：选中料号后重新加载该料号下的 Lot 列表
+            if (IsLotListOnly && timePicker.Checked)
+            {
+                DateTime startDate = timePicker.Value.Date;
+                DateTime endDate = timePickerEnd.Value.Date.AddDays(1).AddTicks(-1);
+                string selectedPartNumber = string.IsNullOrEmpty(PartNumber) ? null : PartNumber;
+
+                var lots = await Machine.master.GetLotNumbersByDateRange(startDate, endDate, selectedPartNumber);
+
+                _suppressFilterChanged = true;
+                try
+                {
+                    SetLotItems(lots);
+                    // 清空当前选中的 Lot，让用户重新选择
+                    cmb_Lot.Text = string.Empty;
+                }
+                finally
+                {
+                    _suppressFilterChanged = false;
+                }
+                return;
+            }
+
+            // 已加载明细模式：触发筛选变化事件
+            if (QueryResult != null && QueryResult.Count > 0)
             {
                 FilterChanged?.Invoke(this, EventArgs.Empty);
             }
@@ -418,14 +457,33 @@ namespace DeepSightAI
                         return;
                     }
 
-                    // 两段式加载：先仅取 Lot 列表填充下拉框，明细推迟到用户选 Lot 后再加载
+                    // 两段式加载：先取料号列表和 Lot 列表填充下拉框，明细推迟到用户选 Lot 后再加载
+                    string selectedPartNumber = string.IsNullOrEmpty(PartNumber) ? null : PartNumber;
                     var lots = await Machine.master.GetLotNumbersByDateRange(
-                        startDate, endDate,
-                        string.IsNullOrEmpty(PartNumber) ? null : PartNumber);
+                        startDate, endDate, selectedPartNumber);
+                    var partNumbers = await Machine.master.GetPartNumbersByDateRange(startDate, endDate);
 
                     _suppressFilterChanged = true;
                     try
                     {
+                        // 填充料号列表
+                        cmb_PartNumber.Items.Clear();
+                        cmb_PartNumber.Items.Add("全部");
+                        foreach (var pn in partNumbers)
+                        {
+                            cmb_PartNumber.Items.Add(pn);
+                        }
+                        // 保持之前选中的料号，如果之前没选则默认"全部"
+                        if (string.IsNullOrEmpty(selectedPartNumber))
+                        {
+                            cmb_PartNumber.SelectedIndex = 0;
+                        }
+                        else
+                        {
+                            int idx = cmb_PartNumber.Items.IndexOf(selectedPartNumber);
+                            cmb_PartNumber.SelectedIndex = idx >= 0 ? idx : 0;
+                        }
+
                         SetLotItems(lots);
                     }
                     finally
@@ -442,16 +500,20 @@ namespace DeepSightAI
                 }
 
                 // 填充料号、机台号和缺陷名称列表（抑制 FilterChanged 事件，避免重复刷新）
-                _suppressFilterChanged = true;
-                try
+                // 两段式查询第一阶段已在上面手动填充了料号列表，此处跳过避免被空 QueryResult 覆盖
+                if (!IsLotListOnly)
                 {
-                    UpdatePartNumberList();
-                    UpdateMachineIDList();
-                    UpdateDefectNameList();
-                }
-                finally
-                {
-                    _suppressFilterChanged = false;
+                    _suppressFilterChanged = true;
+                    try
+                    {
+                        UpdatePartNumberList();
+                        UpdateMachineIDList();
+                        UpdateDefectNameList();
+                    }
+                    finally
+                    {
+                        _suppressFilterChanged = false;
+                    }
                 }
 
                 // 仅在加载了明细时合并 VRS 历史；两段式第一阶段无明细，跳过

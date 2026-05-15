@@ -72,6 +72,7 @@ namespace DeepSightAI
             this.btnClear = new System.Windows.Forms.ToolStripButton();
             this.btnPipelineMonitor = new System.Windows.Forms.ToolStripButton();
             this.btnMenuGenerateInference = new System.Windows.Forms.ToolStripButton();
+            this.btnAviHistory = new System.Windows.Forms.ToolStripButton();
             this.lbl_title = new System.Windows.Forms.Label();
             this.panel_r = new System.Windows.Forms.Panel();
             this.btnClose = new System.Windows.Forms.Button();
@@ -541,6 +542,7 @@ namespace DeepSightAI
             this.btnClear,
             this.btnPipelineMonitor,
             this.btnMenuGenerateInference,
+            this.btnAviHistory,
             this.toolStripButton1});
             this.toolStrip.Location = new System.Drawing.Point(0, 48);
             this.toolStrip.Name = "toolStrip";
@@ -588,6 +590,15 @@ namespace DeepSightAI
             this.btnMenuGenerateInference.Size = new System.Drawing.Size(106, 28);
             this.btnMenuGenerateInference.Text = "生成推理请求";
             this.btnMenuGenerateInference.Click += new System.EventHandler(this.btnMenuGenerateInference_Click);
+            //
+            // btnAviHistory
+            //
+            this.btnAviHistory.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.btnAviHistory.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(219)))), ((int)(((byte)(188)))));
+            this.btnAviHistory.Name = "btnAviHistory";
+            this.btnAviHistory.Size = new System.Drawing.Size(106, 28);
+            this.btnAviHistory.Text = "AVI历史数据";
+            this.btnAviHistory.Click += new System.EventHandler(this.btnAviHistory_Click);
             //
             // lbl_title
             // 
@@ -775,6 +786,7 @@ namespace DeepSightAI
         private System.Windows.Forms.ToolStripButton btnClear;
         private System.Windows.Forms.ToolStripButton btnPipelineMonitor;
         private System.Windows.Forms.ToolStripButton btnMenuGenerateInference;
+        private System.Windows.Forms.ToolStripButton btnAviHistory;
         private System.Windows.Forms.ToolStripButton toolStripButton1;
         public System.Windows.Forms.ToolStrip toolStrip;
         public System.Windows.Forms.Label lbl_title;

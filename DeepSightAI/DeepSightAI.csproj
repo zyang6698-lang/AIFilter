@@ -338,6 +338,12 @@
       <DependentUpon>FrmAlarm.cs</DependentUpon>
     </Compile>
     <Compile Include="ToastNotifier.cs" />
+    <Compile Include="FrmAviHistory.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmAviHistory.Designer.cs">
+      <DependentUpon>FrmAviHistory.cs</DependentUpon>
+    </Compile>
     <Compile Include="FrmLotHistory.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -499,6 +505,9 @@
     </Compile>
     <EmbeddedResource Include="FrmAiReview.resx">
       <DependentUpon>FrmAiReview.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmAviHistory.resx">
+      <DependentUpon>FrmAviHistory.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UcDefectListPanel.resx">
       <DependentUpon>UcDefectListPanel.cs</DependentUpon>

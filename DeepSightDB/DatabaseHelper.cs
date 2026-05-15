@@ -1322,6 +1322,47 @@ namespace DeepSightDB
         }
 
         /// <summary>
+        /// 按日期范围获取去重后的料号列表，按料号升序。
+        /// </summary>
+        public Task<List<string>> GetPartNumbersByDateRange(DateTime start, DateTime end)
+        {
+            var tcs = new TaskCompletionSource<List<string>>();
+            _dbQueue.Add(connection =>
+            {
+                try
+                {
+                    var partNumbers = new List<string>();
+                    var sql = @"
+                        SELECT DISTINCT ProductSerial
+                        FROM Panels
+                        WHERE DetectionDate >= @Start AND DetectionDate <= @End
+                          AND ProductSerial IS NOT NULL AND ProductSerial <> ''
+                        ORDER BY ProductSerial";
+
+                    using (var cmd = new NpgsqlCommand(sql, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@Start", start);
+                        cmd.Parameters.AddWithValue("@End", end);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                partNumbers.Add(reader.GetString(0));
+                            }
+                        }
+                    }
+                    tcs.SetResult(partNumbers);
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error($"按日期范围获取料号列表失败: {ex.Message}");
+                    tcs.SetException(ex);
+                }
+            });
+            return tcs.Task;
+        }
+
+        /// <summary>
         /// 按日期范围获取去重后的 Lot 号列表（可选按料号过滤），按该范围内最新检测时间倒序。
         /// </summary>
         public Task<List<string>> GetLotNumbersByDateRange(DateTime start, DateTime end, string partNumber = null)

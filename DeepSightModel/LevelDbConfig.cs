@@ -92,6 +92,12 @@ namespace DeepSightModel
         public string MinioIpB { get; set; } = "127.0.0.1";
 
         /// <summary>
+        /// 上次读取游标时间（持久化保存，用于断点续读）
+        /// </summary>
+        [JsonProperty("last_fetch_time")]
+        public DateTime? LastFetchTime { get; set; }
+
+        /// <summary>
         /// AVI 侧完整 URL（自动加 http:// 前缀；用于 AVI 源读取 + AVI 回写）
         /// </summary>
         [JsonIgnore]

@@ -17,6 +17,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DeepSightWorkLib
@@ -148,10 +149,10 @@ namespace DeepSightWorkLib
                 bool previousValue = _isStart;
                 _isStart = value;
 
-                // 当从 false 变为 true 时，重置所有数据库的 fetchTime 为当前时间
+                // 当从 false 变为 true 时，加载持久化的 fetchTime（不再重置为当前时间）
                 if (!previousValue && value)
                 {
-                    _aviReaderService.ResetAllFetchTimes();
+                    _aviReaderService.LoadPersistedFetchTimes();
                 }
                 // 停止后自动将暂存数据库信息写入
                 if (previousValue&& !value)
@@ -160,6 +161,74 @@ namespace DeepSightWorkLib
                     BoardStatCache.Flush();
                 }
             }
+        }
+
+        /// <summary>
+        /// 获取所有启用数据库中最早的持久化 fetchTime（供 UI 判断是否有未处理数据）
+        /// </summary>
+        public DateTime GetEarliestFetchTime()
+        {
+            return _aviReaderService.GetEarliestFetchTime();
+        }
+
+        /// <summary>
+        /// 重置所有 fetchTime 为当前时间（跳过未处理数据时调用）
+        /// </summary>
+        public void ResetAllFetchTimes()
+        {
+            _aviReaderService.ResetAllFetchTimes();
+        }
+
+        /// <summary>
+        /// 检查 fetchTime 到当前时间之间是否有待处理的推理请求，返回总条数
+        /// </summary>
+        public int CheckPendingDataCount()
+        {
+            return _aviReaderService.CheckPendingDataCount();
+        }
+
+        /// <summary>
+        /// 检查每个启用数据库的待处理推理请求，返回各数据库的详细信息
+        /// </summary>
+        public List<PendingDataInfo> CheckPendingDataCountPerDb()
+        {
+            return _aviReaderService.CheckPendingDataCountPerDb();
+        }
+
+        /// <summary>
+        /// 从所有启用数据库读取待处理数据并暂存（不发送推理请求），同时更新 fetchTime。
+        /// </summary>
+        public PreparedPendingData ReadAndHoldPendingData()
+        {
+            return _aviReaderService.ReadAndHoldAllAVI();
+        }
+
+        /// <summary>
+        /// 在后台以限流速率（1秒/条）释放暂存的推理请求到处理管线。
+        /// 调用后立即返回，释放过程在后台线程执行。
+        /// </summary>
+        public void ReleaseHeldDataThrottled(List<AviProcessingContext> contexts)
+        {
+            if (contexts == null || contexts.Count == 0) return;
+
+            LogTextHelper.Info($"开始以 1秒/条 速率释放 {contexts.Count} 条历史推理请求...");
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                int released = 0;
+                foreach (var ctx in contexts)
+                {
+                    if (!IsStart) // 如果用户中途停止，则终止释放
+                    {
+                        LogTextHelper.Info($"作业已停止，终止历史数据释放（已释放 {released}/{contexts.Count}）");
+                        return;
+                    }
+                    _aviReaderService.ReleaseHeldContext(ctx);
+                    released++;
+                    if (released < contexts.Count)
+                        Thread.Sleep(1000); // 1秒间隔
+                }
+                LogTextHelper.Info($"历史推理请求释放完毕，共 {released} 条");
+            });
         }
 
         /// <summary>
@@ -640,6 +709,9 @@ namespace DeepSightWorkLib
 
         public Task<List<string>> GetLotNumbersByDateRange(DateTime start, DateTime end, string partNumber = null) =>
             _databaseHelper.GetLotNumbersByDateRange(start, end, partNumber);
+
+        public Task<List<string>> GetPartNumbersByDateRange(DateTime start, DateTime end) =>
+            _databaseHelper.GetPartNumbersByDateRange(start, end);
         #endregion
 
         #region 统计信息

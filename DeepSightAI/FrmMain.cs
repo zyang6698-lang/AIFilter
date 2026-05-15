@@ -4,6 +4,7 @@ using DeepSightEvent;
 using DeepSightModel;
 using DeepSightModel.Configuration;
 using DeepSightTool;
+using DeepSightWorkLib.Services;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -13,6 +14,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -710,6 +712,12 @@ namespace DeepSightAI
             {
                 if (!Machine.master.IsStart)
                 {
+                    // ── 阻塞式检查历史待处理数据 ──
+                    if (!CheckAndConfirmPendingData())
+                    {
+                        // 仅当弹窗流程正常走完后才继续启动
+                    }
+
                     Machine.master.IsStart = true;
                     btnStart.Image = Resources.pause2;
                     if (Machine.HasAgentMachines)
@@ -734,14 +742,98 @@ namespace DeepSightAI
 
                     LogTextHelper.Info("暂停作业...");
                 }
-                return;
             }
             catch (Exception)
             {
-
                 throw;
             }
+        }
 
+        /// <summary>
+        /// 阻塞式检查历史待处理数据，弹窗确认后按 1秒/条 释放。
+        /// 返回 true 表示有数据且用户确认处理。
+        /// </summary>
+        private bool CheckAndConfirmPendingData()
+        {
+            try
+            {
+                var earliestFetchTime = Machine.master.GetEarliestFetchTime();
+                if (earliestFetchTime <= DateTime.MinValue)
+                    return false;
+
+                var gap = DateTime.Now - earliestFetchTime;
+
+                // 时间跨度 > 1天，不去读取，直接弹窗提示跳过
+                if (gap.TotalDays > 1)
+                {
+                    string gapText = $"{gap.TotalDays:F1} 天";
+                    MessageBox.Show(
+                        $"上次停止时间为 {earliestFetchTime:yyyy-MM-dd HH:mm:ss}，距今已超过 {gapText}。\n\n" +
+                        "时间跨度超过 1 天，将跳过历史数据，从当前时间开始。",
+                        "历史数据跳过",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+
+                    Machine.master.ResetAllFetchTimes();
+                    LogTextHelper.Info($"历史数据跨度超过1天（{gapText}），自动跳过，fetchTime 已重置");
+                    return false;
+                }
+
+                // 阻塞式读取历史数据并暂存
+                LogTextHelper.Info($"正在读取 {earliestFetchTime:yyyy-MM-dd HH:mm:ss} 至今的待处理数据...");
+                var prepared = Machine.master.ReadAndHoldPendingData();
+
+                if (!prepared.HasData)
+                    return false;
+
+                // 构建分数据库的详细信息
+                int totalCount = 0;
+                var sb = new StringBuilder();
+                sb.AppendLine("检测到以下数据库存在待处理推理请求：\n");
+
+                foreach (var info in prepared.DbInfos)
+                {
+                    var dbGap = DateTime.Now - info.FetchTime;
+                    string dbGapText = dbGap.TotalHours >= 1
+                        ? $"{dbGap.TotalHours:F1} 小时"
+                        : $"{dbGap.TotalMinutes:F0} 分钟";
+
+                    sb.AppendLine($"  ● {info.DisplayName}");
+                    sb.AppendLine($"    上次停止：{info.FetchTime:yyyy-MM-dd HH:mm:ss}（距今 {dbGapText}）");
+                    sb.AppendLine($"    待处理：{info.PendingCount} 条");
+                    sb.AppendLine();
+                    totalCount += info.PendingCount;
+                }
+
+                sb.AppendLine($"合计：{totalCount} 条待处理推理请求\n");
+                sb.AppendLine("是否对这些数据执行推理？（确认后将以 1秒/片 速率发送）\n");
+                sb.AppendLine("【是】→ 发送这些历史推理请求");
+                sb.AppendLine("【否】→ 跳过这些数据，从当前时间开始");
+
+                var result = MessageBox.Show(
+                    sb.ToString(),
+                    "待处理数据确认",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
+
+                if (result == DialogResult.Yes)
+                {
+                    LogTextHelper.Info($"用户确认处理 {totalCount} 条历史数据，将以 1秒/条 速率释放");
+                    Machine.master.ReleaseHeldDataThrottled(prepared.HeldContexts);
+                    return true;
+                }
+                else
+                {
+                    Machine.master.ResetAllFetchTimes();
+                    LogTextHelper.Info($"用户选择跳过 {totalCount} 条历史数据，fetchTime 已重置为当前时间");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"检查待处理数据异常: {ex.Message}");
+                return false;
+            }
         }
         private void btnPause_Click(object sender, EventArgs e)
         {
@@ -1100,6 +1192,24 @@ namespace DeepSightAI
             {
                 LogTextHelper.Error("菜单栏触发生成推理请求失败", ex);
                 MessageBox.Show($"生成推理请求失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private FrmAviHistory _aviHistory;
+
+        private void btnAviHistory_Click(object sender, EventArgs e)
+        {
+            if (_aviHistory == null || _aviHistory.IsDisposed)
+            {
+                _aviHistory = new FrmAviHistory();
+            }
+            if (!_aviHistory.Visible)
+            {
+                _aviHistory.Show(this);
+            }
+            else
+            {
+                _aviHistory.BringToFront();
             }
         }
 

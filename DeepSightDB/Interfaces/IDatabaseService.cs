@@ -102,6 +102,11 @@ namespace DeepSightDB.Interfaces
         /// <param name="end">结束时间</param>
         /// <param name="partNumber">料号（可选）</param>
         Task<List<string>> GetLotNumbersByDateRange(DateTime start, DateTime end, string partNumber = null);
+
+        /// <summary>
+        /// 按日期范围获取去重后的料号列表，按料号升序。
+        /// </summary>
+        Task<List<string>> GetPartNumbersByDateRange(DateTime start, DateTime end);
     }
 }
 
