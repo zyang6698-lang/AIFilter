@@ -112,24 +112,25 @@ namespace DeepSightWorkLib.Services
                 {
                     ResultInfo res = new ResultInfo
                     {
-                        ResultInfos = $"{info.Side}_{info.DirectReportPcsIndices[i]}_{info.DirectReportDefectIndices[i]}_2",
+                        ResultInfos = $"{info.Side}_{info.DirectReportPcsIndices[i]}_{info.DirectReportDefectIndices[i]}_4",
                         Details = new Details()
                     };
                     results.Add(res);
 
                     aIDetailResults.Add(new AIDetailResultItem()
                     {
-                        Index = info.DefectIndex[i],
-                        PcsIndex = info.PcsIndex[i],
+                        Index = info.DirectReportDefectIndices[i],
+                        PcsIndex = info.DirectReportPcsIndices[i],
                         AiLabel = "NG",
                         AiClsType = "",
                         AiFlag = "experiment",
-                        DefectCode= defectNames != null && i<defectNames.Count ? defectNames[i] :null,
+                        DefectCode = null,
                         InferDetail = new Dictionary<string, object>(),
                     });
                 }
                 LogTextHelper.Info($"SN:{info.SN} 追加 {info.DirectReportDefectIndices.Count} 个直报缺陷结果");
             }
+
             WriteBackData writeBackData = new WriteBackData()
             {
                 ResultInfos = results,

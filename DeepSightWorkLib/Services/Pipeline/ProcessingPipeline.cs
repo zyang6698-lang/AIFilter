@@ -1,3 +1,4 @@
+using DeepSightModel.Configuration;
 using DeepSightTool;
 using System;
 using System.Threading;
@@ -43,6 +44,16 @@ namespace DeepSightWorkLib.Services.Pipeline
         private Action<PipelineContext> _postProcessAction;
         private Action<PipelineContext> _errorHandler;
         private Action<PipelineContext> _completionHandler;
+
+        #endregion
+
+        #region 容量配置
+
+        /// <summary>
+        /// 推理队列最大积压数量（除当前正在推理的一帧外，最多允许 N 帧已加载图片等待推理）
+        /// 对应 _inferenceBlock 和 _imageLoadBlock 的 BoundedCapacity = MaxPendingInferenceCount + 1
+        /// </summary>
+        private int _maxPendingInferenceCount = DefaultValues.MaxPendingInferenceCount;
 
         #endregion
 
@@ -118,6 +129,13 @@ namespace DeepSightWorkLib.Services.Pipeline
         public ProcessingPipeline WithCompletionHandler(Action<PipelineContext> handler)
         {
             _completionHandler = handler ?? throw new ArgumentNullException(nameof(handler));
+            return this;
+        }
+
+        /// <summary>设置推理队列最大积压数量（控制内存占用，作用于 Inference 和 ImageLoad Block 的 BoundedCapacity）</summary>
+        public ProcessingPipeline WithMaxPendingInferenceCount(int maxPendingInferenceCount)
+        {
+            _maxPendingInferenceCount = Math.Max(0, maxPendingInferenceCount);
             return this;
         }
 
@@ -269,27 +287,38 @@ namespace DeepSightWorkLib.Services.Pipeline
 
         private void BuildBlocks(int maxParallelism)
         {
-            // 所有 Block 统一不设容量上限（boundedCapacity = -1）
-            var blockOptions = new ExecutionDataflowBlockOptions
+            // 推理/图像加载阶段的容量限制 = MaxPendingInferenceCount + 1（当前正在处理的一帧 + N 帧积压）
+            int boundedCapacity = _maxPendingInferenceCount + 1;
+
+            // JSON 解析、结果回写、后处理不限制容量
+            var unboundedOptions = new ExecutionDataflowBlockOptions
             {
                 CancellationToken = _cts.Token,
                 MaxDegreeOfParallelism = maxParallelism,
                 BoundedCapacity = -1
             };
 
-            // 推理阶段固定单并行（算法通常非线程安全）
+            // 图片加载阶段：限制容量，推理慢时阻塞加载，避免内存堆积
+            var imageLoadOptions = new ExecutionDataflowBlockOptions
+            {
+                CancellationToken = _cts.Token,
+                MaxDegreeOfParallelism = maxParallelism,
+                BoundedCapacity = boundedCapacity
+            };
+
+            // 推理阶段固定单并行（算法通常非线程安全），同时限制容量
             var inferenceOptions = new ExecutionDataflowBlockOptions
             {
                 CancellationToken = _cts.Token,
                 MaxDegreeOfParallelism = 1,
-                BoundedCapacity = -1
+                BoundedCapacity = boundedCapacity
             };
 
             _jsonParseBlock = new TransformBlock<PipelineContext, PipelineContext>(
-                ctx => { Interlocked.Increment(ref _jsonParseProcessed); return SafeExecuteTransform(ctx, "JSON解析", _jsonParseFunc); }, blockOptions);
+                ctx => { Interlocked.Increment(ref _jsonParseProcessed); return SafeExecuteTransform(ctx, "JSON解析", _jsonParseFunc); }, unboundedOptions);
 
             _imageLoadBlock = new TransformBlock<PipelineContext, PipelineContext>(
-                ctx => { Interlocked.Increment(ref _imageLoadProcessed); return SafeExecuteTransform(ctx, "图片加载", _imageLoadFunc); }, blockOptions);
+                ctx => { Interlocked.Increment(ref _imageLoadProcessed); return SafeExecuteTransform(ctx, "图片加载", _imageLoadFunc); }, imageLoadOptions);
 
             _inferenceBlock = new TransformBlock<PipelineContext, PipelineContext>(
                 ctx => { Interlocked.Increment(ref _inferenceProcessed); return SafeExecuteTransform(ctx, "推理", _inferenceFunc); }, inferenceOptions);
@@ -298,10 +327,10 @@ namespace DeepSightWorkLib.Services.Pipeline
                 new DataflowBlockOptions { CancellationToken = _cts.Token });
 
             _resultWriteBlock = new ActionBlock<PipelineContext>(
-                ctx => { Interlocked.Increment(ref _resultWriteProcessed); SafeExecuteAction(ctx, "结果回写", _resultWriteAction); }, blockOptions);
+                ctx => { Interlocked.Increment(ref _resultWriteProcessed); SafeExecuteAction(ctx, "结果回写", _resultWriteAction); }, unboundedOptions);
 
             _postProcessBlock = new ActionBlock<PipelineContext>(
-                ctx => { Interlocked.Increment(ref _postProcessProcessed); SafeExecuteAction(ctx, "后处理", _postProcessAction); }, blockOptions);
+                ctx => { Interlocked.Increment(ref _postProcessProcessed); SafeExecuteAction(ctx, "后处理", _postProcessAction); }, unboundedOptions);
         }
 
         private void LinkBlocks()

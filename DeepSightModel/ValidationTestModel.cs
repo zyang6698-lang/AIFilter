@@ -194,6 +194,10 @@ namespace DeepSightModel
         /// </summary>
         public int FinalUndetectedCount { get; set; }
         /// <summary>
+        /// 直报缺陷数量（状态=4，始终直报不参与实际推理）
+        /// </summary>
+        public int DirectReportCount { get; set; }
+        /// <summary>
         /// 各点的详细结果
         /// </summary>
         public List<SecondaryInferencePointResult> PointResults { get; set; } = new List<SecondaryInferencePointResult>();

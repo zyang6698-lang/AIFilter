@@ -25,6 +25,7 @@ namespace DeepSightModel.Configuration
                 ProjectName = DefaultValues.ProjectName,
                 LogDay = DefaultValues.LogDay,
                 MaxDefectCount = DefaultValues.MaxDefectCount,
+                MaxPendingInferenceCount = DefaultValues.MaxPendingInferenceCount,
                 AgentShutdownTimeout = DefaultValues.AgentShutdownTimeout,
                 WelcomeTitle = DefaultValues.WelcomeTitle,
                 WelcomeFontSize = DefaultValues.WelcomeFontSize,

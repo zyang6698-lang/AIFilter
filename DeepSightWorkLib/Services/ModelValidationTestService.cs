@@ -816,8 +816,40 @@ namespace DeepSightWorkLib.Services
                     }
                 }
 
+                // 追加直报缺陷的结果（标记为bypass "4"）
+                int directReportCount = 0;
+                if (vbModel.DirectReportDefectIndices != null && vbModel.DirectReportDefectIndices.Count > 0)
+                {
+                    directReportCount = vbModel.DirectReportDefectIndices.Count;
+                    for (int di = 0; di < directReportCount; di++)
+                    {
+                        int dpcsIndex = di < vbModel.DirectReportPcsIndices.Count ? vbModel.DirectReportPcsIndices[di] : 0;
+                        int ddefectIdx = vbModel.DirectReportDefectIndices[di];
+                        string dImagePath = di < vbModel.DirectReportFlags.Count && vbModel.ImageKeys != null && di < vbModel.ImageKeys.Count ? vbModel.ImageKeys[di] : null;
+
+                        // 原始直报状态（始终 AI-直报=4）
+                        int dOriginalStatus = 4;
+                        // 二次推理后依然是直报（不会改）
+                        int dNewStatus = 4;
+
+                        // 尝试获取 DetectInfo
+                        DetectInfo dDetectInfo = null;
+                        vbModel.OriginalDetectInfos?.TryGetValue(ddefectIdx, out dDetectInfo);
+
+                        sideResult.PointResults.Add(new SecondaryInferencePointResult
+                        {
+                            DefectIndex = ddefectIdx,
+                            ImagePath = dImagePath,
+                            DetectInfo = dDetectInfo?.Clone(),
+                            OriginalAIStatus = dOriginalStatus,
+                            NewAIStatus = dNewStatus
+                        });
+                    }
+                }
+
+                sideResult.DirectReportCount = directReportCount;
                 sideResult.FinalNgCount = sideResult.OriginalNgCount - changedToOkCount;
-                LogTextHelper.Info($"二次推理结果: {vbModel.SN}_{vbModel.Side}, 原NG数={sideResult.OriginalNgCount}, 转OK={changedToOkCount}, 最终NG={sideResult.FinalNgCount}");
+                LogTextHelper.Info($"二次推理结果: {vbModel.SN}_{vbModel.Side}, 原NG数={sideResult.OriginalNgCount}, 转OK={changedToOkCount}, 最终NG={sideResult.FinalNgCount}, 直报数={directReportCount}");
             }
             catch (Exception ex)
             {

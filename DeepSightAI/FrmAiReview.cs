@@ -586,6 +586,7 @@ namespace DeepSightAI
                 case 1: return "OK";
                 case 2: return "NG";
                 case 3: return "异常";
+                case 4: return "直报";
                 default: return status.ToString();
             }
         }
@@ -1321,6 +1322,7 @@ namespace DeepSightAI
                 case 1: return "OK";
                 case 2: return "NG";
                 case 3: return "异常";
+                case 4: return "直报";
                 default: return status.ToString();
             }
         }
@@ -1684,7 +1686,7 @@ namespace DeepSightAI
             var heatPoints = item.HeatPoints ?? new List<DetectInfo>();
             int totalPoints = heatPoints.Count;
 
-            int aiOk = 0, aiNg = 0, aiException = 0, aiUninspected = 0;
+            int aiOk = 0, aiNg = 0, aiException = 0, aiUninspected = 0, aiDirectReport = 0;
             int vvsOk = 0, vvsNg = 0, vvsNotSet = 0;
             int vrsNotSet = 0, vrsOk = 0, vrsNg = 0, vrsIgnore = 0, vrsNoResult = 0, vrsNgReject = 0, vrsOther = 0;
             foreach (var hp in heatPoints)
@@ -1695,6 +1697,7 @@ namespace DeepSightAI
                     case 1: aiOk++; break;
                     case 2: aiNg++; break;
                     case 3: aiException++; break;
+                    case 4: aiDirectReport++; break;
                 }
                 switch (hp.VVSStatus)
                 {
@@ -1720,6 +1723,7 @@ namespace DeepSightAI
             sb.AppendLine($"  AI-NG: {aiNg}");
             sb.AppendLine($"  AI-异常: {aiException}");
             sb.AppendLine($"  AI-未检测: {aiUninspected}");
+            sb.AppendLine($"  AI-直报: {aiDirectReport}");
             sb.AppendLine($"  VVS-OK: {vvsOk}");
             sb.AppendLine($"  VVS-NG: {vvsNg}");
             sb.AppendLine($"  VVS-未判定: {vvsNotSet}");

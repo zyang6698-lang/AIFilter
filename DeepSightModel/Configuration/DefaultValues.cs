@@ -80,6 +80,12 @@ namespace DeepSightModel.Configuration
         public const int AgentShutdownTimeout = 2000;
 
         /// <summary>
+        /// 推理队列最大积压数量（除当前正在推理的一帧外，最多允许 N 帧已加载图片等待推理）
+        /// 配合 TPL Dataflow 的 BoundedCapacity 实现背压，限制内存占用
+        /// </summary>
+        public const int MaxPendingInferenceCount = 10;
+
+        /// <summary>
         /// 推理请求超时时间（秒）
         /// </summary>
         public const int InferRequestTimeout = 30;

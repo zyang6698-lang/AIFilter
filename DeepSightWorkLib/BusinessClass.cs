@@ -400,7 +400,8 @@ namespace DeepSightWorkLib
                 .WithResultWriteStage(resultWriteStage.Execute)
                 .WithPostProcessStage(postProcessStage.Execute)
                 .WithErrorHandler(HandlePipelineError)
-                .WithCompletionHandler(HandlePipelineCompleted);
+                .WithCompletionHandler(HandlePipelineCompleted)
+                .WithMaxPendingInferenceCount(SysConfig.MaxPendingInferenceCount);
 
             _pipeline.Start(maxDegreeOfParallelism: 1);
             LogTextHelper.Info("ProcessingPipeline 已初始化并启动");
