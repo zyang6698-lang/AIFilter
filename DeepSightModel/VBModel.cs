@@ -32,6 +32,11 @@ namespace DeepSightModel
         public string ProductSerial { get; set; }
 
         /// <summary>
+        /// 机台号（测试推理构建时填充，用于单图测试复用算法配置）。
+        /// </summary>
+        public string MachineId { get; set; }
+
+        /// <summary>
         /// AVI 生成时间（原始字符串，来源 RootPanelInfo.AviCreateTime；下游负责解析）
         /// </summary>
         public string AviCreateTime { get; set; }

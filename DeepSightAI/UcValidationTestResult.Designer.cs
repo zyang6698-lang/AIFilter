@@ -36,6 +36,7 @@
             this.col_MissCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.col_OverKillCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.panel_Filter = new System.Windows.Forms.Panel();
+            this.btn_CompareResults = new DeepSightAI.StyledButton();
             this.btn_ExportResult = new DeepSightAI.StyledButton();
             this.comboBox_Filter = new System.Windows.Forms.ComboBox();
             this.label_Filter = new System.Windows.Forms.Label();
@@ -126,6 +127,7 @@
             // panel_Filter
             // 
             this.panel_Filter.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
+            this.panel_Filter.Controls.Add(this.btn_CompareResults);
             this.panel_Filter.Controls.Add(this.btn_ExportResult);
             this.panel_Filter.Controls.Add(this.comboBox_Filter);
             this.panel_Filter.Controls.Add(this.label_Filter);
@@ -153,6 +155,16 @@
             this.comboBox_Filter.Name = "comboBox_Filter";
             this.comboBox_Filter.Size = new System.Drawing.Size(100, 25);
             this.comboBox_Filter.TabIndex = 1;
+            //
+            // btn_CompareResults
+            //
+            this.btn_CompareResults.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btn_CompareResults.Enabled = false;
+            this.btn_CompareResults.Location = new System.Drawing.Point(581, 5);
+            this.btn_CompareResults.Name = "btn_CompareResults";
+            this.btn_CompareResults.Size = new System.Drawing.Size(110, 25);
+            this.btn_CompareResults.TabIndex = 3;
+            this.btn_CompareResults.Text = "对比前后结果";
             //
             // btn_ExportResult
             //
@@ -300,6 +312,7 @@
         private System.Windows.Forms.Panel panel_Filter;
         private System.Windows.Forms.Label label_Filter;
         private System.Windows.Forms.ComboBox comboBox_Filter;
+        private DeepSightAI.StyledButton btn_CompareResults;
         private DeepSightAI.StyledButton btn_ExportResult;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_SerialNumber;
         private System.Windows.Forms.DataGridViewTextBoxColumn col_Side;

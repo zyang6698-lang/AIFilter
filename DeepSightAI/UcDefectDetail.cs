@@ -26,6 +26,17 @@ namespace DeepSightAI
         private string _vvsFilter = "All";
         private string _vrsFilter = "All";
         private string _defectNameFilter = "All";
+        private bool _comparisonMode = false;
+        private string _comparisonOriginalAiFilter = "All";
+        private string _comparisonNewAiFilter = "All";
+        private string _comparisonChangeFilter = "All";
+        private readonly Dictionary<DetectInfo, AiComparisonDefectItem> _comparisonItems = new Dictionary<DetectInfo, AiComparisonDefectItem>();
+        private Label label_FilterOriginalAI;
+        private ComboBox comboBox_FilterOriginalAI;
+        private Label label_FilterNewAI;
+        private ComboBox comboBox_FilterNewAI;
+        private Label label_FilterChange;
+        private ComboBox comboBox_FilterChange;
 
         // 存储原始的DefectReviewItem列表，用于按SN分组检查VVS状态
         private List<DefectReviewItem> _sourceItems;
@@ -63,6 +74,7 @@ namespace DeepSightAI
         {
             InitializeComponent();
             InitializeFilterControls();
+            InitializeComparisonFilterControls();
             InitializePaginationControls();
             InitializeExportButton();
         }
@@ -108,6 +120,99 @@ namespace DeepSightAI
         }
 
         /// <summary>
+        /// 初始化AI前后对比模式的筛选控件，默认隐藏，普通复判详情不受影响。
+        /// </summary>
+        private void InitializeComparisonFilterControls()
+        {
+            label_FilterOriginalAI = CreateFilterLabel("旧AI:", 20);
+            comboBox_FilterOriginalAI = CreateComparisonComboBox(75);
+            comboBox_FilterOriginalAI.SelectedIndexChanged += (s, e) =>
+            {
+                _comparisonOriginalAiFilter = comboBox_FilterOriginalAI.SelectedItem?.ToString() ?? "All";
+                ApplyFiltersAndReload();
+            };
+
+            label_FilterNewAI = CreateFilterLabel("新AI:", 210);
+            comboBox_FilterNewAI = CreateComparisonComboBox(265);
+            comboBox_FilterNewAI.SelectedIndexChanged += (s, e) =>
+            {
+                _comparisonNewAiFilter = comboBox_FilterNewAI.SelectedItem?.ToString() ?? "All";
+                ApplyFiltersAndReload();
+            };
+
+            label_FilterChange = CreateFilterLabel("变化:", 400);
+            comboBox_FilterChange = new ComboBox
+            {
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Location = new Point(455, 14),
+                Size = new Size(120, 28),
+                Visible = false
+            };
+            comboBox_FilterChange.Items.AddRange(new object[] { "All", "已变化", "无变化" });
+            comboBox_FilterChange.SelectedIndex = 0;
+            comboBox_FilterChange.SelectedIndexChanged += (s, e) =>
+            {
+                _comparisonChangeFilter = comboBox_FilterChange.SelectedItem?.ToString() ?? "All";
+                ApplyFiltersAndReload();
+            };
+
+            panel_Filter.Controls.Add(label_FilterOriginalAI);
+            panel_Filter.Controls.Add(comboBox_FilterOriginalAI);
+            panel_Filter.Controls.Add(label_FilterNewAI);
+            panel_Filter.Controls.Add(comboBox_FilterNewAI);
+            panel_Filter.Controls.Add(label_FilterChange);
+            panel_Filter.Controls.Add(comboBox_FilterChange);
+            SetComparisonFilterVisible(false);
+        }
+
+        private Label CreateFilterLabel(string text, int x)
+        {
+            return new Label
+            {
+                AutoSize = true,
+                Font = new Font("微软雅黑", 9F),
+                ForeColor = Color.White,
+                Location = new Point(x, 16),
+                Text = text,
+                Visible = false
+            };
+        }
+
+        private ComboBox CreateComparisonComboBox(int x)
+        {
+            var combo = new ComboBox
+            {
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Location = new Point(x, 14),
+                Size = new Size(110, 28),
+                Visible = false
+            };
+            combo.Items.AddRange(new object[] { "All", "未检测", "OK", "NG", "异常" });
+            combo.SelectedIndex = 0;
+            return combo;
+        }
+
+        private void SetComparisonFilterVisible(bool visible)
+        {
+            label_FilterAI.Visible = !visible;
+            comboBox_FilterAI.Visible = !visible;
+            label_FilterVVS.Visible = !visible;
+            comboBox_FilterVVS.Visible = !visible;
+            label_FilterVRS.Visible = !visible;
+            comboBox_FilterVRS.Visible = !visible;
+
+            label_FilterOriginalAI.Visible = visible;
+            comboBox_FilterOriginalAI.Visible = visible;
+            label_FilterNewAI.Visible = visible;
+            comboBox_FilterNewAI.Visible = visible;
+            label_FilterChange.Visible = visible;
+            comboBox_FilterChange.Visible = visible;
+
+            label_FilterDefectName.Location = visible ? new Point(595, 16) : new Point(470, 16);
+            comboBox_FilterDefectName.Location = visible ? new Point(675, 14) : new Point(549, 14);
+        }
+
+        /// <summary>
         /// 根据当前所有缺陷点的DefectName，填充缺陷名称下拉框（带数量）
         /// </summary>
         private void PopulateDefectNameFilter()
@@ -147,16 +252,45 @@ namespace DeepSightAI
 
         private void ApplyFiltersAndReload()
         {
-            _filteredHeatPoints = _allHeatPoints;
+            _filteredHeatPoints = _allHeatPoints ?? new List<DetectInfo>();
 
-            if (_aiFilter != "All")
+            if (_comparisonMode)
+            {
+                if (TryGetAiStatusFilter(_comparisonOriginalAiFilter, out int originalAiStatus))
+                {
+                    _filteredHeatPoints = _filteredHeatPoints
+                        .Where(p => _comparisonItems.ContainsKey(p) && _comparisonItems[p].OriginalAIStatus == originalAiStatus)
+                        .ToList();
+                }
+
+                if (TryGetAiStatusFilter(_comparisonNewAiFilter, out int newAiStatus))
+                {
+                    _filteredHeatPoints = _filteredHeatPoints
+                        .Where(p => _comparisonItems.ContainsKey(p) && _comparisonItems[p].NewAIStatus == newAiStatus)
+                        .ToList();
+                }
+
+                if (_comparisonChangeFilter == "已变化")
+                {
+                    _filteredHeatPoints = _filteredHeatPoints
+                        .Where(p => _comparisonItems.ContainsKey(p) && _comparisonItems[p].IsChanged)
+                        .ToList();
+                }
+                else if (_comparisonChangeFilter == "无变化")
+                {
+                    _filteredHeatPoints = _filteredHeatPoints
+                        .Where(p => _comparisonItems.ContainsKey(p) && !_comparisonItems[p].IsChanged)
+                        .ToList();
+                }
+            }
+            else if (_aiFilter != "All")
             {
                 // AIStatus: 0 未运行 / 1 OK / 2 NG / 3 异常
                 int targetAiStatus = _aiFilter == "AI_OK" ? 1 : 2;
                 _filteredHeatPoints = _filteredHeatPoints.Where(p => p.AIStatus == targetAiStatus).ToList();
             }
 
-            if (_vvsFilter != "All")
+            if (!_comparisonMode && _vvsFilter != "All")
             {
                 if (_vvsFilter == "NotSet")
                 {
@@ -171,7 +305,7 @@ namespace DeepSightAI
                 }
             }
 
-            if (_vrsFilter != "All")
+            if (!_comparisonMode && _vrsFilter != "All")
             {
                 // VrsState: 0=未判定, 1=OK, 2=NG, 3=忽略, 4=无结果, 5=NG不接收
                 int targetVrsState;
@@ -204,6 +338,30 @@ namespace DeepSightAI
             _totalPages = (int)Math.Ceiling((double)_filteredHeatPoints.Count / PageSize);
             _currentPage = 1;
             LoadDefectsPage(_currentPage);
+        }
+
+        private bool TryGetAiStatusFilter(string filter, out int status)
+        {
+            switch (filter)
+            {
+                case "未检测": status = 0; return true;
+                case "OK": status = 1; return true;
+                case "NG": status = 2; return true;
+                case "异常": status = 3; return true;
+                default: status = -1; return false;
+            }
+        }
+
+        private string GetStatusText(int status)
+        {
+            switch (status)
+            {
+                case 0: return "未检测";
+                case 1: return "OK";
+                case 2: return "NG";
+                case 3: return "异常";
+                default: return status.ToString();
+            }
         }
 
         private void InitializePaginationControls()
@@ -282,19 +440,19 @@ namespace DeepSightAI
         {
             var cfg = Machine.sysConfig;
 
-            if (cfg != null && MatchShortcutKey(keyData, cfg.ShortcutVvsOk))
+            if (!_comparisonMode && cfg != null && MatchShortcutKey(keyData, cfg.ShortcutVvsOk))
             {
                 TagImage("VVS_OK", false);
                 SelectNextImage();
                 return true;
             }
-            else if (cfg != null && MatchShortcutKey(keyData, cfg.ShortcutVvsNg))
+            else if (!_comparisonMode && cfg != null && MatchShortcutKey(keyData, cfg.ShortcutVvsNg))
             {
                 TagImage("VVS_NG", false);
                 SelectNextImage();
                 return true;
             }
-            else if (cfg != null && MatchShortcutKey(keyData, cfg.ShortcutVvsNotSet))
+            else if (!_comparisonMode && cfg != null && MatchShortcutKey(keyData, cfg.ShortcutVvsNotSet))
             {
                 TagImage("VVS_NotSet", false);
                 SelectNextImage();
@@ -439,6 +597,10 @@ namespace DeepSightAI
             // 取消正在进行的异步图片加载
             CancelPendingImageLoads();
 
+            _comparisonMode = false;
+            _comparisonItems.Clear();
+            SetComparisonFilterVisible(false);
+
             // 保存原始items列表，用于按SN分组检查VVS状态
             _sourceItems = items;
             _completedSnSet.Clear();
@@ -472,6 +634,52 @@ namespace DeepSightAI
             comboBox_FilterAI.SelectedIndex = 0;
             comboBox_FilterVVS.SelectedIndex = 0;
             comboBox_FilterVRS.SelectedIndex = 0;
+            PopulateDefectNameFilter();
+
+            LoadDefectsPage(_currentPage);
+        }
+
+        /// <summary>
+        /// 使用现有缺陷详情控件展示AI前后结果对比，复用图片加载、缺陷框绘制、分页和缺陷名称筛选能力。
+        /// </summary>
+        public void DisplayAiComparisonDetails(List<AiComparisonDefectItem> items, string title)
+        {
+            CancelPendingImageLoads();
+
+            _comparisonMode = true;
+            _sourceItems = null;
+            _completedSnSet.Clear();
+            _comparisonItems.Clear();
+            SetComparisonFilterVisible(true);
+
+            _allHeatPoints = new List<DetectInfo>();
+            foreach (var item in items ?? new List<AiComparisonDefectItem>())
+            {
+                var point = item.DetectInfo?.Clone();
+                if (point == null)
+                    continue;
+
+                point.AIStatus = item.NewAIStatus;
+                point.VVSStatus = item.IsChanged ? 2 : 1;
+                point.DisplaySN = $"{item.SerialNumber} ({item.Side}) 缺陷{item.DefectIndex}";
+
+                var displayItem = item.CloneFor(point);
+                _comparisonItems[point] = displayItem;
+                _allHeatPoints.Add(point);
+            }
+
+            _filteredHeatPoints = new List<DetectInfo>(_allHeatPoints);
+            _totalPages = (int)Math.Ceiling((double)_filteredHeatPoints.Count / PageSize);
+            _currentPage = 1;
+            label_DetailTitle.Text = title;
+
+            _comparisonOriginalAiFilter = "All";
+            _comparisonNewAiFilter = "All";
+            _comparisonChangeFilter = "All";
+            comboBox_FilterOriginalAI.SelectedIndex = 0;
+            comboBox_FilterNewAI.SelectedIndex = 0;
+            comboBox_FilterChange.SelectedIndex = 0;
+            _defectNameFilter = "All";
             PopulateDefectNameFilter();
 
             LoadDefectsPage(_currentPage);
@@ -600,6 +808,10 @@ namespace DeepSightAI
 
             // 调整图片高度
             itemControl.AdjustImageHeight(height);
+            if (_comparisonMode)
+            {
+                itemControl.UpdateStatusText(BuildComparisonStatusText(heatPoint));
+            }
 
             // 绑定点击事件
             itemControl.ItemClicked += (s, e) => SelectImage(index);
@@ -607,10 +819,32 @@ namespace DeepSightAI
             // 绑定运行测试事件
             itemControl.RunTestRequested += (s, e) =>
             {
+                if (_comparisonMode && e?.HeatPoint != null && _comparisonItems.TryGetValue(e.HeatPoint, out var comparisonItem))
+                {
+                    SingleImageTestRequested?.Invoke(this, new SingleImageTestEventArgs
+                    {
+                        HeatPoint = e.HeatPoint,
+                        ProductSerial = comparisonItem.ProductSerial,
+                        MachineId = comparisonItem.MachineId,
+                        Side = comparisonItem.Side
+                    });
+                    return;
+                }
+
                 SingleImageTestRequested?.Invoke(this, e);
             };
 
             return itemControl;
+        }
+
+        private string BuildComparisonStatusText(DetectInfo heatPoint)
+        {
+            if (heatPoint == null || !_comparisonItems.TryGetValue(heatPoint, out var item))
+                return string.Empty;
+
+            string changedText = item.IsChanged ? "已变化" : "无变化";
+            string sourceText = string.IsNullOrWhiteSpace(item.SourceText) ? string.Empty : $"  |  来源: {item.SourceText}";
+            return $"旧AI: {GetStatusText(item.OriginalAIStatus)}  →  新AI: {GetStatusText(item.NewAIStatus)}  |  {changedText}{sourceText}";
         }
 
         private void UpdatePaginationButtons()
@@ -936,6 +1170,39 @@ namespace DeepSightAI
     }
 
     /// <summary>
+    /// AI前后结果对比显示项。
+    /// </summary>
+    public class AiComparisonDefectItem
+    {
+        public string SerialNumber { get; set; }
+        public string Side { get; set; }
+        public int DefectIndex { get; set; }
+        public DetectInfo DetectInfo { get; set; }
+        public string ProductSerial { get; set; }
+        public string MachineId { get; set; }
+        public int OriginalAIStatus { get; set; }
+        public int NewAIStatus { get; set; }
+        public string SourceText { get; set; }
+        public bool IsChanged => OriginalAIStatus != NewAIStatus;
+
+        public AiComparisonDefectItem CloneFor(DetectInfo detectInfo)
+        {
+            return new AiComparisonDefectItem
+            {
+                SerialNumber = SerialNumber,
+                Side = Side,
+                DefectIndex = DefectIndex,
+                DetectInfo = detectInfo,
+                ProductSerial = ProductSerial,
+                MachineId = MachineId,
+                OriginalAIStatus = OriginalAIStatus,
+                NewAIStatus = NewAIStatus,
+                SourceText = SourceText
+            };
+        }
+    }
+
+    /// <summary>
     /// VVS复判完成事件参数
     /// </summary>
     public class VvsCompletedEventArgs : EventArgs
@@ -965,6 +1232,9 @@ namespace DeepSightAI
         /// 要测试的缺陷点信息
         /// </summary>
         public DetectInfo HeatPoint { get; set; }
+        public string ProductSerial { get; set; }
+        public string MachineId { get; set; }
+        public string Side { get; set; }
     }
 
     /// <summary>

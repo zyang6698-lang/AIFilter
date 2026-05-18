@@ -97,6 +97,8 @@ namespace DeepSightWorkLib.Services
                 Key = $"{GetModePrefix(context.Mode)}_{context.TaskId}_{context.SerialNumber}_{context.SideName}",
                 SN = context.SerialNumber,
                 Side = context.SideName,
+                ProductSerial = context.ProductSerial,
+                MachineId = context.MachineId,
                 DefectIndex = defectIndexList,
                 PcsIndex = pcsIndexList,
                 ImageKeys = imageKeys,

@@ -31,6 +31,10 @@ namespace DeepSightModel
     {
         public int DefectIndex { get; set; }
         public string ImagePath { get; set; }
+        /// <summary>
+        /// 原始缺陷信息快照，用于结果对比界面展示图片、ROI缺陷框和缺陷名称。
+        /// </summary>
+        public DetectInfo DetectInfo { get; set; }
         public int OriginalAIStatus { get; set; }
         /// <summary>
         /// 原始VVS状态（如果有VVS数据）
@@ -63,6 +67,8 @@ namespace DeepSightModel
     {
         public string SerialNumber { get; set; }
         public string Side { get; set; }
+        public string ProductSerial { get; set; }
+        public string MachineId { get; set; }
         public DateTime TestTime { get; set; }
         public int TotalDefects { get; set; }
         public int ConsistentCount { get; set; }
@@ -148,6 +154,8 @@ namespace DeepSightModel
     {
         public string SerialNumber { get; set; }
         public string Side { get; set; }
+        public string ProductSerial { get; set; }
+        public string MachineId { get; set; }
         public DateTime InferenceTime { get; set; }
         /// <summary>
         /// 推理前的NG点数
@@ -200,6 +208,10 @@ namespace DeepSightModel
     {
         public int DefectIndex { get; set; }
         public string ImagePath { get; set; }
+        /// <summary>
+        /// 推理前的缺陷信息快照，用于结果对比界面展示图片和缺陷框。
+        /// </summary>
+        public DetectInfo DetectInfo { get; set; }
         /// <summary>
         /// 原始AI状态（推理前，都是NG=2）
         /// </summary>

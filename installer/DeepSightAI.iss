@@ -10,7 +10,7 @@
 ; ============================================================================
 
 #define MyAppName "DeepSightAI"
-#define MyAppVersion "1.1.7.7"
+#define MyAppVersion "1.1.7.8"
 #define MyAppPublisher "上海深视信息有限公司科技"
 #define MyAppExeName "DeepSightAI.exe"
 #define MyAppCopyright "Copyright © 2025 上海深视信息有限公司科技"

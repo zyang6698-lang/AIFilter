@@ -490,6 +490,8 @@ namespace DeepSightWorkLib.Services
             {
                 SerialNumber = vbModel.SN,
                 Side = vbModel.Side,
+                ProductSerial = vbModel.ProductSerial,
+                MachineId = vbModel.MachineId,
                 TotalDefects = vbModel.DefectIndex?.Count ?? 0,
                 DataSource = vbModel.HasVVSData ? OriginalDataSourceType.VVS : OriginalDataSourceType.AI
             };
@@ -514,6 +516,11 @@ namespace DeepSightWorkLib.Services
                     ? vbModel.OriginalAIResults[defectIdx] : 0;
                 var originalVVSStatus = vbModel.OriginalVVSResults != null && vbModel.OriginalVVSResults.ContainsKey(defectIdx)
                     ? vbModel.OriginalVVSResults[defectIdx] : 0;
+                DetectInfo originalDetectInfo = null;
+                if (vbModel.OriginalDetectInfos != null && vbModel.OriginalDetectInfos.TryGetValue(defectIdx, out var detectInfo))
+                {
+                    originalDetectInfo = detectInfo?.Clone();
+                }
 
                 int newStatus = i < inferResults.Count ? ParseInferenceStatus(inferResults[i]) : 3;
 
@@ -526,6 +533,7 @@ namespace DeepSightWorkLib.Services
                 {
                     DefectIndex = defectIdx,
                     ImagePath = i < vbModel.ImageKeys.Count ? vbModel.ImageKeys[i] : null,
+                    DetectInfo = originalDetectInfo,
                     OriginalAIStatus = originalAIStatus,
                     OriginalVVSStatus = originalVVSStatus,
                     NewAIStatus = newStatus,
@@ -696,6 +704,8 @@ namespace DeepSightWorkLib.Services
                 {
                     SerialNumber = vbModel.SN,
                     Side = vbModel.Side,
+                    ProductSerial = vbModel.ProductSerial,
+                    MachineId = vbModel.MachineId,
                     InferenceTime = DateTime.Now
                 };
 
@@ -736,6 +746,7 @@ namespace DeepSightWorkLib.Services
                             {
                                 DefectIndex = defectIdx,
                                 ImagePath = detectInfo.ImagePath,
+                                DetectInfo = detectInfo.Clone(),
                                 OriginalAIStatus = originalStatus,
                                 NewAIStatus = newStatus
                             });

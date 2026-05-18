@@ -191,7 +191,7 @@ namespace DeepSightAI
             this.cmbDbConfig.FormattingEnabled = true;
             this.cmbDbConfig.Location = new System.Drawing.Point(110, 60);
             this.cmbDbConfig.Name = "cmbDbConfig";
-            this.cmbDbConfig.Size = new System.Drawing.Size(328, 32);
+            this.cmbDbConfig.Size = new System.Drawing.Size(394, 32);
             this.cmbDbConfig.TabIndex = 5;
             // 
             // lblStatus

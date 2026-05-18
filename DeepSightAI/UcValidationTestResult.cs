@@ -23,6 +23,10 @@ namespace DeepSightAI
         private List<SideTestResultDisplay> _allResults = new List<SideTestResultDisplay>();
         private List<SideTestResultDisplay> _filteredResults = new List<SideTestResultDisplay>();
         private Timer _refreshTimer;
+        private SplitContainer _splitContainerResults;
+        private UcAiResultComparison _comparisonControl;
+        private bool _comparisonVisible;
+        private bool _isRefreshingGrid;
 
         #endregion
 
@@ -31,8 +35,32 @@ namespace DeepSightAI
         public UcValidationTestResult()
         {
             InitializeComponent();
+            InitializeInlineComparisonLayout();
             InitializeStyles();
             InitializeEvents();
+        }
+
+        private void InitializeInlineComparisonLayout()
+        {
+            _splitContainerResults = new SplitContainer
+            {
+                Dock = DockStyle.Fill,
+                Orientation = Orientation.Horizontal,
+                BackColor = Color.FromArgb(30, 30, 30),
+                Panel2Collapsed = true,
+                SplitterWidth = 5
+            };
+
+            _comparisonControl = new UcAiResultComparison { Dock = DockStyle.Fill };
+            _comparisonControl.SingleImageTestRequested += ComparisonControl_SingleImageTestRequested;
+
+            splitContainer_Main.Panel2.Controls.Remove(panel_Filter);
+            splitContainer_Main.Panel2.Controls.Remove(dataGridView_Results);
+            dataGridView_Results.Dock = DockStyle.Fill;
+            _splitContainerResults.Panel1.Controls.Add(dataGridView_Results);
+            _splitContainerResults.Panel2.Controls.Add(_comparisonControl);
+            splitContainer_Main.Panel2.Controls.Add(_splitContainerResults);
+            splitContainer_Main.Panel2.Controls.Add(panel_Filter);
         }
 
         private void InitializeStyles()
@@ -47,7 +75,9 @@ namespace DeepSightAI
         {
             comboBox_Filter.SelectedIndexChanged += ComboBox_Filter_SelectedIndexChanged;
             btn_ExportResult.Click += Btn_ExportResult_Click;
+            btn_CompareResults.Click += Btn_CompareResults_Click;
             dataGridView_Results.CellDoubleClick += DataGridView_Results_CellDoubleClick;
+            dataGridView_Results.SelectionChanged += DataGridView_Results_SelectionChanged;
 
             // 定时刷新进度
             _refreshTimer = new Timer { Interval = 500 };
@@ -64,8 +94,11 @@ namespace DeepSightAI
         public void StartMonitoring(InferenceTask task)
         {
             _currentTask = task;
+            _isSecondaryInferenceMode = false;
             _allResults.Clear();
             _filteredResults.Clear();
+            btn_CompareResults.Enabled = false;
+            SetComparisonVisible(false);
 
             label_Title.Text = $"模型一致性测试 - {task.Description ?? task.TaskId}";
             UpdateProgress();
@@ -93,6 +126,8 @@ namespace DeepSightAI
             _isSecondaryInferenceMode = true;
             _allResults.Clear();
             _filteredResults.Clear();
+            btn_CompareResults.Enabled = false;
+            SetComparisonVisible(false);
 
             label_Title.Text = $"二次推理 - {task.Description ?? task.TaskId}";
             UpdateSecondaryInferenceProgress();
@@ -234,6 +269,7 @@ namespace DeepSightAI
 
             UpdateProgress();
             ApplyFilter();
+            UpdateCompareButtonState();
         }
 
         #endregion
@@ -271,6 +307,7 @@ namespace DeepSightAI
                 (_currentTask.State == InferenceTaskState.Completed && _currentTask.IsReallyCompleted))
             {
                 _refreshTimer.Stop();
+                UpdateCompareButtonState();
             }
         }
 
@@ -299,6 +336,7 @@ namespace DeepSightAI
             {
                 _refreshTimer.Stop();
                 _isSecondaryInferenceMode = false;
+                UpdateCompareButtonState();
             }
         }
 
@@ -333,6 +371,7 @@ namespace DeepSightAI
 
             UpdateProgress();
             ApplyFilter();
+            UpdateCompareButtonState();
         }
 
         private void UpdateProgress()
@@ -426,43 +465,161 @@ namespace DeepSightAI
 
         private void RefreshDataGrid()
         {
-            dataGridView_Results.Rows.Clear();
-            foreach (var result in _filteredResults)
+            _isRefreshingGrid = true;
+            try
             {
-                // 漏失和误报仅对VVS数据显示数值，AI数据显示"-"
-                string missDisplay = result.HasVVSData ? result.MissCount.ToString() : "-";
-                string overKillDisplay = result.HasVVSData ? result.OverKillCount.ToString() : "-";
-
-                int rowIndex = dataGridView_Results.Rows.Add(
-                    result.SerialNumber,
-                    result.Side,
-                    result.DataSourceText,
-                    result.OriginalResult,
-                    result.NewResult,
-                    result.IsConsistent,
-                    result.DefectCount,
-                    result.ConsistentCount,
-                    result.InconsistentCount,
-                    missDisplay,
-                    overKillDisplay);
-
-                // 设置不一致行的颜色
-                if (!result.IsConsistentBool)
+                dataGridView_Results.Rows.Clear();
+                foreach (var result in _filteredResults)
                 {
-                    dataGridView_Results.Rows[rowIndex].DefaultCellStyle.BackColor = Color.FromArgb(120, 50, 50);
+                    // 漏失和误报仅对VVS数据显示数值，AI数据显示"-"
+                    string missDisplay = result.HasVVSData ? result.MissCount.ToString() : "-";
+                    string overKillDisplay = result.HasVVSData ? result.OverKillCount.ToString() : "-";
+
+                    int rowIndex = dataGridView_Results.Rows.Add(
+                        result.SerialNumber,
+                        result.Side,
+                        result.DataSourceText,
+                        result.OriginalResult,
+                        result.NewResult,
+                        result.IsConsistent,
+                        result.DefectCount,
+                        result.ConsistentCount,
+                        result.InconsistentCount,
+                        missDisplay,
+                        overKillDisplay);
+
+                    // 设置不一致行的颜色
+                    if (!result.IsConsistentBool)
+                    {
+                        dataGridView_Results.Rows[rowIndex].DefaultCellStyle.BackColor = Color.FromArgb(120, 50, 50);
+                    }
+
+                    // VVS数据来源的行用不同颜色标识
+                    if (result.HasVVSData)
+                    {
+                        dataGridView_Results.Rows[rowIndex].Cells["col_DataSource"].Style.ForeColor = Color.Cyan;
+                    }
                 }
 
-                // VVS数据来源的行用不同颜色标识
-                if (result.HasVVSData)
+                if (dataGridView_Results.Rows.Count > 0)
                 {
-                    dataGridView_Results.Rows[rowIndex].Cells["col_DataSource"].Style.ForeColor = Color.Cyan;
+                    dataGridView_Results.ClearSelection();
+                    dataGridView_Results.Rows[0].Selected = true;
+                    dataGridView_Results.CurrentCell = dataGridView_Results.Rows[0].Cells[0];
                 }
             }
+            finally
+            {
+                _isRefreshingGrid = false;
+            }
+
+            UpdateComparisonForSelectedRow();
         }
 
         private void ComboBox_Filter_SelectedIndexChanged(object sender, EventArgs e)
         {
             ApplyFilter();
+        }
+
+        private void UpdateCompareButtonState()
+        {
+            bool canCompare = _currentTask != null
+                && _currentTask.State == InferenceTaskState.Completed
+                && _currentTask.IsReallyCompleted
+                && HasComparisonData(_currentTask);
+
+            btn_CompareResults.Enabled = canCompare;
+            if (!canCompare)
+            {
+                SetComparisonVisible(false);
+            }
+        }
+
+        private bool HasComparisonData(InferenceTask task)
+        {
+            if (task == null) return false;
+            if (task.Mode == InferenceMode.SecondaryInference)
+            {
+                return task.SecondaryResults.Any(r => r.PointResults != null && r.PointResults.Any(p => p.DetectInfo != null));
+            }
+            return task.ConsistencyResults.Any(r => r.DefectResults != null && r.DefectResults.Any(d => d.DetectInfo != null));
+        }
+
+        private void Btn_CompareResults_Click(object sender, EventArgs e)
+        {
+            if (_currentTask == null || !HasComparisonData(_currentTask))
+            {
+                MessageBox.Show("当前任务没有可对比的AI结果。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            SetComparisonVisible(!_comparisonVisible);
+            if (_comparisonVisible)
+            {
+                UpdateComparisonForSelectedRow();
+            }
+        }
+
+        private void SetComparisonVisible(bool visible)
+        {
+            _comparisonVisible = visible;
+            if (_splitContainerResults != null)
+            {
+                _splitContainerResults.Panel2Collapsed = !visible;
+                if (visible)
+                {
+                    int availableHeight = _splitContainerResults.Height;
+                    if (availableHeight > 260)
+                    {
+                        _splitContainerResults.SplitterDistance = Math.Max(120, availableHeight / 3);
+                    }
+                }
+            }
+
+            btn_CompareResults.Text = visible ? "隐藏对比详情" : "对比前后结果";
+            if (!visible)
+            {
+                _comparisonControl?.ClearComparison();
+            }
+        }
+
+        private void DataGridView_Results_SelectionChanged(object sender, EventArgs e)
+        {
+            if (_isRefreshingGrid) return;
+            UpdateComparisonForSelectedRow();
+        }
+
+        private void UpdateComparisonForSelectedRow()
+        {
+            if (!_comparisonVisible || _comparisonControl == null || _currentTask == null)
+            {
+                return;
+            }
+
+            var selectedResult = GetSelectedResult();
+            if (selectedResult == null)
+            {
+                _comparisonControl.ClearComparison();
+                return;
+            }
+
+            _comparisonControl.DisplayTask(_currentTask, selectedResult.SerialNumber, selectedResult.Side);
+        }
+
+        private SideTestResultDisplay GetSelectedResult()
+        {
+            if (dataGridView_Results.CurrentRow == null)
+            {
+                return null;
+            }
+
+            int rowIndex = dataGridView_Results.CurrentRow.Index;
+            if (rowIndex < 0 || rowIndex >= _filteredResults.Count)
+            {
+                return null;
+            }
+
+            return _filteredResults[rowIndex];
         }
 
         private void DataGridView_Results_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
@@ -473,6 +630,75 @@ namespace DeepSightAI
             if (result.Details != null && result.Details.Count > 0)
             {
                 ShowDefectDetails(result);
+            }
+        }
+
+        private async void ComparisonControl_SingleImageTestRequested(object sender, SingleImageTestEventArgs e)
+        {
+            if (e?.HeatPoint == null)
+                return;
+
+            if (string.IsNullOrWhiteSpace(e.ProductSerial) || string.IsNullOrWhiteSpace(e.MachineId) || string.IsNullOrWhiteSpace(e.Side))
+            {
+                MessageBox.Show("缺少料号、机台或面别信息，无法运行单图测试。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            var service = Machine.master?.ValidationTestService;
+            if (service == null)
+            {
+                MessageBox.Show("模型验证测试服务未初始化。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            try
+            {
+                Enabled = false;
+                Cursor = Cursors.WaitCursor;
+
+                var result = await service.RunSingleImageTestAsync(
+                    e.HeatPoint,
+                    e.ProductSerial,
+                    e.MachineId,
+                    e.Side,
+                    timeout: 30);
+
+                if (result.Success)
+                {
+                    string consistentText = result.IsConsistent ? "✓ 一致" : "✗ 不一致";
+                    string message = $"单图测试完成！\n\n" +
+                        $"原始AI结果: {GetStatusText(result.OriginalAIStatus)}\n" +
+                        $"新AI结果: {GetStatusText(result.NewAIStatus)}\n" +
+                        $"比对结果: {consistentText}";
+
+                    if (!string.IsNullOrEmpty(result.InferDetailText))
+                    {
+                        message += $"\n\n--- 复判详情 ---\n{result.InferDetailText}";
+                    }
+                    else if (!string.IsNullOrEmpty(result.DefectName))
+                    {
+                        message += $"\n\n缺陷名称: {result.DefectName}";
+                        if (!string.IsNullOrEmpty(result.DefectArea))
+                            message += $"\n缺陷面积: {result.DefectArea}";
+                    }
+
+                    MessageBox.Show(message, "单图测试结果", MessageBoxButtons.OK,
+                        result.IsConsistent ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+                }
+                else
+                {
+                    MessageBox.Show($"单图测试失败: {result.ErrorMessage}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Error($"对比详情单图测试异常: {ex}");
+                MessageBox.Show($"单图测试异常: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                Enabled = true;
+                Cursor = Cursors.Default;
             }
         }
 
