@@ -1589,7 +1589,7 @@ namespace DeepSightAI
             AppendDetail($"  AI准确率(VVS)  : {FormatPercent(_aiOkVvsOkPointCount + _aiNgVvsNgPointCount, totalPoints)}\n\n", DetailFontNormal, DetailColorGood);
 
             // ===== PCS 统计 =====
-            AppendDetail($"▶ PCS统计  (共 {totalPcs} 片)\n", DetailFontSection, DetailColorSection);
+            AppendDetail($"▶ PCS统计  (共 {totalPcs} )\n", DetailFontSection, DetailColorSection);
             AppendDetail($"  AI-OK     : {stat.AiOkPcsCount}\n", DetailFontNormal, DetailColorNormal);
             AppendDetail($"  AI-NG     : {stat.AiNgPcsCount}\n", DetailFontNormal, DetailColorNormal);
             AppendDetail($"  AI-异常   : {stat.AiExceptionPcsCount}\n", DetailFontNormal, DetailColorMuted);

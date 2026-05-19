@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Drawing;
 using System.IO;
 using System.Text;
@@ -29,6 +30,38 @@ namespace DeepSightTool
         /// 是否保存日志
         /// </summary>
         public static bool Enable = true;
+
+        // ========== UI 回调冷却机制（防止日志框刷屏）==========
+
+        /// <summary>UI 回调冷却时间（秒），默认 5 秒</summary>
+        public static int UiCooldownSeconds { get; set; } = 5;
+
+        // 冷却字典：key = 消息摘要(前80字符), value = 上次回调时间
+        private static readonly ConcurrentDictionary<string, DateTime> _uiCooldownMap =
+            new ConcurrentDictionary<string, DateTime>();
+
+        /// <summary>
+        /// 带冷却的 UI 回调触发。同一条消息在冷却期内只触发一次回调。
+        /// 文件日志不受影响，始终写入。
+        /// </summary>
+        private static void FireCallbackWithCooldown(string msg, Color color)
+        {
+            var cb = OnCallBackLogProc;
+            if (cb == null) return;
+
+            // 生成冷却 Key：消息前 80 字符
+            string cooldownKey = msg?.Length > 80 ? msg.Substring(0, 80) : (msg ?? "");
+
+            var now = DateTime.Now;
+            var lastFire = _uiCooldownMap.GetOrAdd(cooldownKey, _ => DateTime.MinValue);
+
+            if ((now - lastFire).TotalSeconds < UiCooldownSeconds)
+                return; // 冷却期内，跳过 UI 回调
+
+            // 冷却期已过：更新时间并触发回调（CAS 更新防止并发重复触发）
+            _uiCooldownMap.TryUpdate(cooldownKey, now, lastFire);
+            cb(msg, color);
+        }
 
         // Serilog 日志记录器
         private static Logger _infoLogger;
@@ -149,7 +182,7 @@ namespace DeepSightTool
                     Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss,fff}]---->  {message}\r\n{ex}");
                 }
 
-                OnCallBackLogProc?.Invoke($"{message}:{ex}", Color.Red);
+                FireCallbackWithCooldown($"{message}:{ex}", Color.Red);
             }
             catch
             {
@@ -170,7 +203,7 @@ namespace DeepSightTool
             }
             var msg = ex?.ToString() ?? string.Empty;
             _infoLogger?.Debug(msg);
-            OnCallBackLogProc?.Invoke(msg, Color.Green);
+            FireCallbackWithCooldown(msg, Color.Green);
         }
 
         /// <summary>
@@ -185,7 +218,7 @@ namespace DeepSightTool
             }
             var msg = ex?.ToString() ?? string.Empty;
             _warnLogger?.Warning(msg);
-            OnCallBackLogProc?.Invoke(msg, Color.Green);
+            FireCallbackWithCooldown(msg, Color.Green);
         }
 
         /// <summary>
@@ -200,7 +233,7 @@ namespace DeepSightTool
             }
             var msg = ex?.ToString() ?? string.Empty;
             _errorLogger?.Error(msg);
-            OnCallBackLogProc?.Invoke(msg, Color.Green);
+            FireCallbackWithCooldown(msg, Color.Green);
         }
 
         /// <summary>

@@ -495,13 +495,15 @@ namespace DeepSightAI
         /// </summary>
         private void CleanupExcessRows()
         {
-            const int MAX_ROWS = 50;
+            int maxRows = Machine.sysConfig?.MaxTaskQueueRows ?? 50;
+            // 安全兜底：防止配置值为 0 或负数导致异常
+            if (maxRows < 10) maxRows = 50;
             var dgv = FrmHome.Instance.dataGridViewData;
 
-            if (dgv.Rows.Count > MAX_ROWS)
+            if (dgv.Rows.Count > maxRows)
             {
                 // 从底部向上查找可移除的终态行
-                for (int i = dgv.Rows.Count - 1; i >= 0 && dgv.Rows.Count > MAX_ROWS; i--)
+                for (int i = dgv.Rows.Count - 1; i >= 0 && dgv.Rows.Count > maxRows; i--)
                 {
                     string status = dgv.Rows[i].Cells[6].Value?.ToString() ?? "";
                     if (IsTerminalStatus(status))
@@ -515,7 +517,7 @@ namespace DeepSightAI
                 }
 
                 // 如果移除所有终态行后仍超限（全是活跃任务），则禁止新数据进入
-                Machine.master.IsAllow = dgv.Rows.Count <= MAX_ROWS;
+                Machine.master.IsAllow = dgv.Rows.Count <= maxRows;
             }
             else
             {

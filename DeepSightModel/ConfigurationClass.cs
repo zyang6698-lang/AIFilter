@@ -98,6 +98,12 @@ namespace DeepSightModel
         public int MaxPendingInferenceCount { get; set; } = DefaultValues.MaxPendingInferenceCount;
 
         /// <summary>
+        /// 任务队列最大行数（DataGridView 推理队列容量），用于 CleanupExcessRows 的清理阈值。
+        /// 设为 50 时保持兼容旧行为，手动发送大量推理请求时可调大（取值范围 10-500）。
+        /// </summary>
+        public int MaxTaskQueueRows { get; set; } = 50;
+
+        /// <summary>
         /// 是否使用 Gerber 图进行推理和显示（false=使用 Template 图，true=使用 Gerber 图）
         /// </summary>
         public bool UseGerberImage { get; set; } = DefaultValues.UseGerberImage;
@@ -148,6 +154,7 @@ namespace DeepSightModel
                     ShortcutPrevImage = DefaultValues.ShortcutPrevImage,
                     ShortcutNextPage = DefaultValues.ShortcutNextPage,
                     ShortcutPrevPage = DefaultValues.ShortcutPrevPage,
+                    MaxTaskQueueRows = 50,
                     UseGerberImage = DefaultValues.UseGerberImage
                 };
                 return Save(config);
