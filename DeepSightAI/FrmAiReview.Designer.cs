@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             this.panel_Main = new System.Windows.Forms.Panel();
             this.splitContainer_Main = new Sunny.UI.UISplitContainer();
             this.tableLayoutPanel_Left = new System.Windows.Forms.TableLayoutPanel();
@@ -72,7 +71,7 @@
             this.panel_Main.Location = new System.Drawing.Point(0, 0);
             this.panel_Main.Margin = new System.Windows.Forms.Padding(0);
             this.panel_Main.Name = "panel_Main";
-            this.panel_Main.Size = new System.Drawing.Size(1924, 1088);
+            this.panel_Main.Size = new System.Drawing.Size(1924, 1055);
             this.panel_Main.TabIndex = 0;
             // 
             // splitContainer_Main
@@ -98,7 +97,7 @@
             // 
             this.splitContainer_Main.Panel2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.splitContainer_Main.Panel2.Controls.Add(this.tabControl_Main);
-            this.splitContainer_Main.Size = new System.Drawing.Size(1924, 1088);
+            this.splitContainer_Main.Size = new System.Drawing.Size(1924, 1055);
             this.splitContainer_Main.SplitterDistance = 363;
             this.splitContainer_Main.SplitterWidth = 11;
             this.splitContainer_Main.Style = Sunny.UI.UIStyle.Custom;
@@ -119,7 +118,7 @@
             this.tableLayoutPanel_Left.RowCount = 2;
             this.tableLayoutPanel_Left.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 360F));
             this.tableLayoutPanel_Left.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel_Left.Size = new System.Drawing.Size(363, 1088);
+            this.tableLayoutPanel_Left.Size = new System.Drawing.Size(363, 1055);
             this.tableLayoutPanel_Left.TabIndex = 1;
             // 
             // UcDefectQuery
@@ -147,7 +146,7 @@
             this.panel_ReviewDetail.Location = new System.Drawing.Point(0, 360);
             this.panel_ReviewDetail.Margin = new System.Windows.Forms.Padding(0);
             this.panel_ReviewDetail.Name = "panel_ReviewDetail";
-            this.panel_ReviewDetail.Size = new System.Drawing.Size(363, 728);
+            this.panel_ReviewDetail.Size = new System.Drawing.Size(363, 695);
             this.panel_ReviewDetail.TabIndex = 0;
             // 
             // label_ReviewDetail
@@ -168,7 +167,7 @@
             this.label_ReviewDetail.ScrollBarColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(80)))), ((int)(((byte)(95)))));
             this.label_ReviewDetail.ScrollBarStyleInherited = false;
             this.label_ReviewDetail.ShowText = false;
-            this.label_ReviewDetail.Size = new System.Drawing.Size(363, 728);
+            this.label_ReviewDetail.Size = new System.Drawing.Size(363, 695);
             this.label_ReviewDetail.Style = Sunny.UI.UIStyle.Custom;
             this.label_ReviewDetail.StyleCustomMode = true;
             this.label_ReviewDetail.TabIndex = 0;
@@ -194,7 +193,7 @@
             this.tabControl_Main.MenuStyle = Sunny.UI.UIMenuStyle.Custom;
             this.tabControl_Main.Name = "tabControl_Main";
             this.tabControl_Main.SelectedIndex = 0;
-            this.tabControl_Main.Size = new System.Drawing.Size(1550, 1088);
+            this.tabControl_Main.Size = new System.Drawing.Size(1550, 1055);
             this.tabControl_Main.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
             this.tabControl_Main.Style = Sunny.UI.UIStyle.Custom;
             this.tabControl_Main.StyleCustomMode = true;
@@ -206,27 +205,29 @@
             this.tabControl_Main.TabUnSelectedColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.tabControl_Main.TabUnSelectedForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(200)))), ((int)(((byte)(200)))));
             this.tabControl_Main.TipsFont = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            //
+            // 
             // tabPage_Grid
-            //
+            // 
             this.tabPage_Grid.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.tabPage_Grid.Controls.Add(this.ucDefectListPanel);
             this.tabPage_Grid.Location = new System.Drawing.Point(0, 30);
             this.tabPage_Grid.Margin = new System.Windows.Forms.Padding(0);
             this.tabPage_Grid.Name = "tabPage_Grid";
-            this.tabPage_Grid.Size = new System.Drawing.Size(1550, 1058);
+            this.tabPage_Grid.Size = new System.Drawing.Size(1550, 1025);
             this.tabPage_Grid.TabIndex = 0;
             this.tabPage_Grid.Text = "缺陷列表";
-            //
+            // 
             // ucDefectListPanel
-            //
+            // 
+            this.ucDefectListPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.ucDefectListPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.ucDefectListPanel.Font = new System.Drawing.Font("微软雅黑", 9F);
             this.ucDefectListPanel.Location = new System.Drawing.Point(0, 0);
             this.ucDefectListPanel.Margin = new System.Windows.Forms.Padding(0);
             this.ucDefectListPanel.Name = "ucDefectListPanel";
-            this.ucDefectListPanel.Size = new System.Drawing.Size(1550, 1058);
+            this.ucDefectListPanel.Size = new System.Drawing.Size(1550, 1025);
             this.ucDefectListPanel.TabIndex = 0;
-            //
+            // 
             // tabPage_Details
             // 
             this.tabPage_Details.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
@@ -234,7 +235,7 @@
             this.tabPage_Details.Location = new System.Drawing.Point(0, 30);
             this.tabPage_Details.Margin = new System.Windows.Forms.Padding(0);
             this.tabPage_Details.Name = "tabPage_Details";
-            this.tabPage_Details.Size = new System.Drawing.Size(1550, 1058);
+            this.tabPage_Details.Size = new System.Drawing.Size(1550, 1025);
             this.tabPage_Details.TabIndex = 1;
             this.tabPage_Details.Text = "缺陷详情";
             // 
@@ -245,7 +246,7 @@
             this.defectDetailControl1.Location = new System.Drawing.Point(0, 0);
             this.defectDetailControl1.Margin = new System.Windows.Forms.Padding(0);
             this.defectDetailControl1.Name = "defectDetailControl1";
-            this.defectDetailControl1.Size = new System.Drawing.Size(1550, 1058);
+            this.defectDetailControl1.Size = new System.Drawing.Size(1550, 1025);
             this.defectDetailControl1.TabIndex = 0;
             // 
             // tabPage_Pareto
@@ -255,7 +256,7 @@
             this.tabPage_Pareto.Location = new System.Drawing.Point(0, 30);
             this.tabPage_Pareto.Margin = new System.Windows.Forms.Padding(0);
             this.tabPage_Pareto.Name = "tabPage_Pareto";
-            this.tabPage_Pareto.Size = new System.Drawing.Size(1550, 1058);
+            this.tabPage_Pareto.Size = new System.Drawing.Size(1550, 1025);
             this.tabPage_Pareto.TabIndex = 5;
             this.tabPage_Pareto.Text = "帕累托图";
             // 
@@ -267,7 +268,7 @@
             this.paretoChart1.Location = new System.Drawing.Point(0, 0);
             this.paretoChart1.Margin = new System.Windows.Forms.Padding(0);
             this.paretoChart1.Name = "paretoChart1";
-            this.paretoChart1.Size = new System.Drawing.Size(1550, 1058);
+            this.paretoChart1.Size = new System.Drawing.Size(1550, 1025);
             this.paretoChart1.TabIndex = 0;
             // 
             // tabPage_ValidationTest
@@ -336,13 +337,13 @@
             this.heatMapControl1.offsetY = 0;
             this.heatMapControl1.Size = new System.Drawing.Size(1550, 1058);
             this.heatMapControl1.TabIndex = 0;
-            //
+            // 
             // FrmAiReview
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.ClientSize = new System.Drawing.Size(1924, 1088);
+            this.ClientSize = new System.Drawing.Size(1924, 1055);
             this.Controls.Add(this.panel_Main);
             this.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;

@@ -35,10 +35,51 @@ namespace DeepSightWorkLib.Services
         /// </summary>
         public bool TryGetBySn(string sn, out VrsHistoryResult result)
         {
+            string _ = null;
+            return TryGetBySnWithHint(sn, ref _, out result);
+        }
+
+        /// <summary>
+        /// 按 SN 查询 vrs_history_result，支持优先 URL 提示以加速批量查询。
+        /// 首次命中后 preferredVrsUrl 会被更新为命中的 LevelDB 地址，
+        /// 后续同一批次的查询优先直连该地址，跳过遍历。
+        /// </summary>
+        public bool TryGetBySnWithHint(string sn, ref string preferredVrsUrl, out VrsHistoryResult result)
+        {
             result = null;
             if (string.IsNullOrWhiteSpace(sn))
                 return false;
 
+            // 1. 优先使用上次命中过的 URL 直连，避免重复遍历
+            if (!string.IsNullOrWhiteSpace(preferredVrsUrl))
+            {
+                var url = preferredVrsUrl; // 拷贝到局部变量，避免 lambda 中捕获 ref 参数导致 CS1628
+                var preferredConfig = LevelDbConfigManager.Instance.Databases
+                    .FirstOrDefault(db => db.IsEnabled &&
+                        string.Equals(db.VRSUrl, url, StringComparison.OrdinalIgnoreCase));
+
+                if (preferredConfig != null)
+                {
+                    var dbName = string.IsNullOrWhiteSpace(preferredConfig.VrsHistoryDbName)
+                        ? DefaultDbName
+                        : preferredConfig.VrsHistoryDbName;
+                    try
+                    {
+                        if (TryQuery(preferredVrsUrl, dbName, sn, out string rawValue, out _))
+                        {
+                            var parsed = Parse(sn, rawValue);
+                            if (parsed != null)
+                            {
+                                result = parsed;
+                                return true;
+                            }
+                        }
+                    }
+                    catch { /* 优先 URL 失败，继续走全量遍历 */ }
+                }
+            }
+
+            // 2. 优先 URL 未命中或为空，遍历所有启用的配置
             var configs = LevelDbConfigManager.Instance.Databases
                 .Where(db => db.IsEnabled)
                 .ToList();
@@ -54,6 +95,11 @@ namespace DeepSightWorkLib.Services
 
             foreach (var config in configs)
             {
+                // 跳过已经作为优先 URL 尝试过的配置，避免重复请求
+                if (!string.IsNullOrWhiteSpace(preferredVrsUrl) &&
+                    string.Equals(config.VRSUrl, preferredVrsUrl, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
                 var dbName = string.IsNullOrWhiteSpace(config.VrsHistoryDbName)
                     ? DefaultDbName
                     : config.VrsHistoryDbName;
@@ -65,6 +111,7 @@ namespace DeepSightWorkLib.Services
                         if (parsed != null)
                         {
                             result = parsed;
+                            preferredVrsUrl = config.VRSUrl; // 记住命中的 URL，后续复用
                             return true;
                         }
                     }

@@ -543,6 +543,7 @@ namespace DeepSightAI
 
                 // 相同 SN 只查询一次
                 var vrsCache = new Dictionary<string, VrsHistoryResult>(StringComparer.OrdinalIgnoreCase);
+                string preferredVrsUrl = null; // 首次命中后记录，后续同批次 SN 优先直连
 
                 foreach (var record in records)
                 {
@@ -551,7 +552,7 @@ namespace DeepSightAI
 
                     if (!vrsCache.TryGetValue(record.SerialNumber, out var vrs))
                     {
-                        if (!svc.TryGetBySn(record.SerialNumber, out vrs))
+                        if (!svc.TryGetBySnWithHint(record.SerialNumber, ref preferredVrsUrl, out vrs))
                             vrs = null;
                         vrsCache[record.SerialNumber] = vrs;
                     }

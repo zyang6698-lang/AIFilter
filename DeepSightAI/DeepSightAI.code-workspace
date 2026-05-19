@@ -6,6 +6,9 @@
 	],
 	"settings": {
 		"dotnet.preferCSharpExtension": true,
-		"commentTranslate.hover.enabled": true
+		"commentTranslate.hover.enabled": true,
+		"chat.tools.terminal.autoApprove": {
+			"dotnet build": true
+		}
 	}
 }
