@@ -102,7 +102,7 @@ namespace DeepSightAI
                 {
                     dgv_Panels.ClearSelection();
                     dgv_Panels.Rows[e.RowIndex].Selected = true;
-                    dgv_Panels.CurrentCell = dgv_Panels.Rows[e.RowIndex].Cells[0];
+                    dgv_Panels.SafeSetCurrentCell(dgv_Panels.Rows[e.RowIndex].Cells[0]);
                 }
             };
         }

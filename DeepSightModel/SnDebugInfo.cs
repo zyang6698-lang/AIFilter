@@ -127,6 +127,11 @@ namespace DeepSightModel
         /// 回写VRS V1.0的JSON（发送给LevelDB的完整请求体，数据库V1.0回写用）
         /// </summary>
         public string VrsV1WriteBackJson { get; set; }
+
+        /// <summary>
+        /// AVI处理状态（process_status）：normal 为正常，其他值均为异常
+        /// </summary>
+        public string ProcessStatus { get; set; }
     }
 
     /// <summary>

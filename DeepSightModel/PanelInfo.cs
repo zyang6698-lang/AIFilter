@@ -9,6 +9,34 @@ using Newtonsoft.Json;
 namespace DeepSightModel
 {
     //定义panelInfo类
+    /// <summary>
+    /// PcsInfo 字典自定义 JsonConverter：当 JSON 中 pcs_info 为 []（空数组）时返回 null，
+    /// 避免 Dictionary 反序列化类型不匹配异常（如 process_status=over_max_count 场景）
+    /// </summary>
+    public class PcsInfoDictionaryConverter : JsonConverter<Dictionary<string, PcsInfo>>
+    {
+        public override Dictionary<string, PcsInfo> ReadJson(
+            JsonReader reader, Type objectType, Dictionary<string, PcsInfo> existingValue,
+            bool hasExistingValue, JsonSerializer serializer)
+        {
+            // pcs_info = [] 空数组 -> 直接跳过并返回 null
+            if (reader.TokenType == JsonToken.StartArray)
+            {
+                reader.Skip();
+                return null;
+            }
+
+            // 正常 object 走标准 Dictionary 反序列化
+            return serializer.Deserialize<Dictionary<string, PcsInfo>>(reader);
+        }
+
+        public override void WriteJson(JsonWriter writer, Dictionary<string, PcsInfo> value, JsonSerializer serializer)
+        {
+            serializer.Serialize(writer, value);
+        }
+    }
+
+    //定义panelInfo类
     public class RootPanelInfo
     {
         [JsonProperty("archive_path")]
@@ -63,6 +91,7 @@ namespace DeepSightModel
         public List<PanelStorageInfo> PanelStorageInfo { get; set; }
 
         [JsonProperty("pcs_info")]
+        [JsonConverter(typeof(PcsInfoDictionaryConverter))]
         public Dictionary<string, PcsInfo> PcsInfo { get; set; }
 
         [JsonProperty("process_status")]

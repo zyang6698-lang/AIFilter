@@ -122,7 +122,7 @@ namespace DeepSightAI
             int next = (cur + 1) % dataGridView_Defects.Rows.Count;
             dataGridView_Defects.ClearSelection();
             dataGridView_Defects.Rows[next].Selected = true;
-            dataGridView_Defects.CurrentCell = dataGridView_Defects.Rows[next].Cells[0];
+            dataGridView_Defects.SafeSetCurrentCell(dataGridView_Defects.Rows[next].Cells[0]);
             return dataGridView_Defects.Rows[next].DataBoundItem as DefectReviewItem;
         }
 
@@ -158,7 +158,7 @@ namespace DeepSightAI
             {
                 dataGridView_Defects.ClearSelection();
                 dataGridView_Defects.Rows[0].Selected = true;
-                dataGridView_Defects.CurrentCell = dataGridView_Defects.Rows[0].Cells[0];
+                dataGridView_Defects.SafeSetCurrentCell(dataGridView_Defects.Rows[0].Cells[0]);
             }
             else if (filtered.Count == 0)
             {

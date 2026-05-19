@@ -272,7 +272,7 @@ namespace DeepSightAI.SettingPages
                 {
                     dgvPipeline.ClearSelection();
                     dgvPipeline.Rows[0].Selected = true;
-                    dgvPipeline.CurrentCell = dgvPipeline.Rows[0].Cells[0];
+                    dgvPipeline.SafeSetCurrentCell(dgvPipeline.Rows[0].Cells[0]);
                     RefreshProductsGrid(0);
                 }
             }
@@ -638,7 +638,7 @@ namespace DeepSightAI.SettingPages
             // 选中新行
             dgvPipeline.ClearSelection();
             dgvPipeline.Rows[rowIdx].Selected = true;
-            dgvPipeline.CurrentCell = dgvPipeline.Rows[rowIdx].Cells[0];
+            dgvPipeline.SafeSetCurrentCell(dgvPipeline.Rows[rowIdx].Cells[0]);
             RefreshProductsGrid(rowIdx);
         }
 

@@ -71,5 +71,24 @@ namespace DeepSightAI
                 uidgv.StripeOddColor = CellAltBack;
             }
         }
+
+        /// <summary>
+        /// 安全设置 CurrentCell，避免"不能将当前单元格设置为不可见的单元格"异常。
+        /// 在设置前检查目标单元格、其所在行和列是否均可见。
+        /// </summary>
+        /// <param name="dgv">目标 DataGridView</param>
+        /// <param name="cell">要设置为当前单元格的单元格</param>
+        /// <returns>是否成功设置</returns>
+        public static bool SafeSetCurrentCell(this DataGridView dgv, DataGridViewCell cell)
+        {
+            if (cell?.OwningRow != null && cell.OwningRow.Visible &&
+                cell.OwningColumn != null && cell.OwningColumn.Visible &&
+                cell.Visible)
+            {
+                dgv.CurrentCell = cell;
+                return true;
+            }
+            return false;
+        }
     }
 }

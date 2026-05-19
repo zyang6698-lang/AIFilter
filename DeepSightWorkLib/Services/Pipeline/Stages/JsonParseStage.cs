@@ -84,6 +84,13 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
                 return ctx;
             }
 
+            // process_status 非 normal 时告警（如 over_max_count 会导致 pcs_info 为空数组，此时 PcsInfo 为 null）
+            if (!string.IsNullOrEmpty(panelInfo.ProcessStatus) &&
+                !string.Equals(panelInfo.ProcessStatus, "normal", StringComparison.OrdinalIgnoreCase))
+            {
+                RaiseProcessStatusAbnormalAlarm(sn, side, panelInfo.ProcessStatus, path);
+            }
+
             // line_name 正常情况下不应为空；为空时降级为默认值并告警，提示运维确认 AVI 机台配置
             if (string.IsNullOrEmpty(panelInfo.LineName))
             {
@@ -206,6 +213,29 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
         }
 
         /// <summary>
+        /// process_status 非 normal 告警（如 over_max_count 等异常状态）
+        /// </summary>
+        private static void RaiseProcessStatusAbnormalAlarm(string sn, string side, string processStatus, string path)
+        {
+            string warnMsg = $"AVI处理状态异常: process_status={processStatus}，pcs_info可能为空，请确认AVI结果是否正常";
+            LogTextHelper.Warn($"{sn} {side} {warnMsg}");
+            try
+            {
+                AlarmService.Instance.RaiseAlarm(
+                    AlarmLevel.Warning,
+                    AlarmCategory.System,
+                    "JsonParseStage.ProcessStatus",
+                    warnMsg,
+                    $"SN={sn}, Side={side}, Path={path}, ProcessStatus={processStatus}",
+                    sn);
+            }
+            catch (Exception alarmEx)
+            {
+                LogTextHelper.Warn($"ProcessStatus 告警发起异常: {alarmEx.Message}");
+            }
+        }
+
+        /// <summary>
         /// line_name 缺失告警：日志 + 结构化告警（30s 冷却由 AlarmService 内置处理）
         /// </summary>
         private static void RaiseLineNameMissingAlarm(string sn, string side, string path)
@@ -243,6 +273,8 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
                 debugInfo.ProductSerial = obj.ProductSerial;
                 debugInfo.LotNumber = obj.LotId ?? obj.LotBatch;
 
+                debugInfo.ProcessStatus = obj.ProcessStatus;
+
                 var defectCodes = new List<string>();
                 CollectDefectCodes(obj.PcsInfo?.Values, defectCodes);
                 CollectDefectCodes(obj.PanelInfo != null ? new[] { obj.PanelInfo } : null, defectCodes);
@@ -253,6 +285,11 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
                     summary.Append("AVI无报点");
                 if (convertResult.DirectReportDefectIndices?.Count > 0)
                     summary.Append($" | 直报{convertResult.DirectReportDefectIndices.Count}个");
+                if (!string.IsNullOrEmpty(obj.ProcessStatus) &&
+                    !string.Equals(obj.ProcessStatus, "normal", StringComparison.OrdinalIgnoreCase))
+                {
+                    summary.Append($" | ⚠ process_status={obj.ProcessStatus}(异常)");
+                }
                 debugInfo.JudgmentSummary = summary.ToString();
 
                 SnDebugInfoCache.Cleanup();

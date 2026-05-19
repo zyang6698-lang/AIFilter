@@ -90,7 +90,7 @@ namespace DeepSightAI
         private void InitializeFilterControls()
         {
             // AI Filter
-            this.comboBox_FilterAI.Items.AddRange(new object[] { "All", "AI_OK", "AI_NG" });
+            this.comboBox_FilterAI.Items.AddRange(new object[] { "All", "AI_OK", "AI_NG", "AI_直报" });
             this.comboBox_FilterAI.SelectedIndex = 0;
             this.comboBox_FilterAI.SelectedIndexChanged += (s, e) =>
             {
@@ -285,9 +285,17 @@ namespace DeepSightAI
             }
             else if (_aiFilter != "All")
             {
-                // AIStatus: 0 未运行 / 1 OK / 2 NG / 3 异常
-                int targetAiStatus = _aiFilter == "AI_OK" ? 1 : 2;
-                _filteredHeatPoints = _filteredHeatPoints.Where(p => p.AIStatus == targetAiStatus).ToList();
+                // AIStatus: 0 未运行 / 1 OK / 2 NG / 3 异常 / 4 直报
+                int targetAiStatus;
+                switch (_aiFilter)
+                {
+                    case "AI_OK": targetAiStatus = 1; break;
+                    case "AI_NG": targetAiStatus = 2; break;
+                    case "AI_直报": targetAiStatus = 4; break;
+                    default: targetAiStatus = -1; break;
+                }
+                if (targetAiStatus >= 0)
+                    _filteredHeatPoints = _filteredHeatPoints.Where(p => p.AIStatus == targetAiStatus).ToList();
             }
 
             if (!_comparisonMode && _vvsFilter != "All")

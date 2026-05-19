@@ -505,7 +505,7 @@ namespace DeepSightAI
                 {
                     dataGridView_Results.ClearSelection();
                     dataGridView_Results.Rows[0].Selected = true;
-                    dataGridView_Results.CurrentCell = dataGridView_Results.Rows[0].Cells[0];
+                    dataGridView_Results.SafeSetCurrentCell(dataGridView_Results.Rows[0].Cells[0]);
                 }
             }
             finally

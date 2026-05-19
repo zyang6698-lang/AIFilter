@@ -354,6 +354,16 @@ namespace DeepSightAI
                 sbOther.AppendLine($"Minio路径:       {debugInfo.MinioPath}");
                 sbOther.AppendLine($"数据获取时间:    {debugInfo.CreateTime:yyyy-MM-dd HH:mm:ss.fff}");
 
+                // process_status 非 normal 时告警
+                if (!string.IsNullOrEmpty(debugInfo.ProcessStatus) &&
+                    !string.Equals(debugInfo.ProcessStatus, "normal", StringComparison.OrdinalIgnoreCase))
+                {
+                    sbOther.AppendLine();
+                    sbOther.AppendLine("---------- ⚠ 警告：AVI处理状态异常 ----------");
+                    sbOther.AppendLine($"ProcessStatus:   {debugInfo.ProcessStatus}");
+                    sbOther.AppendLine($"说明:            pcs_info 可能为空，请确认 AVI 结果是否正常（如 over_max_count）");
+                }
+
                 if (debugInfo.HasError)
                 {
                     sbOther.AppendLine();
