@@ -541,6 +541,10 @@ namespace DeepSightAI
             {
                 var svc = new VrsHistoryService(new LevelDbHttpClient());
 
+                // 预热：提前发送 heartbeat 获取所有 VRS URL 上的 DB 状态，
+                // 避免后续逐 SN 查询时对不存在的 DB 发起无效请求
+                svc.WarmUp();
+
                 // 相同 SN 只查询一次
                 var vrsCache = new Dictionary<string, VrsHistoryResult>(StringComparer.OrdinalIgnoreCase);
                 string preferredVrsUrl = null; // 首次命中后记录，后续同批次 SN 优先直连

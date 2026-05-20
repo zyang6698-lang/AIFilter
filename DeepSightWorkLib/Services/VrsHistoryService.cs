@@ -24,10 +24,35 @@ namespace DeepSightWorkLib.Services
         public const string DefaultDbName = "vrs_history_result";
 
         private readonly LevelDbHttpClient _httpDb;
+        private readonly DbStatusService _dbStatusSvc;
+
+        /// <summary>
+        /// 是否启用 DB 状态预检（通过 heartbeat 判断目标 DB 是否存在）。
+        /// 默认启用；在不需要 DB 状态检查的场景（如测试）可设为 false。
+        /// </summary>
+        public bool EnableDbStatusCheck { get; set; } = true;
 
         public VrsHistoryService(LevelDbHttpClient httpDb)
         {
             _httpDb = httpDb ?? throw new ArgumentNullException(nameof(httpDb));
+            _dbStatusSvc = new DbStatusService(_httpDb);
+        }
+
+        /// <summary>
+        /// 预热：对所有已启用配置的 VRS URL 发送 heartbeat，提前缓存 DB 状态。
+        /// 建议在批量查询前调用，避免每个 SN 查询时重复发送 heartbeat。
+        /// </summary>
+        public void WarmUp()
+        {
+            if (!EnableDbStatusCheck) return;
+
+            var urls = LevelDbConfigManager.Instance.Databases
+                .Where(db => db.IsEnabled)
+                .Select(db => db.VRSUrl)
+                .Where(url => !string.IsNullOrWhiteSpace(url))
+                .Distinct(StringComparer.OrdinalIgnoreCase);
+
+            _dbStatusSvc.WarmUp(urls);
         }
 
         /// <summary>
@@ -63,19 +88,28 @@ namespace DeepSightWorkLib.Services
                     var dbName = string.IsNullOrWhiteSpace(preferredConfig.VrsHistoryDbName)
                         ? DefaultDbName
                         : preferredConfig.VrsHistoryDbName;
-                    try
+
+                    // DB 状态预检：通过 heartbeat 确认目标 DB 是否存在且可读
+                    if (EnableDbStatusCheck && !_dbStatusSvc.IsDbAvailable(preferredVrsUrl, dbName))
                     {
-                        if (TryQuery(preferredVrsUrl, dbName, sn, out string rawValue, out _))
+                        LogTextHelper.Warn($"VrsHistoryService: DB 不可用，跳过查询 url={preferredVrsUrl}, db={dbName}");
+                    }
+                    else
+                    {
+                        try
                         {
-                            var parsed = Parse(sn, rawValue);
-                            if (parsed != null)
+                            if (TryQuery(preferredVrsUrl, dbName, sn, out string rawValue, out _))
                             {
-                                result = parsed;
-                                return true;
+                                var parsed = Parse(sn, rawValue);
+                                if (parsed != null)
+                                {
+                                    result = parsed;
+                                    return true;
+                                }
                             }
                         }
+                        catch { /* 优先 URL 失败，继续走全量遍历 */ }
                     }
-                    catch { /* 优先 URL 失败，继续走全量遍历 */ }
                 }
             }
 
@@ -103,6 +137,14 @@ namespace DeepSightWorkLib.Services
                 var dbName = string.IsNullOrWhiteSpace(config.VrsHistoryDbName)
                     ? DefaultDbName
                     : config.VrsHistoryDbName;
+
+                // DB 状态预检：通过 heartbeat 确认目标 DB 是否存在且可读
+                if (EnableDbStatusCheck && !_dbStatusSvc.IsDbAvailable(config.VRSUrl, dbName))
+                {
+                    LogTextHelper.Warn($"VrsHistoryService: DB 不可用，跳过查询 url={config.VRSUrl}, db={dbName}");
+                    continue;
+                }
+
                 try
                 {
                     if (TryQuery(config.VRSUrl, dbName, sn, out string rawValue, out _))

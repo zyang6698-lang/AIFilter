@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace DeepSightDB
 {
@@ -35,6 +36,52 @@ namespace DeepSightDB
 
     }
 
+    /// <summary>
+    /// LevelDB 心跳响应中的单个 DB 状态
+    /// </summary>
+    public class DbStatusInfo
+    {
+        [JsonProperty("db_name")]
+        public string DbName { get; set; }
 
+        [JsonProperty("get_status")]
+        public bool GetStatus { get; set; }
+
+        [JsonProperty("get_status_err")]
+        public string GetStatusErr { get; set; }
+
+        [JsonProperty("put_status")]
+        public bool PutStatus { get; set; }
+
+        [JsonProperty("put_status_err")]
+        public string PutStatusErr { get; set; }
+
+        [JsonProperty("threads_count")]
+        public int ThreadsCount { get; set; }
+    }
+
+    /// <summary>
+    /// LevelDB 心跳（heartbeat）响应
+    /// </summary>
+    public class HeartbeatResponse
+    {
+        [JsonProperty("db_count")]
+        public int DbCount { get; set; }
+
+        [JsonProperty("db_status")]
+        public List<DbStatusInfo> DbStatus { get; set; }
+
+        [JsonProperty("request_time")]
+        public string RequestTime { get; set; }
+
+        [JsonProperty("response_time")]
+        public string ResponseTime { get; set; }
+
+        [JsonProperty("result")]
+        public string Result { get; set; }
+
+        [JsonProperty("uniqueKey")]
+        public string UniqueKey { get; set; }
+    }
 
 }

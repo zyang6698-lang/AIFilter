@@ -192,6 +192,7 @@
     <Compile Include="Services\WorkerThreadManager.cs" />
     <Compile Include="Services\PanelDataConverter.cs" />
     <Compile Include="Services\ConsistencyTestDataStore.cs" />
+    <Compile Include="Services\DbStatusService.cs" />
     <Compile Include="Services\ModelValidationTestService.cs" />
     <Compile Include="Services\VBModelBuilder.cs" />
     <Compile Include="Services\VrsHistoryService.cs" />

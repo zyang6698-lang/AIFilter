@@ -33,7 +33,7 @@ namespace DeepSightAI.SettingPages
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);
             SetStyle(ControlStyles.DoubleBuffer, true);
             // 为容器面板开启双缓冲，消除切换 UISwitch 等控件时的页面闪烁
-            EnableDoubleBuffered(tlpMain, tlpRight, tlpBasic, tlpAvi, tlpVrs, tlpMinio, tlpListButtons);
+            EnableDoubleBuffered(tlpMain, tlpRight, tlpAvi, tlpVrs, tlpMinio, tlpListButtons);
             HookDetailEvents();
         }
 
@@ -100,6 +100,8 @@ namespace DeepSightAI.SettingPages
             txtVrsWriteBackDbName.TextChanged += (s, e) => WriteBack(c => c.VRSWriteBackDbName = txtVrsWriteBackDbName.Text);
             txtVrsWriteBackDbNameV1.TextChanged += (s, e) => WriteBack(c => c.VRSWriteBackDbNameV1 = txtVrsWriteBackDbNameV1.Text);
             txtVrsHistoryDbName.TextChanged += (s, e) => WriteBack(c => { c.VrsHistoryDbName = txtVrsHistoryDbName.Text; ResetVrsStatus(); });
+            txtVrsIp.TextChanged += (s, e) => WriteBack(c => { c.VRSIP = txtVrsIp.Text; ResetVrsStatus(); });
+            txtVrsPort.TextChanged += (s, e) => WriteBack(c => { c.VRSPort = txtVrsPort.Text; ResetVrsStatus(); });
             chkIsEnabled.ValueChanged += (s, v) => WriteBack(c => c.IsEnabled = chkIsEnabled.Active);
             txtMinioIpA.TextChanged += (s, e) => WriteBack(c => { c.MinioIpA = txtMinioIpA.Text; ResetMinioStatus("A"); });
             txtMinioIpB.TextChanged += (s, e) => WriteBack(c => { c.MinioIpB = txtMinioIpB.Text; ResetMinioStatus("B"); });
@@ -178,6 +180,12 @@ namespace DeepSightAI.SettingPages
         /// </summary>
         private void lstDatabases_SelectedIndexChanged(object sender, EventArgs e)
         {
+            // 防止点击列表空白区域导致选中丢失，进而触发 chkIsEnabled 显示为禁用
+            if (lstDatabases.SelectedIndex < 0 && _configs.Count > 0)
+            {
+                lstDatabases.SelectedIndex = 0;
+                return;
+            }
             BindDetail(CurrentConfig);
         }
 
@@ -190,12 +198,13 @@ namespace DeepSightAI.SettingPages
             try
             {
                 bool has = db != null;
-                grpBasic.Enabled = grpAvi.Enabled = grpVrs.Enabled = grpMinio.Enabled = has;
+                grpAvi.Enabled = grpVrs.Enabled = grpMinio.Enabled = has;
                 if (!has)
                 {
                     txtDbName.Text = txtIp.Text = txtPort.Text = txtWriteBackDbName.Text = "";
                     txtVrsWriteBackDbName.Text = txtVrsWriteBackDbNameV1.Text = "";
                     txtVrsHistoryDbName.Text = txtVrsTestSn.Text = "";
+                    txtVrsIp.Text = txtVrsPort.Text = "";
                     txtMinioIpA.Text = txtMinioIpB.Text = "";
                     chkIsEnabled.Active = false;
                     SetAviStatus("未测试", Color.FromArgb(216, 219, 188));
@@ -213,6 +222,8 @@ namespace DeepSightAI.SettingPages
                 txtVrsHistoryDbName.Text = string.IsNullOrWhiteSpace(db.VrsHistoryDbName)
                     ? VrsHistoryService.DefaultDbName : db.VrsHistoryDbName;
                 txtVrsTestSn.Text = "";
+                txtVrsIp.Text = db.VRSIP ?? "";
+                txtVrsPort.Text = db.VRSPort ?? "";
                 chkIsEnabled.Active = db.IsEnabled;
                 txtMinioIpA.Text = db.MinioIpA ?? "";
                 txtMinioIpB.Text = db.MinioIpB ?? "";
@@ -241,6 +252,8 @@ namespace DeepSightAI.SettingPages
                 VRSWriteBackDbName = "ai_detail_results_tovrs",
                 VRSWriteBackDbNameV1 = "ai_inference_result",
                 VrsHistoryDbName = VrsHistoryService.DefaultDbName,
+                VRSIP = null,
+                VRSPort = null,
                 EnableVRSWriteBackV1 = true,
                 IsEnabled = false,
                 MinioIpA = "127.0.0.1",
