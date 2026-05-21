@@ -198,6 +198,66 @@ namespace DeepSightWorkLib
                 SystemEvent.SendAlarmMsg($"VB算法调用异常(WithImages2):{ex.ToString()}");
             }
         }
+
+        /// <summary>
+        /// 多批图像推理方法（将所有图片一次性传递给 C++，由 C++ 端按 defect_count × img_count_each_defect 分批推理）
+        /// </summary>
+        /// <param name="info">推理参数信息</param>
+        /// <param name="mats">所有待推理图片列表（已解码的 Mat），总数量 = defectCount × imgCountEachDefect</param>
+        /// <param name="defectCount">待推理的缺陷数量</param>
+        /// <param name="imgCountEachDefect">单个缺陷所需的图片数量</param>
+        /// <param name="vb_outStr">推理结果输出</param>
+        public void DefectMethodWithAllImages(RootVBInfo info, List<Mat> mats, int defectCount, int imgCountEachDefect, out string vb_outStr)
+        {
+            if (_aiDefect == null)
+            {
+                vb_outStr = "";
+                LogTextHelper.Warn("DefectMethodWithAllImages: AI 引擎未初始化，跳过推理");
+                return;
+            }
+            try
+            {
+                // 检查 mats 是否为空
+                if (mats == null || mats.Count == 0)
+                {
+                    vb_outStr = "";
+                    LogTextHelper.Info("DefectMethodWithAllImages: mats为空或没有图片数据");
+                    return;
+                }
+
+                // 验证图片数量与 defectCount × imgCountEachDefect 是否匹配
+                int expectedCount = defectCount * imgCountEachDefect;
+                if (mats.Count != expectedCount)
+                {
+                    vb_outStr = "";
+                    LogTextHelper.Warn($"DefectMethodWithAllImages: 图片数量({mats.Count})与预期({expectedCount}=defectCount({defectCount})×imgCountEachDefect({imgCountEachDefect}))不匹配");
+                    return;
+                }
+
+                JsonSerializerSettings jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+                string jsonStr = JsonConvert.SerializeObject(info, Formatting.None, jsonSetting);
+
+                LogTextHelper.Info($"DefectMethodWithAllImages: 准备调用推理，图片总数={mats.Count}，缺陷数={defectCount}，每缺陷图片数={imgCountEachDefect}");
+
+                // 使用 BatchImageData 管理图片数据的非托管内存
+                using (var batchData = ImageHelper.CreateBatchImageData(mats))
+                {
+                    LogTextHelper.Info($"DefectMethodWithAllImages: BatchImageData创建完成，ImagesPtr={batchData.ImagesPtr}, Count={batchData.Count}");
+
+                    IntPtr result = IntPtr.Zero;
+                    int ret = _aiDefect.InferenceWithAllImages(jsonStr, batchData.ImagesPtr, defectCount, imgCountEachDefect, out result);
+
+                    LogTextHelper.Info($"DefectMethodWithAllImages: 推理返回，ret={ret}, result={result}");
+
+                    vb_outStr = Marshal.PtrToStringAnsi(result);
+                }
+            }
+            catch (Exception ex)
+            {
+                vb_outStr = "";
+                SystemEvent.SendAlarmMsg($"VB算法调用异常(WithAllImages):{ex.ToString()}");
+            }
+        }
     }
 
     //C++接口实现
@@ -253,6 +313,26 @@ namespace DeepSightWorkLib
     IntPtr images,IntPtr images_temp,
     int image_count,
     out IntPtr output);
+
+        /// <summary>
+        /// 多批图像推理接口（将所有图片一次性传递给 C++，按 defect_count × img_count_each_defect 分批推理）
+        /// 与 C++ 端 basehandler_handle_message_with_all_images 对应
+        /// </summary>
+        /// <param name="handler">句柄</param>
+        /// <param name="request">调用接口发送给proxy的推理请求json</param>
+        /// <param name="imgs">c_img_info 结构体数组指针（所有待推理图片）</param>
+        /// <param name="defect_count">待推理的缺陷的数量</param>
+        /// <param name="img_count_each_defect">单个待推理的缺陷所需的图片数量</param>
+        /// <param name="out_response">返回的推理结果response</param>
+        /// <returns>0=成功，其他=失败</returns>
+        [DllImport(strName, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
+        public static extern int basehandler_handle_message_with_all_images(
+            IntPtr handler,
+            [MarshalAs(UnmanagedType.LPStr)] string request,
+            IntPtr imgs,
+            int defect_count,
+            int img_count_each_defect,
+            out IntPtr out_response);
 
         #endregion
 
@@ -314,6 +394,20 @@ namespace DeepSightWorkLib
         public int InferenceWithImages2(string jsonInput, IntPtr imagesPtr,IntPtr imagesPtr_Temp, int imageCount, out IntPtr output)
         {
             return basehandler_handle_message_with_images_template(handler, jsonInput, imagesPtr, imagesPtr_Temp, imageCount, out output);
+        }
+
+        /// <summary>
+        /// 多批图像推理方法（将所有图片一次性传递给 C++，按 defect_count × img_count_each_defect 分批推理）
+        /// </summary>
+        /// <param name="jsonInput">JSON 推理请求参数</param>
+        /// <param name="imagesPtr">ImageDataInfo 数组指针（所有图片）</param>
+        /// <param name="defectCount">待推理的缺陷数量</param>
+        /// <param name="imgCountEachDefect">单个缺陷所需的图片数量</param>
+        /// <param name="output">推理结果输出</param>
+        /// <returns>0=成功</returns>
+        public int InferenceWithAllImages(string jsonInput, IntPtr imagesPtr, int defectCount, int imgCountEachDefect, out IntPtr output)
+        {
+            return basehandler_handle_message_with_all_images(handler, jsonInput, imagesPtr, defectCount, imgCountEachDefect, out output);
         }
     }
 }

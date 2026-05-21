@@ -47,6 +47,16 @@ namespace DeepSightWorkLib.Interfaces
         /// <param name="mats_Tmp">模板图数据列表（已解码的 Mat）</param>
         /// <param name="vb_outStr">推理结果输出</param>
         void DefectMethodWithImages2(RootVBInfo info, List<Mat> mats, List<Mat> mats_Tmp, out string vb_outStr);
+
+        /// <summary>
+        /// 多批图像推理方法（将所有图片一次性传递给 C++，由 C++ 端按 defect_count × img_count_each_defect 分批推理）
+        /// </summary>
+        /// <param name="info">推理参数信息</param>
+        /// <param name="mats">所有待推理图片列表（已解码的 Mat），总数量 = defect_count × img_count_each_defect</param>
+        /// <param name="defectCount">待推理的缺陷数量</param>
+        /// <param name="imgCountEachDefect">单个缺陷所需的图片数量</param>
+        /// <param name="vb_outStr">推理结果输出</param>
+        void DefectMethodWithAllImages(RootVBInfo info, List<Mat> mats, int defectCount, int imgCountEachDefect, out string vb_outStr);
     }
 }
 
