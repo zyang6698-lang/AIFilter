@@ -66,6 +66,10 @@ dotnet test DeepSightWorkLib.Tests/DeepSightWorkLib.Tests.csproj
 
 ## Configuration & Environment
 
+- **Shell PATH 受限**：当前环境 `PATH` 仅包含 `/home/zhangyang/.local/bin`，缺少 `/usr/bin` 和 `/bin`。使用 `git`、`dotnet` 等命令时需加完整路径（如 `/usr/bin/git`、`/usr/bin/dotnet`），或在命令前先执行：
+  ```bash
+  export PATH="/usr/bin:/bin:$PATH"
+  ```
 - Solution configurations: `Debug`, `DebugRemote`, `Release` (each with x64/x86/Any CPU).
 - Installer is **Inno Setup** (`installer/DeepSightAI.iss`). Bundles PostgreSQL 18.1, CUDA 11.8, TensorRT 8.5.3.1, Qt, Python 2.7. Full installer vs. update installer (`DeepSightAI_Update.iss`).
 - No CI/CD pipeline is configured in the repo. `UpdateVersion.ps1` has GITHUB_OUTPUT support if one is added later.
