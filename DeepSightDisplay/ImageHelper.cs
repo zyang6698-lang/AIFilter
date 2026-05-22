@@ -50,9 +50,14 @@ namespace DeepSightDisplay
                 g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
                 g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
 
+                // 根据图片分辨率动态计算线宽和字体大小，避免高分辨率下线条过细
+                float scaleFactor = Math.Max(1.0f, Math.Min(result.Width, result.Height) / 512.0f);
+                float penWidth = Math.Max(2.0f, 4.0f * scaleFactor);
+                float fontSize = 10.0f * scaleFactor;
+
                 // 缺陷框颜色 - 使用醒目的红色
                 Color boxColor = Color.Red;
-                using (Pen pen = new Pen(boxColor, 4))
+                using (Pen pen = new Pen(boxColor, penWidth))
                 {
                     // 绘制缺陷框
                     Rectangle defectRect = new Rectangle(
@@ -67,7 +72,7 @@ namespace DeepSightDisplay
                 // 绘制缺陷名称
                 if (!string.IsNullOrEmpty(heatPoint.DefectName))
                 {
-                    using (Font font = new Font("微软雅黑", 10F, FontStyle.Bold))
+                    using (Font font = new Font("微软雅黑", fontSize, FontStyle.Bold))
                     using (SolidBrush textBrush = new SolidBrush(Color.Yellow))
                     using (SolidBrush bgBrush = new SolidBrush(Color.FromArgb(180, 0, 0, 0)))
                     {

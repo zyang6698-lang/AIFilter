@@ -141,26 +141,27 @@ namespace DeepSightAI
         {
             string filter = txt_SnFilter.Text.Trim();
             if (string.IsNullOrEmpty(filter))
-            {
-                // 清空搜索时恢复当前 Lot 的全量数据
-                RefreshDisplay(_sourceItems);
                 return;
+
+            // 在现有数据中查找第一个匹配的行
+            int matchIndex = -1;
+            for (int i = 0; i < _sourceItems.Count; i++)
+            {
+                if (_sourceItems[i].SerialNumber != null &&
+                    _sourceItems[i].SerialNumber.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    matchIndex = i;
+                    break;
+                }
             }
 
-            var filtered = _sourceItems
-                .Where(x => x.SerialNumber != null &&
-                            x.SerialNumber.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0)
-                .ToList();
-
-            RefreshDisplay(filtered);
-
-            if (filtered.Count == 1)
+            if (matchIndex >= 0)
             {
                 dataGridView_Defects.ClearSelection();
-                dataGridView_Defects.Rows[0].Selected = true;
-                dataGridView_Defects.SafeSetCurrentCell(dataGridView_Defects.Rows[0].Cells[0]);
+                dataGridView_Defects.Rows[matchIndex].Selected = true;
+                dataGridView_Defects.SafeSetCurrentCell(dataGridView_Defects.Rows[matchIndex].Cells[0]);
             }
-            else if (filtered.Count == 0)
+            else
             {
                 MessageBox.Show($"未找到包含 \"{filter}\" 的序列号。",
                     "搜索结果", MessageBoxButtons.OK, MessageBoxIcon.Information);

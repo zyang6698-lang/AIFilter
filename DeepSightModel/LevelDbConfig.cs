@@ -1,11 +1,28 @@
 using DeepSightTool;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.IO;
 
 namespace DeepSightModel
 {
+    /// <summary>
+    /// AVI 数据来源类型枚举
+    /// </summary>
+    public enum AviSourceType
+    {
+        /// <summary>
+        /// 标准 AVI 数据源
+        /// </summary>
+        Avi,
+
+        /// <summary>
+        /// 拍照机数据源（含额外图片及额外 JSON 字段）
+        /// </summary>
+        Camera
+    }
+
     /// <summary>
     /// 单个 LevelDB 数据库配置
     /// </summary>
@@ -78,6 +95,13 @@ namespace DeepSightModel
         /// </summary>
         [JsonProperty("is_enabled")]
         public bool IsEnabled { get; set; } = true;
+
+        /// <summary>
+        /// AVI 数据来源类型（AVI 标准源 / 拍照机）
+        /// </summary>
+        [JsonProperty("avi_source_type")]
+        [JsonConverter(typeof(StringEnumConverter))]
+        public AviSourceType AviSourceType { get; set; } = AviSourceType.Avi;
 
         /// <summary>
         /// A面 MinIO 服务器 IP（仅IP，端口使用 MinioSettings.DefaultPort）

@@ -671,7 +671,8 @@ namespace DeepSightWorkLib.Services
                         WriteBackDbName = writeBackDbName,
                         DbUrl = dbUrl,
                         VrsWriteBackDbName = vrsWriteBackDbName,
-                        VrsDbUrl = vrsDbUrl
+                        VrsDbUrl = vrsDbUrl,
+                        AviSourceType = config.AviSourceType
                     };
 
                     if (holdList != null)

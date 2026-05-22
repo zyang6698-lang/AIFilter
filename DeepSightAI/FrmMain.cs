@@ -290,6 +290,9 @@ namespace DeepSightAI
             string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             this.lbl_title.Text = "AI过滤软件 ~ V" + version;
 
+            // 同步 btnStart 图标与实际运行状态（防止设计器默认值与实际状态不一致）
+            btnStart.Image = Machine.master.IsStart ? Resources.pause2 : Resources.start2;
+
             // 启动 UI 批量刷新定时器（200ms ≈ 5FPS，足够流畅且不卡顿）
             _uiRefreshTimer = new System.Windows.Forms.Timer();
             _uiRefreshTimer.Interval = 200;
@@ -301,7 +304,6 @@ namespace DeepSightAI
         {
             LogTextHelper.Error($"收到异常消息：{massage},任务已停止");
         }
-        public static object Locker = new object();
         
         /// <summary>
         /// 新的任务状态事件处理（推荐使用）
@@ -313,8 +315,6 @@ namespace DeepSightAI
             _pendingTaskStatus.Enqueue(statusInfo);
         }
         
-
-
         /// <summary>
         /// 添加新任务行（区分AB面）
         /// 新排队任务始终插入到最顶部
@@ -714,11 +714,8 @@ namespace DeepSightAI
             {
                 if (!Machine.master.IsStart)
                 {
-                    // ── 阻塞式检查历史待处理数据 ──
-                    if (!CheckAndConfirmPendingData())
-                    {
-                        // 仅当弹窗流程正常走完后才继续启动
-                    }
+                    // ── 阻塞式检查历史待处理数据（内部处理/跳过历史数据，不影响启动） ──
+                    CheckAndConfirmPendingData();
 
                     Machine.master.IsStart = true;
                     btnStart.Image = Resources.pause2;

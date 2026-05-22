@@ -7,6 +7,11 @@ namespace DeepSightWorkLib.Services
     public class AviProcessingContext
     {
         /// <summary>
+        /// AVI 数据来源类型（AVI 标准源 / 拍照机）
+        /// </summary>
+        public DeepSightModel.AviSourceType AviSourceType { get; set; }
+
+        /// <summary>
         /// MinIO 服务器 IP 地址
         /// </summary>
         public string MinioIp { get; set; }

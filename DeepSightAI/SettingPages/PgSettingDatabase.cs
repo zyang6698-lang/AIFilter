@@ -34,6 +34,7 @@ namespace DeepSightAI.SettingPages
             SetStyle(ControlStyles.DoubleBuffer, true);
             // 为容器面板开启双缓冲，消除切换 UISwitch 等控件时的页面闪烁
             EnableDoubleBuffered(tlpMain, tlpRight, tlpAvi, tlpVrs, tlpMinio, tlpListButtons);
+            InitAviSourceTypeControls();
             HookDetailEvents();
         }
 
@@ -45,6 +46,61 @@ namespace DeepSightAI.SettingPages
             foreach (var c in controls)
             {
                 if (c != null) prop.SetValue(c, true, null);
+            }
+        }
+
+        /// <summary>
+        /// 初始化 AVI 数据来源类型下拉框控件
+        /// </summary>
+        private void InitAviSourceTypeControls()
+        {
+            // 标签
+            lblAviSourceType = new Sunny.UI.UILabel
+            {
+                BackColor = Color.Transparent,
+                Dock = DockStyle.Fill,
+                Font = new System.Drawing.Font("微软雅黑", 10F),
+                ForeColor = Color.FromArgb(216, 219, 188),
+                Name = "lblAviSourceType",
+                Style = Sunny.UI.UIStyle.Custom,
+                StyleCustomMode = true,
+                Text = "数据来源：",
+                TextAlign = System.Drawing.ContentAlignment.MiddleRight
+            };
+
+            // 下拉框
+            cmbAviSourceType = new Sunny.UI.UIComboBox
+            {
+                Cursor = Cursors.Hand,
+                Dock = DockStyle.Fill,
+                FillColor = Color.FromArgb(45, 45, 48),
+                Font = new System.Drawing.Font("微软雅黑", 10F),
+                ForeColor = Color.FromArgb(216, 219, 188),
+                Name = "cmbAviSourceType",
+                RectColor = Color.FromArgb(60, 80, 95),
+                Style = Sunny.UI.UIStyle.Custom,
+                StyleCustomMode = true,
+                DropDownStyle = Sunny.UI.UIDropDownStyle.DropDownList
+            };
+            cmbAviSourceType.Items.Clear();
+            cmbAviSourceType.Items.Add("AVI（标准源）");
+            cmbAviSourceType.Items.Add("拍照机");
+            cmbAviSourceType.SelectedIndex = 0;
+            cmbAviSourceType.SelectedIndexChanged += (s, e) =>
+                WriteBack(c => c.AviSourceType = cmbAviSourceType.SelectedIndex == 1
+                    ? AviSourceType.Camera : AviSourceType.Avi);
+
+            // 添加到 tlpAvi：新增第 4 行
+            tlpAvi.RowCount = 4;
+            tlpAvi.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 55F));
+            tlpAvi.Controls.Add(lblAviSourceType, 0, 3);
+            tlpAvi.Controls.Add(cmbAviSourceType, 1, 3);
+            tlpAvi.SetColumnSpan(cmbAviSourceType, 3);
+
+            // 调整 grpAvi 所在行高，容纳新增的数据来源行（原 230 → 285）
+            if (tlpRight.RowStyles.Count > 0 && tlpRight.RowStyles[0].SizeType == System.Windows.Forms.SizeType.Absolute)
+            {
+                tlpRight.RowStyles[0] = new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 285F);
             }
         }
 
@@ -79,6 +135,16 @@ namespace DeepSightAI.SettingPages
         /// 加载/切换选项时屏蔽 TextChanged/CheckedChanged 写回
         /// </summary>
         private bool _isBinding = false;
+
+        /// <summary>
+        /// AVI 数据来源类型下拉框
+        /// </summary>
+        private Sunny.UI.UIComboBox cmbAviSourceType;
+
+        /// <summary>
+        /// AVI 数据来源类型标签
+        /// </summary>
+        private Sunny.UI.UILabel lblAviSourceType;
 
         /// <summary>
         /// 当前选中的配置（null 表示无选择）
@@ -207,6 +273,7 @@ namespace DeepSightAI.SettingPages
                     txtVrsIp.Text = txtVrsPort.Text = "";
                     txtMinioIpA.Text = txtMinioIpB.Text = "";
                     chkIsEnabled.Active = false;
+                    cmbAviSourceType.SelectedIndex = 0;
                     SetAviStatus("未测试", Color.FromArgb(216, 219, 188));
                     SetVrsStatus("未测试", Color.FromArgb(216, 219, 188));
                     SetMinioStatus("A", "未测试", Color.FromArgb(216, 219, 188));
@@ -225,6 +292,7 @@ namespace DeepSightAI.SettingPages
                 txtVrsIp.Text = db.VRSIP ?? "";
                 txtVrsPort.Text = db.VRSPort ?? "";
                 chkIsEnabled.Active = db.IsEnabled;
+                cmbAviSourceType.SelectedIndex = db.AviSourceType == AviSourceType.Camera ? 1 : 0;
                 txtMinioIpA.Text = db.MinioIpA ?? "";
                 txtMinioIpB.Text = db.MinioIpB ?? "";
                 SetAviStatus("未测试", Color.FromArgb(216, 219, 188));

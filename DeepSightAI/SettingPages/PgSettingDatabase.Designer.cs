@@ -47,7 +47,6 @@
             this.btnAviTest = new Sunny.UI.UIButton();
             this.lblDbName = new Sunny.UI.UILabel();
             this.txtDbName = new Sunny.UI.UITextBox();
-            this.chkIsEnabled = new Sunny.UI.UISwitch();
             this.lblWriteBackDbName = new Sunny.UI.UILabel();
             this.txtWriteBackDbName = new Sunny.UI.UITextBox();
             this.grpVrs = new Sunny.UI.UIGroupBox();
@@ -76,6 +75,7 @@
             this.txtMinioIpB = new Sunny.UI.UITextBox();
             this.lblMinioStatusB = new Sunny.UI.UILabel();
             this.btnMinioTestB = new Sunny.UI.UIButton();
+            this.chkIsEnabled = new Sunny.UI.UISwitch();
             this.tlpMain.SuspendLayout();
             this.pnlLeft.SuspendLayout();
             this.tlpListButtons.SuspendLayout();
@@ -463,23 +463,6 @@
             this.txtDbName.TabIndex = 1;
             this.txtDbName.TextAlignment = System.Drawing.ContentAlignment.MiddleLeft;
             this.txtDbName.Watermark = "ai_merged_results";
-            // 
-            // chkIsEnabled
-            // 
-            this.chkIsEnabled.ActiveColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(120)))), ((int)(((byte)(160)))));
-            this.chkIsEnabled.ActiveText = "启用";
-            this.chkIsEnabled.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.chkIsEnabled.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
-            this.chkIsEnabled.Font = new System.Drawing.Font("微软雅黑", 10F);
-            this.chkIsEnabled.InActiveText = "禁用";
-            this.chkIsEnabled.Location = new System.Drawing.Point(799, 243);
-            this.chkIsEnabled.Margin = new System.Windows.Forms.Padding(12, 11, 0, 0);
-            this.chkIsEnabled.MinimumSize = new System.Drawing.Size(1, 1);
-            this.chkIsEnabled.Name = "chkIsEnabled";
-            this.chkIsEnabled.Size = new System.Drawing.Size(85, 29);
-            this.chkIsEnabled.Style = Sunny.UI.UIStyle.Custom;
-            this.chkIsEnabled.StyleCustomMode = true;
-            this.chkIsEnabled.TabIndex = 8;
             // 
             // lblWriteBackDbName
             // 
@@ -1018,6 +1001,23 @@
             this.btnMinioTestB.Text = "测试 B 面";
             this.btnMinioTestB.TipsFont = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.btnMinioTestB.Click += new System.EventHandler(this.btnMinioTestB_Click);
+            // 
+            // chkIsEnabled
+            // 
+            this.chkIsEnabled.ActiveColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(120)))), ((int)(((byte)(160)))));
+            this.chkIsEnabled.ActiveText = "启用";
+            this.chkIsEnabled.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.chkIsEnabled.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
+            this.chkIsEnabled.Font = new System.Drawing.Font("微软雅黑", 10F);
+            this.chkIsEnabled.InActiveText = "禁用";
+            this.chkIsEnabled.Location = new System.Drawing.Point(799, 243);
+            this.chkIsEnabled.Margin = new System.Windows.Forms.Padding(12, 11, 0, 0);
+            this.chkIsEnabled.MinimumSize = new System.Drawing.Size(1, 1);
+            this.chkIsEnabled.Name = "chkIsEnabled";
+            this.chkIsEnabled.Size = new System.Drawing.Size(85, 29);
+            this.chkIsEnabled.Style = Sunny.UI.UIStyle.Custom;
+            this.chkIsEnabled.StyleCustomMode = true;
+            this.chkIsEnabled.TabIndex = 8;
             // 
             // PgSettingDatabase
             // 

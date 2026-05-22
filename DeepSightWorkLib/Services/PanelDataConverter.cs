@@ -286,6 +286,7 @@ namespace DeepSightWorkLib.Services
             AddGroupInfo(defect.DefectVrsImages, "defect", context.Head, group);
             AddGroupInfo(defect.DefectVrsOkImages, "template", context.Head, group);
             AddGroupInfo(defect.DefectVrsGerberImages, "gerber", context.Head, group);
+            AddGroupInfo(defect.DefectAviImages, "avi", context.Head, group);
         }
 
         /// <summary>

@@ -207,6 +207,7 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
                         DefectVrsImage = d.DefectVrsImages != null && d.DefectVrsImages.Count > 0 ? d.DefectVrsImages[0] : null,
                         DefectVrsGerberImage = d.DefectVrsGerberImages != null && d.DefectVrsGerberImages.Count > 0 ? d.DefectVrsGerberImages[0] : null,
                         DefectVrsOkImage = d.DefectVrsOkImages != null && d.DefectVrsOkImages.Count > 0 ? d.DefectVrsOkImages[0] : null,
+                        DefectAviImage = d.DefectAviImages != null && d.DefectAviImages.Count > 0 ? d.DefectAviImages[0] : null,
                     });
                 }
             }

@@ -63,5 +63,8 @@ namespace DeepSightModel
 
         /// <summary>VRS OK 图（取 DefectVrsOkImages[0]，无则为 null）</summary>
         public string DefectVrsOkImage { get; set; }
+
+        /// <summary>AVI 额外图（拍照机来源，取 DefectAviImages[0]，无则为 null）</summary>
+        public string DefectAviImage { get; set; }
     }
 }
