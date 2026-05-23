@@ -88,6 +88,8 @@ namespace DeepSightModel
         /// </summary>
         public List<string> AllDefectTempKeys { get; set; }
 
+        public List<string> AllDefectAviKeys { get; set; }
+
         /// <summary>
         /// 每个缺陷是否为直报缺陷的标记列表（与 AllDefectXxxKeys 索引对齐，true=直报）
         /// </summary>

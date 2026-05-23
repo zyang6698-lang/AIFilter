@@ -22,6 +22,7 @@ namespace DeepSightAI
         private DetectInfo _point;
         private bool _isSelected;
         private Image _rawOriginalImage;
+        private bool _useHorizontalImageLayout;
 
         /// <summary>
         /// 主界面背景色（用于空白图片时与主界面保持一致）
@@ -92,12 +93,14 @@ namespace DeepSightAI
             label_SN.Click += (s, e) => ItemClicked?.Invoke(this, EventArgs.Empty);
             pictureBox_OriginalImage.Click += (s, e) => ItemClicked?.Invoke(this, EventArgs.Empty);
             pictureBox_TemplateImage.Click += (s, e) => ItemClicked?.Invoke(this, EventArgs.Empty);
+            pictureBox_AviImage.Click += (s, e) => ItemClicked?.Invoke(this, EventArgs.Empty);
             panel_Status.Click += (s, e) => ItemClicked?.Invoke(this, EventArgs.Empty);
             label_Status.Click += (s, e) => ItemClicked?.Invoke(this, EventArgs.Empty);
 
             // 双击图片弹出详情窗口
             pictureBox_OriginalImage.DoubleClick += PictureBox_DoubleClick;
             pictureBox_TemplateImage.DoubleClick += PictureBox_DoubleClick;
+            pictureBox_AviImage.DoubleClick += PictureBox_DoubleClick;
 
             // 运行按钮
             button_Run.PreviewKeyDown += (s, e) => e.IsInputKey = false;
@@ -140,6 +143,7 @@ namespace DeepSightAI
                 pictureBox_OriginalImage.Image = null;
                 pictureBox_TemplateImage.Image?.Dispose();
                 pictureBox_TemplateImage.Image = null;
+                ClearAviImage();
                 return;
             }
 
@@ -155,6 +159,7 @@ namespace DeepSightAI
             pictureBox_OriginalImage.Image = null;
             pictureBox_TemplateImage.Image?.Dispose();
             pictureBox_TemplateImage.Image = null;
+            ClearAviImage();
 
             UpdateAppearance();
         }
@@ -173,13 +178,14 @@ namespace DeepSightAI
             try
             {
                 // 在后台线程执行耗时的网络I/O和图片解码
-                var (originalMarked, rawOriginal, templateMarked) = await Task.Run(() =>
+                var (originalMarked, rawOriginal, templateMarked, aviImage) = await Task.Run(() =>
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
                     Bitmap rawBmp = null;
                     Bitmap originalWithBox = null;
                     Bitmap templateWithBox = null;
+                    Bitmap aviBmp = null;
 
                     // 加载原图
                     try
@@ -220,7 +226,23 @@ namespace DeepSightAI
                         LogTextHelper.Error($"加载模板图片失败: {ex.Message}");
                     }
 
-                    return (originalWithBox, rawBmp, templateWithBox);
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    try
+                    {
+                        string aviPath = point.DefectAviImage;
+                        if (!string.IsNullOrEmpty(aviPath))
+                        {
+                            aviBmp = LoadImageFromMinio(aviPath);
+                        }
+                    }
+                    catch (OperationCanceledException) { throw; }
+                    catch (Exception ex)
+                    {
+                        LogTextHelper.Error($"加载AVI图片失败: {ex.Message}");
+                    }
+
+                    return (originalWithBox, rawBmp, templateWithBox, aviBmp);
                 }, cancellationToken);
 
                 // 回到UI线程更新控件（Task.Run后自动回到调用线程的同步上下文）
@@ -234,6 +256,11 @@ namespace DeepSightAI
 
                 pictureBox_TemplateImage.Image?.Dispose();
                 pictureBox_TemplateImage.Image = templateMarked;
+
+                pictureBox_AviImage.Image?.Dispose();
+                pictureBox_AviImage.Image = aviImage;
+                pictureBox_AviImage.Visible = aviImage != null;
+                if (aviImage != null) pictureBox_AviImage.BringToFront();
             }
             catch (OperationCanceledException)
             {
@@ -275,6 +302,13 @@ namespace DeepSightAI
                     return mt.ToBitmap();
                 }
             }
+        }
+
+        private void ClearAviImage()
+        {
+            pictureBox_AviImage.Image?.Dispose();
+            pictureBox_AviImage.Image = null;
+            pictureBox_AviImage.Visible = false;
         }
 
 
@@ -398,12 +432,49 @@ namespace DeepSightAI
         /// </summary>
         public void AdjustImageHeight(int totalHeight)
         {
-            // 减去Header(28) + Status(40) + Padding
             int availableHeight = totalHeight - panel_Header.Height - panel_Status.Height - this.Padding.Vertical;
-            int imageHeight = availableHeight / 2;
+            int imageHeight = _useHorizontalImageLayout ? availableHeight : availableHeight / 2;
 
             pictureBox_OriginalImage.Height = imageHeight;
             pictureBox_TemplateImage.Height = imageHeight;
+        }
+
+        public void SetImageLayout(bool horizontal)
+        {
+            if (_useHorizontalImageLayout == horizontal) return;
+
+            _useHorizontalImageLayout = horizontal;
+            tableImages.SuspendLayout();
+            tableImages.Controls.Clear();
+            tableImages.ColumnStyles.Clear();
+            tableImages.RowStyles.Clear();
+
+            if (horizontal)
+            {
+                tableImages.ColumnCount = 2;
+                tableImages.RowCount = 1;
+                tableImages.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+                tableImages.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+                tableImages.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+                pictureBox_OriginalImage.Margin = new Padding(0, 0, 1, 0);
+                pictureBox_TemplateImage.Margin = new Padding(1, 0, 0, 0);
+                tableImages.Controls.Add(pictureBox_OriginalImage, 0, 0);
+                tableImages.Controls.Add(pictureBox_TemplateImage, 1, 0);
+            }
+            else
+            {
+                tableImages.ColumnCount = 1;
+                tableImages.RowCount = 2;
+                tableImages.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+                tableImages.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+                tableImages.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+                pictureBox_OriginalImage.Margin = new Padding(0, 0, 0, 1);
+                pictureBox_TemplateImage.Margin = new Padding(0, 1, 0, 0);
+                tableImages.Controls.Add(pictureBox_OriginalImage, 0, 0);
+                tableImages.Controls.Add(pictureBox_TemplateImage, 0, 1);
+            }
+
+            tableImages.ResumeLayout(true);
         }
 
         /// <summary>
@@ -435,6 +506,7 @@ namespace DeepSightAI
             // 模板图
             pictureBox_TemplateImage.Image?.Dispose();
             pictureBox_TemplateImage.Image = templateImage;
+            ClearAviImage();
 
             // 状态
             label_Status.Text = statusText ?? "";
@@ -472,6 +544,7 @@ namespace DeepSightAI
             pictureBox_OriginalImage.Image = null;
             pictureBox_TemplateImage.Image?.Dispose();
             pictureBox_TemplateImage.Image = null;
+            ClearAviImage();
             _rawOriginalImage?.Dispose();
             _rawOriginalImage = null;
 

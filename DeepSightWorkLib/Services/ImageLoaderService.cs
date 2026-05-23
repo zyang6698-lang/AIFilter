@@ -80,12 +80,13 @@ namespace DeepSightWorkLib.Services
         /// 返回的六个列表索引对齐：AllImageKeys[i]、AllGerberKeys[i]、AllTempKeys[i]、DirectReportFlags[i]、AllDefectCodes[i]、GlobalFlags[i] 对应同一个缺陷。
         /// 迭代顺序：先 PcsInfo（pcs_info），后 PanelInfo（panel_info，全局点）。
         /// </summary>
-        public (List<string> AllImageKeys, List<string> AllGerberKeys, List<string> AllTempKeys, List<bool> DirectReportFlags, List<string> AllDefectCodes, List<bool> GlobalFlags)
+        public (List<string> AllImageKeys, List<string> AllGerberKeys, List<string> AllTempKeys, List<string> AllAviKeys, List<bool> DirectReportFlags, List<string> AllDefectCodes, List<bool> GlobalFlags)
             GetAllImageKeysWithDirectReportFlags(RootPanelInfo panel, string ip, string head)
         {
             var allImageKeys = new List<string>();
             var allGerberKeys = new List<string>();
             var allTempKeys = new List<string>();
+            var allAviKeys = new List<string>();
             var flags = new List<bool>();
             var allDefectCodes = new List<string>();
             var globalFlags = new List<bool>();
@@ -95,21 +96,21 @@ namespace DeepSightWorkLib.Services
                 if (panel == null || string.IsNullOrWhiteSpace(ip))
                 {
                     LogTextHelper.Warn("GetAllImageKeysWithDirectReportFlags: 参数为空或 IP 缺失！");
-                    return (allImageKeys, allGerberKeys, allTempKeys, flags, allDefectCodes, globalFlags);
+                    return (allImageKeys, allGerberKeys, allTempKeys, allAviKeys, flags, allDefectCodes, globalFlags);
                 }
 
                 AppendDefects(panel.PcsInfo?.Values, panel.ProductSerial, ip, head, isGlobal: false,
-                    allImageKeys, allGerberKeys, allTempKeys, flags, allDefectCodes, globalFlags);
+                    allImageKeys, allGerberKeys, allTempKeys, allAviKeys, flags, allDefectCodes, globalFlags);
                 AppendDefects(panel.PanelInfo != null ? new[] { panel.PanelInfo } : null,
                     panel.ProductSerial, ip, head, isGlobal: true,
-                    allImageKeys, allGerberKeys, allTempKeys, flags, allDefectCodes, globalFlags);
+                    allImageKeys, allGerberKeys, allTempKeys, allAviKeys, flags, allDefectCodes, globalFlags);
             }
             catch (Exception ex)
             {
                 LogTextHelper.Error("GetAllImageKeysWithDirectReportFlags 异常：" + ex);
             }
 
-            return (allImageKeys, allGerberKeys, allTempKeys, flags, allDefectCodes, globalFlags);
+            return (allImageKeys, allGerberKeys, allTempKeys, allAviKeys, flags, allDefectCodes, globalFlags);
         }
 
         /// <summary>
@@ -119,7 +120,7 @@ namespace DeepSightWorkLib.Services
             IEnumerable<PcsInfo> source,
             string productSerial, string ip, string head, bool isGlobal,
             List<string> allImageKeys, List<string> allGerberKeys, List<string> allTempKeys,
-            List<bool> flags, List<string> allDefectCodes, List<bool> globalFlags)
+            List<string> allAviKeys, List<bool> flags, List<string> allDefectCodes, List<bool> globalFlags)
         {
             if (source == null) return;
 
@@ -140,10 +141,12 @@ namespace DeepSightWorkLib.Services
                     string imgKey = BuildFirstImageKey(defect.DefectVrsImages, ip, head);
                     string gerberKey = BuildFirstImageKey(defect.DefectVrsGerberImages, ip, head);
                     string tempKey = BuildFirstImageKey(defect.DefectVrsOkImages, ip, head);
+                    string aviKey = BuildFirstImageKey(defect.DefectAviImages, ip, head);
 
                     allImageKeys.Add(imgKey);
                     allGerberKeys.Add(gerberKey);
                     allTempKeys.Add(tempKey);
+                    allAviKeys.Add(aviKey);
                     flags.Add(isDirectReport);
                     allDefectCodes.Add(defect.DefectCode ?? "");
                     globalFlags.Add(isGlobal);

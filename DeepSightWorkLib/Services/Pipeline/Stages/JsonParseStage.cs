@@ -108,7 +108,7 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
 
             var convertResult = _panelDataConverter.Convert(panelInfo, convertContext);
 
-            var (AllImageKeys, AllGerberKeys, AllTempKeys, DirectReportFlags, AllDefectCodes, GlobalFlags)
+            var (AllImageKeys, AllGerberKeys, AllTempKeys, AllAviKeys, DirectReportFlags, AllDefectCodes, GlobalFlags)
                 = _imageLoaderService.GetAllImageKeysWithDirectReportFlags(panelInfo, ip, head);
 
             // 构造 UI 投影模型（缺陷展平顺序与 GetAllImageKeysWithDirectReportFlags 一致：先 PcsInfo 后 PanelInfo）
@@ -137,6 +137,7 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
                 AllDefectImageKeys = AllImageKeys,
                 AllDefectGerberKeys = AllGerberKeys,
                 AllDefectTempKeys = AllTempKeys,
+                AllDefectAviKeys = AllAviKeys,
                 DirectReportFlags = DirectReportFlags,
                 AllDefectCodes = AllDefectCodes,
                 GlobalFlags = GlobalFlags,

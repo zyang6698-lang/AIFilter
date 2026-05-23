@@ -20,7 +20,10 @@ namespace DeepSightAI
         private List<DetectInfo> _allHeatPoints;
         private List<DetectInfo> _filteredHeatPoints; // For filtered data
         private int _currentPage = 1;
-        private const int PageSize = 5;
+        private const int DefaultPageSize = 5;
+        private const int TwoImagesPerPageSize = 1;
+        private int _pageSize = DefaultPageSize;
+        private bool _largeImageMode;
         private int _totalPages;
         private string _aiFilter = "All";
         private string _vvsFilter = "All";
@@ -37,6 +40,7 @@ namespace DeepSightAI
         private ComboBox comboBox_FilterNewAI;
         private Label label_FilterChange;
         private ComboBox comboBox_FilterChange;
+        private Button btn_DisplayMode;
 
         // 存储原始的DefectReviewItem列表，用于按SN分组检查VVS状态
         private List<DefectReviewItem> _sourceItems;
@@ -76,7 +80,29 @@ namespace DeepSightAI
             InitializeFilterControls();
             InitializeComparisonFilterControls();
             InitializePaginationControls();
+            InitializeDisplayModeButton();
             InitializeExportButton();
+        }
+
+        private void InitializeDisplayModeButton()
+        {
+            btn_DisplayMode = new Button
+            {
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                BackColor = Color.FromArgb(45, 45, 48),
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("微软雅黑", 9F),
+                ForeColor = Color.White,
+                Location = new Point(panel_Top.Width - 100, 5),
+                Size = new Size(90, 30),
+                Text = "大图模式",
+                UseVisualStyleBackColor = false
+            };
+            btn_DisplayMode.FlatAppearance.BorderSize = 1;
+            btn_DisplayMode.FlatAppearance.BorderColor = Color.FromArgb(80, 80, 80);
+            btn_DisplayMode.Click += (s, e) => ToggleDisplayMode();
+            panel_Top.Controls.Add(btn_DisplayMode);
+            btn_DisplayMode.BringToFront();
         }
 
         private void InitializeExportButton()
@@ -343,7 +369,7 @@ namespace DeepSightAI
                 }
             }
 
-            _totalPages = (int)Math.Ceiling((double)_filteredHeatPoints.Count / PageSize);
+            _totalPages = CalculateTotalPages();
             _currentPage = 1;
             LoadDefectsPage(_currentPage);
         }
@@ -593,8 +619,24 @@ namespace DeepSightAI
 
         public void DisplayDefectDetails(DefectReviewItem item)
         {
-            // 单个item显示，包装成列表调用
+            if (item == null)
+            {
+                ClearDetails();
+                return;
+            }
+
             DisplayDefectDetails(new List<DefectReviewItem> { item }, $" SN: {item.SerialNumber} ({item.Side})");
+        }
+
+        public void DisplayDefectDetailsTwoImagesPerPage(DefectReviewItem item)
+        {
+            if (item == null)
+            {
+                ClearDetails();
+                return;
+            }
+
+            DisplayDefectDetailsTwoImagesPerPage(new List<DefectReviewItem> { item }, $" SN: {item.SerialNumber} ({item.Side})");
         }
 
         /// <summary>
@@ -602,8 +644,22 @@ namespace DeepSightAI
         /// </summary>
         public void DisplayDefectDetails(List<DefectReviewItem> items, string title)
         {
+            DisplayDefectDetailsCore(items, title, DefaultPageSize);
+        }
+
+        public void DisplayDefectDetailsTwoImagesPerPage(List<DefectReviewItem> items, string title)
+        {
+            DisplayDefectDetailsCore(items, title, TwoImagesPerPageSize);
+        }
+
+        private void DisplayDefectDetailsCore(List<DefectReviewItem> items, string title, int pageSize)
+        {
             // 取消正在进行的异步图片加载
             CancelPendingImageLoads();
+
+            _pageSize = NormalizePageSize(pageSize);
+            _largeImageMode = _pageSize == TwoImagesPerPageSize;
+            UpdateDisplayModeButton();
 
             _comparisonMode = false;
             _comparisonItems.Clear();
@@ -615,7 +671,7 @@ namespace DeepSightAI
 
             // 合并所有HeatPoints，并设置DisplaySN
             _allHeatPoints = new List<DetectInfo>();
-            foreach (var item in items)
+            foreach (var item in items ?? new List<DefectReviewItem>())
             {
                 if (item.HeatPoints != null)
                 {
@@ -629,7 +685,7 @@ namespace DeepSightAI
             }
 
             _filteredHeatPoints = new List<DetectInfo>(_allHeatPoints);
-            _totalPages = (int)Math.Ceiling((double)_filteredHeatPoints.Count / PageSize);
+            _totalPages = CalculateTotalPages();
             _currentPage = 1;
 
             label_DetailTitle.Text = title;
@@ -654,6 +710,10 @@ namespace DeepSightAI
         {
             CancelPendingImageLoads();
 
+            _pageSize = DefaultPageSize;
+            _largeImageMode = false;
+            UpdateDisplayModeButton();
+
             _comparisonMode = true;
             _sourceItems = null;
             _completedSnSet.Clear();
@@ -677,7 +737,7 @@ namespace DeepSightAI
             }
 
             _filteredHeatPoints = new List<DetectInfo>(_allHeatPoints);
-            _totalPages = (int)Math.Ceiling((double)_filteredHeatPoints.Count / PageSize);
+            _totalPages = CalculateTotalPages();
             _currentPage = 1;
             label_DetailTitle.Text = title;
 
@@ -744,19 +804,21 @@ namespace DeepSightAI
                     return;
                 }
 
-                _currentPage = page;
-                var heatPointsToShow = _filteredHeatPoints.Skip((_currentPage - 1) * PageSize).Take(PageSize).ToList();
+                _currentPage = Math.Max(1, Math.Min(page, _totalPages));
+                int pageSize = NormalizePageSize(_pageSize);
+                var heatPointsToShow = _filteredHeatPoints.Skip((_currentPage - 1) * pageSize).Take(pageSize).ToList();
 
                 // 计算控件高度
                 int itemHeight = flowLayoutPanel_DefectImages.ClientSize.Height - flowLayoutPanel_DefectImages.Padding.Vertical - 6;
                 // 确保最小高度，避免面板尚未布局时高度为0
                 if (itemHeight < 100) itemHeight = 300;
+                int itemWidth = CalculateItemWidth();
 
                 // 第一步：同步创建所有占位控件（瞬间完成，立即显示SN和状态文本）
                 var itemControls = new List<UcDefectImageItem>();
                 for (int i = 0; i < heatPointsToShow.Count; i++)
                 {
-                    var itemControl = CreateDefectImageItemControl(heatPointsToShow[i], i, itemHeight);
+                    var itemControl = CreateDefectImageItemControl(heatPointsToShow[i], i, itemWidth, itemHeight);
                     flowLayoutPanel_DefectImages.Controls.Add(itemControl);
                     itemControls.Add(itemControl);
                 }
@@ -804,17 +866,17 @@ namespace DeepSightAI
         /// <summary>
         /// 创建缺陷图片项控件
         /// </summary>
-        private UcDefectImageItem CreateDefectImageItemControl(DetectInfo heatPoint, int index, int height)
+        private UcDefectImageItem CreateDefectImageItemControl(DetectInfo heatPoint, int index, int width, int height)
         {
             var itemControl = new UcDefectImageItem
             {
-                Width = 300,
+                Width = width,
                 Height = height,
                 Margin = new Padding(3),
                 HeatPoint = heatPoint
             };
 
-            // 调整图片高度
+            itemControl.SetImageLayout(_largeImageMode);
             itemControl.AdjustImageHeight(height);
             if (_comparisonMode)
             {
@@ -862,6 +924,69 @@ namespace DeepSightAI
             btnNextPage.Enabled = _currentPage < _totalPages;
         }
 
+        private void ToggleDisplayMode()
+        {
+            int globalIndex = GetSelectedGlobalIndex();
+            _largeImageMode = !_largeImageMode;
+            _pageSize = _largeImageMode ? TwoImagesPerPageSize : DefaultPageSize;
+            _totalPages = CalculateTotalPages();
+            UpdateDisplayModeButton();
+
+            if (_filteredHeatPoints == null)
+                return;
+
+            if (_filteredHeatPoints.Count == 0)
+            {
+                LoadDefectsPage(1);
+                return;
+            }
+
+            int pageSize = NormalizePageSize(_pageSize);
+            int targetPage = Math.Min(_totalPages, (globalIndex / pageSize) + 1);
+            int targetLocalIndex = globalIndex % pageSize;
+            LoadDefectsPage(targetPage);
+            SelectImage(targetLocalIndex);
+        }
+
+        private int GetSelectedGlobalIndex()
+        {
+            int pageSize = NormalizePageSize(_pageSize);
+            int localIndex = _selectedIndex >= 0 ? _selectedIndex : 0;
+            int globalIndex = ((_currentPage - 1) * pageSize) + localIndex;
+            int maxIndex = (_filteredHeatPoints?.Count ?? 1) - 1;
+            return Math.Max(0, Math.Min(globalIndex, maxIndex));
+        }
+
+        private void UpdateDisplayModeButton()
+        {
+            if (btn_DisplayMode == null) return;
+            btn_DisplayMode.Text = _largeImageMode ? "小图模式" : "大图模式";
+        }
+
+        private int NormalizePageSize(int pageSize)
+        {
+            return Math.Max(1, pageSize);
+        }
+
+        private int CalculateTotalPages()
+        {
+            int count = _filteredHeatPoints?.Count ?? 0;
+            if (count == 0) return 0;
+            return (int)Math.Ceiling((double)count / NormalizePageSize(_pageSize));
+        }
+
+        private int CalculateItemWidth()
+        {
+            if (NormalizePageSize(_pageSize) != TwoImagesPerPageSize)
+                return 300;
+
+            int availableWidth = flowLayoutPanel_DefectImages.ClientSize.Width
+                - flowLayoutPanel_DefectImages.Padding.Horizontal
+                - SystemInformation.VerticalScrollBarWidth
+                - 12;
+            return Math.Max(300, availableWidth);
+        }
+
         private void SelectImage(int index)
         {
             if (index < 0 || index >= flowLayoutPanel_DefectImages.Controls.Count)
@@ -890,11 +1015,12 @@ namespace DeepSightAI
         {
             if (_filteredHeatPoints == null || _filteredHeatPoints.Count == 0) return;
 
-            int globalIndex = ((_currentPage - 1) * PageSize) + _selectedIndex;
+            int pageSize = NormalizePageSize(_pageSize);
+            int globalIndex = ((_currentPage - 1) * pageSize) + _selectedIndex;
             int nextGlobalIndex = (globalIndex + 1) % _filteredHeatPoints.Count;
             if (nextGlobalIndex == 0) return;
-            int nextPage = (nextGlobalIndex / PageSize) + 1;
-            int nextLocalIndex = nextGlobalIndex % PageSize;
+            int nextPage = (nextGlobalIndex / pageSize) + 1;
+            int nextLocalIndex = nextGlobalIndex % pageSize;
 
             if (nextPage != _currentPage)
             {
@@ -907,11 +1033,12 @@ namespace DeepSightAI
         {
             if (_filteredHeatPoints == null || _filteredHeatPoints.Count == 0) return;
 
-            int globalIndex = ((_currentPage - 1) * PageSize) + _selectedIndex;
+            int pageSize = NormalizePageSize(_pageSize);
+            int globalIndex = ((_currentPage - 1) * pageSize) + _selectedIndex;
             int prevGlobalIndex = (globalIndex - 1 + _filteredHeatPoints.Count) % _filteredHeatPoints.Count;
 
-            int prevPage = (prevGlobalIndex / PageSize) + 1;
-            int prevLocalIndex = prevGlobalIndex % PageSize;
+            int prevPage = (prevGlobalIndex / pageSize) + 1;
+            int prevLocalIndex = prevGlobalIndex % pageSize;
 
             if (prevPage != _currentPage)
             {

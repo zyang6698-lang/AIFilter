@@ -44,6 +44,7 @@ namespace DeepSightWorkLib.Services
             var allDefectImageKeys = new List<string>();
             var allDefectGerberKeys = new List<string>();
             var allDefectTempKeys = new List<string>();
+            var allDefectAviKeys = new List<string>();
             var allDefectCodes = new List<string>();
 
             // 检查是否有VVS数据
@@ -64,6 +65,7 @@ namespace DeepSightWorkLib.Services
                 allDefectImageKeys.Add(defect.ImagePath ?? "");
                 allDefectGerberKeys.Add(defect.GerberImagePath ?? "");
                 allDefectTempKeys.Add(defect.TempImagePath ?? "");
+                allDefectAviKeys.Add(defect.DefectAviImage ?? "");
                 allDefectCodes.Add(aviDefectCode);
 
                 // 根据配置判断是否为直报缺陷（与主流程一致）
@@ -113,6 +115,7 @@ namespace DeepSightWorkLib.Services
                 AllDefectImageKeys = allDefectImageKeys,
                 AllDefectGerberKeys = allDefectGerberKeys,
                 AllDefectTempKeys = allDefectTempKeys,
+                AllDefectAviKeys = allDefectAviKeys,
                 DirectReportFlags = directReportFlags,
                 AllDefectCodes = allDefectCodes,
                 GlobalFlags = globalFlags

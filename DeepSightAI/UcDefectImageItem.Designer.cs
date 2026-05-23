@@ -24,6 +24,7 @@
                 _rawOriginalImage?.Dispose();
                 pictureBox_OriginalImage?.Image?.Dispose();
                 pictureBox_TemplateImage?.Image?.Dispose();
+                pictureBox_AviImage?.Image?.Dispose();
                 components?.Dispose();
             }
             base.Dispose(disposing);
@@ -43,6 +44,7 @@
             this.tableImages = new System.Windows.Forms.TableLayoutPanel();
             this.pictureBox_OriginalImage = new System.Windows.Forms.PictureBox();
             this.pictureBox_TemplateImage = new System.Windows.Forms.PictureBox();
+            this.pictureBox_AviImage = new System.Windows.Forms.PictureBox();
             this.panel_Status = new System.Windows.Forms.Panel();
             this.label_Status = new System.Windows.Forms.Label();
             this.label_Index = new System.Windows.Forms.Label();
@@ -50,6 +52,7 @@
             this.tableImages.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox_OriginalImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox_TemplateImage)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox_AviImage)).BeginInit();
             this.panel_Status.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -135,6 +138,19 @@
             this.pictureBox_TemplateImage.TabIndex = 2;
             this.pictureBox_TemplateImage.TabStop = false;
             //
+            // pictureBox_AviImage
+            //
+            this.pictureBox_AviImage.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.pictureBox_AviImage.BackColor = System.Drawing.Color.Black;
+            this.pictureBox_AviImage.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pictureBox_AviImage.Location = new System.Drawing.Point(214, 34);
+            this.pictureBox_AviImage.Name = "pictureBox_AviImage";
+            this.pictureBox_AviImage.Size = new System.Drawing.Size(78, 58);
+            this.pictureBox_AviImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pictureBox_AviImage.TabIndex = 5;
+            this.pictureBox_AviImage.TabStop = false;
+            this.pictureBox_AviImage.Visible = false;
+            //
             // panel_Status
             //
             this.panel_Status.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
@@ -176,6 +192,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(29)))), ((int)(((byte)(48)))), ((int)(((byte)(60)))));
             this.Controls.Add(this.tableImages);
+            this.Controls.Add(this.pictureBox_AviImage);
             this.Controls.Add(this.panel_Status);
             this.Controls.Add(this.panel_Header);
             this.Font = new System.Drawing.Font("微软雅黑", 9F);
@@ -185,6 +202,7 @@
             this.tableImages.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox_OriginalImage)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox_TemplateImage)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox_AviImage)).EndInit();
             this.panel_Status.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -198,6 +216,7 @@
         private System.Windows.Forms.TableLayoutPanel tableImages;
         private System.Windows.Forms.PictureBox pictureBox_OriginalImage;
         private System.Windows.Forms.PictureBox pictureBox_TemplateImage;
+        private System.Windows.Forms.PictureBox pictureBox_AviImage;
         private System.Windows.Forms.Panel panel_Status;
         private System.Windows.Forms.Label label_Status;
         private System.Windows.Forms.Label label_Index;

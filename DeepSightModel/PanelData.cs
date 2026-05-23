@@ -24,6 +24,7 @@ namespace DeepSightModel
         public string ImagePath { get; set; }
         public string TempImagePath { get; set; }
         public string GerberImagePath {  get; set; }
+        public string DefectAviImage { get; set; }
         public string DrawInfo { get; set; }
         public int DefectIndex {  get; set; }
         public int PcsIndex {  get; set; }
@@ -69,6 +70,7 @@ namespace DeepSightModel
                 ImagePath = ImagePath,
                 TempImagePath = TempImagePath,
                 GerberImagePath = GerberImagePath,
+                DefectAviImage = DefectAviImage,
                 DrawInfo = DrawInfo,
                 AIStatus = AIStatus,
                 VVSStatus = VVSStatus,

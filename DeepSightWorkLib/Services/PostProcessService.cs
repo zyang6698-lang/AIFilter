@@ -284,6 +284,7 @@ namespace DeepSightWorkLib.Services
             var allImageKeys = vBModel.AllDefectImageKeys;
             var allGerberKeys = vBModel.AllDefectGerberKeys;
             var allTempKeys = vBModel.AllDefectTempKeys;
+            var allAviKeys = vBModel.AllDefectAviKeys;
             var flags = vBModel.DirectReportFlags;
             var allDefectCodes = vBModel.AllDefectCodes;
             var globalFlags = vBModel.GlobalFlags;
@@ -308,6 +309,7 @@ namespace DeepSightWorkLib.Services
                     defect.ImagePath = allImageKeys.ElementAtOrDefault(i) ?? defect.ImagePath ?? "";
                     defect.GerberImagePath = allGerberKeys?.ElementAtOrDefault(i) ?? defect.GerberImagePath ?? "";
                     defect.TempImagePath = allTempKeys?.ElementAtOrDefault(i) ?? defect.TempImagePath ?? "";
+                    defect.DefectAviImage = allAviKeys?.ElementAtOrDefault(i) ?? defect.DefectAviImage ?? "";
                     defect.DefectName = !string.IsNullOrWhiteSpace(defect.DefectName)
                         ? defect.DefectName
                         : allDefectCodes?.ElementAtOrDefault(i) ?? "";
