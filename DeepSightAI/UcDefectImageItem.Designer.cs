@@ -22,9 +22,9 @@
             {
                 _toolTip?.Dispose();
                 _rawOriginalImage?.Dispose();
-                pictureBox_OriginalImage?.Image?.Dispose();
-                pictureBox_TemplateImage?.Image?.Dispose();
-                pictureBox_AviImage?.Image?.Dispose();
+                ClearPictureBoxImage(pictureBox_OriginalImage);
+                ClearPictureBoxImage(pictureBox_TemplateImage);
+                ClearPictureBoxImage(pictureBox_AviImage);
                 components?.Dispose();
             }
             base.Dispose(disposing);

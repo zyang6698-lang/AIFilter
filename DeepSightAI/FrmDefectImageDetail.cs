@@ -225,6 +225,7 @@ namespace DeepSightAI
 
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
+            pictureBox_Image.Image = null;
             _originalImage?.Dispose();
             _templateImage?.Dispose();
             _defectBoxImage?.Dispose();

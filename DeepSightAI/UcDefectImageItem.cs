@@ -107,6 +107,26 @@ namespace DeepSightAI
             _toolTip.SetToolTip(button_Run, "单图测试");
         }
 
+        private static void SetPictureBoxImage(PictureBox pictureBox, Image newImage)
+        {
+            if (pictureBox == null)
+            {
+                newImage?.Dispose();
+                return;
+            }
+
+            var oldImage = pictureBox.Image;
+            if (ReferenceEquals(oldImage, newImage)) return;
+
+            pictureBox.Image = newImage;
+            oldImage?.Dispose();
+        }
+
+        private static void ClearPictureBoxImage(PictureBox pictureBox)
+        {
+            SetPictureBoxImage(pictureBox, null);
+        }
+
         private void Button_Run_Click(object sender, EventArgs e)
         {
             if (_point != null)
@@ -139,10 +159,8 @@ namespace DeepSightAI
                 label_SN.Text = "";
                 label_Status.Text = "";
                 label_Index.Text = "";
-                pictureBox_OriginalImage.Image?.Dispose();
-                pictureBox_OriginalImage.Image = null;
-                pictureBox_TemplateImage.Image?.Dispose();
-                pictureBox_TemplateImage.Image = null;
+                ClearPictureBoxImage(pictureBox_OriginalImage);
+                ClearPictureBoxImage(pictureBox_TemplateImage);
                 ClearAviImage();
                 return;
             }
@@ -155,10 +173,8 @@ namespace DeepSightAI
             UpdateIndexLabel();
 
             // 清空旧图片，显示为空白占位
-            pictureBox_OriginalImage.Image?.Dispose();
-            pictureBox_OriginalImage.Image = null;
-            pictureBox_TemplateImage.Image?.Dispose();
-            pictureBox_TemplateImage.Image = null;
+            ClearPictureBoxImage(pictureBox_OriginalImage);
+            ClearPictureBoxImage(pictureBox_TemplateImage);
             ClearAviImage();
 
             UpdateAppearance();
@@ -251,14 +267,11 @@ namespace DeepSightAI
                 _rawOriginalImage?.Dispose();
                 _rawOriginalImage = rawOriginal;
 
-                pictureBox_OriginalImage.Image?.Dispose();
-                pictureBox_OriginalImage.Image = originalMarked;
+                SetPictureBoxImage(pictureBox_OriginalImage, originalMarked);
 
-                pictureBox_TemplateImage.Image?.Dispose();
-                pictureBox_TemplateImage.Image = templateMarked;
+                SetPictureBoxImage(pictureBox_TemplateImage, templateMarked);
 
-                pictureBox_AviImage.Image?.Dispose();
-                pictureBox_AviImage.Image = aviImage;
+                SetPictureBoxImage(pictureBox_AviImage, aviImage);
                 pictureBox_AviImage.Visible = aviImage != null;
                 if (aviImage != null) pictureBox_AviImage.BringToFront();
             }
@@ -306,8 +319,7 @@ namespace DeepSightAI
 
         private void ClearAviImage()
         {
-            pictureBox_AviImage.Image?.Dispose();
-            pictureBox_AviImage.Image = null;
+            ClearPictureBoxImage(pictureBox_AviImage);
             pictureBox_AviImage.Visible = false;
         }
 
@@ -496,16 +508,14 @@ namespace DeepSightAI
             label_SN.Text = headerText ?? "";
 
             // 原图
-            pictureBox_OriginalImage.Image?.Dispose();
-            pictureBox_OriginalImage.Image = originalImage;
+            SetPictureBoxImage(pictureBox_OriginalImage, originalImage);
 
             // 原始未标注图
             _rawOriginalImage?.Dispose();
             _rawOriginalImage = rawOriginalImage;
 
             // 模板图
-            pictureBox_TemplateImage.Image?.Dispose();
-            pictureBox_TemplateImage.Image = templateImage;
+            SetPictureBoxImage(pictureBox_TemplateImage, templateImage);
             ClearAviImage();
 
             // 状态
@@ -540,10 +550,8 @@ namespace DeepSightAI
             label_Status.Text = "";
             label_Index.Text = "";
 
-            pictureBox_OriginalImage.Image?.Dispose();
-            pictureBox_OriginalImage.Image = null;
-            pictureBox_TemplateImage.Image?.Dispose();
-            pictureBox_TemplateImage.Image = null;
+            ClearPictureBoxImage(pictureBox_OriginalImage);
+            ClearPictureBoxImage(pictureBox_TemplateImage);
             ClearAviImage();
             _rawOriginalImage?.Dispose();
             _rawOriginalImage = null;

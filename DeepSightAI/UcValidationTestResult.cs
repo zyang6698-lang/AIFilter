@@ -141,6 +141,8 @@ namespace DeepSightAI
         {
             if (_currentTask == null) return;
 
+            var secondaryResults = GetSecondaryResultsSnapshot(_currentTask);
+
             int progress = (int)_currentTask.Progress;
             progressBar_Test.Value = Math.Min(progress, 100);
 
@@ -152,12 +154,12 @@ namespace DeepSightAI
             label_Progress.Text = progressText;
 
             // 更新统计信息 - 二次推理显示四种AI状态
-            int total = _currentTask.SecondaryResults.Count;
-            int totalOk = _currentTask.SecondaryResults.Sum(r => r.FinalOkCount);
-            int totalNg = _currentTask.SecondaryResults.Sum(r => r.FinalNgCount);
-            int totalBypass = _currentTask.SecondaryResults.Sum(r => r.FinalBypassCount);
-            int totalUndetected = _currentTask.SecondaryResults.Sum(r => r.FinalUndetectedCount);
-            int changedToOk = _currentTask.SecondaryResults.Sum(r => r.ChangedToOkCount);
+            int total = secondaryResults.Count;
+            int totalOk = secondaryResults.Sum(r => r.FinalOkCount);
+            int totalNg = secondaryResults.Sum(r => r.FinalNgCount);
+            int totalBypass = secondaryResults.Sum(r => r.FinalBypassCount);
+            int totalUndetected = secondaryResults.Sum(r => r.FinalUndetectedCount);
+            int changedToOk = secondaryResults.Sum(r => r.ChangedToOkCount);
 
             string summaryText = $"总处理面数: {total} | " +
                 $"OK: {totalOk} | NG: {totalNg} | 异常: {totalBypass} | 未检测: {totalUndetected} | " +
@@ -173,8 +175,10 @@ namespace DeepSightAI
         {
             if (_currentTask == null) return;
 
+            var secondaryResults = GetSecondaryResultsSnapshot(_currentTask);
+
             _allResults.Clear();
-            foreach (var result in _currentTask.SecondaryResults)
+            foreach (var result in secondaryResults)
             {
                 // 原判定：显示推理前四种AI状态
                 string originalText = BuildStatusText(result.OriginalOkCount, result.OriginalNgCount, result.OriginalBypassCount, result.OriginalUndetectedCount);
@@ -243,8 +247,10 @@ namespace DeepSightAI
             _currentTask = task;
             _refreshTimer.Stop();
 
+            var consistencyResults = GetConsistencyResultsSnapshot(task);
+
             _allResults.Clear();
-            foreach (var result in task.ConsistencyResults)
+            foreach (var result in consistencyResults)
             {
                 // 根据一致/不一致数量判断整体结果
                 bool isConsistent = result.InconsistentCount == 0 && result.State != ValidationTestState.TestError;
@@ -345,8 +351,10 @@ namespace DeepSightAI
         /// </summary>
         private void RefreshResultsInternal(InferenceTask task)
         {
+            var consistencyResults = GetConsistencyResultsSnapshot(task);
+
             _allResults.Clear();
-            foreach (var result in task.ConsistencyResults)
+            foreach (var result in consistencyResults)
             {
                 // 根据一致/不一致数量判断整体结果
                 bool isConsistent = result.InconsistentCount == 0 && result.State != ValidationTestState.TestError;
@@ -540,9 +548,35 @@ namespace DeepSightAI
             if (task == null) return false;
             if (task.Mode == InferenceMode.SecondaryInference)
             {
-                return task.SecondaryResults.Any(r => r.PointResults != null && r.PointResults.Any(p => p.DetectInfo != null));
+                return GetSecondaryResultsSnapshot(task).Any(r => r.PointResults != null && r.PointResults.Any(p => p.DetectInfo != null));
             }
-            return task.ConsistencyResults.Any(r => r.DefectResults != null && r.DefectResults.Any(d => d.DetectInfo != null));
+            return GetConsistencyResultsSnapshot(task).Any(r => r.DefectResults != null && r.DefectResults.Any(d => d.DetectInfo != null));
+        }
+
+        private static List<SecondaryInferenceResult> GetSecondaryResultsSnapshot(InferenceTask task)
+        {
+            if (task?.SecondaryResults == null)
+            {
+                return new List<SecondaryInferenceResult>();
+            }
+
+            lock (task)
+            {
+                return task.SecondaryResults.ToList();
+            }
+        }
+
+        private static List<SideTestResult> GetConsistencyResultsSnapshot(InferenceTask task)
+        {
+            if (task?.ConsistencyResults == null)
+            {
+                return new List<SideTestResult>();
+            }
+
+            lock (task)
+            {
+                return task.ConsistencyResults.ToList();
+            }
         }
 
         private void Btn_CompareResults_Click(object sender, EventArgs e)
