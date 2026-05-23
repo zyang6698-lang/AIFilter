@@ -67,7 +67,6 @@ namespace DeepSightWorkLib.Services
 
             _activeTasks[task.TaskId] = task;
             LogTextHelper.Info($"创建{GetModeName(request.Mode)}任务: {task.TaskId}, 描述: {task.Description}");
-            SendUnifiedInferenceTaskStatus(task, DeepSightModel.TaskStatus.Queued, "已创建");
 
             // 异步执行任务
             _ = Task.Run(() => ExecuteTaskAsync(task, cancellationToken), cancellationToken);
@@ -131,29 +130,6 @@ namespace DeepSightWorkLib.Services
             }
         }
 
-        private void SendUnifiedInferenceTaskStatus(InferenceTask task, DeepSightModel.TaskStatus status, string message = "")
-        {
-            if (task == null) return;
-
-            int finishedCount = task.ProcessedRecords + task.SkippedRecords + task.ErrorRecords;
-            long elapsedMs = 0;
-            if ((status == DeepSightModel.TaskStatus.Completed || status == DeepSightModel.TaskStatus.Failed || status == DeepSightModel.TaskStatus.Skipped)
-                && task.StartTime.HasValue && task.EndTime.HasValue)
-            {
-                elapsedMs = (long)(task.EndTime.Value - task.StartTime.Value).TotalMilliseconds;
-            }
-
-            TaskStatusSender.SendUnifiedTaskStatus(
-                task.TaskId,
-                GetModeName(task.Mode),
-                task.Description,
-                status,
-                task.TotalRecords,
-                finishedCount,
-                message,
-                elapsedMs);
-        }
-
         #endregion
 
         #region 统一任务执行
@@ -167,19 +143,16 @@ namespace DeepSightWorkLib.Services
             {
                 task.State = InferenceTaskState.Running;
                 task.StartTime = DateTime.Now;
-                SendUnifiedInferenceTaskStatus(task, DeepSightModel.TaskStatus.ReadingData, "正在获取数据");
 
                 // 获取数据
                 var records = await GetTaskDataAsync(task);
                 task.TotalRecords = records.Count;
                 LogTextHelper.Info($"{GetModeName(task.Mode)}任务 {task.TaskId}: 获取到 {records.Count} 条数据");
-                SendUnifiedInferenceTaskStatus(task, DeepSightModel.TaskStatus.LoadingImages, $"获取到 {records.Count} 条数据");
 
                 if (records.Count == 0)
                 {
                     task.State = InferenceTaskState.Completed;
                     task.EndTime = DateTime.Now;
-                    SendUnifiedInferenceTaskStatus(task, DeepSightModel.TaskStatus.Completed, "没有符合条件的数据");
                     return;
                 }
 
@@ -193,35 +166,21 @@ namespace DeepSightWorkLib.Services
                     }
 
                     await ProcessRecordAsync(task, record);
-                    SendUnifiedInferenceTaskStatus(task, DeepSightModel.TaskStatus.AIDetecting, $"已入队 {task.EnqueuedRecords}/{task.TotalRecords}");
                 }
 
                 LogTextHelper.Info($"{GetModeName(task.Mode)}任务 {task.TaskId} 入队完成: 总数={task.TotalRecords}, 已入队={task.EnqueuedRecords}, 跳过(直报)={task.SkippedRecords}, 错误={task.ErrorRecords}");
-
-                if (task.State == InferenceTaskState.Cancelled)
-                {
-                    task.EndTime = DateTime.Now;
-                    SendUnifiedInferenceTaskStatus(task, DeepSightModel.TaskStatus.Skipped, "任务已取消");
-                    return;
-                }
 
                 if (task.State == InferenceTaskState.Running && task.IsReallyCompleted)
                 {
                     task.State = InferenceTaskState.Completed;
                     task.EndTime = DateTime.Now;
                     LogTextHelper.Info($"{GetModeName(task.Mode)}任务 {task.TaskId} 已完成: 已处理={task.ProcessedRecords}, 跳过={task.SkippedRecords}, 错误={task.ErrorRecords}");
-                    SendUnifiedInferenceTaskStatus(task, DeepSightModel.TaskStatus.Completed, "全部完成");
-                }
-                else if (task.State == InferenceTaskState.Running)
-                {
-                    SendUnifiedInferenceTaskStatus(task, DeepSightModel.TaskStatus.AIDetecting, "入队完成，等待推理结果");
                 }
             }
             catch (Exception ex)
             {
                 task.State = InferenceTaskState.Failed;
                 task.EndTime = DateTime.Now;
-                SendUnifiedInferenceTaskStatus(task, DeepSightModel.TaskStatus.Failed, ex.Message);
                 LogTextHelper.Error($"{GetModeName(task.Mode)}任务 {task.TaskId} 执行失败: {ex}");
             }
         }
@@ -484,16 +443,9 @@ namespace DeepSightWorkLib.Services
                 // 更新任务统计
                 if (_activeTasks.TryGetValue(vbModel.TestTaskId, out var task))
                 {
-                    if (InferenceTaskStateService.TryRecordConsistencyResult(task, sideResult, out bool completed))
+                    if (InferenceTaskStateService.TryRecordConsistencyResult(task, sideResult, out bool completed) && completed)
                     {
-                        SendUnifiedInferenceTaskStatus(task,
-                            completed ? DeepSightModel.TaskStatus.Completed : DeepSightModel.TaskStatus.AICompleted,
-                            completed ? "全部完成" : "测试结果已更新");
-
-                        if (completed)
-                        {
-                            LogTextHelper.Info($"测试任务 {task.TaskId} 全部完成: 一致={task.ConsistentRecords}, 不一致={task.InconsistentRecords}, 错误={task.ErrorRecords}, VVS记录={task.VVSRecords}, 漏失={task.TotalMissCount}, 误报={task.TotalOverKillCount}");
-                        }
+                        LogTextHelper.Info($"测试任务 {task.TaskId} 全部完成: 一致={task.ConsistentRecords}, 不一致={task.InconsistentRecords}, 错误={task.ErrorRecords}, VVS记录={task.VVSRecords}, 漏失={task.TotalMissCount}, 误报={task.TotalOverKillCount}");
                     }
                 }
 
@@ -555,10 +507,6 @@ namespace DeepSightWorkLib.Services
             {
                 LogTextHelper.Info($"{GetModeName(task.Mode)}任务 {task.TaskId} 全部完成: 已处理={task.ProcessedRecords}, 跳过={task.SkippedRecords}, 错误={task.ErrorRecords}");
             }
-
-            SendUnifiedInferenceTaskStatus(task,
-                completed ? DeepSightModel.TaskStatus.Completed : DeepSightModel.TaskStatus.AIDetecting,
-                completed ? "全部完成" : $"记录失败: {errorStage}");
 
             InferenceDebugInfoService.RecordFailure(vbModel, errorStage, errorMessage);
             LogTextHelper.Warn($"{GetModeName(vbModel.InferenceMode)}记录失败已闭环: {vbModel.SN}_{vbModel.Side}, 阶段={errorStage}, 原因={errorMessage}");
@@ -971,16 +919,9 @@ namespace DeepSightWorkLib.Services
                 // 更新任务统计
                 if (_activeTasks.TryGetValue(vbModel.TestTaskId, out var task))
                 {
-                    if (InferenceTaskStateService.TryRecordSecondaryResult(task, sideResult, changedToOkCount, out bool completed))
+                    if (InferenceTaskStateService.TryRecordSecondaryResult(task, sideResult, changedToOkCount, out bool completed) && completed)
                     {
-                        SendUnifiedInferenceTaskStatus(task,
-                            completed ? DeepSightModel.TaskStatus.Completed : DeepSightModel.TaskStatus.AICompleted,
-                            completed ? "全部完成" : "二次推理结果已更新");
-
-                        if (completed)
-                        {
-                            LogTextHelper.Info($"二次推理任务 {task.TaskId} 全部完成: 总点数={task.OkRecords + task.NgRecords}, 转OK={task.OkRecords}");
-                        }
+                        LogTextHelper.Info($"二次推理任务 {task.TaskId} 全部完成: 总点数={task.OkRecords + task.NgRecords}, 转OK={task.OkRecords}");
                     }
                 }
 

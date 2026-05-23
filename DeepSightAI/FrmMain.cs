@@ -319,23 +319,13 @@ namespace DeepSightAI
         /// 添加新任务行（区分AB面）
         /// 新排队任务始终插入到最顶部
         /// </summary>
-        private void AddNewTaskRow(TaskStatusInfo statusInfo)
+        private void AddNewTaskRow(string sn, string side)
         {
             var dgv = FrmHome.Instance.dataGridViewData;
 
-            var existingRow = FindRowByStatusInfo(statusInfo);
-            if (existingRow != null)
-            {
-                UpdateTaskRowWithStatus(statusInfo);
-                return;
-            }
-
             // 列顺序: SN[0], Side[1], AVI[2], AI[3], Time[4], QueueTime[5], Status[6]
-            string queueTime = statusInfo.Timestamp.ToString("HH:mm:ss");
-            string totalText = statusInfo.TotalCount > 0 ? statusInfo.TotalCount.ToString() : "0";
-            string finishedText = statusInfo.TotalCount > 0 ? statusInfo.FinishedCount.ToString() : "0";
-            dgv.Rows.Insert(0, new object[] { statusInfo.GetDisplayName(), statusInfo.Side, totalText, finishedText, "", queueTime, statusInfo.GetFullDisplayMessage() });
-            dgv.Rows[0].Tag = statusInfo.GetRowKey();
+            string queueTime = DateTime.Now.ToString("HH:mm:ss");
+            dgv.Rows.Insert(0, new object[] { sn, side, "0", "0", "", queueTime, "排队中" });
             dgv.Rows[0].DefaultCellStyle.ForeColor = Color.Yellow;
         }
 
@@ -362,14 +352,8 @@ namespace DeepSightAI
         /// </summary>
         private DataGridViewRow FindRowBySnSide(string sn, string side)
         {
-            string rowKey = $"SN|{sn}|{side}";
             foreach (DataGridViewRow row in FrmHome.Instance.dataGridViewData.Rows)
             {
-                if (row.Tag?.ToString() == rowKey)
-                {
-                    return row;
-                }
-
                 if (row.Cells[0].Value?.ToString() == sn && row.Cells[1].Value?.ToString() == side)
                 {
                     return row;
@@ -385,12 +369,6 @@ namespace DeepSightAI
         {
             foreach (DataGridViewRow row in FrmHome.Instance.dataGridViewData.Rows)
             {
-                string tag = row.Tag?.ToString();
-                if (!string.IsNullOrEmpty(tag) && tag.StartsWith($"SN|{sn}|"))
-                {
-                    return row;
-                }
-
                 if (row.Cells[0].Value?.ToString() == sn)
                 {
                     return row;
@@ -399,43 +377,21 @@ namespace DeepSightAI
             return null;
         }
 
-        private DataGridViewRow FindRowByStatusInfo(TaskStatusInfo statusInfo)
-        {
-            if (statusInfo == null) return null;
-
-            string rowKey = statusInfo.GetRowKey();
-            foreach (DataGridViewRow row in FrmHome.Instance.dataGridViewData.Rows)
-            {
-                if (row.Tag?.ToString() == rowKey)
-                {
-                    return row;
-                }
-            }
-
-            return FindRowBySnSide(statusInfo.SerialNumber, statusInfo.Side) ?? FindRowBySn(statusInfo.SerialNumber);
-        }
-
         /// <summary>
         /// 更新任务行状态（使用结构化状态）
         /// </summary>
         private void UpdateTaskRowWithStatus(TaskStatusInfo statusInfo)
         {
-            DataGridViewRow targetRow = FindRowByStatusInfo(statusInfo);
-            if (targetRow == null && !string.IsNullOrEmpty(statusInfo.TaskId))
+            // 按SN+Side精确查找行
+            DataGridViewRow targetRow = FindRowBySnSide(statusInfo.SerialNumber, statusInfo.Side);
+
+            // 兼容：如果找不到精确匹配，尝试按SN查找（旧数据兼容）
+            if (targetRow == null)
             {
-                AddNewTaskRow(statusInfo);
-                targetRow = FindRowByStatusInfo(statusInfo);
+                targetRow = FindRowBySn(statusInfo.SerialNumber);
             }
 
             if (targetRow == null) return;
-
-            targetRow.Tag = statusInfo.GetRowKey();
-
-            if (statusInfo.TotalCount > 0)
-            {
-                targetRow.Cells[2].Value = statusInfo.TotalCount;
-                targetRow.Cells[3].Value = statusInfo.FinishedCount;
-            }
 
             // 设置颜色
             Color statusColor = TaskStatusHelper.GetStatusColor(statusInfo.Status);
@@ -605,7 +561,7 @@ namespace DeepSightAI
                         {
                             if (statusInfo.Status == DeepSightModel.TaskStatus.Queued)
                             {
-                                AddNewTaskRow(statusInfo);
+                                AddNewTaskRow(statusInfo.SerialNumber, statusInfo.Side);
                             }
                             else
                             {

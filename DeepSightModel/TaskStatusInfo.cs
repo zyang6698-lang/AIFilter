@@ -7,22 +7,10 @@ namespace DeepSightModel
     /// </summary>
     public class TaskStatusInfo
     {
-        private const string OnlineTaskType = "\u5728\u7ebf";
-
         /// <summary>
         /// ���кţ�SN��
         /// </summary>
         public string SerialNumber { get; set; }
-
-        public string TaskId { get; set; }
-
-        public string TaskType { get; set; } = OnlineTaskType;
-
-        public string DisplayName { get; set; }
-
-        public int TotalCount { get; set; }
-
-        public int FinishedCount { get; set; }
 
         /// <summary>
         /// ����״̬
@@ -63,39 +51,10 @@ namespace DeepSightModel
             
             if (!string.IsNullOrEmpty(Message))
             {
-                baseMessage = $"{baseMessage} - {Message}";
+                return $"{baseMessage} - {Message}";
             }
             
-            if (TotalCount > 0)
-            {
-                double progress = Math.Min(100, Math.Max(0, (double)FinishedCount / TotalCount * 100));
-                return $"{baseMessage} [{FinishedCount}/{TotalCount} {progress:F0}%]";
-            }
-
             return baseMessage;
-        }
-
-        public string GetRowKey()
-        {
-            if (!string.IsNullOrWhiteSpace(TaskId))
-            {
-                return $"TASK|{TaskType}|{TaskId}";
-            }
-
-            return $"SN|{SerialNumber}|{Side}";
-        }
-
-        public string GetDisplayName()
-        {
-            string name = !string.IsNullOrWhiteSpace(DisplayName) ? DisplayName : SerialNumber;
-            string taskType = string.IsNullOrWhiteSpace(TaskType) ? OnlineTaskType : TaskType;
-
-            if (taskType == OnlineTaskType)
-            {
-                return name;
-            }
-
-            return $"[{taskType}] {name}";
         }
 
         /// <summary>
@@ -126,25 +85,9 @@ namespace DeepSightModel
             };
         }
 
-        public static TaskStatusInfo CreateTask(string taskId, string taskType, string displayName, TaskStatus status, string message = "", int totalCount = 0, int finishedCount = 0, long timeMs = 0)
-        {
-            return new TaskStatusInfo
-            {
-                TaskId = taskId,
-                SerialNumber = taskId,
-                TaskType = string.IsNullOrWhiteSpace(taskType) ? "\u79bb\u7ebf" : taskType,
-                DisplayName = displayName,
-                Status = status,
-                Message = message,
-                TotalCount = totalCount,
-                FinishedCount = finishedCount,
-                ProcessingTimeMs = timeMs
-            };
-        }
-
         public override string ToString()
         {
-            return $"[{GetDisplayName()}] {GetFullDisplayMessage()} ({Timestamp:HH:mm:ss})";
+            return $"[{SerialNumber}] {GetFullDisplayMessage()} ({Timestamp:HH:mm:ss})";
         }
     }
 }

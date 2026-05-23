@@ -89,26 +89,5 @@ namespace DeepSightWorkLib.Services
         {
             SystemEvent.SendTaskStatus(TaskStatusInfo.Create(serialNumber, TaskStatus.Failed, side, errorMessage));
         }
-
-        public static void SendUnifiedTaskStatus(
-            string taskId,
-            string taskType,
-            string displayName,
-            TaskStatus status,
-            int totalCount = 0,
-            int finishedCount = 0,
-            string message = "",
-            long timeMs = 0)
-        {
-            SystemEvent.SendTaskStatus(TaskStatusInfo.CreateTask(
-                taskId,
-                taskType,
-                displayName,
-                status,
-                message,
-                totalCount,
-                finishedCount,
-                timeMs));
-        }
     }
 }
