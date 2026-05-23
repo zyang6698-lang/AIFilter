@@ -43,7 +43,10 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
             var model = ctx.LoadModel.Model;
             string taskPrefix = model.IsValidationTest ? "[验证测试]" : "";
 
-            TaskStatusSender.SendAIDetecting(model.SN, model.Side);
+            if (!model.IsValidationTest)
+            {
+                TaskStatusSender.SendAIDetecting(model.SN, model.Side);
+            }
 
             // 使用局部 Stopwatch 代替共享的 AIStopwatch
             var sw = Stopwatch.StartNew();
@@ -80,7 +83,7 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
                     ctx.SetError("推理", $"SN:{model.SN} 检测失败");
                 }
 
-                if (sw.ElapsedMilliseconds > 20)
+                if (!model.IsValidationTest && sw.ElapsedMilliseconds > 20)
                 {
                     TaskStatusSender.SendAICompleted(model.SN, model.Side, sw.ElapsedMilliseconds);
                 }

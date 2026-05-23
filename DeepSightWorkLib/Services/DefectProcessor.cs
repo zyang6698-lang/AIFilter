@@ -1,7 +1,5 @@
 using DeepSightModel;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using OpenCvSharp;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -123,7 +121,7 @@ namespace DeepSightWorkLib.Services
                         PcsIndex = info.DirectReportPcsIndices[i],
                         AiLabel = "NG",
                         AiClsType = "",
-                        AiFlag = "experiment",
+                        AiFlag = "DirectReport",
                         DefectCode = null,
                         InferDetail = new Dictionary<string, object>(),
                     });
@@ -239,17 +237,8 @@ namespace DeepSightWorkLib.Services
                     return stageResult;
                 }
 
-                LogTextHelper.Info($"{vBModel.SN} {vBModel.Side} 算法返回原始结果: {msg}");
-
-                // 存储推理返回JSON到调试缓存
-                try
-                {
-                    var debugInfo = SnDebugInfoCache.GetOrCreate(vBModel.SN, vBModel.Side);
-                    debugInfo.InferenceReturnJson = msg;
-                    var prev = debugInfo.JudgmentSummary ?? "";
-                    debugInfo.JudgmentSummary = prev + " → AI推理完成";
-                }
-                catch { }
+                string safeMsg = InferenceDebugInfoService.RecordInferenceReturn(vBModel, msg);
+                LogTextHelper.Info($"{vBModel.SN} {vBModel.Side} 算法返回原始结果: {safeMsg}");
 
                 if (string.IsNullOrEmpty(msg))
                 {

@@ -29,6 +29,9 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
                 if (ctx.PostProcessModel == null)
                 {
                     LogTextHelper.Warn($"SN:{ctx.SN} PostProcessModel 为空，跳过后处理");
+                    ctx.SetError("后处理", "PostProcessModel为空");
+                    if (!ctx.IsValidationTest)
+                        throw new InvalidOperationException("PostProcessModel为空");
                     return;
                 }
 

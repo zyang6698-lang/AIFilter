@@ -67,6 +67,7 @@ namespace DeepSightWorkLib.Services
 
             _activeTasks[task.TaskId] = task;
             LogTextHelper.Info($"创建{GetModeName(request.Mode)}任务: {task.TaskId}, 描述: {task.Description}");
+            SendUnifiedInferenceTaskStatus(task, DeepSightModel.TaskStatus.Queued, "已创建");
 
             // 异步执行任务
             _ = Task.Run(() => ExecuteTaskAsync(task, cancellationToken), cancellationToken);
@@ -130,6 +131,29 @@ namespace DeepSightWorkLib.Services
             }
         }
 
+        private void SendUnifiedInferenceTaskStatus(InferenceTask task, DeepSightModel.TaskStatus status, string message = "")
+        {
+            if (task == null) return;
+
+            int finishedCount = task.ProcessedRecords + task.SkippedRecords + task.ErrorRecords;
+            long elapsedMs = 0;
+            if ((status == DeepSightModel.TaskStatus.Completed || status == DeepSightModel.TaskStatus.Failed || status == DeepSightModel.TaskStatus.Skipped)
+                && task.StartTime.HasValue && task.EndTime.HasValue)
+            {
+                elapsedMs = (long)(task.EndTime.Value - task.StartTime.Value).TotalMilliseconds;
+            }
+
+            TaskStatusSender.SendUnifiedTaskStatus(
+                task.TaskId,
+                GetModeName(task.Mode),
+                task.Description,
+                status,
+                task.TotalRecords,
+                finishedCount,
+                message,
+                elapsedMs);
+        }
+
         #endregion
 
         #region 统一任务执行
@@ -143,16 +167,19 @@ namespace DeepSightWorkLib.Services
             {
                 task.State = InferenceTaskState.Running;
                 task.StartTime = DateTime.Now;
+                SendUnifiedInferenceTaskStatus(task, DeepSightModel.TaskStatus.ReadingData, "正在获取数据");
 
                 // 获取数据
                 var records = await GetTaskDataAsync(task);
                 task.TotalRecords = records.Count;
                 LogTextHelper.Info($"{GetModeName(task.Mode)}任务 {task.TaskId}: 获取到 {records.Count} 条数据");
+                SendUnifiedInferenceTaskStatus(task, DeepSightModel.TaskStatus.LoadingImages, $"获取到 {records.Count} 条数据");
 
                 if (records.Count == 0)
                 {
                     task.State = InferenceTaskState.Completed;
                     task.EndTime = DateTime.Now;
+                    SendUnifiedInferenceTaskStatus(task, DeepSightModel.TaskStatus.Completed, "没有符合条件的数据");
                     return;
                 }
 
@@ -166,21 +193,35 @@ namespace DeepSightWorkLib.Services
                     }
 
                     await ProcessRecordAsync(task, record);
+                    SendUnifiedInferenceTaskStatus(task, DeepSightModel.TaskStatus.AIDetecting, $"已入队 {task.EnqueuedRecords}/{task.TotalRecords}");
                 }
 
                 LogTextHelper.Info($"{GetModeName(task.Mode)}任务 {task.TaskId} 入队完成: 总数={task.TotalRecords}, 已入队={task.EnqueuedRecords}, 跳过(直报)={task.SkippedRecords}, 错误={task.ErrorRecords}");
+
+                if (task.State == InferenceTaskState.Cancelled)
+                {
+                    task.EndTime = DateTime.Now;
+                    SendUnifiedInferenceTaskStatus(task, DeepSightModel.TaskStatus.Skipped, "任务已取消");
+                    return;
+                }
 
                 if (task.State == InferenceTaskState.Running && task.IsReallyCompleted)
                 {
                     task.State = InferenceTaskState.Completed;
                     task.EndTime = DateTime.Now;
                     LogTextHelper.Info($"{GetModeName(task.Mode)}任务 {task.TaskId} 已完成: 已处理={task.ProcessedRecords}, 跳过={task.SkippedRecords}, 错误={task.ErrorRecords}");
+                    SendUnifiedInferenceTaskStatus(task, DeepSightModel.TaskStatus.Completed, "全部完成");
+                }
+                else if (task.State == InferenceTaskState.Running)
+                {
+                    SendUnifiedInferenceTaskStatus(task, DeepSightModel.TaskStatus.AIDetecting, "入队完成，等待推理结果");
                 }
             }
             catch (Exception ex)
             {
                 task.State = InferenceTaskState.Failed;
                 task.EndTime = DateTime.Now;
+                SendUnifiedInferenceTaskStatus(task, DeepSightModel.TaskStatus.Failed, ex.Message);
                 LogTextHelper.Error($"{GetModeName(task.Mode)}任务 {task.TaskId} 执行失败: {ex}");
             }
         }
@@ -261,6 +302,7 @@ namespace DeepSightWorkLib.Services
                 };
 
                 var vbModel = _vbModelBuilder.Build(context);
+                InferenceDebugInfoService.RecordOfflineStep(vbModel, GetModeName(task.Mode), panel.LotNumber, defectPoints, BuildRecordDebugSource(task, panel, side, defectPoints), stage: "已构建VBModel");
 
                 if (vbModel == null)
                 {
@@ -334,6 +376,9 @@ namespace DeepSightWorkLib.Services
                         .ToList();
                     vbModel.Mats_Temp = _imageLoaderService.LoadImages(tempImagePaths);
                 }
+
+                InferenceDebugInfoService.RecordOfflineStep(vbModel, GetModeName(task.Mode), panel.LotNumber, defectPoints, null,
+                    vbModel.Mats?.Count ?? 0, vbModel.Mats_Temp?.Count ?? 0, "图片已预加载");
 
                 // 构建 PipelineContext 并投递到 Pipeline（跳过JSON解析和图片加载阶段，图片已预加载）
                 var pipelineCtx = new PipelineContext
@@ -439,31 +484,14 @@ namespace DeepSightWorkLib.Services
                 // 更新任务统计
                 if (_activeTasks.TryGetValue(vbModel.TestTaskId, out var task))
                 {
-                    lock (task)
+                    if (InferenceTaskStateService.TryRecordConsistencyResult(task, sideResult, out bool completed))
                     {
-                        task.ConsistencyResults.Add(sideResult);
-                        task.ProcessedRecords++;  // 在推理结果返回时增加处理计数
+                        SendUnifiedInferenceTaskStatus(task,
+                            completed ? DeepSightModel.TaskStatus.Completed : DeepSightModel.TaskStatus.AICompleted,
+                            completed ? "全部完成" : "测试结果已更新");
 
-                        if (sideResult.State == ValidationTestState.Consistent)
-                            task.ConsistentRecords++;
-                        else if (sideResult.State == ValidationTestState.Inconsistent)
-                            task.InconsistentRecords++;
-                        else
-                            task.ErrorRecords++;
-
-                        // 更新VVS相关统计
-                        if (sideResult.HasVVSData)
+                        if (completed)
                         {
-                            task.VVSRecords++;
-                            task.TotalMissCount += sideResult.MissCount;
-                            task.TotalOverKillCount += sideResult.OverKillCount;
-                        }
-
-                        // 检查任务是否真正完成（所有入队的记录都已返回结果）
-                        if (task.IsReallyCompleted && task.State == InferenceTaskState.Running)
-                        {
-                            task.State = InferenceTaskState.Completed;
-                            task.EndTime = DateTime.Now;
                             LogTextHelper.Info($"测试任务 {task.TaskId} 全部完成: 一致={task.ConsistentRecords}, 不一致={task.InconsistentRecords}, 错误={task.ErrorRecords}, VVS记录={task.VVSRecords}, 漏失={task.TotalMissCount}, 误报={task.TotalOverKillCount}");
                         }
                     }
@@ -472,13 +500,120 @@ namespace DeepSightWorkLib.Services
                 // 更新数据库状态
                 _ = UpdateTestStateAsync(vbModel.SN, vbModel.Side, sideResult.State);
 
+                InferenceDebugInfoService.RecordOfflineStep(vbModel, GetModeName(vbModel.InferenceMode), vbModel.LotId,
+                    vbModel.OriginalDetectInfos?.Values, null, stage: $"一致性测试完成，状态={sideResult.State}，一致率={sideResult.ConsistencyRate:F1}%");
+
                 LogTextHelper.Info($"测试结果: {vbModel.SN}_{vbModel.Side}, 状态={sideResult.State}, " +
                     $"一致率={sideResult.ConsistencyRate:F1}%");
             }
             catch (Exception ex)
             {
                 LogTextHelper.Error($"处理验证测试结果异常: {vbModel.SN}_{vbModel.Side}, {ex}");
+                RecordPipelineFailure(vbModel, "验证测试结果处理", ex.Message);
             }
+        }
+
+        public void RecordPipelineFailure(VBModel vbModel, string stage, string message)
+        {
+            if (vbModel == null || !vbModel.IsValidationTest || string.IsNullOrEmpty(vbModel.TestTaskId))
+                return;
+
+            string errorMessage = string.IsNullOrWhiteSpace(message) ? "未知错误" : message;
+            string errorStage = string.IsNullOrWhiteSpace(stage) ? "Pipeline" : stage;
+
+            if (vbModel.IsSingleImageTest)
+            {
+                InferenceDebugInfoService.RecordFailure(vbModel, errorStage, errorMessage);
+                if (_singleImageTestResults.TryGetValue(vbModel.TestTaskId, out var tcs))
+                {
+                    tcs.TrySetResult(new SingleImageTestResult
+                    {
+                        Success = false,
+                        ErrorMessage = $"{errorStage}: {errorMessage}",
+                        ImagePath = vbModel.ImageKeys?.FirstOrDefault()
+                    });
+                }
+                return;
+            }
+
+            if (!_activeTasks.TryGetValue(vbModel.TestTaskId, out var task))
+            {
+                InferenceDebugInfoService.RecordFailure(vbModel, errorStage, errorMessage);
+                return;
+            }
+
+            bool recorded = InferenceTaskStateService.TryRecordFailure(task, vbModel, errorStage, errorMessage, out bool completed);
+            if (!recorded)
+                return;
+
+            if (!vbModel.IsSecondaryInference)
+            {
+                _ = UpdateTestStateAsync(vbModel.SN, vbModel.Side, ValidationTestState.TestError);
+            }
+
+            if (completed)
+            {
+                LogTextHelper.Info($"{GetModeName(task.Mode)}任务 {task.TaskId} 全部完成: 已处理={task.ProcessedRecords}, 跳过={task.SkippedRecords}, 错误={task.ErrorRecords}");
+            }
+
+            SendUnifiedInferenceTaskStatus(task,
+                completed ? DeepSightModel.TaskStatus.Completed : DeepSightModel.TaskStatus.AIDetecting,
+                completed ? "全部完成" : $"记录失败: {errorStage}");
+
+            InferenceDebugInfoService.RecordFailure(vbModel, errorStage, errorMessage);
+            LogTextHelper.Warn($"{GetModeName(vbModel.InferenceMode)}记录失败已闭环: {vbModel.SN}_{vbModel.Side}, 阶段={errorStage}, 原因={errorMessage}");
+        }
+
+        private static object BuildRecordDebugSource(InferenceTask task, PanelDataRecord panel, SideData side, IEnumerable<DetectInfo> defectPoints)
+        {
+            return new
+            {
+                TaskId = task.TaskId,
+                Mode = task.Mode.ToString(),
+                panel.SerialNumber,
+                panel.LotNumber,
+                panel.ProductSerial,
+                panel.MachineId,
+                panel.DetectionDate,
+                panel.AviCreationTime,
+                Side = new
+                {
+                    side.Side,
+                    side.AviState,
+                    side.AiState,
+                    side.VvsState,
+                    side.VrsState,
+                    side.FinalState,
+                    side.TestState,
+                    side.LastTestTime
+                },
+                DefectPoints = BuildDetectInfoDebugSnapshot(defectPoints)
+            };
+        }
+
+        private static object BuildDetectInfoDebugSnapshot(IEnumerable<DetectInfo> defectPoints)
+        {
+            return defectPoints?.Select(d => new
+            {
+                d.DefectName,
+                d.DefectType,
+                d.DefectShape,
+                d.RoiX,
+                d.RoiY,
+                d.Width,
+                d.Height,
+                d.ImagePath,
+                d.TempImagePath,
+                d.GerberImagePath,
+                d.DefectAviImage,
+                d.DefectIndex,
+                d.PcsIndex,
+                d.AIStatus,
+                d.VVSStatus,
+                d.VrsState,
+                d.FinalState,
+                d.IsGlobal
+            }).ToList();
         }
 
         /// <summary>
@@ -609,6 +744,16 @@ namespace DeepSightWorkLib.Services
 
                 var vbModel = _vbModelBuilder.Build(context);
                 vbModel.OriginalAIResults = new Dictionary<int, int> { { 0, detectInfo.AIStatus } };
+                InferenceDebugInfoService.RecordOfflineStep(vbModel, GetModeName(InferenceMode.SingleImageTest), null, new[] { detectInfo },
+                    new
+                    {
+                        TaskId = testKey,
+                        Mode = InferenceMode.SingleImageTest.ToString(),
+                        ProductSerial = productSerial,
+                        MachineId = machineId,
+                        Side = side,
+                        DefectPoints = BuildDetectInfoDebugSnapshot(new[] { detectInfo })
+                    }, stage: "已构建VBModel");
 
                 // 通过Minio加载缺陷图
                 var mat = _imageLoaderService.LoadMinioImage(detectInfo.ImagePath);
@@ -648,6 +793,9 @@ namespace DeepSightWorkLib.Services
                     LogTextHelper.Warn($"单图测试{imageTypeName}图路径为空");
                     vbModel.Mats_Temp = new List<Mat>();
                 }
+
+                InferenceDebugInfoService.RecordOfflineStep(vbModel, GetModeName(InferenceMode.SingleImageTest), null, new[] { detectInfo }, null,
+                    vbModel.Mats?.Count ?? 0, vbModel.Mats_Temp?.Count ?? 0, "图片已预加载");
 
                 // 构建 PipelineContext 并投递到 Pipeline（跳过JSON解析和图片加载阶段，图片已预加载）
                 var pipelineCtx = new PipelineContext
@@ -785,6 +933,32 @@ namespace DeepSightWorkLib.Services
                 sideResult.FinalUndetectedCount = finalUndetectedCount;
                 sideResult.State = SecondaryInferenceResultState.Completed;
 
+                int directReportCount = 0;
+                if (vbModel.DirectReportDefectIndices != null && vbModel.DirectReportDefectIndices.Count > 0)
+                {
+                    directReportCount = vbModel.DirectReportDefectIndices.Count;
+                    for (int di = 0; di < directReportCount; di++)
+                    {
+                        int ddefectIdx = vbModel.DirectReportDefectIndices[di];
+                        string dImagePath = vbModel.DirectReportFlags != null && di < vbModel.DirectReportFlags.Count && vbModel.ImageKeys != null && di < vbModel.ImageKeys.Count ? vbModel.ImageKeys[di] : null;
+
+                        DetectInfo dDetectInfo = null;
+                        vbModel.OriginalDetectInfos?.TryGetValue(ddefectIdx, out dDetectInfo);
+
+                        sideResult.PointResults.Add(new SecondaryInferencePointResult
+                        {
+                            DefectIndex = ddefectIdx,
+                            ImagePath = dImagePath,
+                            DetectInfo = dDetectInfo?.Clone(),
+                            OriginalAIStatus = 4,
+                            NewAIStatus = 4
+                        });
+                    }
+                }
+
+                sideResult.DirectReportCount = directReportCount;
+                sideResult.FinalNgCount = sideResult.OriginalNgCount - changedToOkCount;
+
                 // 更新数据库
                 if (updatedDetectInfos.Count > 0)
                 {
@@ -797,63 +971,27 @@ namespace DeepSightWorkLib.Services
                 // 更新任务统计
                 if (_activeTasks.TryGetValue(vbModel.TestTaskId, out var task))
                 {
-                    lock (task)
+                    if (InferenceTaskStateService.TryRecordSecondaryResult(task, sideResult, changedToOkCount, out bool completed))
                     {
-                        task.SecondaryResults.Add(sideResult);
-                        task.ProcessedRecords++;
+                        SendUnifiedInferenceTaskStatus(task,
+                            completed ? DeepSightModel.TaskStatus.Completed : DeepSightModel.TaskStatus.AICompleted,
+                            completed ? "全部完成" : "二次推理结果已更新");
 
-                        if (changedToOkCount > 0)
-                            task.OkRecords += changedToOkCount;
-                        task.NgRecords += sideResult.OriginalNgCount - changedToOkCount;
-
-                        // 检查任务是否真正完成
-                        if (task.IsReallyCompleted && task.State == InferenceTaskState.Running)
+                        if (completed)
                         {
-                            task.State = InferenceTaskState.Completed;
-                            task.EndTime = DateTime.Now;
                             LogTextHelper.Info($"二次推理任务 {task.TaskId} 全部完成: 总点数={task.OkRecords + task.NgRecords}, 转OK={task.OkRecords}");
                         }
                     }
                 }
 
-                // 追加直报缺陷的结果（标记为bypass "4"）
-                int directReportCount = 0;
-                if (vbModel.DirectReportDefectIndices != null && vbModel.DirectReportDefectIndices.Count > 0)
-                {
-                    directReportCount = vbModel.DirectReportDefectIndices.Count;
-                    for (int di = 0; di < directReportCount; di++)
-                    {
-                        int dpcsIndex = di < vbModel.DirectReportPcsIndices.Count ? vbModel.DirectReportPcsIndices[di] : 0;
-                        int ddefectIdx = vbModel.DirectReportDefectIndices[di];
-                        string dImagePath = di < vbModel.DirectReportFlags.Count && vbModel.ImageKeys != null && di < vbModel.ImageKeys.Count ? vbModel.ImageKeys[di] : null;
-
-                        // 原始直报状态（始终 AI-直报=4）
-                        int dOriginalStatus = 4;
-                        // 二次推理后依然是直报（不会改）
-                        int dNewStatus = 4;
-
-                        // 尝试获取 DetectInfo
-                        DetectInfo dDetectInfo = null;
-                        vbModel.OriginalDetectInfos?.TryGetValue(ddefectIdx, out dDetectInfo);
-
-                        sideResult.PointResults.Add(new SecondaryInferencePointResult
-                        {
-                            DefectIndex = ddefectIdx,
-                            ImagePath = dImagePath,
-                            DetectInfo = dDetectInfo?.Clone(),
-                            OriginalAIStatus = dOriginalStatus,
-                            NewAIStatus = dNewStatus
-                        });
-                    }
-                }
-
-                sideResult.DirectReportCount = directReportCount;
-                sideResult.FinalNgCount = sideResult.OriginalNgCount - changedToOkCount;
+                InferenceDebugInfoService.RecordOfflineStep(vbModel, GetModeName(vbModel.InferenceMode), vbModel.LotId,
+                    vbModel.OriginalDetectInfos?.Values, null, stage: $"二次推理完成，原NG={sideResult.OriginalNgCount}，转OK={changedToOkCount}，最终NG={sideResult.FinalNgCount}，直报={directReportCount}");
                 LogTextHelper.Info($"二次推理结果: {vbModel.SN}_{vbModel.Side}, 原NG数={sideResult.OriginalNgCount}, 转OK={changedToOkCount}, 最终NG={sideResult.FinalNgCount}, 直报数={directReportCount}");
             }
             catch (Exception ex)
             {
                 LogTextHelper.Error($"处理二次推理结果异常: {vbModel.SN}_{vbModel.Side}, {ex}");
+                RecordPipelineFailure(vbModel, "二次推理结果处理", ex.Message);
             }
         }
 
@@ -896,6 +1034,8 @@ namespace DeepSightWorkLib.Services
                 ExtractInferDetail(result, rawJsonResult);
 
                 tcs.TrySetResult(result);
+                InferenceDebugInfoService.RecordOfflineStep(vbModel, GetModeName(vbModel.InferenceMode), null,
+                    vbModel.OriginalDetectInfos?.Values, null, stage: $"单图测试完成，原状态={originalStatus}，新状态={newStatus}，一致={result.IsConsistent}");
                 LogTextHelper.Info($"单图测试完成: {testKey}, 原状态={originalStatus}, 新状态={newStatus}, 一致={result.IsConsistent}, 缺陷名={result.DefectName ?? "-"}");
             }
             catch (Exception ex)

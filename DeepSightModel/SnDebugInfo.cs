@@ -149,6 +149,7 @@ namespace DeepSightModel
         /// 最大缓存数量
         /// </summary>
         private const int MaxCacheSize = 1000;
+        private const int CleanupBatchSize = 100;
 
         public static SnDebugInfo GetOrCreate(string sn, string side)
         {
@@ -257,19 +258,18 @@ namespace DeepSightModel
         /// </summary>
         public static void Cleanup()
         {
-            if (_cache.Count <= MaxCacheSize) return;
-            // Simple cleanup: remove oldest entries
-            var sorted = new System.Collections.Generic.SortedList<DateTime, string>();
-            foreach (var kvp in _cache)
-            {
-                if (!sorted.ContainsKey(kvp.Value.CreateTime))
-                    sorted.Add(kvp.Value.CreateTime, kvp.Key);
-            }
-            int toRemove = _cache.Count - MaxCacheSize;
+            int count = _cache.Count;
+            if (count <= MaxCacheSize) return;
+
+            int targetSize = Math.Max(0, MaxCacheSize - CleanupBatchSize);
+            int toRemove = count - targetSize;
+            var sorted = new System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<string, SnDebugInfo>>(_cache);
+            sorted.Sort((a, b) => a.Value.CreateTime.CompareTo(b.Value.CreateTime));
+
             foreach (var kvp in sorted)
             {
                 if (toRemove <= 0) break;
-                _cache.TryRemove(kvp.Value, out _);
+                _cache.TryRemove(kvp.Key, out _);
                 toRemove--;
             }
         }

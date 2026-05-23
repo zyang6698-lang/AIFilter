@@ -231,7 +231,7 @@ namespace DeepSightModel
         [JsonProperty("defect_vrs_images")]
         public List<string> DefectVrsImages { get; set; }
 
-        [JsonProperty("defect_avi_images")]
+        [JsonProperty("defect_vrs_avi_images")]
         public List<string> DefectAviImages { get; set; }
 
         [JsonProperty("defect_vrs_ok_images")]

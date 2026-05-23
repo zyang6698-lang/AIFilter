@@ -466,6 +466,11 @@ namespace DeepSightWorkLib
                     }
                 }
 
+                if (ctx.HasError && ctx.IsValidationTest)
+                {
+                    _validationTestService?.RecordPipelineFailure(ctx.LoadModel?.Model, ctx.ErrorStage, ctx.ErrorMessage);
+                }
+
                 LogTextHelper.Info($"SN:{sn} {side} Pipeline 全流程完成，总耗时: {ctx.Stopwatch.ElapsedMilliseconds}ms" +
                     (ctx.InferenceElapsedMs > 0 ? $"（推理: {ctx.InferenceElapsedMs}ms）" : ""));
             }

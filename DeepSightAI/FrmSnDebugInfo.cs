@@ -354,6 +354,13 @@ namespace DeepSightAI
                 sbOther.AppendLine($"Minio路径:       {debugInfo.MinioPath}");
                 sbOther.AppendLine($"数据获取时间:    {debugInfo.CreateTime:yyyy-MM-dd HH:mm:ss.fff}");
 
+                if (!string.IsNullOrWhiteSpace(debugInfo.JudgmentSummary))
+                {
+                    sbOther.AppendLine();
+                    sbOther.AppendLine("---------- 处理摘要 ----------");
+                    sbOther.AppendLine(debugInfo.JudgmentSummary);
+                }
+
                 // process_status 非 normal 时告警
                 if (!string.IsNullOrEmpty(debugInfo.ProcessStatus) &&
                     !string.Equals(debugInfo.ProcessStatus, "normal", StringComparison.OrdinalIgnoreCase))

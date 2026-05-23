@@ -376,6 +376,7 @@ namespace DeepSightWorkLib.Services.Pipeline
         private void SafeExecuteAction(PipelineContext ctx, string stageName, Action<PipelineContext> action)
         {
             ctx.CurrentStage = stageName;
+            bool hadError = ctx.HasError;
             try
             {
                 action(ctx);
@@ -383,10 +384,11 @@ namespace DeepSightWorkLib.Services.Pipeline
             catch (Exception ex)
             {
                 // 仅在本阶段首次出错时记录（避免重复记录上游错误）
-                if (!ctx.HasError)
+                if (!hadError)
                 {
                     LogTextHelper.Error($"Pipeline [{stageName}] 异常: SN={ctx.SN}, {ex}");
-                    ctx.SetError(stageName, ex.Message);
+                    if (!ctx.HasError)
+                        ctx.SetError(stageName, ex.Message);
                     _errorHandler?.Invoke(ctx);
                 }
                 else

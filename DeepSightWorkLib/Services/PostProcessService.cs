@@ -20,9 +20,7 @@ namespace DeepSightWorkLib.Services
     {
         private readonly ConfigurationClass _sysConfig;
         private readonly Action<VBModel, List<DetectInfo>, int, int> _savePanelSideAction;
-
-        // 模型验证测试服务（可选注入）
-        private ModelValidationTestService _validationTestService;
+        private readonly OfflineInferenceResultSinkService _offlineResultSinkService;
 
         // 重点缺陷报警冷却时间记录
         private static DateTime _lastKeyDefectAlarmTime = DateTime.MinValue;
@@ -34,6 +32,7 @@ namespace DeepSightWorkLib.Services
         {
             _sysConfig = sysConfig ?? throw new ArgumentNullException(nameof(sysConfig));
             _savePanelSideAction = savePanelSideAction ?? throw new ArgumentNullException(nameof(savePanelSideAction));
+            _offlineResultSinkService = new OfflineInferenceResultSinkService();
         }
 
         /// <summary>
@@ -41,7 +40,7 @@ namespace DeepSightWorkLib.Services
         /// </summary>
         public void SetValidationTestService(ModelValidationTestService service)
         {
-            _validationTestService = service;
+            _offlineResultSinkService.SetValidationTestService(service);
         }
 
         public void ProcessInferenceResult(InferenceResultModel resultModel)
@@ -54,7 +53,7 @@ namespace DeepSightWorkLib.Services
                 // 如果是验证测试任务，交给验证测试服务处理
                 if (vBModel.IsValidationTest)
                 {
-                    ProcessValidationTestResult(vBModel, msg);
+                    _offlineResultSinkService.Process(vBModel, msg);
                     return;
                 }
 
@@ -174,7 +173,7 @@ namespace DeepSightWorkLib.Services
                         else
                         {
                             defect.AIStatus = 2;
-
+                            //todo需要判空
                             for (int j = 0; j < inferResult.InferDetails.Location.Count; j++)
                             {
                                 string sub_defectName = inferResult.Defect_name;
@@ -320,77 +319,6 @@ namespace DeepSightWorkLib.Services
             }
 
             return defects;
-        }
-
-
-        /// <summary>
-        /// 处理验证测试的推理结果
-        /// </summary>
-        private void ProcessValidationTestResult(VBModel vBModel, string rawJsonResult)
-        {
-            if (_validationTestService == null)
-            {
-                LogTextHelper.Warn($"验证测试服务未注入，跳过测试结果处理: {vBModel.SN}_{vBModel.Side}");
-                return;
-            }
-
-            try
-            {
-                // 解析推理结果
-                var inferResults = ExtractInferResults(rawJsonResult);
-
-                // 根据任务类型调用不同的处理方法
-                if (vBModel.IsSingleImageTest)
-                {
-                    _validationTestService.ProcessSingleImageTestResult(vBModel, inferResults, rawJsonResult);
-                    LogTextHelper.Info($"单图测试结果处理完成: {vBModel.SN}");
-                }
-                else if (vBModel.IsSecondaryInference)
-                {
-                    // 二次推理：异步处理并更新数据库
-                    _ = _validationTestService.ProcessSecondaryInferenceResultAsync(vBModel, inferResults);
-                    LogTextHelper.Info($"二次推理结果处理已启动: {vBModel.SN}_{vBModel.Side}");
-                }
-                else
-                {
-                    _validationTestService.ProcessValidationTestResult(vBModel, inferResults);
-                    LogTextHelper.Info($"验证测试结果处理完成: {vBModel.SN}_{vBModel.Side}");
-                }
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error($"处理验证测试结果异常: {vBModel.SN}_{vBModel.Side}, {ex}");
-            }
-        }
-
-        /// <summary>
-        /// 从原始JSON结果中提取推理结果列表
-        /// </summary>
-        private List<string> ExtractInferResults(string rawJsonResult)
-        {
-            var results = new List<string>();
-
-            if (string.IsNullOrEmpty(rawJsonResult))
-                return results;
-
-            try
-            {
-                var obj = JsonConvert.DeserializeObject<RootVBOutInfo>(rawJsonResult);
-                if (obj?.Code?.ToString() == "200" && obj.Data?.InferWholeData?.InferResults != null)
-                {
-                    foreach (var inferResult in obj.Data.InferWholeData.InferResults)
-                    {
-                        // "OK" -> "0", "NG" -> "1"
-                        results.Add(inferResult.Infer_Result == "NG" ? "1" : "0");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error($"解析推理结果失败: {ex.Message}");
-            }
-
-            return results;
         }
 
         /// <summary>

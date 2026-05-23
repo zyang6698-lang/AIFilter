@@ -687,7 +687,7 @@
             this.Code.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
             this.Code.DataPropertyName = "Code";
             this.Code.FillWeight = 180F;
-            this.Code.HeaderText = "SN任务队列";
+            this.Code.HeaderText = "统一任务队列";
             this.Code.MinimumWidth = 6;
             this.Code.Name = "Code";
             this.Code.ReadOnly = true;
@@ -708,7 +708,7 @@
             this.AVI.MinimumWidth = 6;
             this.AVI.Name = "AVI";
             this.AVI.ReadOnly = true;
-            this.AVI.ToolTipText = "来自AVI机台的总图片数";
+            this.AVI.ToolTipText = "在线: AVI图片数；离线: 总数";
             this.AVI.Width = 50;
             // 
             // AI
@@ -717,12 +717,12 @@
             this.AI.MinimumWidth = 6;
             this.AI.Name = "AI";
             this.AI.ReadOnly = true;
-            this.AI.ToolTipText = "AI实际推理的总图片数（不包含直报图片）";
+            this.AI.ToolTipText = "在线: AI推理数；离线: 完成数";
             this.AI.Width = 50;
             // 
             // Time
             // 
-            this.Time.HeaderText = "时间(ms)";
+            this.Time.HeaderText = "耗时(ms)";
             this.Time.MinimumWidth = 6;
             this.Time.Name = "Time";
             this.Time.ReadOnly = true;
