@@ -39,6 +39,7 @@
             // 
             // lbl_version
             // 
+            this.lbl_version.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lbl_version.AutoSize = true;
             this.lbl_version.BackColor = System.Drawing.Color.Transparent;
             this.lbl_version.Font = new System.Drawing.Font("微软雅黑", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));

@@ -190,15 +190,20 @@ namespace DeepSightAI
             if (Machine.machineRegistry?.Machines == null || Machine.machineRegistry.Machines.Count == 0)
             {
                 // 回退：注册表为空时使用旧配置
-                return Machine.aviconfig?.WatchPaths ?? new List<WatchPathConfig>();
+                return GetDistinctWatchPaths(Machine.aviconfig?.WatchPaths);
             }
 
-            var aviMap = Machine.aviconfig?.WatchPaths?
-                .ToDictionary(w => w.AviName, w => w, System.StringComparer.OrdinalIgnoreCase)
-                ?? new Dictionary<string, WatchPathConfig>(System.StringComparer.OrdinalIgnoreCase);
+            var aviMap = GetDistinctWatchPaths(Machine.aviconfig?.WatchPaths)
+                .ToDictionary(w => w.AviName, w => w, System.StringComparer.OrdinalIgnoreCase);
+            var addedNames = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
 
             foreach (var entry in Machine.machineRegistry.Machines)
             {
+                if (string.IsNullOrWhiteSpace(entry.MachineName) || !addedNames.Add(entry.MachineName))
+                {
+                    continue;
+                }
+
                 if (aviMap.TryGetValue(entry.MachineName, out var existing))
                 {
                     // 使用 Agent 详细配置，但以注册表的 IsEnable 为准
@@ -219,6 +224,29 @@ namespace DeepSightAI
                         FileB = ""
                     });
                 }
+            }
+
+            return result;
+        }
+
+        private List<WatchPathConfig> GetDistinctWatchPaths(IEnumerable<WatchPathConfig> watchPaths)
+        {
+            if (watchPaths == null)
+            {
+                return new List<WatchPathConfig>();
+            }
+
+            var result = new List<WatchPathConfig>();
+            var addedNames = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+
+            foreach (var watchPath in watchPaths)
+            {
+                if (string.IsNullOrWhiteSpace(watchPath?.AviName) || !addedNames.Add(watchPath.AviName))
+                {
+                    continue;
+                }
+
+                result.Add(watchPath);
             }
 
             return result;

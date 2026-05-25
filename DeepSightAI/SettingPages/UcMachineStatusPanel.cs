@@ -67,9 +67,18 @@ namespace DeepSightAI.SettingPages
         {
             if (watchPaths == null) return;
 
+            var validWatchPaths = watchPaths
+                .Where(w => !string.IsNullOrWhiteSpace(w?.AviName))
+                .GroupBy(w => w.AviName, StringComparer.OrdinalIgnoreCase)
+                .Select(g => g.First())
+                .ToList();
+
             // 现有映射
-            var existingMap = _machineCards.ToDictionary(c => c.ctrConfig.AviName, c => c);
-            var incomingNames = new HashSet<string>(watchPaths.Select(w => w.AviName));
+            var existingMap = _machineCards
+                .Where(c => !string.IsNullOrWhiteSpace(c.ctrConfig?.AviName))
+                .GroupBy(c => c.ctrConfig.AviName, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+            var incomingNames = new HashSet<string>(validWatchPaths.Select(w => w.AviName), StringComparer.OrdinalIgnoreCase);
 
             flowLayoutPanel1.SuspendLayout();
             try
@@ -78,7 +87,8 @@ namespace DeepSightAI.SettingPages
                 for (int i = _machineCards.Count - 1; i >= 0; i--)
                 {
                     var ctr = _machineCards[i];
-                    if (!incomingNames.Contains(ctr.ctrConfig.AviName))
+                    var aviName = ctr.ctrConfig?.AviName;
+                    if (string.IsNullOrWhiteSpace(aviName) || !incomingNames.Contains(aviName))
                     {
                         flowLayoutPanel1.Controls.Remove(ctr);
                         _machineCards.RemoveAt(i);
@@ -87,7 +97,7 @@ namespace DeepSightAI.SettingPages
                 }
 
                 // 添加或更新现有
-                foreach (var cfg in watchPaths)
+                foreach (var cfg in validWatchPaths)
                 {
                     if (existingMap.TryGetValue(cfg.AviName, out var ctr))
                     {
@@ -110,10 +120,14 @@ namespace DeepSightAI.SettingPages
         public void UpdateAllMachinePanels(List<WatchPathConfig> watchPaths)
         {
             if (watchPaths == null) return;
-            var configMap = watchPaths.ToDictionary(w => w.AviName);
+            var configMap = watchPaths
+                .Where(w => !string.IsNullOrWhiteSpace(w?.AviName))
+                .GroupBy(w => w.AviName, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
             foreach (var ctr in _machineCards)
             {
-                if (configMap.TryGetValue(ctr.ctrConfig.AviName, out var cfg))
+                var aviName = ctr.ctrConfig?.AviName;
+                if (!string.IsNullOrWhiteSpace(aviName) && configMap.TryGetValue(aviName, out var cfg))
                 {
                     ctr.ctrConfig = cfg;
                     ctr.UpdateDisplay();

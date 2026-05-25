@@ -60,13 +60,22 @@ namespace DeepSightWorkLib.Services
             if (paths == null) return new List<Mat>();
             try
             {
-                var list = paths
+                var pathList = paths.ToList();
+                var results = pathList
                     .AsParallel()
                     .AsOrdered()
-                    .Select(p => LoadMinioImage(p))
-                    .Where(m => m != null)
+                    .Select(p => new { Path = p, Mat = LoadMinioImage(p) })
                     .ToList();
-                return list;
+
+                for (int i = 0; i < results.Count; i++)
+                {
+                    if (results[i].Mat == null)
+                    {
+                        LogTextHelper.Warn($"图片加载失败[{i}]: {results[i].Path}");
+                    }
+                }
+
+                return results.Where(r => r.Mat != null).Select(r => r.Mat).ToList();
             }
             catch (Exception ex)
             {

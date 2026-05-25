@@ -1,7 +1,10 @@
 using DeepSightEvent;
 using DeepSightModel;
 using DeepSightTool;
+using OpenCvSharp;
 using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace DeepSightWorkLib.Services.Pipeline.Stages
 {
@@ -40,13 +43,22 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
             LogTextHelper.Info($"开始加载图片，SN:{model.SN}，数量：{model.ImageKeys.Count}，图片类型：{(useGerber ? "Gerber" : "Template")}");
             TaskStatusSender.SendLoadingImages(model.SN, model.Side);
 
-            model.Mats = _imageLoaderService.LoadImages(model.ImageKeys);
+            // 缺陷图与参考图（Template/Gerber）并行加载
+            var refKeys = useGerber ? model.ImageKeys_Gerber : model.ImageKeys_Temp;
+            List<Mat> defectMats = null;
+            List<Mat> refMats = null;
+
+            Parallel.Invoke(
+                () => defectMats = _imageLoaderService.LoadImages(model.ImageKeys),
+                () => refMats = _imageLoaderService.LoadImages(refKeys)
+            );
+
+            model.Mats = defectMats;
 
             if (useGerber)
             {
-                // 配置为使用 Gerber 图：加载 Gerber 图到 Mats_Gerber，并赋值给 Mats_Temp 用于推理
-                model.Mats_Gerber = _imageLoaderService.LoadImages(model.ImageKeys_Gerber);
-                model.Mats_Temp = model.Mats_Gerber;
+                model.Mats_Gerber = refMats;
+                model.Mats_Temp = refMats;
 
                 if (model.Mats_Temp == null || model.Mats_Temp.Count == 0)
                 {
@@ -56,10 +68,8 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
             }
             else
             {
-                // 配置为使用 Template 图（默认）
-                model.Mats_Temp = _imageLoaderService.LoadImages(model.ImageKeys_Temp);
+                model.Mats_Temp = refMats;
 
-                // 当 temp 图为空时，使用 Gerber 图替代
                 if (model.Mats_Temp == null || model.Mats_Temp.Count == 0)
                 {
                     LogTextHelper.Info($"SN:{model.SN} Temp图为空，使用Gerber图替代");
