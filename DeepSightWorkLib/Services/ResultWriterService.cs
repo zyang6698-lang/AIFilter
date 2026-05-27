@@ -28,7 +28,7 @@ namespace DeepSightWorkLib.Services
         /// 根据 AVI 侧 URL 在配置中查找对应的 LevelDbConfig
         /// （按 Url 精确匹配，匹配不到时回退到第一个启用项）
         /// </summary>
-        internal static LevelDbConfig FindConfigByUrl(string url)
+        public static LevelDbConfig FindConfigByUrl(string url)
             => FindConfig(url, byVrs: false);
 
         /// <summary>
@@ -58,7 +58,7 @@ namespace DeepSightWorkLib.Services
         /// <summary>
         /// 将 AiLabel 映射为 VRS V1.0 状态码（OK=0, NG=1, 其他=2，大小写不敏感）
         /// </summary>
-        internal static string MapAiLabelToStatusCode(string aiLabel)
+        public static string MapAiLabelToStatusCode(string aiLabel)
         {
             if (string.Equals(aiLabel, "OK", StringComparison.OrdinalIgnoreCase)) return StatusCodeOk;
             if (string.Equals(aiLabel, "NG", StringComparison.OrdinalIgnoreCase)) return StatusCodeNg;

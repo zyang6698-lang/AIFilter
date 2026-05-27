@@ -5,7 +5,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using DeepSightCommunication.Interfaces;
-using DeepSightEvent;
+
 using DeepSightTool;
 using Newtonsoft.Json;
 
@@ -87,8 +87,7 @@ namespace DeepSightCommunication
             catch (Exception ex)
             {
                 response = string.Empty;
-                LogTextHelper.Error($"LevelDB {tag} 异常: {ex}");
-                SystemEvent.SendAlarmMsg($"LevelDB {tag} 异常,详情请见LOG");
+                LogTextHelper.ErrorFormat("LevelDB {0} 异常: {1}", tag, ex);
                 return false;
             }
         }

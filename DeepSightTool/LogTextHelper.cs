@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Text;
@@ -14,53 +15,55 @@ namespace DeepSightTool
     /// </summary>
     public class LogTextHelper
     {
-        public string NewLogFolder = string.Empty;
-
         private static string LogFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Log");
         private static string LogFolderConfig = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "人员操作配置记录");
 
         public static bool RecordLog = true;
         public static bool DebugLog = false;
 
-        public delegate void CallBackLogProc(string msg, Color color);
+        public enum LogTextLevel
+        {
+            Debug,
+            Info,
+            Warn,
+            Error
+        }
 
-        public static event CallBackLogProc OnCallBackLogProc;
+        public delegate void LogWrittenProc(LogTextLevel level, string message, Exception exception, string cooldownKey, string source);
+
+        public static event LogWrittenProc OnLogWritten;
 
         /// <summary>
         /// 是否保存日志
         /// </summary>
         public static bool Enable = true;
 
-        // ========== UI 回调冷却机制（防止日志框刷屏）==========
-
-        /// <summary>UI 回调冷却时间（秒），默认 5 秒</summary>
-        public static int UiCooldownSeconds { get; set; } = 5;
-
-        // 冷却字典：key = 消息摘要(前80字符), value = 上次回调时间
-        private static readonly ConcurrentDictionary<string, DateTime> _uiCooldownMap =
-            new ConcurrentDictionary<string, DateTime>();
-
-        /// <summary>
-        /// 带冷却的 UI 回调触发。同一条消息在冷却期内只触发一次回调。
-        /// 文件日志不受影响，始终写入。
-        /// </summary>
-        private static void FireCallbackWithCooldown(string msg, Color color)
+        private static void FireLogWritten(LogTextLevel level, string msg, Exception exception = null, string cooldownKey = null)
         {
-            var cb = OnCallBackLogProc;
-            if (cb == null) return;
+            try
+            {
+                string source = level >= LogTextLevel.Warn ? GetCallerClassName() : null;
+                OnLogWritten?.Invoke(level, msg, exception, cooldownKey, source);
+            }
+            catch
+            {
+            }
+        }
 
-            // 生成冷却 Key：消息前 80 字符
-            string cooldownKey = msg?.Length > 80 ? msg.Substring(0, 80) : (msg ?? "");
-
-            var now = DateTime.Now;
-            var lastFire = _uiCooldownMap.GetOrAdd(cooldownKey, _ => DateTime.MinValue);
-
-            if ((now - lastFire).TotalSeconds < UiCooldownSeconds)
-                return; // 冷却期内，跳过 UI 回调
-
-            // 冷却期已过：更新时间并触发回调（CAS 更新防止并发重复触发）
-            _uiCooldownMap.TryUpdate(cooldownKey, now, lastFire);
-            cb(msg, color);
+        private static string GetCallerClassName()
+        {
+            try
+            {
+                var trace = new StackTrace(false);
+                for (int i = 2; i < trace.FrameCount; i++)
+                {
+                    var type = trace.GetFrame(i)?.GetMethod()?.DeclaringType;
+                    if (type != null && type != typeof(LogTextHelper))
+                        return type.Name;
+                }
+            }
+            catch { }
+            return null;
         }
 
         // Serilog 日志记录器
@@ -157,6 +160,81 @@ namespace DeepSightTool
             _errorLogger?.Dispose();
         }
 
+        public static void WriteFromAlarmService(LogTextLevel level, string message, Exception ex = null)
+        {
+            if (!Enable)
+            {
+                return;
+            }
+
+            try
+            {
+                WriteToSerilog(level, message, ex);
+                if (DebugLog)
+                {
+                    Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss,fff}]---->  {message}{(ex == null ? string.Empty : "\r\n" + ex)}");
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        private static void WriteToSerilog(LogTextLevel level, string message, Exception ex = null)
+        {
+            switch (level)
+            {
+                case LogTextLevel.Debug:
+                    _infoLogger?.Debug(message);
+                    break;
+                case LogTextLevel.Info:
+                    _infoLogger?.Information(message);
+                    break;
+                case LogTextLevel.Warn:
+                    _warnLogger?.Warning(message);
+                    break;
+                case LogTextLevel.Error:
+                    if (ex == null)
+                    {
+                        _errorLogger?.Error(message);
+                    }
+                    else
+                    {
+                        _errorLogger?.Error(ex, message);
+                    }
+                    break;
+            }
+        }
+
+        private static string FormatMessage(string messageTemplate, object[] args)
+        {
+            if (args == null || args.Length == 0)
+            {
+                return messageTemplate ?? string.Empty;
+            }
+
+            try
+            {
+                return string.Format(messageTemplate ?? string.Empty, args);
+            }
+            catch
+            {
+                return messageTemplate ?? string.Empty;
+            }
+        }
+
+        private static void WriteParameterized(LogTextLevel level, string messageTemplate, object[] args)
+        {
+            if (!Enable)
+            {
+                return;
+            }
+
+            var msg = FormatMessage(messageTemplate, args);
+            WriteToSerilog(level, msg);
+            FireLogWritten(level, msg, null, messageTemplate);
+        }
+
 
         /// <summary>
         /// 记录错误信息和异常 (使用 Serilog 异步写入)
@@ -182,7 +260,7 @@ namespace DeepSightTool
                     Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss,fff}]---->  {message}\r\n{ex}");
                 }
 
-                FireCallbackWithCooldown($"{message}:{ex}", Color.Red);
+                FireLogWritten(LogTextLevel.Error, message, ex);
             }
             catch
             {
@@ -203,7 +281,12 @@ namespace DeepSightTool
             }
             var msg = ex?.ToString() ?? string.Empty;
             _infoLogger?.Debug(msg);
-            FireCallbackWithCooldown(msg, Color.Green);
+            FireLogWritten(LogTextLevel.Debug, msg);
+        }
+
+        public static void DebugFormat(string messageTemplate, params object[] args)
+        {
+            WriteParameterized(LogTextLevel.Debug, messageTemplate, args);
         }
 
         /// <summary>
@@ -218,7 +301,12 @@ namespace DeepSightTool
             }
             var msg = ex?.ToString() ?? string.Empty;
             _warnLogger?.Warning(msg);
-            FireCallbackWithCooldown(msg, Color.Green);
+            FireLogWritten(LogTextLevel.Warn, msg);
+        }
+
+        public static void WarnFormat(string messageTemplate, params object[] args)
+        {
+            WriteParameterized(LogTextLevel.Warn, messageTemplate, args);
         }
 
         /// <summary>
@@ -233,13 +321,19 @@ namespace DeepSightTool
             }
             var msg = ex?.ToString() ?? string.Empty;
             _errorLogger?.Error(msg);
-            FireCallbackWithCooldown(msg, Color.Green);
+            FireLogWritten(LogTextLevel.Error, msg);
+        }
+
+        public static void ErrorFormat(string messageTemplate, params object[] args)
+        {
+            WriteParameterized(LogTextLevel.Error, messageTemplate, args);
         }
 
         /// <summary>
-        /// 记录普通信息
+        /// 记录普通信息，仅写入文件日志，不推送到首页运行消息。
+        /// 高频流程日志优先使用此方法，避免 UI 刷屏。
         /// </summary>
-        /// <param name="ex">错误信息</param>
+        /// <param name="ex">日志内容</param>
         public static void Info(object ex)
         {
             if (!Enable)
@@ -248,7 +342,15 @@ namespace DeepSightTool
             }
             var msg = ex?.ToString() ?? string.Empty;
             _infoLogger?.Information(msg);
-           // OnCallBackLogProc?.Invoke(msg, Color.Green);
+            // FireLogWritten(LogTextLevel.Info, msg);
+        }
+
+        /// <summary>
+        /// 记录需要展示给运行界面的普通信息：写入文件日志，并触发 OnLogWritten。
+        /// </summary>
+        public static void InfoFormat(string messageTemplate, params object[] args)
+        {
+            WriteParameterized(LogTextLevel.Info, messageTemplate, args);
         }
 
         /// <summary>

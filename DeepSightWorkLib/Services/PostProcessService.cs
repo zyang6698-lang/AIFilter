@@ -1,6 +1,7 @@
 using DeepSightDB;
 using DeepSightEvent;
 using DeepSightModel;
+using DeepSightModel.Alarm;
 using DeepSightModel.Configuration;
 using DeepSightTool;
 using DeepSightWorkLib.Interfaces;
@@ -365,8 +366,14 @@ namespace DeepSightWorkLib.Services
                     _lastKeyDefectAlarmTime = DateTime.Now;
                 }
 
-                SystemEvent.SendAlarmMsg($"[重点缺陷报警] {reason} (当前SN: {currentSN}, 今日重点缺陷: {keyDefects}, NG总数: {totalDefects})");
-                LogTextHelper.Warn($"[重点缺陷报警] {reason}, SN={currentSN}");
+                AlarmService.Instance.RaiseAlarm(
+                    AlarmLevel.Warning,
+                    AlarmCategory.Defect,
+                    "PostProcessService.KeyDefect",
+                    $"[重点缺陷报警] {reason}",
+                    $"当前SN={currentSN}, 今日重点缺陷={keyDefects}, NG总数={totalDefects}",
+                    currentSN,
+                    code: "KEY_DEFECT_THRESHOLD_TRIGGERED");
             }
             catch (Exception ex)
             {

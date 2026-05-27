@@ -1,4 +1,5 @@
-﻿using DeepSightTool;
+﻿using DeepSightEvent;
+using DeepSightTool;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -31,6 +32,7 @@ namespace DeepSightAI
             GlobalMutex();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            AlarmService.Instance.EnsureInitialized();
 
             #region Error捕抓全局
 

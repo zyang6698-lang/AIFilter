@@ -59,22 +59,25 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
             {
                 model.Mats_Gerber = refMats;
                 model.Mats_Temp = refMats;
+                int defectCount = model.ImageKeys?.Count ?? 0;
+                int expectedGerberCount = model.ImageKeys_Gerber?.Count ?? 0;
+                int actualGerberCount = model.Mats_Gerber?.Count ?? 0;
 
-                if (model.Mats_Temp == null || model.Mats_Temp.Count == 0)
+                if (defectCount > 0 && actualGerberCount < Math.Max(1, expectedGerberCount))
                 {
-                    LogTextHelper.Warn($"SN:{model.SN} Gerber图为空，回退使用Template图");
-                    model.Mats_Temp = _imageLoaderService.LoadImages(model.ImageKeys_Temp);
+                    LogTextHelper.WarnFormat("Gerber参考图缺失或加载失败 SN={0} Side={1}，当前配置仅使用Gerber参考图，期望:{2}，实际:{3}", model.SN, model.Side, expectedGerberCount, actualGerberCount);
                 }
             }
             else
             {
                 model.Mats_Temp = refMats;
+                int defectCount = model.ImageKeys?.Count ?? 0;
+                int expectedTemplateCount = model.ImageKeys_Temp?.Count ?? 0;
+                int actualTemplateCount = model.Mats_Temp?.Count ?? 0;
 
-                if (model.Mats_Temp == null || model.Mats_Temp.Count == 0)
+                if (defectCount > 0 && actualTemplateCount < Math.Max(1, expectedTemplateCount))
                 {
-                    LogTextHelper.Info($"SN:{model.SN} Temp图为空，使用Gerber图替代");
-                    model.Mats_Gerber = _imageLoaderService.LoadImages(model.ImageKeys_Gerber);
-                    model.Mats_Temp = model.Mats_Gerber;
+                    LogTextHelper.WarnFormat("模板参考图缺失或加载失败 SN={0} Side={1}，当前配置不回退Gerber图，期望:{2}，实际:{3}", model.SN, model.Side, expectedTemplateCount, actualTemplateCount);
                 }
             }
 
@@ -99,11 +102,11 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
             }
             else if (actualCount == 0)
             {
-                LogTextHelper.Error($"图片加载失败，SN:{loadModel.Model.SN}，期望{expectedCount}张图片，实际加载0张！");
+                LogTextHelper.ErrorFormat("图片加载失败 SN={0}，期望{1}张，实际0张", loadModel.Model.SN, expectedCount);
             }
             else if (actualCount < expectedCount)
             {
-                LogTextHelper.Warn($"图片部分加载失败，SN:{loadModel.Model.SN}，期望{expectedCount}张，实际{actualCount}张");
+                LogTextHelper.WarnFormat("图片部分加载失败 SN={0}，期望{1}张，实际{2}张", loadModel.Model.SN, expectedCount, actualCount);
             }
         }
     }

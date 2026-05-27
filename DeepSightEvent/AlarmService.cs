@@ -19,7 +19,13 @@ namespace DeepSightEvent
 
         public static AlarmService Instance => _lazy.Value;
 
-        private AlarmService() { }
+        private const string LogSourceName = "LogTextHelper";
+        private const string LegacySourceName = "Legacy";
+
+        private AlarmService()
+        {
+            LogTextHelper.OnLogWritten += HandleLogWritten;
+        }
 
         #endregion
 
@@ -30,6 +36,8 @@ namespace DeepSightEvent
         /// </summary>
         public event Action<AlarmInfo> OnAlarmRaised;
 
+        public event Action<RuntimeMessageInfo> OnRuntimeMessageRaised;
+
         #endregion
 
         #region 配置
@@ -39,6 +47,8 @@ namespace DeepSightEvent
 
         /// <summary>告警历史最大保留条数</summary>
         public int MaxHistoryCount { get; set; } = 500;
+
+        public int RuntimeMessageCooldownSeconds { get; set; } = 5;
 
         #endregion
 
@@ -54,6 +64,9 @@ namespace DeepSightEvent
         // 通知渠道
         private readonly List<IAlarmNotifier> _notifiers = new List<IAlarmNotifier>();
         private readonly object _notifierLock = new object();
+
+        private readonly ConcurrentDictionary<string, DateTime> _runtimeMessageCooldownMap =
+            new ConcurrentDictionary<string, DateTime>();
 
         #endregion
 
@@ -72,13 +85,18 @@ namespace DeepSightEvent
             LogTextHelper.Info($"[AlarmService] 已注册通知渠道: {notifier.Name} (MinLevel={notifier.MinLevel})");
         }
 
+        public void EnsureInitialized()
+        {
+        }
+
         /// <summary>
         /// 发起结构化告警
         /// </summary>
         public void RaiseAlarm(AlarmLevel level, AlarmCategory category,
-            string source, string message, string detail = null, string relatedSN = null)
+            string source, string message, string detail = null, string relatedSN = null,
+            string code = null, string cooldownKey = null)
         {
-            var alarm = AlarmInfo.Create(level, category, source, message, detail, relatedSN);
+            var alarm = AlarmInfo.Create(level, category, source, message, detail, relatedSN, code, cooldownKey);
             ProcessAlarm(alarm);
         }
 
@@ -99,7 +117,7 @@ namespace DeepSightEvent
             if (string.IsNullOrEmpty(message)) return;
             var level = InferLevel(message);
             var category = InferCategory(message);
-            RaiseAlarm(level, category, "Legacy", message);
+            RaiseAlarm(level, category, LegacySourceName, message);
         }
 
         /// <summary>确认告警</summary>
@@ -147,47 +165,8 @@ namespace DeepSightEvent
 
         private void ProcessAlarm(AlarmInfo alarm)
         {
-            // 冷却/聚合检查
-            string cooldownKey = alarm.GetCooldownKey();
-            var now = DateTime.Now;
-
-            var entry = _cooldownMap.GetOrAdd(cooldownKey, _ => new CooldownEntry());
-            lock (entry)
-            {
-                if ((now - entry.LastFireTime).TotalSeconds < DefaultCooldownSeconds)
-                {
-                    // 冷却期内：仅累加计数，不分发
-                    entry.Count++;
-                    if (entry.LatestAlarm != null)
-                    {
-                        entry.LatestAlarm.OccurrenceCount = entry.Count;
-                    }
-                    return;
-                }
-
-                // 冷却期已过：重置并分发
-                entry.LastFireTime = now;
-                entry.Count = 1;
-                entry.LatestAlarm = alarm;
-            }
-
-            // 写入历史
-            _history.Enqueue(alarm);
-            while (_history.Count > MaxHistoryCount)
-            {
-                _history.TryDequeue(out _);
-            }
-
-            // 统一落日志（被冷却抑制的告警不再重复 log，避免日志风暴；
-            // 抑制次数已累加到 LatestAlarm.OccurrenceCount，由 FrmAlarm 表格展示）
-            WriteAlarmLog(alarm);
-
-            // 触发事件
-            try { OnAlarmRaised?.Invoke(alarm); }
-            catch (Exception ex) { LogTextHelper.Error($"[AlarmService] OnAlarmRaised handler error: {ex.Message}"); }
-
-            // 分发到各通知渠道
-            DispatchToNotifiers(alarm);
+            if (alarm == null) return;
+            ProcessAlarmCore(alarm);
         }
 
         /// <summary>
@@ -198,10 +177,17 @@ namespace DeepSightEvent
         {
             try
             {
+                if (string.Equals(alarm.Source, LogSourceName, StringComparison.Ordinal))
+                {
+                    return;
+                }
+
                 var sb = new System.Text.StringBuilder(128);
                 sb.Append("[Alarm][").Append(alarm.Level).Append("][")
                   .Append(alarm.Category).Append('/').Append(alarm.Source).Append("] ")
                   .Append(alarm.Message);
+                if (!string.IsNullOrEmpty(alarm.Code))
+                    sb.Append(" Code=").Append(alarm.Code);
                 if (!string.IsNullOrEmpty(alarm.RelatedSN))
                     sb.Append(" SN=").Append(alarm.RelatedSN);
                 if (!string.IsNullOrEmpty(alarm.Detail))
@@ -212,19 +198,137 @@ namespace DeepSightEvent
                 {
                     case AlarmLevel.Critical:
                     case AlarmLevel.Error:
-                        LogTextHelper.Error(line);
+                        LogTextHelper.WriteFromAlarmService(LogTextHelper.LogTextLevel.Error, line);
                         break;
                     case AlarmLevel.Warning:
-                        LogTextHelper.Warn(line);
+                        LogTextHelper.WriteFromAlarmService(LogTextHelper.LogTextLevel.Warn, line);
                         break;
                     default:
-                        LogTextHelper.Info(line);
+                        LogTextHelper.WriteFromAlarmService(LogTextHelper.LogTextLevel.Info, line);
                         break;
                 }
             }
             catch
             {
                 // 日志失败不影响告警分发
+            }
+        }
+
+        private void HandleLogWritten(LogTextHelper.LogTextLevel level, string message, Exception exception, string cooldownKey, string source)
+        {
+            if (string.IsNullOrEmpty(message)) return;
+
+            var alarmLevel = ConvertLogLevel(level, message);
+            var detail = exception?.ToString();
+            string alarmSource = string.IsNullOrEmpty(source) ? LogSourceName : source;
+
+            if (level >= LogTextHelper.LogTextLevel.Warn)
+            {
+                var category = InferCategory(message);
+                var alarm = AlarmInfo.Create(alarmLevel, category, alarmSource, message, detail,
+                    cooldownKey: cooldownKey);
+                ProcessAlarmCore(alarm, cooldownKey, skipLog: true);
+            }
+            else
+            {
+                PublishRuntimeMessage(alarmLevel, alarmSource, message, detail, cooldownKey);
+            }
+        }
+
+        private void ProcessAlarmCore(AlarmInfo alarm, string cooldownKeyOverride = null, bool skipLog = false)
+        {
+            string cooldownKey = GetCooldownKey(alarm, cooldownKeyOverride);
+            var now = DateTime.Now;
+
+            var entry = _cooldownMap.GetOrAdd(cooldownKey, _ => new CooldownEntry());
+            lock (entry)
+            {
+                if ((now - entry.LastFireTime).TotalSeconds < DefaultCooldownSeconds)
+                {
+                    entry.Count++;
+                    if (entry.LatestAlarm != null)
+                    {
+                        entry.LatestAlarm.OccurrenceCount = entry.Count;
+                    }
+                    return;
+                }
+
+                entry.LastFireTime = now;
+                entry.Count = 1;
+                entry.LatestAlarm = alarm;
+            }
+
+            _history.Enqueue(alarm);
+            while (_history.Count > MaxHistoryCount)
+            {
+                _history.TryDequeue(out _);
+            }
+
+            if (!skipLog)
+            {
+                WriteAlarmLog(alarm);
+            }
+
+            PublishRuntimeMessage(alarm.Level, alarm.Source, alarm.Message, alarm.Detail, null, false);
+
+            try { OnAlarmRaised?.Invoke(alarm); }
+            catch (Exception ex) { LogTextHelper.Error($"[AlarmService] OnAlarmRaised handler error: {ex.Message}"); }
+
+            DispatchToNotifiers(alarm);
+        }
+
+        private void PublishRuntimeMessage(AlarmLevel level, string source, string message, string detail = null, string cooldownKey = null, bool applyCooldown = true)
+        {
+            var runtimeMessage = RuntimeMessageInfo.Create(level, source, message, detail);
+            if (applyCooldown && IsRuntimeMessageCooling(runtimeMessage, cooldownKey)) return;
+
+            try { OnRuntimeMessageRaised?.Invoke(runtimeMessage); }
+            catch (Exception ex) { LogTextHelper.WriteFromAlarmService(LogTextHelper.LogTextLevel.Error, $"[AlarmService] OnRuntimeMessageRaised handler error: {ex.Message}"); }
+        }
+
+        private bool IsRuntimeMessageCooling(RuntimeMessageInfo runtimeMessage, string cooldownKey)
+        {
+            string key = string.IsNullOrWhiteSpace(cooldownKey)
+                ? runtimeMessage.GetCooldownKey()
+                : $"{runtimeMessage.Level}_{runtimeMessage.Source}_{cooldownKey}";
+            var now = DateTime.Now;
+            var lastFire = _runtimeMessageCooldownMap.GetOrAdd(key, _ => DateTime.MinValue);
+            if ((now - lastFire).TotalSeconds < RuntimeMessageCooldownSeconds)
+            {
+                return true;
+            }
+
+            _runtimeMessageCooldownMap.TryUpdate(key, now, lastFire);
+            return false;
+        }
+
+        private static string GetCooldownKey(AlarmInfo alarm, string cooldownKeyOverride = null)
+        {
+            if (!string.IsNullOrWhiteSpace(cooldownKeyOverride))
+            {
+                return $"{alarm.Category}_{alarm.Source}_{cooldownKeyOverride}";
+            }
+
+            if (string.Equals(alarm.Source, LogSourceName, StringComparison.Ordinal) ||
+                string.Equals(alarm.Source, LegacySourceName, StringComparison.Ordinal))
+            {
+                string msgKey = alarm.Message?.Length > 80 ? alarm.Message.Substring(0, 80) : (alarm.Message ?? "");
+                return $"{alarm.Category}_{msgKey}";
+            }
+
+            return alarm.GetCooldownKey();
+        }
+
+        private static AlarmLevel ConvertLogLevel(LogTextHelper.LogTextLevel level, string message)
+        {
+            switch (level)
+            {
+                case LogTextHelper.LogTextLevel.Warn:
+                    return AlarmLevel.Warning;
+                case LogTextHelper.LogTextLevel.Error:
+                    return InferLevel(message) > AlarmLevel.Error ? AlarmLevel.Critical : AlarmLevel.Error;
+                default:
+                    return AlarmLevel.Info;
             }
         }
 

@@ -2,6 +2,7 @@
 using DeepSightDB;
 using DeepSightEvent;
 using DeepSightModel;
+
 using DeepSightModel.Configuration;
 using DeepSightTool;
 using DeepSightWorkLib.Services;
@@ -126,7 +127,6 @@ namespace DeepSightAI
             InitPageSwitchConfig();
 
             SystemEvent.EventSendTaskStatusToUI += new SendTaskStatus(SystemEvent_EventSendTaskStatusToUI);
-            SystemEvent.EventSendAlarmToUI += new SendAlarm(SystemEvent_EventSendAlarmToUI);
             SystemEvent.EventSendDefectPanelInfoToUI += new SendDefectPanelInfo(SystemEvent_EventSendDefectPanelInfoToUI);
             SystemEvent.EventSendDefectResultInfoToUI += new SendDefectResultInfo(SystemEvent_EventSendDefectResultInfoToUI);
             SystemEvent.EventSendDefectRoiInfoToUI += new SendDefectRoiInfo(SystemEvent_EventSendDefectRoiInfoToUI);
@@ -156,8 +156,7 @@ namespace DeepSightAI
             }
             catch (Exception ex)
             {
-                LogTextHelper.Error("结果回调异常" + ex.ToString());
-                SystemEvent.SendAlarmMsg("结果回调异常" + ex.ToString());
+                LogTextHelper.ErrorFormat("结果回调异常: {0}", ex);
             }
         }
 
@@ -275,8 +274,7 @@ namespace DeepSightAI
             }
             catch (Exception ex)
             {
-                LogTextHelper.Error("Panel回调异常" + ex.ToString());
-                SystemEvent.SendAlarmMsg("Panel回调异常" + ex.ToString());
+                LogTextHelper.ErrorFormat("Panel回调异常: {0}", ex);
             }
         }
 
@@ -300,11 +298,6 @@ namespace DeepSightAI
             _uiRefreshTimer.Start();
         }
 
-        private void SystemEvent_EventSendAlarmToUI(string massage)
-        {
-            LogTextHelper.Error($"收到异常消息：{massage},任务已停止");
-        }
-        
         /// <summary>
         /// 新的任务状态事件处理（推荐使用）
         /// </summary>

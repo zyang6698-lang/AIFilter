@@ -92,7 +92,7 @@ namespace DeepSightWorkLib.Services
                     // DB 状态预检：通过 heartbeat 确认目标 DB 是否存在且可读
                     if (EnableDbStatusCheck && !_dbStatusSvc.IsDbAvailable(preferredVrsUrl, dbName))
                     {
-                        LogTextHelper.Warn($"VrsHistoryService: DB 不可用，跳过查询 url={preferredVrsUrl}, db={dbName}");
+                        LogTextHelper.WarnFormat("VrsHistoryService: DB 不可用，跳过查询 url={0}, db={1}", preferredVrsUrl, dbName);
                     }
                     else
                     {
@@ -121,8 +121,7 @@ namespace DeepSightWorkLib.Services
             if (configs.Count == 0)
             {
                 const string msg = "没有启用的 LevelDB 配置";
-                LogTextHelper.Warn($"VrsHistoryService: {msg}");
-                try { AlarmService.Instance.RaiseAlarm(AlarmLevel.Warning, AlarmCategory.Communication, "VrsHistoryService", msg); }
+                try { AlarmService.Instance.RaiseAlarm(AlarmLevel.Warning, AlarmCategory.Communication, "VrsHistoryService", msg, code: "VRS_NO_ENABLED_LEVELDB_CONFIG"); }
                 catch { }
                 return false;
             }
@@ -141,7 +140,7 @@ namespace DeepSightWorkLib.Services
                 // DB 状态预检：通过 heartbeat 确认目标 DB 是否存在且可读
                 if (EnableDbStatusCheck && !_dbStatusSvc.IsDbAvailable(config.VRSUrl, dbName))
                 {
-                    LogTextHelper.Warn($"VrsHistoryService: DB 不可用，跳过查询 url={config.VRSUrl}, db={dbName}");
+                    LogTextHelper.WarnFormat("VrsHistoryService: DB 不可用，跳过查询 url={0}, db={1}", config.VRSUrl, dbName);
                     continue;
                 }
 
@@ -160,8 +159,7 @@ namespace DeepSightWorkLib.Services
                 }
                 catch (Exception ex)
                 {
-                    LogTextHelper.Error($"VrsHistoryService 查询 SN={sn} DB={dbName} 异常: {ex}");
-                    try { AlarmService.Instance.RaiseAlarm(AlarmLevel.Error, AlarmCategory.Communication, "VrsHistoryService.Query", $"VrsHistoryService 查询异常", $"SN={sn}, DB={dbName}, Error={ex.Message}", sn); }
+                    try { AlarmService.Instance.RaiseAlarm(AlarmLevel.Error, AlarmCategory.Communication, "VrsHistoryService.Query", $"VrsHistoryService 查询异常", $"SN={sn}, DB={dbName}, Error={ex.Message}", sn, code: "VRS_HISTORY_QUERY_EXCEPTION"); }
                     catch { }
                 }
             }
@@ -223,8 +221,7 @@ namespace DeepSightWorkLib.Services
                     var s = resultToken.Value<string>();
                     if (!string.IsNullOrEmpty(s) && s.StartsWith("err"))
                     {
-                        LogTextHelper.Warn($"VrsHistoryService: LevelDB 返回错误响应 {s}, SN={sn}");
-                        try { AlarmService.Instance.RaiseAlarm(AlarmLevel.Warning, AlarmCategory.Communication, "VrsHistoryService.LevelDB", $"LevelDB 返回错误响应 {s}", $"SN={sn}", sn); }
+                        try { AlarmService.Instance.RaiseAlarm(AlarmLevel.Warning, AlarmCategory.Communication, "VrsHistoryService.LevelDB", "LevelDB 返回错误响应", $"Result={s}, SN={sn}", sn, code: "VRS_LEVELDB_ERROR_RESPONSE"); }
                         catch { }
                         error = $"LevelDB 返回错误：{s}";
                         return false;
@@ -266,8 +263,7 @@ namespace DeepSightWorkLib.Services
                 var blocks = InferenceResultParser.ParseValueBlocks(valueJson);
                 if (blocks == null || blocks.Count == 0)
                 {
-                    LogTextHelper.Warn($"VrsHistoryService.Parse 未解析到任何数据块 SN={sn}");
-                    try { AlarmService.Instance.RaiseAlarm(AlarmLevel.Warning, AlarmCategory.Communication, "VrsHistoryService.Parse", "VrsHistoryService.Parse 未解析到任何数据块", $"SN={sn}", sn); }
+                    try { AlarmService.Instance.RaiseAlarm(AlarmLevel.Warning, AlarmCategory.Communication, "VrsHistoryService.Parse", "VrsHistoryService.Parse 未解析到任何数据块", $"SN={sn}", sn, code: "VRS_HISTORY_PARSE_EMPTY"); }
                     catch { }
                     return null;
                 }
@@ -301,8 +297,7 @@ namespace DeepSightWorkLib.Services
             }
             catch (Exception ex)
             {
-                LogTextHelper.Error($"VrsHistoryService.Parse 解析异常 SN={sn}: {ex}");
-                try { AlarmService.Instance.RaiseAlarm(AlarmLevel.Error, AlarmCategory.Communication, "VrsHistoryService.Parse", "VrsHistoryService.Parse 解析异常", $"SN={sn}, Error={ex.Message}", sn); }
+                try { AlarmService.Instance.RaiseAlarm(AlarmLevel.Error, AlarmCategory.Communication, "VrsHistoryService.Parse", "VrsHistoryService.Parse 解析异常", $"SN={sn}, Error={ex.Message}", sn, code: "VRS_HISTORY_PARSE_EXCEPTION"); }
                 catch { }
                 return null;
             }

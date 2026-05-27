@@ -32,14 +32,12 @@ namespace DeepSightWorkLib.Services
                 var parts = path.Split(':');
                 if (parts.Length < 2)
                 {
-                    LogTextHelper.Warn("图片路径格式错误(缺少冒号)：" + path);
                     return null;
                 }
                 using (var stream = _minio.GetImageStreamSync("deepiresults", parts[1], parts[0]))
                 {
                     if (stream == null || stream.Length == 0)
                     {
-                        LogTextHelper.Warn("Minio返回空图片数据：" + path);
                         return null;
                     }
                     return Cv2.ImDecode(stream.ToArray(), ImreadModes.Color);
@@ -47,7 +45,7 @@ namespace DeepSightWorkLib.Services
             }
             catch (Exception ex)
             {
-                LogTextHelper.Error("加载 Minio 图片异常：" + ex);
+                LogTextHelper.Debug("加载 Minio 图片异常：" + ex);
                 return null;
             }
         }
@@ -67,12 +65,16 @@ namespace DeepSightWorkLib.Services
                     .Select(p => new { Path = p, Mat = LoadMinioImage(p) })
                     .ToList();
 
-                for (int i = 0; i < results.Count; i++)
+                int failCount = results.Count(r => r.Mat == null);
+                if (failCount > 0)
                 {
-                    if (results[i].Mat == null)
-                    {
-                        LogTextHelper.Warn($"图片加载失败[{i}]: {results[i].Path}");
-                    }
+                    var failedPaths = results
+                        .Where(r => r.Mat == null)
+                        .Select(r => string.IsNullOrWhiteSpace(r.Path) ? "<空路径>" : r.Path)
+                        .Take(5)
+                        .ToList();
+                    string moreText = failCount > failedPaths.Count ? $" 等{failCount}张" : string.Empty;
+                    LogTextHelper.WarnFormat("图片加载失败 {0}/{1} 张，失败路径: {2}{3}", failCount, results.Count, string.Join(" | ", failedPaths), moreText);
                 }
 
                 return results.Where(r => r.Mat != null).Select(r => r.Mat).ToList();

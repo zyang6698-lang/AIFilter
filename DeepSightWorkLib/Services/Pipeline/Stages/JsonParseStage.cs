@@ -220,7 +220,6 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
         private static void RaiseProcessStatusAbnormalAlarm(string sn, string side, string processStatus, string path)
         {
             string warnMsg = $"AVI处理状态异常: process_status={processStatus}，pcs_info可能为空，请确认AVI结果是否正常";
-            LogTextHelper.Warn($"{sn} {side} {warnMsg}");
             try
             {
                 AlarmService.Instance.RaiseAlarm(
@@ -229,7 +228,9 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
                     "JsonParseStage.ProcessStatus",
                     warnMsg,
                     $"SN={sn}, Side={side}, Path={path}, ProcessStatus={processStatus}",
-                    sn);
+                    sn,
+                    code: "AVI_PROCESS_STATUS_ABNORMAL",
+                    cooldownKey: $"AVI_PROCESS_STATUS_ABNORMAL_{processStatus}");
             }
             catch (Exception alarmEx)
             {
@@ -238,12 +239,11 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
         }
 
         /// <summary>
-        /// line_name 缺失告警：日志 + 结构化告警（30s 冷却由 AlarmService 内置处理）
+        /// line_name 缺失告警（30s 冷却由 AlarmService 内置处理）
         /// </summary>
         private static void RaiseLineNameMissingAlarm(string sn, string side, string path)
         {
             string warnMsg = $"linename为空，使用默认值{DefaultValues.LineName}，请确认AVI机台配置";
-            LogTextHelper.Warn($"{sn} {side} {warnMsg}");
             try
             {
                 AlarmService.Instance.RaiseAlarm(
@@ -252,7 +252,8 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
                     "JsonParseStage.LineName",
                     warnMsg,
                     $"SN={sn}, Side={side}, Path={path}",
-                    sn);
+                    sn,
+                    code: "AVI_LINE_NAME_MISSING");
             }
             catch (Exception alarmEx)
             {

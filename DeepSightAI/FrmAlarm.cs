@@ -17,8 +17,6 @@ namespace DeepSightAI
 {
     public partial class FrmAlarm : Form
     {
-        private string logFilePath = null;
-
         private static readonly Dictionary<AlarmLevel, Color> LevelColorMap = new Dictionary<AlarmLevel, Color>
         {
             { AlarmLevel.Info,     Color.FromArgb(24, 144, 255) },
@@ -102,31 +100,10 @@ namespace DeepSightAI
 
                     UpdateStatLabels();
                 }));
-
-                WriteAlarmToFile(alarm);
             }
             catch (Exception ex)
             {
                 LogTextHelper.Error($"[FrmAlarm] OnStructuredAlarmReceived error: {ex.Message}");
-            }
-        }
-
-        private void WriteAlarmToFile(AlarmInfo alarm)
-        {
-            try
-            {
-                string logDir = Path.Combine(Application.StartupPath, "ExceptionLog",
-                    DateTime.Now.ToString("yyyy-MM-dd"));
-                if (!Directory.Exists(logDir)) Directory.CreateDirectory(logDir);
-                logFilePath = Path.Combine(logDir, "exception_log.csv");
-                using (var w = new StreamWriter(logFilePath, true, Encoding.Default))
-                {
-                    w.WriteLine($"{alarm.Timestamp:yyyy-MM-dd HH:mm:ss.fff},{alarm.Level},{alarm.Category},{alarm.Source},{alarm.Message}");
-                }
-            }
-            catch (Exception ex)
-            {
-                LogTextHelper.Error($"[FrmAlarm] WriteAlarmToFile error: {ex.Message}");
             }
         }
 

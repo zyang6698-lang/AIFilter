@@ -13,40 +13,6 @@ namespace DeepSightEvent
     //事件定义
     public class SystemEvent
     {
-        public static event SendAlarm EventSendAlarmToUI;
-        /// <summary>
-        /// 订阅报警（旧接口，自动桥接到 AlarmService）
-        /// </summary>
-        /// <param name="msg"></param>
-        public static void SendAlarmMsg(string msg)
-        {
-            // 保留旧事件通知（向后兼容）
-            EventSendAlarmToUI?.Invoke(msg);
-
-            // 桥接到新告警系统
-            AlarmService.Instance.RaiseAlarmFromLegacy(msg);
-        }
-
-        /// <summary>
-        /// 发送结构化告警（推荐使用）
-        /// </summary>
-        public static void SendAlarm(AlarmLevel level, AlarmCategory category,
-            string source, string message, string detail = null, string relatedSN = null)
-        {
-            AlarmService.Instance.RaiseAlarm(level, category, source, message, detail, relatedSN);
-        }
-
-        public static event SendProcess EventSendProcessToUI;
-        /// <summary>
-        /// 订阅进度
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="isOk"></param>
-        public static void SendProcessMsg(string id, int isOk)
-        {
-            EventSendProcessToUI?.Invoke(id, isOk);
-        }
-
         public static event SendTaskStatus EventSendTaskStatusToUI;
         public static event SendTask EventSendTaskToUI;
         
@@ -75,31 +41,7 @@ namespace DeepSightEvent
                 catch { }
             });
         }
-        
-        /// <summary>
-        /// 订阅任务（已过时，建议使用 SendTaskStatus）
-        /// </summary>
-        /// <param name="task"></param>
-        /// <param name="msg"></param>
-        /// <param name="timeMs">AI处理时间(毫秒)</param>
-        public static void SendTaskMsg(object task, string msg = "", long timeMs = 0)
-        {
-            var handler = EventSendTaskToUI;
-            if (handler != null)
-            {
-                Task.Run(() =>
-                {
-                    try { handler(task, msg, timeMs); }
-                    catch (Exception ex) { LogTextHelper.Error($"EventSendTaskToUI handler error: {ex}"); }
-                });
-            }
-
-            Task.Run(() =>
-            {
-                try { LogTextHelper.Info($"{task} {msg}"); }
-                catch { }
-            });
-        }
+       
 
         public static event SendException EventSendExceptionToUI;
         /// <summary>

@@ -119,6 +119,7 @@
     <Compile Include="Alarm\AlarmLevel.cs" />
     <Compile Include="Alarm\AlarmCategory.cs" />
     <Compile Include="Alarm\AlarmInfo.cs" />
+    <Compile Include="Alarm\RuntimeMessageInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DeepSightTool\DeepSightTool.csproj">

@@ -439,6 +439,14 @@ namespace DeepSightAI
 
         private void btnGenerateInference_Click(object sender, EventArgs e)
         {
+            if (Machine.master == null || !Machine.master.IsStart)
+            {
+                const string message = "请先启动软件，再生成推理请求。";
+                LogTextHelper.Warn(message);
+                MessageBox.Show(message, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             var minioInstance = (Machine.master?.MinioService as MinioClass) ?? new MinioClass();
             using (var dlg = new DlgGenerateInferenceRequest(minioInstance))
             {

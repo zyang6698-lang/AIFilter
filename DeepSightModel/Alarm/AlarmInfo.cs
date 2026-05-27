@@ -22,6 +22,10 @@ namespace DeepSightModel.Alarm
         /// <summary>来源模块（如 DefectProcessor、AviReader）</summary>
         public string Source { get; set; }
 
+        public string Code { get; set; }
+
+        public string CooldownKey { get; set; }
+
         /// <summary>告警消息（简短描述）</summary>
         public string Message { get; set; }
 
@@ -44,7 +48,8 @@ namespace DeepSightModel.Alarm
         /// 创建告警信息的工厂方法
         /// </summary>
         public static AlarmInfo Create(AlarmLevel level, AlarmCategory category,
-            string source, string message, string detail = null, string relatedSN = null)
+            string source, string message, string detail = null, string relatedSN = null,
+            string code = null, string cooldownKey = null)
         {
             return new AlarmInfo
             {
@@ -53,6 +58,8 @@ namespace DeepSightModel.Alarm
                 Level = level,
                 Category = category,
                 Source = source,
+                Code = code,
+                CooldownKey = cooldownKey,
                 Message = message,
                 Detail = detail,
                 RelatedSN = relatedSN
@@ -64,6 +71,16 @@ namespace DeepSightModel.Alarm
         /// </summary>
         public string GetCooldownKey()
         {
+            if (!string.IsNullOrWhiteSpace(CooldownKey))
+            {
+                return $"{Category}_{Source}_{CooldownKey}";
+            }
+
+            if (!string.IsNullOrWhiteSpace(Code))
+            {
+                return $"{Category}_{Source}_{Code}";
+            }
+
             string msgKey = Message?.Length > 50 ? Message.Substring(0, 50) : (Message ?? "");
             return $"{Category}_{Source}_{msgKey}";
         }

@@ -2,6 +2,7 @@
 using DeepSightDB;
 using DeepSightEvent;
 using DeepSightModel;
+
 using DeepSightModel.Configuration;
 using DeepSightTool;
 using Newtonsoft.Json;
@@ -633,7 +634,7 @@ namespace DeepSightWorkLib.Services
                     if (holdList == null) _processingSnSet.TryRemove(snKey, out _);
                     Thread.Sleep(500);
                     TaskStatusSender.SendFailed(serialNumber, side, "Minio格式错误");
-                    SystemEvent.SendAlarmMsg($"SN:{serialNumber} {side}面 Minio格式错误;具体信息 MinioIP:{minioIp} MinioPort:{minioPort}");
+                    LogTextHelper.WarnFormat("Minio格式错误 SN={0} Side={1} MinioIP={2} MinioPort={3}", serialNumber, side, minioIp, minioPort);
                     continue;
                 }
 

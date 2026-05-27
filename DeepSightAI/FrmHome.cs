@@ -1,7 +1,9 @@
 ﻿using DeepSightAI.SettingPages;
 using DeepSightDB;
 using DeepSightDisplay;
+using DeepSightEvent;
 using DeepSightModel;
+using DeepSightModel.Alarm;
 using DeepSightModel.Configuration;
 using DeepSightTool;
 using Newtonsoft.Json.Linq;
@@ -71,8 +73,7 @@ namespace DeepSightAI
         public System.Timers.Timer uph_timer = new System.Timers.Timer();
         private readonly object _updateLock = new object();
 
-        // 日志去重
-        private string logstr = string.Empty;
+
 
         #endregion
 
@@ -93,8 +94,8 @@ namespace DeepSightAI
 
         private void FrHome_Load(object sender, EventArgs e)
         {
-            LogTextHelper.OnCallBackLogProc -= Log_single_OnCallBackLogProc;
-            LogTextHelper.OnCallBackLogProc += Log_single_OnCallBackLogProc;
+            AlarmService.Instance.OnRuntimeMessageRaised -= AlarmService_OnRuntimeMessageRaised;
+            AlarmService.Instance.OnRuntimeMessageRaised += AlarmService_OnRuntimeMessageRaised;
         }
 
         private void InitializeUI()
@@ -256,15 +257,36 @@ namespace DeepSightAI
 
         #region 日志输出
 
+        private void AlarmService_OnRuntimeMessageRaised(RuntimeMessageInfo message)
+        {
+            if (message == null) return;
+            string msg = message.Message ?? string.Empty;
+            if (!string.IsNullOrEmpty(message.Detail))
+            {
+                msg = $"{msg}:{message.Detail}";
+            }
+            Log_single_OnCallBackLogProc(msg, GetLogColor(message.Level));
+        }
+
+        private static Color GetLogColor(AlarmLevel level)
+        {
+            switch (level)
+            {
+                case AlarmLevel.Critical:
+                case AlarmLevel.Error:
+                    return Color.Red;
+                case AlarmLevel.Warning:
+                    return Color.Orange;
+                default:
+                    return Color.Green;
+            }
+        }
+
         private void Log_single_OnCallBackLogProc(string msg, Color color)
         {
             try
             {
-                if (logstr != msg)
-                {
-                    OutputMsg(msg, color);
-                }
-                logstr = msg;
+                OutputMsg(msg, color);
             }
             catch (Exception)
             {
@@ -740,12 +762,9 @@ namespace DeepSightAI
                 }
 
                 // 获取当前页数据
-                // 主路径按 ShowFlag 选择；备路径用于主路径为空时的回退（与推理阶段 Temp 为空回退 Gerber 的行为对齐）
                 var gerberOrtemp_paths = Machine.ShowFlag == "B" ? imagePaths_Gerber : imagePaths_Template;
-                var fallback_paths = Machine.ShowFlag == "B" ? imagePaths_Template : imagePaths_Gerber;
                 var defect_pagedData = imagePaths.Skip(skipCount).Take(pageSize).ToList();
                 var gerberOrtemp_pagedData = gerberOrtemp_paths.Skip(skipCount).Take(pageSize).ToList();
-                var fallback_pagedData = fallback_paths.Skip(skipCount).Take(pageSize).ToList();
                 var defect_pagedRois = defectRois.Skip(skipCount).Take(pageSize).ToList();
                 var pagedDetectInfos = detectInfoList.Skip(skipCount).Take(pageSize).ToList();
                 var pagedDisInfos = disInfosList.Skip(skipCount).Take(pageSize).ToList();
@@ -774,20 +793,24 @@ namespace DeepSightAI
                                 original = DrawDefectBoxOnBitmap(rawOriginal, roi);
                             }
 
-                            // 加载模板图（主路径为空时回退到备路径，与推理逻辑保持一致）
+                            // 加载参考图
                             Bitmap template = null;
+                            string referenceName = Machine.ShowFlag == "B" ? "Gerber图" : "模板图";
+                            Bitmap rawTemplate = null;
                             if (i < gerberOrtemp_pagedData.Count)
                             {
                                 string refPath = gerberOrtemp_pagedData[i];
-                                if (string.IsNullOrEmpty(refPath) && i < fallback_pagedData.Count)
-                                {
-                                    refPath = fallback_pagedData[i];
-                                }
-                                Bitmap rawTemplate = LoadBitmapFromMinioPath(refPath);
-                                template = rawTemplate != null ? DrawDefectBoxOnBitmap(rawTemplate, roi) : null;
-                                // rawTemplate 已被 DrawDefectBoxOnBitmap 复制，可以释放
-                                if (rawTemplate != null && template != rawTemplate)
-                                    rawTemplate.Dispose();
+                                rawTemplate = LoadBitmapFromMinioPath(refPath);
+                            }
+                            if (rawTemplate == null)
+                            {
+                                template = CreateReferenceMissingBitmap(rawOriginal, $"{referenceName}缺失");
+                                LogTextHelper.WarnFormat("{0}显示缺失 SN={1} 第{2}个缺陷，当前配置不使用备选参考图", referenceName, str_SN, skipCount + i + 1);
+                            }
+                            else
+                            {
+                                template = DrawDefectBoxOnBitmap(rawTemplate, roi);
+                                if (template != rawTemplate) rawTemplate.Dispose();
                             }
 
                             // 标题
@@ -844,6 +867,8 @@ namespace DeepSightAI
                 return resultLabels[index] ?? "未处理";
             return "未处理";
         }
+
+
 
         /// <summary>
         /// 从Minio路径加载Bitmap（路径格式：objectKey:IP，与FrHome的路径拼接格式一致）。
@@ -904,6 +929,24 @@ namespace DeepSightAI
                 LogTextHelper.Error($"DrawDefectBoxOnBitmap 异常: {ex}");
             }
             return result;
+        }
+
+        private Bitmap CreateReferenceMissingBitmap(Bitmap referenceSizeSource, string text)
+        {
+            int width = Math.Max(320, referenceSizeSource?.Width ?? 0);
+            int height = Math.Max(220, referenceSizeSource?.Height ?? 0);
+            var bitmap = new Bitmap(width, height);
+            using (Graphics g = Graphics.FromImage(bitmap))
+            using (var brush = new SolidBrush(Color.FromArgb(29, 48, 60)))
+            using (var textBrush = new SolidBrush(Color.FromArgb(230, 230, 230)))
+            using (var font = new Font("Microsoft YaHei UI", Math.Max(16, Math.Min(width, height) / 12f), FontStyle.Bold))
+            using (var format = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center })
+            {
+                g.Clear(Color.FromArgb(29, 48, 60));
+                g.FillRectangle(brush, 0, 0, width, height);
+                g.DrawString(text ?? "参考图缺失", font, textBrush, new RectangleF(0, 0, width, height), format);
+            }
+            return bitmap;
         }
 
         /// <summary>

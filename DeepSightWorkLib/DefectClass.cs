@@ -1,5 +1,4 @@
-﻿using DeepSightEvent;
-using DeepSightModel;
+﻿using DeepSightModel;
 using DeepSightTool;
 using DeepSightWorkLib.Interfaces;
 using DeepSightWorkLib.Services;
@@ -76,7 +75,7 @@ namespace DeepSightWorkLib
             catch (Exception ex)
             {
                 vb_outStr = "";
-                SystemEvent.SendAlarmMsg($"VB算法调用异常:{ex.ToString()}");
+                LogTextHelper.ErrorFormat("VB算法调用异常: {0}", ex);
             }
         }
 
@@ -126,7 +125,7 @@ namespace DeepSightWorkLib
             catch (Exception ex)
             {
                 vb_outStr = "";
-                SystemEvent.SendAlarmMsg($"VB算法调用异常(WithImages):{ex.ToString()}");
+                LogTextHelper.ErrorFormat("VB算法调用异常(WithImages): {0}", ex);
             }
         }
 
@@ -195,7 +194,7 @@ namespace DeepSightWorkLib
             catch (Exception ex)
             {
                 vb_outStr = "";
-                SystemEvent.SendAlarmMsg($"VB算法调用异常(WithImages2):{ex.ToString()}");
+                LogTextHelper.ErrorFormat("VB算法调用异常(WithImages2): {0}", ex);
             }
         }
 
@@ -255,9 +254,11 @@ namespace DeepSightWorkLib
             catch (Exception ex)
             {
                 vb_outStr = "";
-                SystemEvent.SendAlarmMsg($"VB算法调用异常(WithAllImages):{ex.ToString()}");
+                LogTextHelper.ErrorFormat("VB算法调用异常(WithAllImages): {0}", ex);
             }
         }
+
+
     }
 
     //C++接口实现
