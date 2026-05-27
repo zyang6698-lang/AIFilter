@@ -73,6 +73,11 @@ namespace DeepSightAI
         public System.Timers.Timer uph_timer = new System.Timers.Timer();
         private readonly object _updateLock = new object();
 
+        private TableLayoutPanel taskQueueContainer;
+        private TableLayoutPanel taskQueueStatusBar;
+        private Label lblInferenceRequestStatus;
+        private Label lblTaskQueueStatus;
+
 
 
         #endregion
@@ -83,6 +88,7 @@ namespace DeepSightAI
         {
             InitializeComponent();
             dataGridViewData.ApplyDarkTheme();
+            InitializeTaskQueueStatusBar();
             InitializeUI();
             Load += FrHome_Load;
 
@@ -101,8 +107,68 @@ namespace DeepSightAI
         private void InitializeUI()
         {
             machineStatusPanel.CreateMachinePanels(GetMergedWatchPaths());
+            RefreshTaskQueueStatus();
             // 为统计卡片Label注册自绘事件，实现标题/数值分层显示
             SetupStatsLabelOwnerDraw();
+        }
+
+        private void InitializeTaskQueueStatusBar()
+        {
+            if (taskQueueContainer != null || dataGridViewData?.Parent == null) return;
+
+            var parent = dataGridViewData.Parent;
+            parent.SuspendLayout();
+            parent.Controls.Remove(dataGridViewData);
+
+            taskQueueContainer = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                RowCount = 2,
+                BackColor = Color.FromArgb(29, 48, 60),
+                Margin = new Padding(0),
+                Padding = new Padding(0)
+            };
+            taskQueueContainer.RowStyles.Add(new RowStyle(SizeType.Absolute, 50F));
+            taskQueueContainer.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+
+            taskQueueStatusBar = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                RowCount = 2,
+                BackColor = Color.FromArgb(35, 55, 70),
+                Margin = new Padding(0),
+                Padding = new Padding(6, 2, 6, 2)
+            };
+            taskQueueStatusBar.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            taskQueueStatusBar.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+
+            lblInferenceRequestStatus = CreateTaskQueueStatusLabel("发送推理请求：未执行");
+            lblTaskQueueStatus = CreateTaskQueueStatusLabel("当前队列：-");
+            taskQueueStatusBar.Controls.Add(lblInferenceRequestStatus, 0, 0);
+            taskQueueStatusBar.Controls.Add(lblTaskQueueStatus, 0, 1);
+
+            dataGridViewData.Dock = DockStyle.Fill;
+            taskQueueContainer.Controls.Add(taskQueueStatusBar, 0, 0);
+            taskQueueContainer.Controls.Add(dataGridViewData, 0, 1);
+            parent.Controls.Add(taskQueueContainer);
+            parent.ResumeLayout();
+        }
+
+        private Label CreateTaskQueueStatusLabel(string text)
+        {
+            return new Label
+            {
+                Dock = DockStyle.Fill,
+                AutoSize = false,
+                Text = text,
+                Font = new Font("微软雅黑", 8.5F, FontStyle.Regular),
+                ForeColor = Color.FromArgb(235, 245, 250),
+                TextAlign = ContentAlignment.MiddleLeft,
+                AutoEllipsis = true,
+                Margin = new Padding(0)
+            };
         }
 
         /// <summary>
@@ -1060,6 +1126,84 @@ namespace DeepSightAI
         public void CheckAllStationsTimeout()
         {
             machineStatusPanel.CheckAllStationsTimeout();
+        }
+
+        public void UpdateInferenceRequestStatus(string message)
+        {
+            if (string.IsNullOrWhiteSpace(message)) return;
+            if (IsDisposed || !IsHandleCreated) return;
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action<string>(UpdateInferenceRequestStatus), message);
+                return;
+            }
+            if (lblInferenceRequestStatus != null)
+                lblInferenceRequestStatus.Text = $"发送推理请求：{message}";
+        }
+
+        public void RefreshTaskQueueStatus()
+        {
+            if (IsDisposed || !IsHandleCreated) return;
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(RefreshTaskQueueStatus));
+                return;
+            }
+            if (lblTaskQueueStatus == null || dataGridViewData == null) return;
+
+            int total = 0, queued = 0, active = 0, terminal = 0, failed = 0;
+            foreach (DataGridViewRow row in dataGridViewData.Rows)
+            {
+                if (row.IsNewRow) continue;
+                total++;
+                string status = row.Cells[6].Value?.ToString() ?? string.Empty;
+                if (IsTaskQueueTerminalStatus(status))
+                {
+                    terminal++;
+                    if (status.Contains("失败") || status.Contains("错误") || status.Contains("异常")) failed++;
+                }
+                else if (status.Contains("排队"))
+                {
+                    queued++;
+                }
+                else
+                {
+                    active++;
+                }
+            }
+
+            int processing = 0, postProcess = 0, resultWrite = 0, pipelinePending = 0;
+            try
+            {
+                var queueStats = Machine.master?.GetQueueStatistics();
+                if (queueStats != null)
+                {
+                    processing = queueStats.ProcessingSnCount;
+                    postProcess = queueStats.PostProcessQueueCount;
+                    resultWrite = queueStats.AIResultQueueCount;
+                }
+
+                var pipelineStats = Machine.master?.GetPipelineStatistics();
+                if (pipelineStats != null)
+                {
+                    pipelinePending = pipelineStats.JsonParseInputCount + pipelineStats.ImageLoadInputCount
+                        + pipelineStats.InferenceInputCount + pipelineStats.ResultWriteInputCount
+                        + pipelineStats.PostProcessInputCount;
+                }
+            }
+            catch
+            {
+            }
+
+            string failText = failed > 0 ? $" | 失败{failed}" : string.Empty;
+            lblTaskQueueStatus.Text = $"当前队列：显示{total} | 排队{queued} | 处理中{active} | 终态{terminal}{failText} | 内部{processing} | 后处理{postProcess} | 回写{resultWrite} | Pipeline{pipelinePending}";
+        }
+
+        private static bool IsTaskQueueTerminalStatus(string statusText)
+        {
+            if (string.IsNullOrEmpty(statusText)) return false;
+            return statusText.Contains("已完成") || statusText.Contains("跳过")
+                || statusText.Contains("失败") || statusText.Contains("错误") || statusText.Contains("异常");
         }
 
         #endregion

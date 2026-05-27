@@ -20,11 +20,14 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.splitContainer_Main = new System.Windows.Forms.SplitContainer();
+            this.tableLayoutPanel_Images = new System.Windows.Forms.TableLayoutPanel();
             this.pictureBox_Image = new System.Windows.Forms.PictureBox();
+            this.pictureBox_SecondImage = new System.Windows.Forms.PictureBox();
             this.panel_ImageToolbar = new System.Windows.Forms.Panel();
             this.button_OriginalImage = new System.Windows.Forms.Button();
             this.button_TemplateImage = new System.Windows.Forms.Button();
             this.button_DefectBoxImage = new System.Windows.Forms.Button();
+            this.button_AviImage = new System.Windows.Forms.Button();
             this.panel_Info = new System.Windows.Forms.Panel();
             this.label_Title = new System.Windows.Forms.Label();
             this.dataGridView_Info = new System.Windows.Forms.DataGridView();
@@ -34,7 +37,9 @@
             this.splitContainer_Main.Panel1.SuspendLayout();
             this.splitContainer_Main.Panel2.SuspendLayout();
             this.splitContainer_Main.SuspendLayout();
+            this.tableLayoutPanel_Images.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox_Image)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox_SecondImage)).BeginInit();
             this.panel_ImageToolbar.SuspendLayout();
             this.panel_Info.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView_Info)).BeginInit();
@@ -47,7 +52,7 @@
             this.splitContainer_Main.SplitterDistance = 650;
             this.splitContainer_Main.TabIndex = 0;
             // splitContainer_Main.Panel1 - Image area
-            this.splitContainer_Main.Panel1.Controls.Add(this.pictureBox_Image);
+            this.splitContainer_Main.Panel1.Controls.Add(this.tableLayoutPanel_Images);
             this.splitContainer_Main.Panel1.Controls.Add(this.panel_ImageToolbar);
             this.splitContainer_Main.Panel1.BackColor = System.Drawing.Color.FromArgb(30, 30, 30);
             // splitContainer_Main.Panel2 - Info area
@@ -57,6 +62,7 @@
             this.panel_ImageToolbar.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel_ImageToolbar.Height = 36;
             this.panel_ImageToolbar.BackColor = System.Drawing.Color.FromArgb(45, 45, 48);
+            this.panel_ImageToolbar.Controls.Add(this.button_AviImage);
             this.panel_ImageToolbar.Controls.Add(this.button_DefectBoxImage);
             this.panel_ImageToolbar.Controls.Add(this.button_TemplateImage);
             this.panel_ImageToolbar.Controls.Add(this.button_OriginalImage);
@@ -91,11 +97,42 @@
             this.button_DefectBoxImage.Text = "缺陷框图";
             this.button_DefectBoxImage.Size = new System.Drawing.Size(90, 28);
             this.button_DefectBoxImage.Cursor = System.Windows.Forms.Cursors.Hand;
+            // button_AviImage
+            this.button_AviImage.Dock = System.Windows.Forms.DockStyle.Left;
+            this.button_AviImage.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.button_AviImage.FlatAppearance.BorderSize = 0;
+            this.button_AviImage.ForeColor = System.Drawing.Color.Silver;
+            this.button_AviImage.BackColor = System.Drawing.Color.FromArgb(60, 60, 65);
+            this.button_AviImage.Font = new System.Drawing.Font("微软雅黑", 9F);
+            this.button_AviImage.Text = "AVI图";
+            this.button_AviImage.Size = new System.Drawing.Size(80, 28);
+            this.button_AviImage.Cursor = System.Windows.Forms.Cursors.Hand;
+            // tableLayoutPanel_Images
+            this.tableLayoutPanel_Images.ColumnCount = 2;
+            this.tableLayoutPanel_Images.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel_Images.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel_Images.Controls.Add(this.pictureBox_Image, 0, 0);
+            this.tableLayoutPanel_Images.Controls.Add(this.pictureBox_SecondImage, 1, 0);
+            this.tableLayoutPanel_Images.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel_Images.Location = new System.Drawing.Point(0, 36);
+            this.tableLayoutPanel_Images.Margin = new System.Windows.Forms.Padding(0);
+            this.tableLayoutPanel_Images.Name = "tableLayoutPanel_Images";
+            this.tableLayoutPanel_Images.RowCount = 1;
+            this.tableLayoutPanel_Images.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel_Images.Size = new System.Drawing.Size(650, 614);
+            this.tableLayoutPanel_Images.TabIndex = 1;
             // pictureBox_Image
             this.pictureBox_Image.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pictureBox_Image.BackColor = System.Drawing.Color.FromArgb(30, 30, 30);
+            this.pictureBox_Image.Margin = new System.Windows.Forms.Padding(0, 0, 1, 0);
             this.pictureBox_Image.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox_Image.TabStop = false;
+            // pictureBox_SecondImage
+            this.pictureBox_SecondImage.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pictureBox_SecondImage.BackColor = System.Drawing.Color.FromArgb(30, 30, 30);
+            this.pictureBox_SecondImage.Margin = new System.Windows.Forms.Padding(1, 0, 0, 0);
+            this.pictureBox_SecondImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pictureBox_SecondImage.TabStop = false;
             // label_Title
             this.label_Title.Dock = System.Windows.Forms.DockStyle.Top;
             this.label_Title.Height = 40;
@@ -160,7 +197,9 @@
             this.splitContainer_Main.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer_Main)).EndInit();
             this.splitContainer_Main.ResumeLayout(false);
+            this.tableLayoutPanel_Images.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox_Image)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox_SecondImage)).EndInit();
             this.panel_ImageToolbar.ResumeLayout(false);
             this.panel_Info.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView_Info)).EndInit();
@@ -170,11 +209,14 @@
         #endregion
 
         private System.Windows.Forms.SplitContainer splitContainer_Main;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel_Images;
         private System.Windows.Forms.PictureBox pictureBox_Image;
+        private System.Windows.Forms.PictureBox pictureBox_SecondImage;
         private System.Windows.Forms.Panel panel_ImageToolbar;
         private System.Windows.Forms.Button button_OriginalImage;
         private System.Windows.Forms.Button button_TemplateImage;
         private System.Windows.Forms.Button button_DefectBoxImage;
+        private System.Windows.Forms.Button button_AviImage;
         private System.Windows.Forms.Panel panel_Info;
         private System.Windows.Forms.Label label_Title;
         private System.Windows.Forms.DataGridView dataGridView_Info;

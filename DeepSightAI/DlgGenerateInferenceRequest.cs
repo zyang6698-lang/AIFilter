@@ -133,6 +133,7 @@ namespace DeepSightAI
             if (InvokeRequired) { BeginInvoke((Action)(() => SetMinioStatus(percent, msg))); return; }
             progressBarMinio.Value = Math.Max(0, Math.Min(100, percent));
             lblMinioStatus.Text = msg;
+            FrmHome.Instance.UpdateInferenceRequestStatus($"MinIO {progressBarMinio.Value}% - {msg}");
         }
 
         #endregion
@@ -262,6 +263,7 @@ namespace DeepSightAI
             if (InvokeRequired) { BeginInvoke((Action)(() => SetLotStatus(percent, msg))); return; }
             progressBarLot.Value = Math.Max(0, Math.Min(100, percent));
             lblLotStatus.Text = msg;
+            FrmHome.Instance.UpdateInferenceRequestStatus($"Lot {progressBarLot.Value}% - {msg}");
         }
 
         #endregion

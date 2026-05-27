@@ -611,6 +611,8 @@ namespace DeepSightAI
                     FrmHome.Instance.str_SN = imageKey;
                     FrmHome.Instance.dataGridViewData_CellClick(null, null);
                 }
+
+                FrmHome.Instance.RefreshTaskQueueStatus();
             }
             catch (Exception ex)
             {

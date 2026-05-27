@@ -41,6 +41,16 @@ namespace DeepSightAI
         private Label label_FilterChange;
         private ComboBox comboBox_FilterChange;
         private Button btn_DisplayMode;
+        private StyledButton btn_ImageTypeSelector;
+        private CheckedListBox checkedListBox_ImageTypes;
+        private ToolStripDropDown dropDown_ImageTypes;
+        private bool _updatingImageTypeChecks;
+        private readonly List<DefectDisplayImageType> _selectedDisplayImageTypes = new List<DefectDisplayImageType>
+        {
+            DefectDisplayImageType.DefectBox,
+            DefectDisplayImageType.Template,
+            DefectDisplayImageType.Avi
+        };
 
         // 存储原始的DefectReviewItem列表，用于按SN分组检查VVS状态
         private List<DefectReviewItem> _sourceItems;
@@ -81,6 +91,7 @@ namespace DeepSightAI
             InitializeComparisonFilterControls();
             InitializePaginationControls();
             InitializeDisplayModeButton();
+            InitializeImageTypeSelector();
             InitializeExportButton();
         }
 
@@ -105,12 +116,168 @@ namespace DeepSightAI
             btn_DisplayMode.BringToFront();
         }
 
+        private void InitializeImageTypeSelector()
+        {
+            btn_ImageTypeSelector = new StyledButton
+            {
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                Location = new Point(panel_Top.Width - 290, 5),
+                Size = new Size(180, 30),
+                Text = "图片选择 ▼"
+            };
+            btn_ImageTypeSelector.Click += (s, e) => dropDown_ImageTypes.Show(btn_ImageTypeSelector, new Point(0, btn_ImageTypeSelector.Height));
+
+            var dropPanel = new Panel
+            {
+                BackColor = Color.FromArgb(29, 48, 60),
+                Padding = new Padding(8),
+                Size = new Size(190, 165)
+            };
+
+            checkedListBox_ImageTypes = new CheckedListBox
+            {
+                BorderStyle = BorderStyle.None,
+                CheckOnClick = true,
+                Font = new Font("微软雅黑", 9F),
+                BackColor = Color.FromArgb(29, 48, 60),
+                ForeColor = Color.FromArgb(216, 219, 188),
+                IntegralHeight = false,
+                Dock = DockStyle.Top,
+                Height = 122
+            };
+
+            checkedListBox_ImageTypes.Items.Add(new ImageTypeSelectionItem(DefectDisplayImageType.DefectBox, "缺陷框图"));
+            checkedListBox_ImageTypes.Items.Add(new ImageTypeSelectionItem(DefectDisplayImageType.Original, "原图"));
+            checkedListBox_ImageTypes.Items.Add(new ImageTypeSelectionItem(DefectDisplayImageType.Template, "模板图"));
+            checkedListBox_ImageTypes.Items.Add(new ImageTypeSelectionItem(DefectDisplayImageType.Gerber, "Gerber图"));
+            checkedListBox_ImageTypes.Items.Add(new ImageTypeSelectionItem(DefectDisplayImageType.Avi, "AVI图"));
+            checkedListBox_ImageTypes.ItemCheck += CheckedListBox_ImageTypes_ItemCheck;
+
+            var labelHint = new Label
+            {
+                Dock = DockStyle.Bottom,
+                Height = 24,
+                ForeColor = Color.Silver,
+                Font = new Font("微软雅黑", 8F),
+                Text = "最多3项，按选择顺序显示",
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+
+            dropPanel.Controls.Add(checkedListBox_ImageTypes);
+            dropPanel.Controls.Add(labelHint);
+
+            dropDown_ImageTypes = new ToolStripDropDown
+            {
+                Padding = Padding.Empty,
+                BackColor = Color.FromArgb(29, 48, 60)
+            };
+            dropDown_ImageTypes.Items.Add(new ToolStripControlHost(dropPanel)
+            {
+                Margin = Padding.Empty,
+                Padding = Padding.Empty
+            });
+
+            panel_Top.Controls.Add(btn_ImageTypeSelector);
+            btn_ImageTypeSelector.BringToFront();
+            SyncImageTypeChecks();
+            UpdateImageTypeSelectorText();
+        }
+
         private void InitializeExportButton()
         {
             this.btn_Export.Click += (s, e) =>
             {
                 ExportRequested?.Invoke(this, EventArgs.Empty);
             };
+        }
+
+        private void CheckedListBox_ImageTypes_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            if (_updatingImageTypeChecks) return;
+            if (!(checkedListBox_ImageTypes.Items[e.Index] is ImageTypeSelectionItem item)) return;
+
+            if (e.NewValue == CheckState.Checked)
+            {
+                if (!_selectedDisplayImageTypes.Contains(item.ImageType))
+                {
+                    _selectedDisplayImageTypes.Add(item.ImageType);
+                }
+
+                while (_selectedDisplayImageTypes.Count > 3)
+                {
+                    _selectedDisplayImageTypes.RemoveAt(0);
+                }
+            }
+            else
+            {
+                if (_selectedDisplayImageTypes.Count <= 1 && _selectedDisplayImageTypes.Contains(item.ImageType))
+                {
+                    e.NewValue = CheckState.Checked;
+                    return;
+                }
+
+                _selectedDisplayImageTypes.Remove(item.ImageType);
+            }
+
+            BeginInvoke((Action)(() =>
+            {
+                SyncImageTypeChecks();
+                UpdateImageTypeSelectorText();
+                ReloadCurrentPageForImageTypeChange();
+            }));
+        }
+
+        private void SyncImageTypeChecks()
+        {
+            if (checkedListBox_ImageTypes == null) return;
+
+            _updatingImageTypeChecks = true;
+            try
+            {
+                for (int i = 0; i < checkedListBox_ImageTypes.Items.Count; i++)
+                {
+                    var item = checkedListBox_ImageTypes.Items[i] as ImageTypeSelectionItem;
+                    checkedListBox_ImageTypes.SetItemChecked(i, item != null && _selectedDisplayImageTypes.Contains(item.ImageType));
+                }
+            }
+            finally
+            {
+                _updatingImageTypeChecks = false;
+            }
+        }
+
+        private void UpdateImageTypeSelectorText()
+        {
+            if (btn_ImageTypeSelector == null) return;
+            btn_ImageTypeSelector.Text = "图片选择 ▼";
+        }
+
+        private string GetDisplayImageTypeText(DefectDisplayImageType imageType)
+        {
+            switch (imageType)
+            {
+                case DefectDisplayImageType.Original:
+                    return "原图";
+                case DefectDisplayImageType.Template:
+                    return "模板图";
+                case DefectDisplayImageType.Gerber:
+                    return "Gerber图";
+                case DefectDisplayImageType.Avi:
+                    return "AVI图";
+                default:
+                    return "缺陷框图";
+            }
+        }
+
+        private void ReloadCurrentPageForImageTypeChange()
+        {
+            if (_filteredHeatPoints == null) return;
+            int selectedIndex = _selectedIndex;
+            LoadDefectsPage(_currentPage);
+            if (selectedIndex >= 0 && selectedIndex < flowLayoutPanel_DefectImages.Controls.Count)
+            {
+                SelectImage(selectedIndex);
+            }
         }
 
         private void InitializeFilterControls()
@@ -877,6 +1044,7 @@ namespace DeepSightAI
             };
 
             itemControl.SetImageLayout(_largeImageMode);
+            itemControl.SetDisplayImageTypes(_selectedDisplayImageTypes);
             itemControl.AdjustImageHeight(height);
             if (_comparisonMode)
             {
@@ -1301,6 +1469,23 @@ namespace DeepSightAI
             if (pixelFormat == System.Drawing.Imaging.PixelFormat.Format8bppIndexed)
                 return 1;
             return 3;
+        }
+    }
+
+    internal class ImageTypeSelectionItem
+    {
+        public ImageTypeSelectionItem(DefectDisplayImageType imageType, string text)
+        {
+            ImageType = imageType;
+            Text = text;
+        }
+
+        public DefectDisplayImageType ImageType { get; }
+        public string Text { get; }
+
+        public override string ToString()
+        {
+            return Text;
         }
     }
 

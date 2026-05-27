@@ -70,8 +70,11 @@ namespace DeepSightWorkLib
         /// Panel 批量写入大小（来自配置）
         /// </summary>
         private static int PanelSideBatchSize => DefaultValues.PanelSideBatchSize;
+        private static readonly TimeSpan PanelSideIdleFlushInterval = TimeSpan.FromSeconds(2);
+        private const int PanelSideIdleFlushPollIntervalMs = 500;
         private readonly object _panelRecordLock = new object();
         private readonly List<PanelSideRecord> _pendingPanelSideRecords = new List<PanelSideRecord>();
+        private DateTime _lastPanelSideRecordAddedTime = DateTime.MinValue;
 
         /// <summary>
         /// 当前未写入数据库的暂存 PanelSide 记录数量
@@ -112,6 +115,11 @@ namespace DeepSightWorkLib
         public PipelineStatistics GetPipelineStatistics()
         {
             return _pipeline?.GetStatistics() ?? new PipelineStatistics();
+        }
+
+        public QueueStatistics GetQueueStatistics()
+        {
+            return _queueManager?.GetStatistics() ?? new QueueStatistics();
         }
 
         /// <summary>
@@ -357,6 +365,9 @@ namespace DeepSightWorkLib
             _workerManager.RegisterPollingWorker(() => WorkerCleanupCache(),
                 new WorkerConfig { Name = "CleanupCache", PollIntervalMs = DefaultValues.CleanupCachePollIntervalMs, IsLongRunning = true });
 
+            _workerManager.RegisterWorker(WorkerFlushPendingPanelSideRecords,
+                new WorkerConfig { Name = "PanelSideIdleFlush", IsLongRunning = true });
+
             LogTextHelper.Info("BusinessClass 初始化完成，Pipeline 已启动");
         }
 
@@ -543,6 +554,30 @@ namespace DeepSightWorkLib
             return false; // 始终返回 false，保持定时轮询
         }
 
+        private void WorkerFlushPendingPanelSideRecords(CancellationToken token)
+        {
+            LogTextHelper.Info("工作线程 [PanelSideIdleFlush] 已启动");
+
+            while (!token.IsCancellationRequested)
+            {
+                if (token.WaitHandle.WaitOne(PanelSideIdleFlushPollIntervalMs))
+                {
+                    break;
+                }
+
+                try
+                {
+                    FlushPendingPanelSideRecordsIfIdle();
+                }
+                catch (Exception ex)
+                {
+                    LogTextHelper.Error($"PanelSide 空闲写入异常: {ex}");
+                }
+            }
+
+            LogTextHelper.Info("工作线程 [PanelSideIdleFlush] 已停止");
+        }
+
         #endregion
 
         #region 算法调用与结果处理
@@ -670,10 +705,12 @@ namespace DeepSightWorkLib
             lock (_panelRecordLock)
             {
                 _pendingPanelSideRecords.Add(record);
+                _lastPanelSideRecordAddedTime = DateTime.Now;
                 if (_pendingPanelSideRecords.Count >= PanelSideBatchSize)
                 {
                     batchToFlush = new List<PanelSideRecord>(_pendingPanelSideRecords);
                     _pendingPanelSideRecords.Clear();
+                    _lastPanelSideRecordAddedTime = DateTime.MinValue;
                 }
             }
 
@@ -692,6 +729,7 @@ namespace DeepSightWorkLib
                 {
                     snapshot = new List<PanelSideRecord>(_pendingPanelSideRecords);
                     _pendingPanelSideRecords.Clear();
+                    _lastPanelSideRecordAddedTime = DateTime.MinValue;
                 }
             }
 
@@ -699,6 +737,30 @@ namespace DeepSightWorkLib
             {
                 _databaseHelper.SavePanelSidesBatch(snapshot);
             }
+        }
+
+        private bool FlushPendingPanelSideRecordsIfIdle()
+        {
+            List<PanelSideRecord> snapshot = null;
+            lock (_panelRecordLock)
+            {
+                if (_pendingPanelSideRecords.Count == 0)
+                {
+                    return false;
+                }
+
+                if (DateTime.Now - _lastPanelSideRecordAddedTime < PanelSideIdleFlushInterval)
+                {
+                    return false;
+                }
+
+                snapshot = new List<PanelSideRecord>(_pendingPanelSideRecords);
+                _pendingPanelSideRecords.Clear();
+                _lastPanelSideRecordAddedTime = DateTime.MinValue;
+            }
+
+            _databaseHelper.SavePanelSidesBatch(snapshot);
+            return true;
         }
 
         public Task<List<PanelDataRecord>> GetPanelsData(DateTime start, DateTime end, string partnumber = null) =>

@@ -21,10 +21,7 @@
             if (disposing)
             {
                 _toolTip?.Dispose();
-                _rawOriginalImage?.Dispose();
-                ClearPictureBoxImage(pictureBox_OriginalImage);
-                ClearPictureBoxImage(pictureBox_TemplateImage);
-                ClearPictureBoxImage(pictureBox_AviImage);
+                ClearLoadedImages();
                 components?.Dispose();
             }
             base.Dispose(disposing);

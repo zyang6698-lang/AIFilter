@@ -17,7 +17,8 @@ namespace DeepSightAI
         private readonly Image _originalImage;
         private readonly Image _templateImage;
         private readonly Image _defectBoxImage;
-        private ImageTab _currentTab;
+        private readonly Image _aviImage;
+        private readonly List<ImageTab> _selectedTabs = new List<ImageTab>();
 
         /// <summary>
         /// 构造函数
@@ -26,7 +27,8 @@ namespace DeepSightAI
         /// <param name="originalImage">原图（不带缺陷框）</param>
         /// <param name="templateImage">模板图</param>
         /// <param name="defectBoxImage">带缺陷框的图</param>
-        public FrmDefectImageDetail(DetectInfo detectInfo, Image originalImage, Image templateImage, Image defectBoxImage)
+        /// <param name="aviImage">AVI 图</param>
+        public FrmDefectImageDetail(DetectInfo detectInfo, Image originalImage, Image templateImage, Image defectBoxImage, Image aviImage = null)
         {
             InitializeComponent();
             dataGridView_Info.ApplyDarkTheme();
@@ -36,19 +38,25 @@ namespace DeepSightAI
             _originalImage = (Image)originalImage?.Clone();
             _templateImage = (Image)templateImage?.Clone();
             _defectBoxImage = (Image)defectBoxImage?.Clone();
+            _aviImage = (Image)aviImage?.Clone();
 
-            button_OriginalImage.Click += (s, e) => SwitchImage(ImageTab.Original);
-            button_TemplateImage.Click += (s, e) => SwitchImage(ImageTab.Template);
-            button_DefectBoxImage.Click += (s, e) => SwitchImage(ImageTab.DefectBox);
+            button_OriginalImage.Click += (s, e) => ToggleImage(ImageTab.Original);
+            button_TemplateImage.Click += (s, e) => ToggleImage(ImageTab.Template);
+            button_DefectBoxImage.Click += (s, e) => ToggleImage(ImageTab.DefectBox);
+            button_AviImage.Click += (s, e) => ToggleImage(ImageTab.Avi);
 
             // 任意点击关闭（图片区域、空白区域等）
             pictureBox_Image.Click += (s, e) => this.Close();
+            pictureBox_SecondImage.Click += (s, e) => this.Close();
+            tableLayoutPanel_Images.Click += (s, e) => this.Close();
             splitContainer_Main.Panel1.Click += (s, e) => this.Close();
             this.Click += (s, e) => this.Close();
             // ESC 也可关闭
             this.KeyDown += (s, e) => { if (e.KeyCode == Keys.Escape) this.Close(); };
             // 滚轮切换图片
             pictureBox_Image.MouseWheel += PictureBox_MouseWheel;
+            pictureBox_SecondImage.MouseWheel += PictureBox_MouseWheel;
+            tableLayoutPanel_Images.MouseWheel += PictureBox_MouseWheel;
             this.MouseWheel += PictureBox_MouseWheel;
 
             this.Load += (s, e) =>
@@ -58,51 +66,126 @@ namespace DeepSightAI
             };
 
             LoadInfo();
-            SwitchImage(ImageTab.DefectBox);
+            InitializeImageSelection();
         }
 
-        private enum ImageTab { Original, Template, DefectBox }
+        private enum ImageTab { Original, Template, DefectBox, Avi }
 
         private void PictureBox_MouseWheel(object sender, MouseEventArgs e)
         {
-            // 滚轮上：上一张，滚轮下：下一张
-            int current = (int)_currentTab;
             if (e.Delta > 0)
-                current--;
+                RotateSelection(-1);
             else if (e.Delta < 0)
-                current++;
-
-            // 循环切换
-            const int count = 3;
-            current = ((current % count) + count) % count;
-            SwitchImage((ImageTab)current);
+                RotateSelection(1);
         }
 
-        private void SwitchImage(ImageTab tab)
+        private void InitializeImageSelection()
         {
-            _currentTab = tab;
-            // Update button appearance
+            _selectedTabs.Clear();
+            var preferredTabs = new[] { ImageTab.DefectBox, ImageTab.Template, ImageTab.Original, ImageTab.Avi };
+            foreach (var tab in preferredTabs)
+            {
+                if (!HasImage(tab)) continue;
+                _selectedTabs.Add(tab);
+                if (_selectedTabs.Count == 2) break;
+            }
+
+            RefreshImageDisplay();
+        }
+
+        private void ToggleImage(ImageTab tab)
+        {
+            if (!HasImage(tab)) return;
+
+            if (_selectedTabs.Contains(tab))
+            {
+                return;
+            }
+            else
+            {
+                _selectedTabs.Add(tab);
+                while (_selectedTabs.Count > 2)
+                {
+                    _selectedTabs.RemoveAt(0);
+                }
+            }
+
+            RefreshImageDisplay();
+        }
+
+        private void RotateSelection(int offset)
+        {
+            var availableTabs = GetAvailableTabs();
+            if (availableTabs.Count <= 2)
+            {
+                _selectedTabs.Clear();
+                _selectedTabs.AddRange(availableTabs);
+                RefreshImageDisplay();
+                return;
+            }
+
+            int currentIndex = _selectedTabs.Count > 0 ? availableTabs.IndexOf(_selectedTabs[0]) : 0;
+            if (currentIndex < 0) currentIndex = 0;
+
+            int startIndex = (currentIndex + offset) % availableTabs.Count;
+            if (startIndex < 0) startIndex += availableTabs.Count;
+
+            _selectedTabs.Clear();
+            _selectedTabs.Add(availableTabs[startIndex]);
+            _selectedTabs.Add(availableTabs[(startIndex + 1) % availableTabs.Count]);
+            RefreshImageDisplay();
+        }
+
+        private void RefreshImageDisplay()
+        {
             var activeColor = Color.FromArgb(0, 122, 204);
             var inactiveColor = Color.FromArgb(60, 60, 65);
+            var disabledColor = Color.FromArgb(45, 45, 48);
 
-            button_OriginalImage.BackColor = tab == ImageTab.Original ? activeColor : inactiveColor;
-            button_OriginalImage.ForeColor = tab == ImageTab.Original ? Color.White : Color.Silver;
-            button_TemplateImage.BackColor = tab == ImageTab.Template ? activeColor : inactiveColor;
-            button_TemplateImage.ForeColor = tab == ImageTab.Template ? Color.White : Color.Silver;
-            button_DefectBoxImage.BackColor = tab == ImageTab.DefectBox ? activeColor : inactiveColor;
-            button_DefectBoxImage.ForeColor = tab == ImageTab.DefectBox ? Color.White : Color.Silver;
+            UpdateButton(button_OriginalImage, ImageTab.Original, activeColor, inactiveColor, disabledColor);
+            UpdateButton(button_TemplateImage, ImageTab.Template, activeColor, inactiveColor, disabledColor);
+            UpdateButton(button_DefectBoxImage, ImageTab.DefectBox, activeColor, inactiveColor, disabledColor);
+            UpdateButton(button_AviImage, ImageTab.Avi, activeColor, inactiveColor, disabledColor);
 
+            pictureBox_Image.Image = _selectedTabs.Count > 0 ? GetImage(_selectedTabs[0]) : null;
+            pictureBox_SecondImage.Image = _selectedTabs.Count > 1 ? GetImage(_selectedTabs[1]) : null;
+        }
+
+        private void UpdateButton(Button button, ImageTab tab, Color activeColor, Color inactiveColor, Color disabledColor)
+        {
+            bool enabled = HasImage(tab);
+            bool selected = _selectedTabs.Contains(tab);
+            button.Enabled = enabled;
+            button.BackColor = !enabled ? disabledColor : selected ? activeColor : inactiveColor;
+            button.ForeColor = !enabled ? Color.Gray : selected ? Color.White : Color.Silver;
+        }
+
+        private bool HasImage(ImageTab tab)
+        {
+            return GetImage(tab) != null;
+        }
+
+        private List<ImageTab> GetAvailableTabs()
+        {
+            var tabs = new List<ImageTab> { ImageTab.Original, ImageTab.Template, ImageTab.DefectBox, ImageTab.Avi };
+            tabs.RemoveAll(tab => !HasImage(tab));
+            return tabs;
+        }
+
+        private Image GetImage(ImageTab tab)
+        {
             switch (tab)
             {
                 case ImageTab.Original:
-                    pictureBox_Image.Image = _originalImage;
-                    break;
+                    return _originalImage;
                 case ImageTab.Template:
-                    pictureBox_Image.Image = _templateImage;
-                    break;
+                    return _templateImage;
                 case ImageTab.DefectBox:
-                    pictureBox_Image.Image = _defectBoxImage;
-                    break;
+                    return _defectBoxImage;
+                case ImageTab.Avi:
+                    return _aviImage;
+                default:
+                    return null;
             }
         }
 
@@ -226,9 +309,11 @@ namespace DeepSightAI
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
             pictureBox_Image.Image = null;
+            pictureBox_SecondImage.Image = null;
             _originalImage?.Dispose();
             _templateImage?.Dispose();
             _defectBoxImage?.Dispose();
+            _aviImage?.Dispose();
             base.OnFormClosed(e);
         }
     }
