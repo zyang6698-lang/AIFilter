@@ -193,6 +193,7 @@ namespace DeepSightWorkLib.Services
             var results = new List<(PanelDataRecord, SideData, List<DetectInfo>)>();
 
             List<PanelDataRecord> panels;
+            // TODO 修改数据源为缺陷详情表格里的源数据
             if (!string.IsNullOrEmpty(task.LotNumber))
             {
                 panels = await _databaseHelper.GetPanelsDataByMachineAndLot(null, task.LotNumber);

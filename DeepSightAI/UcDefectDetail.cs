@@ -40,7 +40,7 @@ namespace DeepSightAI
         private ComboBox comboBox_FilterNewAI;
         private Label label_FilterChange;
         private ComboBox comboBox_FilterChange;
-        private Button btn_DisplayMode;
+        private StyledButton btn_DisplayMode;
         private StyledButton btn_ImageTypeSelector;
         private CheckedListBox checkedListBox_ImageTypes;
         private ToolStripDropDown dropDown_ImageTypes;
@@ -97,20 +97,13 @@ namespace DeepSightAI
 
         private void InitializeDisplayModeButton()
         {
-            btn_DisplayMode = new Button
+            btn_DisplayMode = new StyledButton
             {
                 Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                BackColor = Color.FromArgb(45, 45, 48),
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("微软雅黑", 9F),
-                ForeColor = Color.White,
                 Location = new Point(panel_Top.Width - 100, 5),
                 Size = new Size(90, 30),
-                Text = "大图模式",
-                UseVisualStyleBackColor = false
+                Text = "大图模式"
             };
-            btn_DisplayMode.FlatAppearance.BorderSize = 1;
-            btn_DisplayMode.FlatAppearance.BorderColor = Color.FromArgb(80, 80, 80);
             btn_DisplayMode.Click += (s, e) => ToggleDisplayMode();
             panel_Top.Controls.Add(btn_DisplayMode);
             btn_DisplayMode.BringToFront();
@@ -129,9 +122,10 @@ namespace DeepSightAI
 
             var dropPanel = new Panel
             {
-                BackColor = Color.FromArgb(29, 48, 60),
+                BackColor = Color.FromArgb(45, 45, 48),
+                BorderStyle = BorderStyle.FixedSingle,
                 Padding = new Padding(8),
-                Size = new Size(190, 165)
+                Size = new Size(200, 170)
             };
 
             checkedListBox_ImageTypes = new CheckedListBox
@@ -139,11 +133,13 @@ namespace DeepSightAI
                 BorderStyle = BorderStyle.None,
                 CheckOnClick = true,
                 Font = new Font("微软雅黑", 9F),
-                BackColor = Color.FromArgb(29, 48, 60),
+                BackColor = Color.FromArgb(45, 45, 48),
                 ForeColor = Color.FromArgb(216, 219, 188),
                 IntegralHeight = false,
-                Dock = DockStyle.Top,
-                Height = 122
+                Location = new Point(8, 8),
+                Size = new Size(184, 126),
+                DrawMode = DrawMode.OwnerDrawFixed,
+                ItemHeight = 24
             };
 
             checkedListBox_ImageTypes.Items.Add(new ImageTypeSelectionItem(DefectDisplayImageType.DefectBox, "缺陷框图"));
@@ -152,13 +148,15 @@ namespace DeepSightAI
             checkedListBox_ImageTypes.Items.Add(new ImageTypeSelectionItem(DefectDisplayImageType.Gerber, "Gerber图"));
             checkedListBox_ImageTypes.Items.Add(new ImageTypeSelectionItem(DefectDisplayImageType.Avi, "AVI图"));
             checkedListBox_ImageTypes.ItemCheck += CheckedListBox_ImageTypes_ItemCheck;
+            checkedListBox_ImageTypes.DrawItem += CheckedListBox_ImageTypes_DrawItem;
 
             var labelHint = new Label
             {
-                Dock = DockStyle.Bottom,
-                Height = 24,
+                BackColor = Color.FromArgb(45, 45, 48),
                 ForeColor = Color.Silver,
                 Font = new Font("微软雅黑", 8F),
+                Location = new Point(8, 138),
+                Size = new Size(184, 24),
                 Text = "最多3项，按选择顺序显示",
                 TextAlign = ContentAlignment.MiddleLeft
             };
@@ -169,12 +167,14 @@ namespace DeepSightAI
             dropDown_ImageTypes = new ToolStripDropDown
             {
                 Padding = Padding.Empty,
-                BackColor = Color.FromArgb(29, 48, 60)
+                BackColor = Color.FromArgb(45, 45, 48)
             };
             dropDown_ImageTypes.Items.Add(new ToolStripControlHost(dropPanel)
             {
+                AutoSize = false,
                 Margin = Padding.Empty,
-                Padding = Padding.Empty
+                Padding = Padding.Empty,
+                Size = dropPanel.Size
             });
 
             panel_Top.Controls.Add(btn_ImageTypeSelector);
@@ -225,6 +225,28 @@ namespace DeepSightAI
                 UpdateImageTypeSelectorText();
                 ReloadCurrentPageForImageTypeChange();
             }));
+        }
+
+        private void CheckedListBox_ImageTypes_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            if (e.Index < 0) return;
+
+            bool selected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
+            bool isChecked = checkedListBox_ImageTypes.GetItemChecked(e.Index);
+            Color backColor = selected ? Color.FromArgb(0, 86, 110) : Color.FromArgb(45, 45, 48);
+            Color textColor = Color.FromArgb(216, 219, 188);
+
+            using (var backBrush = new SolidBrush(backColor))
+            {
+                e.Graphics.FillRectangle(backBrush, e.Bounds);
+            }
+
+            var checkRect = new Rectangle(e.Bounds.Left + 4, e.Bounds.Top + 5, 14, 14);
+            ControlPaint.DrawCheckBox(e.Graphics, checkRect, isChecked ? ButtonState.Checked : ButtonState.Normal);
+
+            var textRect = new Rectangle(e.Bounds.Left + 24, e.Bounds.Top, e.Bounds.Width - 28, e.Bounds.Height);
+            TextRenderer.DrawText(e.Graphics, checkedListBox_ImageTypes.Items[e.Index].ToString(), e.Font, textRect, textColor,
+                TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.EndEllipsis);
         }
 
         private void SyncImageTypeChecks()
