@@ -10,6 +10,7 @@ namespace DeepSightModel
     /// </summary>
     public class DetectInfo
     {
+        public string OriginDefectName { get; set; }
         public string DefectName { get; set; }
         public string DefectType { get; set; }
         public string DefectShape { get; set; }
@@ -28,7 +29,7 @@ namespace DeepSightModel
         public string DrawInfo { get; set; }
         public int DefectIndex {  get; set; }
         public int PcsIndex {  get; set; }
-        // 分阶段状态：0 未运行 / 1 OK / 2 NG / 3 异常
+        // 分阶段状态：0 未运行 / 1 OK / 2 NG / 3 异常 / 4 直报
         public int AIStatus { get; set; }
         public int VVSStatus { get; set; }
         public int VrsState { get; set; }
@@ -56,6 +57,7 @@ namespace DeepSightModel
         {
             return new DetectInfo
             {
+                OriginDefectName = OriginDefectName,
                 DefectName = DefectName,
                 DefectType = DefectType,
                 DefectShape = DefectShape,
@@ -72,6 +74,8 @@ namespace DeepSightModel
                 GerberImagePath = GerberImagePath,
                 DefectAviImage = DefectAviImage,
                 DrawInfo = DrawInfo,
+                DefectIndex = DefectIndex,
+                PcsIndex = PcsIndex,
                 AIStatus = AIStatus,
                 VVSStatus = VVSStatus,
                 VrsState = VrsState,

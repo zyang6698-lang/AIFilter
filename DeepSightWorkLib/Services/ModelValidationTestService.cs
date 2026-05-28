@@ -279,7 +279,8 @@ namespace DeepSightWorkLib.Services
                 if (vbModel.ImageKeys == null || vbModel.ImageKeys.Count == 0)
                 {
                     // 区分"全部直报跳过"和"真无有效图片"
-                    bool allDirectReport = vbModel.DirectReportFlags != null && vbModel.DirectReportFlags.Any(f => f);
+                    bool allDirectReport = vbModel.AllDefectInfos != null
+                        && vbModel.AllDefectInfos.Any(d => d.AIStatus == 4);
                     if (allDirectReport)
                     {
                         // 该面所有缺陷均为直报，业务上跳过推理，不计为错误
@@ -834,7 +835,8 @@ namespace DeepSightWorkLib.Services
                                 case 0: originalUndetectedCount++; break;
                                 case 1: originalOkCount++; break;
                                 case 2: originalNgCount++; break;
-                                case 3: originalBypassCount++; break;
+                                case 3: originalUndetectedCount++; break;
+                                case 4: originalBypassCount++; break;
                                 default: originalBypassCount++; break;
                             }
 
@@ -858,7 +860,8 @@ namespace DeepSightWorkLib.Services
                                 case 0: finalUndetectedCount++; break;
                                 case 1: finalOkCount++; break;
                                 case 2: finalNgCount++; break;
-                                case 3: finalBypassCount++; break;
+                                case 3: finalUndetectedCount++; break;
+                                case 4: finalBypassCount++; break;
                                 default: finalBypassCount++; break;
                             }
 
@@ -882,23 +885,19 @@ namespace DeepSightWorkLib.Services
                 sideResult.FinalUndetectedCount = finalUndetectedCount;
                 sideResult.State = SecondaryInferenceResultState.Completed;
 
-                int directReportCount = 0;
-                if (vbModel.DirectReportDefectIndices != null && vbModel.DirectReportDefectIndices.Count > 0)
+                var directReportDefects = vbModel.AllDefectInfos?
+                    .Where(d => d != null && d.AIStatus == 4)
+                    .ToList();
+                int directReportCount = directReportDefects?.Count ?? 0;
+                if (directReportCount > 0)
                 {
-                    directReportCount = vbModel.DirectReportDefectIndices.Count;
-                    for (int di = 0; di < directReportCount; di++)
+                    foreach (var directReportDefect in directReportDefects)
                     {
-                        int ddefectIdx = vbModel.DirectReportDefectIndices[di];
-                        string dImagePath = vbModel.DirectReportFlags != null && di < vbModel.DirectReportFlags.Count && vbModel.ImageKeys != null && di < vbModel.ImageKeys.Count ? vbModel.ImageKeys[di] : null;
-
-                        DetectInfo dDetectInfo = null;
-                        vbModel.OriginalDetectInfos?.TryGetValue(ddefectIdx, out dDetectInfo);
-
                         sideResult.PointResults.Add(new SecondaryInferencePointResult
                         {
-                            DefectIndex = ddefectIdx,
-                            ImagePath = dImagePath,
-                            DetectInfo = dDetectInfo?.Clone(),
+                            DefectIndex = directReportDefect.DefectIndex,
+                            ImagePath = directReportDefect.ImagePath,
+                            DetectInfo = directReportDefect.Clone(),
                             OriginalAIStatus = 4,
                             NewAIStatus = 4
                         });

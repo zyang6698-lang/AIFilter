@@ -1156,7 +1156,7 @@ namespace DeepSightAI
             {
                 if (row.IsNewRow) continue;
                 total++;
-                string status = row.Cells[6].Value?.ToString() ?? string.Empty;
+                string status = row.Cells["Status"].Value?.ToString() ?? string.Empty;
                 if (IsTaskQueueTerminalStatus(status))
                 {
                     terminal++;

@@ -103,30 +103,34 @@ namespace DeepSightWorkLib.Services
                 });
             }
 
-            // 追加直报缺陷的结果（标记为bypass "2"）
-            if (info.DirectReportDefectIndices != null && info.DirectReportDefectIndices.Count > 0)
+            var directReportDefects = info.AllDefectInfos?
+                .Where(d => d != null && d.AIStatus == 4)
+                .ToList();
+
+            // 追加直报缺陷的结果（回写状态为4）
+            if (directReportDefects != null && directReportDefects.Count > 0)
             {
-                for (int i = 0; i < info.DirectReportDefectIndices.Count; i++)
+                foreach (var defect in directReportDefects)
                 {
                     ResultInfo res = new ResultInfo
                     {
-                        ResultInfos = $"{info.Side}_{info.DirectReportPcsIndices[i]}_{info.DirectReportDefectIndices[i]}_4",
+                        ResultInfos = $"{info.Side}_{defect.PcsIndex}_{defect.DefectIndex}_4",
                         Details = new Details()
                     };
                     results.Add(res);
 
                     aIDetailResults.Add(new AIDetailResultItem()
                     {
-                        Index = info.DirectReportDefectIndices[i],
-                        PcsIndex = info.DirectReportPcsIndices[i],
+                        Index = defect.DefectIndex,
+                        PcsIndex = defect.PcsIndex,
                         AiLabel = "NG",
                         AiClsType = "",
                         AiFlag = "DirectReport",
-                        DefectCode = null,
+                        DefectCode = !string.IsNullOrWhiteSpace(defect.OriginDefectName) ? defect.OriginDefectName : defect.DefectName,
                         InferDetail = new Dictionary<string, object>(),
                     });
                 }
-                LogTextHelper.Info($"SN:{info.SN} 追加 {info.DirectReportDefectIndices.Count} 个直报缺陷结果");
+                LogTextHelper.Info($"SN:{info.SN} 追加 {directReportDefects.Count} 个直报缺陷结果");
             }
 
             WriteBackData writeBackData = new WriteBackData()

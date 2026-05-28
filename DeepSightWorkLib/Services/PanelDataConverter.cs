@@ -43,8 +43,7 @@ namespace DeepSightWorkLib.Services
 
                 //  构建 VBInfo
                 result.VBInfo = BuildVBInfo(panelInfo, context, solutionInfo,
-                    result.DefectIndexList, result.PcsIndexList,
-                    result.DirectReportDefectIndices, result.DirectReportPcsIndices);
+                    result.DefectIndexList, result.PcsIndexList);
 
                 return result;
             }
@@ -122,15 +121,12 @@ namespace DeepSightWorkLib.Services
             PanelConvertContext context,
             (string Solution, string Flow, bool IsSwitch) solutionInfo,
             List<int> defectList,
-            List<int> pcsList,
-            List<int> directReportDefectList,
-            List<int> directReportPcsList)
+            List<int> pcsList)
         {
             var vBInfo = CreateBaseVBInfo(solutionInfo.Solution, solutionInfo.Flow);
 
             // 处理 PCS 信息
-            ProcessPcsInfo(panelInfo, context, solutionInfo.IsSwitch, vBInfo, defectList, pcsList,
-                directReportDefectList, directReportPcsList);
+            ProcessPcsInfo(panelInfo, context, solutionInfo.IsSwitch, vBInfo, defectList, pcsList);
            
             // 设置 Minio 信息
             SetMinioInfo(vBInfo, context.MinioIP, context.MinioPort);
@@ -178,17 +174,15 @@ namespace DeepSightWorkLib.Services
             bool isSwitch,
             RootVBInfo vBInfo,
             List<int> defectList,
-            List<int> pcsList,
-            List<int> directReportDefectList,
-            List<int> directReportPcsList)
+            List<int> pcsList)
         {
             int defectCount = 0;
             defectCount += AppendPcsInfoSource(panelInfo.PcsInfo?.Values, panelInfo, context, isSwitch, vBInfo,
-                defectList, pcsList, directReportDefectList, directReportPcsList);
+                defectList, pcsList);
             defectCount += AppendPcsInfoSource(
                 panelInfo.PanelInfo != null ? new[] { panelInfo.PanelInfo } : null,
                 panelInfo, context, isSwitch, vBInfo,
-                defectList, pcsList, directReportDefectList, directReportPcsList);
+                defectList, pcsList);
             LogTextHelper.Info($"SN:{context.SN}_{panelInfo.SideIndex}面报点数据为:{defectCount}");
         }
 
@@ -202,9 +196,7 @@ namespace DeepSightWorkLib.Services
             bool isSwitch,
             RootVBInfo vBInfo,
             List<int> defectList,
-            List<int> pcsList,
-            List<int> directReportDefectList,
-            List<int> directReportPcsList)
+            List<int> pcsList)
         {
             int defectCount = 0;
             if (source == null) return 0;
@@ -220,8 +212,6 @@ namespace DeepSightWorkLib.Services
                     // 检查是否为直报缺陷（根据料号对应的 profile）
                     if (KeyDefectConfigManager.Instance.IsDirectReportByProduct(defect.DefectCode, panelInfo.ProductSerial))
                     {
-                        directReportDefectList.Add(j);
-                        directReportPcsList.Add(defect.PcsIndex);
                         LogTextHelper.Info($"SN:{context.SN} 缺陷 {defect.DefectCode} (Pcs:{defect.PcsIndex}, Defect:{j}) 标记为直报，跳过AI推理");
                         continue;
                     }

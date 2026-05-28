@@ -39,7 +39,7 @@ namespace DeepSightModel
         /// <summary>MinIO 服务 IP</summary>
         public string IP { get; set; }
 
-        /// <summary>展平后的缺陷列表，顺序与 ImageLoaderService.GetAllImageKeysWithDirectReportFlags 对齐</summary>
+        /// <summary>展平后的缺陷列表，顺序与 VBModel.AllDefectInfos 对齐</summary>
         public List<DefectInfoView> Defects { get; set; } = new List<DefectInfoView>();
     }
 

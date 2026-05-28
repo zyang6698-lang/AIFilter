@@ -72,7 +72,7 @@ namespace DeepSightAI.Services
                     {
                         var pts = pcsGroup.ToList();
                         stat.TotalPcsCount++;
-                        if (pts.Any(p => p.AIStatus == 2))
+                        if (pts.Any(p => p.AIStatus == 2 || p.AIStatus == 4))
                         {
                             stat.AiNgPcsCount++;
                             panelAllAiPass = false;
@@ -111,7 +111,7 @@ namespace DeepSightAI.Services
             {
                 stat.TotalPointCount += side.DetectPoints.Count;
                 stat.AiOkPointCount += side.DetectPoints.Count(p => p.AIStatus == 1);
-                stat.AiNgPointCount += side.DetectPoints.Count(p => p.AIStatus == 2);
+                stat.AiNgPointCount += side.DetectPoints.Count(p => p.AIStatus == 2 || p.AIStatus == 4);
                 stat.AiExceptionPointCount += side.DetectPoints.Count(p => p.AIStatus == 3);
                 stat.AiUninspectedPointCount += side.DetectPoints.Count(p => p.AIStatus == 0);
             }

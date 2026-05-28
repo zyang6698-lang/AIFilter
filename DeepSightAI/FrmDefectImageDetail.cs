@@ -195,34 +195,47 @@ namespace DeepSightAI
 
             var rows = dataGridView_Info.Rows;
 
+            AddSection(rows, "缺陷基础信息");
             AddRow(rows, "显示SN", _detectInfo.DisplaySN);
+            AddRow(rows, "缺陷来源", _detectInfo.IsGlobal ? "Panel 全局点" : "PCS 缺陷点");
+            AddRow(rows, "PcsIndex", _detectInfo.PcsIndex.ToString());
+            AddRow(rows, "DefectIndex", _detectInfo.DefectIndex.ToString());
             AddRow(rows, "缺陷名称", _detectInfo.DefectName);
+            AddRow(rows, "原始缺陷名", _detectInfo.OriginDefectName);
             AddRow(rows, "缺陷类型", _detectInfo.DefectType);
             AddRow(rows, "缺陷形状", _detectInfo.DefectShape);
-            AddRow(rows, "ROI X", _detectInfo.RoiX.ToString());
-            AddRow(rows, "ROI Y", _detectInfo.RoiY.ToString());
-            AddRow(rows, "宽度", _detectInfo.Width.ToString());
-            AddRow(rows, "高度", _detectInfo.Height.ToString());
-            AddRow(rows, "原始 ROI X", _detectInfo.OriginRoiX.ToString());
-            AddRow(rows, "原始 ROI Y", _detectInfo.OriginRoiY.ToString());
-            AddRow(rows, "原始宽度", _detectInfo.OriginWidth.ToString());
-            AddRow(rows, "原始高度", _detectInfo.OriginHeight.ToString());
-            AddRow(rows, "图片路径", _detectInfo.ImagePath);
+            AddRow(rows, "重点缺陷", _detectInfo.IsKeyDefect ? "是" : "否");
+
+            AddSection(rows, "缺陷位置");
+            AddRow(rows, "ROI", FormatRoi(_detectInfo.RoiX, _detectInfo.RoiY, _detectInfo.Width, _detectInfo.Height));
+            AddRow(rows, "原始 ROI", FormatRoi(_detectInfo.OriginRoiX, _detectInfo.OriginRoiY, _detectInfo.OriginWidth, _detectInfo.OriginHeight));
+
+            AddSection(rows, "图片路径");
+            AddRow(rows, "缺陷图", _detectInfo.ImagePath);
+            AddRow(rows, "模板图", _detectInfo.TempImagePath);
+            AddRow(rows, "Gerber 图", _detectInfo.GerberImagePath);
+            AddRow(rows, "AVI 图", _detectInfo.DefectAviImage);
+
+            AddSection(rows, "状态信息");
             AddRow(rows, "AI 状态", GetStatusText(_detectInfo.AIStatus));
             AddRow(rows, "VVS 状态", GetStatusText(_detectInfo.VVSStatus));
-            AddRow(rows, "VRS 状态", GetStatusText(_detectInfo.VrsState));
-            AddRow(rows, "最终状态", GetStatusText(_detectInfo.FinalState));
+            AddRow(rows, "VRS 状态", GetVrsStatusText(_detectInfo.VrsState));
+            AddRow(rows, "最终状态", GetFinalStatusText(_detectInfo.FinalState));
 
-            // Image basic info
             if (_originalImage != null)
             {
+                AddSection(rows, "当前图片信息");
                 AddRow(rows, "图片宽度 (px)", _originalImage.Width.ToString());
                 AddRow(rows, "图片高度 (px)", _originalImage.Height.ToString());
                 AddRow(rows, "图片格式", _originalImage.RawFormat.ToString());
             }
 
-            // 解析判别依据 (DrawInfo)
             LoadDrawInfo(rows);
+        }
+
+        private string FormatRoi(int x, int y, int width, int height)
+        {
+            return $"X={x}, Y={y}, W={width}, H={height}";
         }
 
         /// <summary>
@@ -237,7 +250,7 @@ namespace DeepSightAI
                 var drawInfoList = JsonConvert.DeserializeObject<List<DrawInfo>>(_detectInfo.DrawInfo);
                 if (drawInfoList == null || drawInfoList.Count == 0) return;
 
-                AddRow(rows, "── 判别依据 ──", "");
+                AddSection(rows, "判别依据");
 
                 for (int i = 0; i < drawInfoList.Count; i++)
                 {
@@ -291,7 +304,12 @@ namespace DeepSightAI
 
         private void AddRow(DataGridViewRowCollection rows, string property, string value)
         {
-            rows.Add(property, value ?? "-");
+            rows.Add(property, string.IsNullOrWhiteSpace(value) ? "-" : value);
+        }
+
+        private void AddSection(DataGridViewRowCollection rows, string title)
+        {
+            rows.Add($"── {title} ──", "");
         }
 
         private string GetStatusText(int status)
@@ -302,7 +320,33 @@ namespace DeepSightAI
                 case 1: return "OK";
                 case 2: return "NG";
                 case 3: return "异常";
+                case 4: return "直报";
                 default: return status.ToString();
+            }
+        }
+
+        private string GetVrsStatusText(int vrsState)
+        {
+            switch (vrsState)
+            {
+                case 0: return "未判定";
+                case 1: return "OK";
+                case 2: return "NG";
+                case 3: return "忽略";
+                case 4: return "无结果";
+                case 5: return "NG不接收";
+                default: return vrsState.ToString();
+            }
+        }
+
+        private string GetFinalStatusText(int finalState)
+        {
+            switch (finalState)
+            {
+                case 0: return "待处理";
+                case 1: return "最终OK";
+                case 2: return "最终NG";
+                default: return finalState.ToString();
             }
         }
 

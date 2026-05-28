@@ -62,50 +62,8 @@ namespace DeepSightModel
         public string PanelSerialNumber { get; set; }
         #endregion
 
-        /// <summary>
-        /// 直报缺陷的原始 DefectIndex 列表（这些缺陷跳过AI推理，结果标记为bypass）
-        /// </summary>
-        public List<int> DirectReportDefectIndices { get; set; } = new List<int>();
-
-        /// <summary>
-        /// 直报缺陷对应的 PcsIndex 列表
-        /// </summary>
-        public List<int> DirectReportPcsIndices { get; set; } = new List<int>();
-
-        #region 全量图片路径（包含直报缺陷，用于后处理保存）
-        /// <summary>
-        /// 所有缺陷的 VRS 图片路径（包含直报缺陷，与 DirectReportFlags 索引对齐）
-        /// </summary>
-        public List<string> AllDefectImageKeys { get; set; }
-
-        /// <summary>
-        /// 所有缺陷的 Gerber 图片路径（包含直报缺陷，与 DirectReportFlags 索引对齐）
-        /// </summary>
-        public List<string> AllDefectGerberKeys { get; set; }
-
-        /// <summary>
-        /// 所有缺陷的 Template 图片路径（包含直报缺陷，与 DirectReportFlags 索引对齐）
-        /// </summary>
-        public List<string> AllDefectTempKeys { get; set; }
-
-        public List<string> AllDefectAviKeys { get; set; }
-
-        /// <summary>
-        /// 每个缺陷是否为直报缺陷的标记列表（与 AllDefectXxxKeys 索引对齐，true=直报）
-        /// </summary>
-        public List<bool> DirectReportFlags { get; set; }
-
-        /// <summary>
-        /// 所有缺陷的 AVI 原始报码（DefectCode），与 AllDefectXxxKeys 索引对齐，
-        /// 用于后处理时填充 DetectInfo.DefectName，确保直报缺陷落库信息完整。
-        /// </summary>
-        public List<string> AllDefectCodes { get; set; }
-
-        /// <summary>
-        /// 每个缺陷是否为全局点的标记列表（与 AllDefectXxxKeys 索引对齐，
-        /// true=来源 RootPanelInfo.PanelInfo（panel_info），false=来源 PcsInfo（pcs_info））
-        /// </summary>
-        public List<bool> GlobalFlags { get; set; }
+        #region 全量缺陷信息（包含直报缺陷，用于后处理保存和直报回写）
+        public List<DetectInfo> AllDefectInfos { get; set; }
         #endregion
 
         #region 源数据库追踪（多DB回写支持）

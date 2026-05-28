@@ -37,15 +37,7 @@ namespace DeepSightWorkLib.Services
             var originalAIResults = new Dictionary<int, int>();
             var originalVVSResults = new Dictionary<int, int>();
             var originalDetectInfos = new Dictionary<int, DetectInfo>();
-            var directReportFlags = new List<bool>();
-            var globalFlags = new List<bool>();
-
-            // 全量路径（包含直报），用于后续保存完整缺陷信息
-            var allDefectImageKeys = new List<string>();
-            var allDefectGerberKeys = new List<string>();
-            var allDefectTempKeys = new List<string>();
-            var allDefectAviKeys = new List<string>();
-            var allDefectCodes = new List<string>();
+            var allDefectInfos = new List<DetectInfo>();
 
             // 检查是否有VVS数据
             bool hasVVSData = context.Side?.VvsState > 0 || context.DefectPoints.Any(d => d.VVSStatus > 0);
@@ -58,21 +50,19 @@ namespace DeepSightWorkLib.Services
                     : defect.DefectType ?? "";
 
                 var defectClone = defect.Clone();
+                defectClone.OriginDefectName = !string.IsNullOrWhiteSpace(defectClone.OriginDefectName)
+                    ? defectClone.OriginDefectName
+                    : aviDefectCode;
                 defectClone.DefectName = aviDefectCode;
-                originalDetectInfos[i] = defectClone;
-
-                // 记录全量路径和缺陷名（验证流中 DefectName 即为原始 AVI 报码）
-                allDefectImageKeys.Add(defect.ImagePath ?? "");
-                allDefectGerberKeys.Add(defect.GerberImagePath ?? "");
-                allDefectTempKeys.Add(defect.TempImagePath ?? "");
-                allDefectAviKeys.Add(defect.DefectAviImage ?? "");
-                allDefectCodes.Add(aviDefectCode);
 
                 // 根据配置判断是否为直报缺陷（与主流程一致）
                 bool isDirectReport = KeyDefectConfigManager.Instance.IsDirectReportByProduct(
                     aviDefectCode, context.ProductSerial);
-                directReportFlags.Add(isDirectReport);
-                globalFlags.Add(defect.IsGlobal);
+                originalDetectInfos[i] = defectClone;
+
+                var allDefectInfo = defectClone.Clone();
+                allDefectInfo.AIStatus = isDirectReport ? 4 : 0;
+                allDefectInfos.Add(allDefectInfo);
 
                 if (isDirectReport || string.IsNullOrEmpty(defect.ImagePath))
                     continue;
@@ -112,13 +102,7 @@ namespace DeepSightWorkLib.Services
                 HasVVSData = hasVVSData,
                 OriginalDetectInfos = originalDetectInfos,
                 TestTaskId = context.TaskId,
-                AllDefectImageKeys = allDefectImageKeys,
-                AllDefectGerberKeys = allDefectGerberKeys,
-                AllDefectTempKeys = allDefectTempKeys,
-                AllDefectAviKeys = allDefectAviKeys,
-                DirectReportFlags = directReportFlags,
-                AllDefectCodes = allDefectCodes,
-                GlobalFlags = globalFlags
+                AllDefectInfos = allDefectInfos,
             };
         }
 

@@ -132,8 +132,10 @@ namespace DeepSightWorkLib.Tests
         public void BuildAIResult_包含直报缺陷()
         {
             var model = CreateTestVBModel();
-            model.DirectReportDefectIndices = new List<int> { 3 };
-            model.DirectReportPcsIndices = new List<int> { 2 };
+            model.AllDefectInfos = new List<DetectInfo>
+            {
+                new DetectInfo { DefectIndex = 3, PcsIndex = 2, AIStatus = 4, OriginDefectName = "DR01" }
+            };
 
             var msgs = new List<string> { "0", "1", "0" };
 

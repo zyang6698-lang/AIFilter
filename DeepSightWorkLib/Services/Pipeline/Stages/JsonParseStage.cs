@@ -108,13 +108,12 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
 
             var convertResult = _panelDataConverter.Convert(panelInfo, convertContext);
 
-            var (AllImageKeys, AllGerberKeys, AllTempKeys, AllAviKeys, DirectReportFlags, AllDefectCodes, GlobalFlags)
-                = _imageLoaderService.GetAllImageKeysWithDirectReportFlags(panelInfo, ip, head);
+            var AllDefectInfos = ImageLoaderService.BuildAllDefectInfos(panelInfo, ip, head);
 
-            // 构造 UI 投影模型（缺陷展平顺序与 GetAllImageKeysWithDirectReportFlags 一致：先 PcsInfo 后 PanelInfo）
+            // 构造 UI 投影模型（缺陷展平顺序与 AllDefectInfos 一致：先 PcsInfo 后 PanelInfo）
             var panelView = BuildPanelView(sn, side, ip, head, panelInfo);
             var (ImageKeys, GerberKeys, TempKeys)
-                = ImageLoaderService.DeriveFilteredKeys(AllImageKeys, AllGerberKeys, AllTempKeys, DirectReportFlags);
+                = ImageLoaderService.DeriveFilteredKeys(AllDefectInfos);
 
             VBModel model = new VBModel
             {
@@ -134,23 +133,15 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
                 ImageKeys = ImageKeys,
                 ImageKeys_Gerber = GerberKeys,
                 ImageKeys_Temp = TempKeys,
-                AllDefectImageKeys = AllImageKeys,
-                AllDefectGerberKeys = AllGerberKeys,
-                AllDefectTempKeys = AllTempKeys,
-                AllDefectAviKeys = AllAviKeys,
-                DirectReportFlags = DirectReportFlags,
-                AllDefectCodes = AllDefectCodes,
-                GlobalFlags = GlobalFlags,
+                AllDefectInfos = AllDefectInfos,
                 SourceDbUrl = dbUrl,
                 SourceVRSDbUrl = vrsDbUrl,
                 SourceWriteBackDbName = writeBackDbName,
                 SourceVRSWriteBackDbName = vrsWriteBackDbName,
-                DirectReportDefectIndices = convertResult.DirectReportDefectIndices,
-                DirectReportPcsIndices = convertResult.DirectReportPcsIndices
             };
 
             // 存储调试信息到缓存
-            StoreDebugInfo(sn, side, json, convertResult, ImageKeys, head, panelInfo);
+            StoreDebugInfo(sn, side, json, convertResult, ImageKeys, head, panelInfo, AllDefectInfos);
 
             ctx.LoadModel = new ImageLoadModel
             {
@@ -262,14 +253,14 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
         }
 
         private void StoreDebugInfo(string sn, string side, string json,
-            PanelConvertResult convertResult, List<string> imageKeys, string head, RootPanelInfo obj)
+            PanelConvertResult convertResult, List<string> imageKeys, string head, RootPanelInfo obj, List<DetectInfo> allDefectInfos)
         {
             try
             {
                 var debugInfo = SnDebugInfoCache.GetOrCreate(sn, side);
                 debugInfo.PanelInfoJson = json;
                 debugInfo.VbInferenceJson = JsonConvert.SerializeObject(convertResult.VBInfo, Formatting.Indented);
-                debugInfo.DefectCount = convertResult.DefectIndexList?.Count ?? 0;
+                debugInfo.DefectCount = allDefectInfos?.Count ?? convertResult.DefectIndexList?.Count ?? 0;
                 debugInfo.PcsCount = convertResult.PcsIndexList?.Count ?? 0;
                 debugInfo.ImageCount = imageKeys?.Count ?? 0;
                 debugInfo.MinioPath = head;
@@ -286,8 +277,9 @@ namespace DeepSightWorkLib.Services.Pipeline.Stages
                     summary.Append($"AVI报点{defectCodes.Count}个: {string.Join(",", defectCodes.Distinct())}");
                 else
                     summary.Append("AVI无报点");
-                if (convertResult.DirectReportDefectIndices?.Count > 0)
-                    summary.Append($" | 直报{convertResult.DirectReportDefectIndices.Count}个");
+                int directReportCount = allDefectInfos?.Count(d => d.AIStatus == 4) ?? 0;
+                if (directReportCount > 0)
+                    summary.Append($" | 直报{directReportCount}个");
                 if (!string.IsNullOrEmpty(obj.ProcessStatus) &&
                     !string.Equals(obj.ProcessStatus, "normal", StringComparison.OrdinalIgnoreCase))
                 {

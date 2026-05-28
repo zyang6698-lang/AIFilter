@@ -65,27 +65,26 @@ namespace DeepSightWorkLib.Services
                     {
                         // 即使无图片也保存所有缺陷的图片路径（包含直报缺陷）
                         var allDefects = BuildAllDefectsWithPaths(vBModel);
+                        foreach (var defect in allDefects)
+                        {
+                            if (IsAiStatusDirectReport(defect))
+                                defect.AIStatus = 4;
+                            else
+                                defect.AIStatus = 3;
+                        }
 
-                        // 区分：有直报缺陷时不能按整面OK保存
-                        bool hasDirectReport = vBModel.DirectReportFlags != null && vBModel.DirectReportFlags.Any(f => f);
-                        int skipAviState, skipAiState;
+                        int skipAviState;
+                        int skipAiState;
                         if (allDefects.Count == 0)
                         {
                             // 真的没有缺陷
                             skipAviState = 1;
                             skipAiState = 1;
                         }
-                        else if (hasDirectReport)
-                        {
-                            // 有直报缺陷：AVI=NG, AI=异常/直报
-                            skipAviState = 2;
-                            skipAiState = 3;
-                        }
                         else
                         {
-                            // 有缺陷但无直报、无图片（异常情况）
                             skipAviState = 2;
-                            skipAiState = 3;
+                            skipAiState = CalculateAiState(allDefects);
                         }
 
                         _savePanelSideAction(vBModel, allDefects, skipAviState, skipAiState);
@@ -94,8 +93,8 @@ namespace DeepSightWorkLib.Services
                     else if (vBModel.Mats.Count > _sysConfig.MaxDefectCount)
                     {
                         var allDefects = BuildAllDefectsWithPaths(vBModel);
-                        foreach (var d in allDefects) d.AIStatus = 3;
-                        _savePanelSideAction(vBModel, allDefects, 2, 3);
+                        foreach (var d in allDefects) d.AIStatus = IsAiStatusDirectReport(d) ? 4 : 3;
+                        _savePanelSideAction(vBModel, allDefects, 2, CalculateAiState(allDefects));
                         LogTextHelper.Info($"跳过处理(图片超限): SN={vBModel.SN}, 保存缺陷路径数={allDefects.Count}");
                     }
                     return;
@@ -103,11 +102,14 @@ namespace DeepSightWorkLib.Services
 
                 LogTextHelper.Info($"开始处理: SN={vBModel.SN}, Side={vBModel.Side}");
 
-                // 自动发现 AVI 上报的 DefectCode（已在 JsonParseStage 收集到 AllDefectCodes）
-                if (vBModel.AllDefectCodes != null)
+                // 从 VBModel 中已构建好的全量缺陷列表读取完整缺陷信息（包含直报缺陷）
+                List<DetectInfo> defects = BuildAllDefectsWithPaths(vBModel);
+
+                // 自动发现 AVI 上报的 DefectCode
+                if (defects.Count > 0)
                 {
                     var profileName = KeyDefectConfigManager.Instance.GetProfileNameForProduct(vBModel.ProductSerial);
-                    foreach (var defectCode in vBModel.AllDefectCodes)
+                    foreach (var defectCode in defects.Select(d => !string.IsNullOrWhiteSpace(d.OriginDefectName) ? d.OriginDefectName : d.DefectName))
                     {
                         if (!string.IsNullOrEmpty(defectCode))
                             KeyDefectConfigManager.Instance.AutoDiscoverDefect(defectCode, profileName);
@@ -124,9 +126,7 @@ namespace DeepSightWorkLib.Services
                 string code = obj.Code.ToString();
                 string message = obj.Message.ToString();
 
-                // 从 AllDefectXxxKeys 构建完整的缺陷列表（包含直报缺陷，图片路径完整）
-                List<DetectInfo> defects = BuildAllDefectsWithPaths(vBModel);
-                int directReportCount = vBModel.DirectReportFlags?.Count(f => f) ?? 0;
+                int directReportCount = defects.Count(IsAiStatusDirectReport);
                 int inferableCount = defects.Count - directReportCount;
 
                 int aviState = defects.Count == 0 ? 1 : 2;
@@ -141,10 +141,8 @@ namespace DeepSightWorkLib.Services
                     {
                         var defect = defects[i];
 
-                        // 直报缺陷：已在 BuildAllDefectsWithPaths 中标记 AIStatus=3，跳过
-                        bool isDirectReport = vBModel.DirectReportFlags != null
-                            && i < vBModel.DirectReportFlags.Count
-                            && vBModel.DirectReportFlags[i];
+                        // 直报缺陷：AIStatus=4，跳过AI结果映射
+                        bool isDirectReport = IsAiStatusDirectReport(defect);
                         if (isDirectReport) continue;
 
                         // 非直报缺陷：映射 AI 推理结果
@@ -217,7 +215,7 @@ namespace DeepSightWorkLib.Services
                         inferIdx++;
                     }
 
-                    aiState = defects.Any(h => h.AIStatus == 3) ? 3 : defects.Any(h => h.AIStatus == 2) ? 2 : 1;
+                    aiState = CalculateAiState(defects);
 
                     int keyDefectInThisSide = defects.Count(h => h.IsKeyDefect);
                     if (keyDefectInThisSide > 0)
@@ -235,19 +233,21 @@ namespace DeepSightWorkLib.Services
                     for (int i = 0; i < defects.Count; i++)
                     {
                         var defect = defects[i];
-                        bool isDirectReport = vBModel.DirectReportFlags != null
-                            && i < vBModel.DirectReportFlags.Count
-                            && vBModel.DirectReportFlags[i];
+                        bool isDirectReport = IsAiStatusDirectReport(defect);
                         if (!isDirectReport)
                         {
                             defect.AIStatus = 1;
+                        }
+                        else
+                        {
+                            defect.AIStatus = 4;
                         }
                     }
 
                     if (directReportCount > 0)
                     {
                         aviState = 2;
-                        aiState = 3;
+                        aiState = CalculateAiState(defects);
                         LogTextHelper.Info($"处理完成(AI无缺陷,有{directReportCount}个直报): SN={vBModel.SN}, Side={vBModel.Side}");
                     }
                     else
@@ -273,53 +273,30 @@ namespace DeepSightWorkLib.Services
         }
 
         /// <summary>
-        /// 根据 AllDefectXxxKeys 构建包含所有缺陷（含直报）的 DetectInfo 列表，
-        /// 直报缺陷预设 AIStatus=3，非直报缺陷 AIStatus 默认为 0（后续由推理结果填充）。
+        /// 从 VBModel 中获取包含所有缺陷（含直报）的 DetectInfo 列表。
+        /// 直报缺陷统一为 AIStatus=4，非直报缺陷 AIStatus 默认为 0（后续由推理结果填充）。
         /// </summary>
         private List<DetectInfo> BuildAllDefectsWithPaths(VBModel vBModel)
         {
-            var defects = new List<DetectInfo>();
-
-            // 优先使用全量路径列表（包含直报缺陷）
-            var allImageKeys = vBModel.AllDefectImageKeys;
-            var allGerberKeys = vBModel.AllDefectGerberKeys;
-            var allTempKeys = vBModel.AllDefectTempKeys;
-            var allAviKeys = vBModel.AllDefectAviKeys;
-            var flags = vBModel.DirectReportFlags;
-            var allDefectCodes = vBModel.AllDefectCodes;
-            var globalFlags = vBModel.GlobalFlags;
-
-            if (allImageKeys != null && allImageKeys.Count > 0)
-            {
-                for (int i = 0; i < allImageKeys.Count; i++)
-                {
-                    bool isDirectReport = flags != null && i < flags.Count && flags[i];
-                    bool isGlobal = globalFlags != null && i < globalFlags.Count && globalFlags[i];
-                    DetectInfo defect = null;
-                    if (vBModel.OriginalDetectInfos != null
-                        && vBModel.OriginalDetectInfos.TryGetValue(i, out var originalDetectInfo)
-                        && originalDetectInfo != null)
-                    {
-                        defect = originalDetectInfo.Clone();
-                    }
-
-                    defect = defect ?? new DetectInfo();
-                    defect.PcsIndex = vBModel.PcsIndex.ElementAtOrDefault(i);
-                    defect.DefectIndex=vBModel.DefectIndex.ElementAtOrDefault(i );
-                    defect.ImagePath = allImageKeys.ElementAtOrDefault(i) ?? defect.ImagePath ?? "";
-                    defect.GerberImagePath = allGerberKeys?.ElementAtOrDefault(i) ?? defect.GerberImagePath ?? "";
-                    defect.TempImagePath = allTempKeys?.ElementAtOrDefault(i) ?? defect.TempImagePath ?? "";
-                    defect.DefectAviImage = allAviKeys?.ElementAtOrDefault(i) ?? defect.DefectAviImage ?? "";
-                    defect.DefectName = !string.IsNullOrWhiteSpace(defect.DefectName)
-                        ? defect.DefectName
-                        : allDefectCodes?.ElementAtOrDefault(i) ?? "";
-                    defect.AIStatus = isDirectReport ? 3 : 0;
-                    defect.IsGlobal = isGlobal || defect.IsGlobal;
-                    defects.Add(defect);
-                }
-            }
+            var defects = vBModel.AllDefectInfos?
+                .Select(d => d?.Clone() ?? new DetectInfo())
+                .ToList() ?? new List<DetectInfo>();
 
             return defects;
+        }
+
+        private static bool IsAiStatusDirectReport(DetectInfo defect)
+        {
+            return defect != null && defect.AIStatus == 4;
+        }
+
+        private static int CalculateAiState(List<DetectInfo> defects)
+        {
+            if (defects == null || defects.Count == 0) return 1;
+            if (defects.Any(d => d.AIStatus == 3)) return 3;
+            if (defects.Any(d => d.AIStatus == 2 || IsAiStatusDirectReport(d))) return 2;
+            if (defects.All(d => d.AIStatus == 1)) return 1;
+            return 3;
         }
 
         /// <summary>

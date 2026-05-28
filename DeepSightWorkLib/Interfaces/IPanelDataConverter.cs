@@ -61,15 +61,6 @@ namespace DeepSightWorkLib.Interfaces
         /// </summary>
         public List<int> PcsIndexList { get; set; } = new List<int>();
 
-        /// <summary>
-        /// 直报缺陷的原始 DefectIndex 列表（这些缺陷跳过AI推理）
-        /// </summary>
-        public List<int> DirectReportDefectIndices { get; set; } = new List<int>();
-
-        /// <summary>
-        /// 直报缺陷对应的 PcsIndex 列表
-        /// </summary>
-        public List<int> DirectReportPcsIndices { get; set; } = new List<int>();
     }
 
     /// <summary>

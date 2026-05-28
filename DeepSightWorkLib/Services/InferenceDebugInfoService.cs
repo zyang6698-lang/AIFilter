@@ -22,7 +22,7 @@ namespace DeepSightWorkLib.Services
                 debugInfo.SourceDbName = modeName;
                 debugInfo.ProductSerial = string.IsNullOrEmpty(debugInfo.ProductSerial) ? vbModel.ProductSerial : debugInfo.ProductSerial;
                 debugInfo.LotNumber = string.IsNullOrEmpty(debugInfo.LotNumber) ? lotNumber : debugInfo.LotNumber;
-                debugInfo.DefectCount = defectPoints?.Count() ?? vbModel.AllDefectCodes?.Count ?? debugInfo.DefectCount;
+                debugInfo.DefectCount = defectPoints?.Count() ?? vbModel.AllDefectInfos?.Count ?? debugInfo.DefectCount;
                 debugInfo.PcsCount = vbModel.PcsIndex?.Distinct().Count() ?? debugInfo.PcsCount;
                 debugInfo.ImageCount = vbModel.ImageKeys?.Count ?? debugInfo.ImageCount;
                 debugInfo.MinioPath = string.IsNullOrEmpty(debugInfo.MinioPath) ? vbModel.ImageKeys?.FirstOrDefault() : debugInfo.MinioPath;

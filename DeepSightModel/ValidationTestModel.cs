@@ -166,7 +166,7 @@ namespace DeepSightModel
         /// </summary>
         public int OriginalOkCount { get; set; }
         /// <summary>
-        /// 推理前状态为异常/直报(3)的点数
+        /// 推理前状态为直报(4)的点数
         /// </summary>
         public int OriginalBypassCount { get; set; }
         /// <summary>
@@ -186,7 +186,7 @@ namespace DeepSightModel
         /// </summary>
         public int FinalOkCount { get; set; }
         /// <summary>
-        /// 推理后状态为异常/直报(3)的点数
+        /// 推理后状态为直报(4)的点数
         /// </summary>
         public int FinalBypassCount { get; set; }
         /// <summary>
