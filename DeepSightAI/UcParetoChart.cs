@@ -9,104 +9,111 @@ using System.Windows.Forms.DataVisualization.Charting;
 
 namespace DeepSightAI
 {
-    /// <summary>
-    /// 帕累托图控件：以 Lot 为基准，展示缺陷按发生频次排序的柱状图与累计百分比折线
-    /// 支持多数据源合并展示：AI结果 / VVS结果 / VRS结果（可多选1~3个）
-    /// 当前 Lot 由父窗体通过 ShowLot 注入（与 UcDefectQuery.cmb_Lot 联动）。
-    /// </summary>
     public partial class UcParetoChart : UserControl
     {
         private string _currentLot;
         private List<DefectReviewItem> _currentItems;
 
-        /// <summary>
-        /// 数据来源定义
-        /// </summary>
         private struct SourceDef
         {
-            public string Name;           // 显示名称
-            public Color BarColor;        // 柱状图颜色
-            public Color LineColor;       // 折线颜色
-            public string SeriesPrefix;   // Series 名称前缀
-            public Func<DetectInfo, bool> HasData;   // 是否有数据
-            public Func<DetectInfo, bool> IsNg;      // 是否为NG
+            public string Name;
+            public Color BarColor;
+            public Color LineColor;
+            public Func<DetectInfo, bool> HasData;
+            public Func<DetectInfo, bool> IsNg;
         }
 
-        private static readonly SourceDef[] AllSources = new[]
+        private static readonly SourceDef SrcAI = new SourceDef
         {
-            new SourceDef
-            {
-                Name = "AI",
-                BarColor = Color.FromArgb(65, 160, 255),
-                LineColor = Color.FromArgb(100, 190, 255),
-                SeriesPrefix = "AI",
-                HasData = hp => hp.AIStatus != 0,
-                IsNg = hp => hp.AIStatus == 2
-            },
-            new SourceDef
-            {
-                Name = "VVS",
-                BarColor = Color.FromArgb(255, 107, 107),
-                LineColor = Color.FromArgb(255, 150, 150),
-                SeriesPrefix = "VVS",
-                HasData = hp => hp.VVSStatus != 0,
-                IsNg = hp => hp.VVSStatus == 2
-            },
-            new SourceDef
-            {
-                Name = "VRS",
-                BarColor = Color.FromArgb(81, 207, 102),
-                LineColor = Color.FromArgb(120, 230, 140),
-                SeriesPrefix = "VRS",
-                HasData = hp => hp.VrsState != 0,
-                IsNg = hp => hp.VrsState == 2 || hp.VrsState == 5
-            }
+            Name = "AI",
+            BarColor = Color.FromArgb(65, 160, 255),
+            LineColor = Color.FromArgb(100, 190, 255),
+            HasData = hp => hp.AIStatus != 0,
+            IsNg = hp => hp.AIStatus == 2
         };
+
+        private static readonly SourceDef SrcVVS = new SourceDef
+        {
+            Name = "VVS",
+            BarColor = Color.FromArgb(255, 107, 107),
+            LineColor = Color.FromArgb(255, 150, 150),
+            HasData = hp => hp.VVSStatus != 0,
+            IsNg = hp => hp.VVSStatus == 2
+        };
+
+        private static readonly SourceDef SrcVRS = new SourceDef
+        {
+            Name = "VRS",
+            BarColor = Color.FromArgb(81, 207, 102),
+            LineColor = Color.FromArgb(120, 230, 140),
+            HasData = hp => hp.VrsState != 0,
+            IsNg = hp => hp.VrsState == 2 || hp.VrsState == 5
+        };
+
+        private static readonly string[] SourceNames = { "AI", "VVS", "VRS" };
 
         public UcParetoChart()
         {
             InitializeComponent();
-            InitializeChartConfig();
+            InitComboBoxes();
+            InitAllCharts();
             WireEvents();
+        }
+
+        private void InitComboBoxes()
+        {
+            cmb_TopLeft.Items.AddRange(SourceNames);
+            cmb_TopLeft.SelectedIndex = 0;
+            cmb_TopRight.Items.AddRange(SourceNames);
+            cmb_TopRight.SelectedIndex = 1;
         }
 
         private void WireEvents()
         {
-            chk_AI.CheckedChanged += (s, e) => RefreshChart();
-            chk_VVS.CheckedChanged += (s, e) => RefreshChart();
-            chk_VRS.CheckedChanged += (s, e) => RefreshChart();
-            btn_Refresh.Click += (s, e) => RefreshChart();
+            cmb_TopLeft.SelectedIndexChanged += (s, e) => RefreshAllCharts();
+            cmb_TopRight.SelectedIndexChanged += (s, e) => RefreshAllCharts();
+            rdo_VVS.CheckedChanged += (s, e) => RefreshAllCharts();
+            chk_OriginName.CheckedChanged += (s, e) => RefreshAllCharts();
+            btn_Refresh.Click += (s, e) => RefreshAllCharts();
         }
 
-        private void InitializeChartConfig()
+        private void InitAllCharts()
         {
-            chart_Pareto.ChartAreas.Clear();
-            chart_Pareto.Series.Clear();
-            chart_Pareto.Legends.Clear();
+            ConfigureChart(chart_TopLeft, "");
+            ConfigureChart(chart_TopRight, "");
+            ConfigureChart(chart_BottomLeft, "AI OK & ?NG");
+            ConfigureChart(chart_BottomRight, "AI NG & ?NG");
+        }
+
+        private void ConfigureChart(Chart chart, string defaultTitle)
+        {
+            chart.ChartAreas.Clear();
+            chart.Series.Clear();
+            chart.Legends.Clear();
 
             var area = new ChartArea("MainArea")
             {
                 BackColor = Color.FromArgb(35, 35, 38),
                 AxisX = {
-                    Title = "缺陷名称",
-                    TitleForeColor = Color.FromArgb(200, 200, 200),
-                    LabelStyle = { ForeColor = Color.FromArgb(180, 180, 180), Angle = -30 },
+                    LabelStyle = { ForeColor = Color.FromArgb(180, 180, 180), Angle = -30, Font = new Font("微软雅黑", 7F) },
                     LineColor = Color.FromArgb(80, 80, 80),
-                    MajorGrid = { LineColor = Color.FromArgb(50, 50, 50), Enabled = false },
+                    MajorGrid = { Enabled = false },
                     Interval = 1
                 },
                 AxisY = {
                     Title = "频次",
                     TitleForeColor = Color.FromArgb(200, 200, 200),
-                    LabelStyle = { ForeColor = Color.FromArgb(180, 180, 180) },
+                    TitleFont = new Font("微软雅黑", 7F),
+                    LabelStyle = { ForeColor = Color.FromArgb(180, 180, 180), Font = new Font("微软雅黑", 7F) },
                     LineColor = Color.FromArgb(80, 80, 80),
                     MajorGrid = { LineColor = Color.FromArgb(50, 50, 50) },
                     Minimum = 0
                 },
                 AxisY2 = {
-                    Title = "累计百分比 (%)",
+                    Title = "累计%",
                     TitleForeColor = Color.FromArgb(200, 200, 200),
-                    LabelStyle = { ForeColor = Color.FromArgb(180, 180, 180) },
+                    TitleFont = new Font("微软雅黑", 7F),
+                    LabelStyle = { ForeColor = Color.FromArgb(180, 180, 180), Font = new Font("微软雅黑", 7F) },
                     LineColor = Color.FromArgb(80, 80, 80),
                     MajorGrid = { Enabled = false },
                     Minimum = 0,
@@ -114,79 +121,67 @@ namespace DeepSightAI
                     Enabled = AxisEnabled.True
                 }
             };
-            chart_Pareto.ChartAreas.Add(area);
+            chart.ChartAreas.Add(area);
 
-            var legend = new Legend
+            if (!string.IsNullOrEmpty(defaultTitle))
             {
-                BackColor = Color.FromArgb(35, 35, 38),
-                ForeColor = Color.FromArgb(200, 200, 200),
-                Docking = Docking.Top
-            };
-            chart_Pareto.Legends.Add(legend);
+                chart.Titles.Add(new Title(defaultTitle)
+                {
+                    ForeColor = Color.FromArgb(200, 200, 200),
+                    Font = new Font("微软雅黑", 9F, FontStyle.Bold),
+                    Docking = Docking.Top
+                });
+            }
         }
 
-        /// <summary>
-        /// 由父窗体在切换 Lot 时调用，展示指定 Lot 的帕累托图。
-        /// </summary>
         public void ShowLot(string lotNumber, List<DefectReviewItem> items)
         {
             _currentLot = lotNumber;
             _currentItems = items;
-            RefreshChart();
+            RefreshAllCharts();
         }
 
-        /// <summary>
-        /// 清空图表显示，用于切换查询条件或两段式加载第一阶段。
-        /// </summary>
         public void Clear(string hint = "无数据，请先执行查询")
         {
             _currentLot = null;
             _currentItems = null;
-            ClearChart(hint);
+            ClearAllCharts(hint);
         }
 
-        private void ClearChart(string message)
+        private void ClearAllCharts(string message)
         {
-            foreach (var s in chart_Pareto.Series) s.Points.Clear();
+            ClearSingleChart(chart_TopLeft);
+            ClearSingleChart(chart_TopRight);
+            ClearSingleChart(chart_BottomLeft);
+            ClearSingleChart(chart_BottomRight);
             label_Status.Text = message ?? string.Empty;
-            lbl_AIStatus.Text = "● AI: 无数据";
-            lbl_VVSStatus.Text = "● VVS: 无数据";
-            lbl_VRSStatus.Text = "● VRS: 无数据";
-            lbl_AIStatus.ForeColor = Color.FromArgb(200, 200, 200);
-            lbl_VVSStatus.ForeColor = Color.FromArgb(200, 200, 200);
-            lbl_VRSStatus.ForeColor = Color.FromArgb(200, 200, 200);
         }
 
-        /// <summary>
-        /// 获取当前选中的来源列表（按用户 CheckBox 勾选状态）
-        /// </summary>
-        private List<SourceDef> GetSelectedSources()
+        private void ClearSingleChart(Chart chart)
         {
-            var selected = new List<SourceDef>();
-            if (chk_AI.Checked) selected.Add(AllSources[0]);
-            if (chk_VVS.Checked) selected.Add(AllSources[1]);
-            if (chk_VRS.Checked) selected.Add(AllSources[2]);
-            return selected;
+            chart.Series.Clear();
         }
 
-        /// <summary>
-        /// 统计单个来源的缺陷分组结果
-        /// </summary>
-        private class SourceStatistics
+        private string GetDefectNameKey(DetectInfo hp)
         {
-            public SourceDef Source;
-            public List<IGrouping<string, DetectInfo>> GroupedPoints;
-            public int TotalPoints;
-            public int NgPoints;
-            public bool HasData;
+            if (chk_OriginName.Checked)
+            {
+                return string.IsNullOrEmpty(hp.OriginDefectName) ? "(未命名)" : hp.OriginDefectName;
+            }
+            return string.IsNullOrEmpty(hp.DefectName) ? "(未命名)" : hp.DefectName;
         }
 
-        /// <summary>
-        /// 根据当前选中的 Lot 与勾选的数据来源刷新帕累托图
-        /// 支持多来源合并展示（簇状柱形图 + 各自累计百分比折线）
-        /// 过滤 AiState == 0 的 DefectReviewItem（无AI结果不参与统计）
-        /// </summary>
-        private void RefreshChart()
+        private SourceDef GetSourceByName(string name)
+        {
+            switch (name)
+            {
+                case "VVS": return SrcVVS;
+                case "VRS": return SrcVRS;
+                default: return SrcAI;
+            }
+        }
+
+        private void RefreshAllCharts()
         {
             try
             {
@@ -194,221 +189,171 @@ namespace DeepSightAI
                 var items = _currentItems;
                 if (string.IsNullOrEmpty(lot) || items == null)
                 {
-                    ClearChart("请选择 Lot");
+                    ClearAllCharts("请选择 Lot");
                     return;
                 }
 
-                // 过滤 OriginalAiState == 0 的项（无AI结果不参与统计）
                 var validItems = items
                     .Where(it => it != null && it.HeatPoints != null && it.OriginalAiState != 0)
                     .ToList();
 
                 if (validItems.Count == 0)
                 {
-                    ClearChart($"Lot: {lot} 无有效AI结果数据（OriginalAiState全为0）");
+                    ClearAllCharts($"Lot: {lot} 无有效AI结果数据");
                     return;
                 }
 
-                var selectedSources = GetSelectedSources();
-                if (selectedSources.Count == 0)
-                {
-                    ClearChart("请至少选择一个数据来源");
-                    return;
-                }
+                var allPoints = validItems.SelectMany(it => it.HeatPoints).Where(hp => hp != null).ToList();
 
-                // 对每个选中来源分别统计
-                var statsList = new List<SourceStatistics>();
-                foreach (var src in selectedSources)
-                {
-                    var points = validItems
-                        .SelectMany(it => it.HeatPoints)
-                        .Where(hp => hp != null && src.HasData(hp))
-                        .ToList();
+                var srcTopLeft = GetSourceByName(cmb_TopLeft.SelectedItem?.ToString());
+                var srcTopRight = GetSourceByName(cmb_TopRight.SelectedItem?.ToString());
+                bool useVVS = rdo_VVS.Checked;
+                var srcBottom = useVVS ? SrcVVS : SrcVRS;
+                string bottomLabel = useVVS ? "VVS" : "VRS";
 
-                    var grouped = points
-                        .GroupBy(hp => string.IsNullOrEmpty(hp.DefectName) ? "(未命名)" : hp.DefectName)
-                        .ToList();
+                RefreshSingleSourceChart(chart_TopLeft, allPoints, srcTopLeft,
+                    $"{srcTopLeft.Name} 缺陷分布");
 
-                    statsList.Add(new SourceStatistics
-                    {
-                        Source = src,
-                        GroupedPoints = grouped,
-                        TotalPoints = points.Count,
-                        NgPoints = points.Count(p => src.IsNg(p)),
-                        HasData = points.Count > 0
-                    });
-                }
+                RefreshSingleSourceChart(chart_TopRight, allPoints, srcTopRight,
+                    $"{srcTopRight.Name} 缺陷分布");
 
-                // 检查是否所有来源都无数据
-                if (statsList.All(s => !s.HasData))
-                {
-                    var sourceNames = string.Join("/", statsList.Select(s => s.Source.Name));
-                    ClearChart($"Lot: {lot} 无 {sourceNames} 结果数据");
-                    UpdateTopStatusLabels(statsList);
-                    return;
-                }
+                var aiOkPoints = allPoints.Where(hp => hp.AIStatus == 1).ToList();
+                RefreshFilteredChart(chart_BottomLeft, aiOkPoints, srcBottom,
+                    $"AI OK & {bottomLabel} NG 缺陷分布");
 
-                // 收集所有缺陷名称的并集作为 X 轴分类
-                var allDefectNames = new HashSet<string>();
-                foreach (var st in statsList)
-                {
-                    if (st.HasData)
-                    {
-                        foreach (var g in st.GroupedPoints)
-                            allDefectNames.Add(g.Key);
-                    }
-                }
+                var aiNgPoints = allPoints.Where(hp => hp.AIStatus == 2).ToList();
+                RefreshFilteredOkChart(chart_BottomRight, aiNgPoints, srcBottom,
+                    $"AI NG & {bottomLabel} OK 缺陷分布");
 
-                // 按总频次排序（取所有来源中该缺陷的最大频次来排序，保持一致性）
-                var nameOrder = allDefectNames
-                    .OrderByDescending(name =>
-                        statsList.Where(s => s.HasData)
-                            .Select(s => s.GroupedPoints.FirstOrDefault(g => g.Key == name)?.Count() ?? 0)
-                            .DefaultIfEmpty(0)
-                            .Max())
-                    .ToList();
-
-                // 清除旧 Series 并动态创建
-                chart_Pareto.Series.Clear();
-
-                // 对各来源数据归一化为 nameOrder 顺序，缺失值填 0
-                var normalizedData = new Dictionary<string, List<int>>();
-                foreach (var st in statsList)
-                {
-                    var data = new List<int>();
-                    var countDict = st.HasData
-                        ? st.GroupedPoints.ToDictionary(g => g.Key, g => g.Count())
-                        : new Dictionary<string, int>();
-                    foreach (var name in nameOrder)
-                    {
-                        data.Add(countDict.TryGetValue(name, out int c) ? c : 0);
-                    }
-                    normalizedData[st.Source.SeriesPrefix] = data;
-                }
-
-                // 计算各来源的累计值（用于折线，每个来源独立计算）
-                var cumulativeData = new Dictionary<string, List<double>>();
-                foreach (var st in statsList)
-                {
-                    var data = normalizedData[st.Source.SeriesPrefix];
-                    int total = st.TotalPoints;
-                    var cumList = new List<double>();
-                    int running = 0;
-                    for (int i = 0; i < nameOrder.Count; i++)
-                    {
-                        running += data[i];
-                        double pct = total > 0 ? running * 100.0 / total : 0;
-                        cumList.Add(pct);
-                    }
-                    cumulativeData[st.Source.SeriesPrefix] = cumList;
-                }
-
-                // 创建柱状图 Series（每个来源一个）
-                foreach (var st in statsList)
-                {
-                    var barSeries = new Series($"{st.Source.SeriesPrefix}_频次")
-                    {
-                        ChartType = SeriesChartType.Column,
-                        Color = st.Source.BarColor,
-                        BorderColor = Color.FromArgb(
-                            Math.Max(0, st.Source.BarColor.R - 30),
-                            Math.Max(0, st.Source.BarColor.G - 60),
-                            Math.Max(0, st.Source.BarColor.B - 50)),
-                        IsValueShownAsLabel = true,
-                        LabelForeColor = Color.White,
-                        ["PixelPointWidth"] = Math.Max(8, 40 / selectedSources.Count).ToString()
-                    };
-                    chart_Pareto.Series.Add(barSeries);
-
-                    var data = normalizedData[st.Source.SeriesPrefix];
-                    for (int i = 0; i < nameOrder.Count; i++)
-                    {
-                        barSeries.Points.AddXY(nameOrder[i], data[i]);
-                    }
-                }
-
-                // 创建累计百分比折线 Series（每个来源一个）
-                foreach (var st in statsList)
-                {
-                    var lineSeries = new Series($"{st.Source.SeriesPrefix}_累计%")
-                    {
-                        ChartType = SeriesChartType.Line,
-                        Color = st.Source.LineColor,
-                        BorderWidth = 2,
-                        MarkerStyle = MarkerStyle.Circle,
-                        MarkerSize = 6,
-                        MarkerColor = st.Source.LineColor,
-                        YAxisType = AxisType.Secondary,
-                        IsValueShownAsLabel = true,
-                        LabelForeColor = st.Source.LineColor,
-                        LabelFormat = "F1"
-                    };
-                    chart_Pareto.Series.Add(lineSeries);
-
-                    var cumData = cumulativeData[st.Source.SeriesPrefix];
-                    for (int i = 0; i < nameOrder.Count; i++)
-                    {
-                        int idx = lineSeries.Points.AddXY(nameOrder[i], cumData[i]);
-                        lineSeries.Points[idx].Label = cumData[i].ToString("F1") + "%";
-                    }
-                }
-
-                chart_Pareto.ChartAreas[0].RecalculateAxesScale();
-
-                // 更新顶部状态标签
-                UpdateTopStatusLabels(statsList);
-
-                // 更新底部状态栏
                 var statusParts = new List<string> { $"Lot: {lot}" };
-                foreach (var st in statsList)
-                {
-                    string sourceTag = st.Source.Name;
-                    if (st.HasData)
-                    {
-                        statusParts.Add($"{sourceTag}: {st.TotalPoints}点(NG:{st.NgPoints})");
-                    }
-                    else
-                    {
-                        statusParts.Add($"{sourceTag}: ⚠ 无数据");
-                    }
-                }
-                statusParts.Add($"缺陷类别: {nameOrder.Count}");
+                statusParts.Add($"总点数: {allPoints.Count}");
+                statusParts.Add($"AI OK: {aiOkPoints.Count}");
+                statusParts.Add($"AI NG: {aiNgPoints.Count}");
                 label_Status.Text = string.Join("  |  ", statusParts);
             }
             catch (Exception ex)
             {
                 LogTextHelper.Error($"刷新帕累托图异常: {ex}");
-                ClearChart("刷新失败，请查看日志");
+                ClearAllCharts("刷新失败，请查看日志");
             }
         }
 
-        /// <summary>
-        /// 更新顶部各数据源的状态标签（显示颜色圆点 + 数据量/缺失状态）
-        /// </summary>
-        private void UpdateTopStatusLabels(List<SourceStatistics> statsList)
+        private void RefreshSingleSourceChart(Chart chart, List<DetectInfo> allPoints, SourceDef src, string title)
         {
-            foreach (var st in statsList)
-            {
-                Label lbl;
-                switch (st.Source.Name)
-                {
-                    case "AI": lbl = lbl_AIStatus; break;
-                    case "VVS": lbl = lbl_VVSStatus; break;
-                    case "VRS": lbl = lbl_VRSStatus; break;
-                    default: continue;
-                }
+            chart.Series.Clear();
+            UpdateChartTitle(chart, title);
 
-                if (st.HasData)
-                {
-                    lbl.Text = $"● {st.Source.Name}: {st.TotalPoints}点";
-                    lbl.ForeColor = st.Source.BarColor;
-                }
-                else
-                {
-                    lbl.Text = $"○ {st.Source.Name}: 无数据";
-                    lbl.ForeColor = Color.FromArgb(140, 140, 140);
-                }
+            var points = allPoints.Where(hp => src.HasData(hp)).ToList();
+            if (points.Count == 0)
+            {
+                UpdateChartTitle(chart, title + " (无数据)");
+                return;
             }
+
+            var grouped = points
+                .GroupBy(hp => GetDefectNameKey(hp))
+                .OrderByDescending(g => g.Count())
+                .ToList();
+
+            FillChart(chart, grouped, points.Count, src.BarColor, src.LineColor, src.Name);
+        }
+
+        private void RefreshFilteredChart(Chart chart, List<DetectInfo> preFiltered, SourceDef src, string title)
+        {
+            chart.Series.Clear();
+            UpdateChartTitle(chart, title);
+
+            var ngPoints = preFiltered.Where(hp => src.HasData(hp) && src.IsNg(hp)).ToList();
+            if (ngPoints.Count == 0)
+            {
+                UpdateChartTitle(chart, title + " (无数据)");
+                return;
+            }
+
+            var grouped = ngPoints
+                .GroupBy(hp => GetDefectNameKey(hp))
+                .OrderByDescending(g => g.Count())
+                .ToList();
+
+            FillChart(chart, grouped, ngPoints.Count, src.BarColor, src.LineColor, src.Name);
+        }
+
+        private void RefreshFilteredOkChart(Chart chart, List<DetectInfo> preFiltered, SourceDef src, string title)
+        {
+            chart.Series.Clear();
+            UpdateChartTitle(chart, title);
+
+            var okPoints = preFiltered.Where(hp => src.HasData(hp) && !src.IsNg(hp)).ToList();
+            if (okPoints.Count == 0)
+            {
+                UpdateChartTitle(chart, title + " (无数据)");
+                return;
+            }
+
+            var grouped = okPoints
+                .GroupBy(hp => GetDefectNameKey(hp))
+                .OrderByDescending(g => g.Count())
+                .ToList();
+
+            FillChart(chart, grouped, okPoints.Count, src.BarColor, src.LineColor, src.Name);
+        }
+
+        private void UpdateChartTitle(Chart chart, string title)
+        {
+            chart.Titles.Clear();
+            chart.Titles.Add(new Title(title)
+            {
+                ForeColor = Color.FromArgb(200, 200, 200),
+                Font = new Font("微软雅黑", 9F, FontStyle.Bold),
+                Docking = Docking.Top
+            });
+        }
+
+        private void FillChart(Chart chart, List<IGrouping<string, DetectInfo>> grouped, int total,
+            Color barColor, Color lineColor, string prefix)
+        {
+            var barSeries = new Series($"{prefix}_频次")
+            {
+                ChartType = SeriesChartType.Column,
+                Color = barColor,
+                BorderColor = Color.FromArgb(
+                    Math.Max(0, barColor.R - 30),
+                    Math.Max(0, barColor.G - 60),
+                    Math.Max(0, barColor.B - 50)),
+                IsValueShownAsLabel = true,
+                LabelForeColor = Color.White,
+                Font = new Font("微软雅黑", 7F),
+                ["PixelPointWidth"] = "30"
+            };
+            chart.Series.Add(barSeries);
+
+            var lineSeries = new Series($"{prefix}_累计%")
+            {
+                ChartType = SeriesChartType.Line,
+                Color = lineColor,
+                BorderWidth = 2,
+                MarkerStyle = MarkerStyle.Circle,
+                MarkerSize = 5,
+                MarkerColor = lineColor,
+                YAxisType = AxisType.Secondary,
+                IsValueShownAsLabel = true,
+                LabelForeColor = lineColor,
+                Font = new Font("微软雅黑", 7F)
+            };
+            chart.Series.Add(lineSeries);
+
+            int running = 0;
+            foreach (var g in grouped)
+            {
+                int count = g.Count();
+                barSeries.Points.AddXY(g.Key, count);
+                running += count;
+                double pct = total > 0 ? running * 100.0 / total : 0;
+                int idx = lineSeries.Points.AddXY(g.Key, pct);
+                lineSeries.Points[idx].Label = pct.ToString("F1") + "%";
+            }
+
+            chart.ChartAreas[0].RecalculateAxesScale();
         }
     }
 }
