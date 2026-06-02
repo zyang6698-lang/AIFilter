@@ -1615,6 +1615,12 @@ namespace DeepSightAI
             AppendDetail($"  PCS漏失率(VVS) : {FormatPercent(_aiOkVvsNgPcsCount, totalPcs)}\n", DetailFontNormal, DetailColorBad);
             AppendDetail($"  PCS准确率(VVS) : {FormatPercent(_aiOkVvsOkPcsCount + _aiNgVvsNgPcsCount, totalPcs)}\n\n", DetailFontNormal, DetailColorGood);
 
+            // ===== A面板子统计 =====
+            RenderBoardSideDetail("A面", stat.SideAStats);
+
+            // ===== B面板子统计 =====
+            RenderBoardSideDetail("B面", stat.SideBStats);
+
             // ===== Panel 通过率 =====
             AppendDetail("▶ Panel 通过率\n", DetailFontSection, DetailColorSection);
             AppendDetail($"  一次通过率 : {FormatPercent(stat.AviOkPanelCount, stat.TotalPanelCount)}\n", DetailFontNormal, DetailColorNormal);
@@ -1631,6 +1637,20 @@ namespace DeepSightAI
             label_ReviewDetail.SelectionStart = 0;
             label_ReviewDetail.SelectionLength = 0;
             label_ReviewDetail.ScrollToCaret();
+        }
+
+        private void RenderBoardSideDetail(string sideLabel, BoardSideStatistics bs)
+        {
+            if (bs == null || bs.TotalBoardCount == 0) return;
+
+            AppendDetail($"▶ {sideLabel}统计  (共 {bs.TotalBoardCount} 板)\n", DetailFontSection, DetailColorSection);
+            AppendDetail($"  AVI-OK板数 : {bs.AviOkBoardCount}\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  AI通过板数 : {bs.AiPassBoardCount}\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  板通过率   : {FormatPercent(bs.AiPassBoardCount, bs.TotalBoardCount)}\n", DetailFontNormal, DetailColorGood);
+            AppendDetail($"  总PCS      : {bs.TotalPcsCount}  (AVI-OK {bs.AviOkPcsCount} / AI-OK {bs.AiOkPcsCount} / AI-NG {bs.AiNgPcsCount})\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  PCS过滤率  : {FormatPercent(bs.AiOkPcsCount, bs.TotalPcsCount - bs.AviOkPcsCount)}\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  总报点     : {bs.TotalPointCount}  (AI-OK {bs.AiOkPointCount} / AI-NG {bs.AiNgPointCount})\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  报点过滤率 : {FormatPercent(bs.AiOkPointCount, bs.TotalPointCount)}\n\n", DetailFontNormal, DetailColorNormal);
         }
 
         /// <summary>
@@ -1877,6 +1897,32 @@ namespace DeepSightAI
     }
 
     /// <summary>
+    /// 单面（板子）级别的统计数据
+    /// </summary>
+    public class BoardSideStatistics
+    {
+        // PCS 级别
+        public int TotalPcsCount { get; set; }
+        public int AviOkPcsCount { get; set; }
+        public int AiOkPcsCount { get; set; }
+        public int AiNgPcsCount { get; set; }
+        public int AiExceptionPcsCount { get; set; }
+        public int AiUninspectedPcsCount { get; set; }
+
+        // 报点级别
+        public int TotalPointCount { get; set; }
+        public int AiOkPointCount { get; set; }
+        public int AiNgPointCount { get; set; }
+        public int AiExceptionPointCount { get; set; }
+        public int AiUninspectedPointCount { get; set; }
+
+        // Board 级别
+        public int TotalBoardCount { get; set; }
+        public int AviOkBoardCount { get; set; }
+        public int AiPassBoardCount { get; set; }
+    }
+
+    /// <summary>
     /// Lot统计数据（包含所有面板，用于计算统计指标）
     /// </summary>
     public class LotStatistics
@@ -1904,6 +1950,10 @@ namespace DeepSightAI
         public int AiNgPointCount { get; set; }        // AI-NG报点数
         public int AiExceptionPointCount { get; set; } // AI-异常报点数
         public int AiUninspectedPointCount { get; set; } // AI-未检测报点数
+
+        // 板子（面别）级别统计
+        public BoardSideStatistics SideAStats { get; set; } = new BoardSideStatistics();
+        public BoardSideStatistics SideBStats { get; set; } = new BoardSideStatistics();
     }
 
     #endregion

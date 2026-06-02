@@ -40,7 +40,8 @@ namespace DeepSightAI.Services
                 foreach (var side in panel.Sides)
                 {
                     if (side == null) continue;
-                    CalculateSideStatistics(side, stat, ref panelAllAviOk, ref panelAllAiPass);
+                    var boardSide = GetBoardSideStats(stat, side.Side);
+                    CalculateSideStatistics(side, stat, boardSide, ref panelAllAviOk, ref panelAllAiPass);
                 }
 
                 if (panelAllAviOk) stat.AviOkPanelCount++;
@@ -50,17 +51,36 @@ namespace DeepSightAI.Services
             return result;
         }
 
+        private static BoardSideStatistics GetBoardSideStats(LotStatistics stat, string side)
+        {
+            if (string.Equals(side, "A", System.StringComparison.OrdinalIgnoreCase))
+                return stat.SideAStats;
+            if (string.Equals(side, "B", System.StringComparison.OrdinalIgnoreCase))
+                return stat.SideBStats;
+            return null;
+        }
+
         /// <summary>
         /// 计算单面的 PCS 和报点级别统计
         /// </summary>
         private static void CalculateSideStatistics(SideData side, LotStatistics stat,
-            ref bool panelAllAviOk, ref bool panelAllAiPass)
+            BoardSideStatistics boardSide, ref bool panelAllAviOk, ref bool panelAllAiPass)
         {
+            if (boardSide != null) boardSide.TotalBoardCount++;
+            bool sideAviOk = false;
+            bool sideAiPass = true;
+
             // PCS 级别统计
             if (side.AviState == 1)
             {
                 stat.TotalPcsCount++;
                 stat.AviOkPcsCount++;
+                if (boardSide != null)
+                {
+                    boardSide.TotalPcsCount++;
+                    boardSide.AviOkPcsCount++;
+                }
+                sideAviOk = true;
             }
             else
             {
@@ -72,48 +92,96 @@ namespace DeepSightAI.Services
                     {
                         var pts = pcsGroup.ToList();
                         stat.TotalPcsCount++;
+                        if (boardSide != null) boardSide.TotalPcsCount++;
                         if (pts.Any(p => p.AIStatus == 2 || p.AIStatus == 4))
                         {
                             stat.AiNgPcsCount++;
+                            if (boardSide != null) boardSide.AiNgPcsCount++;
                             panelAllAiPass = false;
+                            sideAiPass = false;
                         }
                         else if (pts.Any(p => p.AIStatus == 3))
                         {
                             stat.AiExceptionPcsCount++;
+                            if (boardSide != null) boardSide.AiExceptionPcsCount++;
                             panelAllAiPass = false;
+                            sideAiPass = false;
                         }
                         else if (pts.All(p => p.AIStatus == 1))
                         {
                             stat.AiOkPcsCount++;
+                            if (boardSide != null) boardSide.AiOkPcsCount++;
                         }
                         else
                         {
                             stat.AiUninspectedPcsCount++;
+                            if (boardSide != null) boardSide.AiUninspectedPcsCount++;
                             panelAllAiPass = false;
+                            sideAiPass = false;
                         }
                     }
                 }
                 else
                 {
                     stat.TotalPcsCount++;
+                    if (boardSide != null) boardSide.TotalPcsCount++;
                     switch (side.AiState)
                     {
-                        case 1: stat.AiOkPcsCount++; break;
-                        case 2: stat.AiNgPcsCount++; panelAllAiPass = false; break;
-                        case 3: stat.AiExceptionPcsCount++; panelAllAiPass = false; break;
-                        default: stat.AiUninspectedPcsCount++; panelAllAiPass = false; break;
+                        case 1:
+                            stat.AiOkPcsCount++;
+                            if (boardSide != null) boardSide.AiOkPcsCount++;
+                            break;
+                        case 2:
+                            stat.AiNgPcsCount++;
+                            if (boardSide != null) boardSide.AiNgPcsCount++;
+                            panelAllAiPass = false;
+                            sideAiPass = false;
+                            break;
+                        case 3:
+                            stat.AiExceptionPcsCount++;
+                            if (boardSide != null) boardSide.AiExceptionPcsCount++;
+                            panelAllAiPass = false;
+                            sideAiPass = false;
+                            break;
+                        default:
+                            stat.AiUninspectedPcsCount++;
+                            if (boardSide != null) boardSide.AiUninspectedPcsCount++;
+                            panelAllAiPass = false;
+                            sideAiPass = false;
+                            break;
                     }
                 }
+            }
+
+            if (boardSide != null)
+            {
+                if (sideAviOk) boardSide.AviOkBoardCount++;
+                if (sideAviOk || sideAiPass) boardSide.AiPassBoardCount++;
             }
 
             // 报点级别统计
             if (side.DetectPoints != null)
             {
-                stat.TotalPointCount += side.DetectPoints.Count;
-                stat.AiOkPointCount += side.DetectPoints.Count(p => p.AIStatus == 1);
-                stat.AiNgPointCount += side.DetectPoints.Count(p => p.AIStatus == 2 || p.AIStatus == 4);
-                stat.AiExceptionPointCount += side.DetectPoints.Count(p => p.AIStatus == 3);
-                stat.AiUninspectedPointCount += side.DetectPoints.Count(p => p.AIStatus == 0);
+                int count = side.DetectPoints.Count;
+                int okCount = side.DetectPoints.Count(p => p.AIStatus == 1);
+                int ngCount = side.DetectPoints.Count(p => p.AIStatus == 2 || p.AIStatus == 4);
+                int exCount = side.DetectPoints.Count(p => p.AIStatus == 3);
+                int unCount = side.DetectPoints.Count(p => p.AIStatus == 0);
+
+                stat.TotalPointCount += count;
+                stat.AiOkPointCount += okCount;
+                stat.AiNgPointCount += ngCount;
+                stat.AiExceptionPointCount += exCount;
+                stat.AiUninspectedPointCount += unCount;
+
+                if (boardSide != null)
+                {
+                    boardSide.TotalPointCount += count;
+                    boardSide.AiOkPointCount += okCount;
+                    boardSide.AiNgPointCount += ngCount;
+                    boardSide.AiExceptionPointCount += exCount;
+                    boardSide.AiUninspectedPointCount += unCount;
+                }
             }
         }
     }
