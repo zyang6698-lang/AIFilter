@@ -1,4 +1,5 @@
 ﻿using DeepSightAI.Services;
+using DeepSightCommunication;
 using DeepSightDB;
 using DeepSightModel;
 using DeepSightTool;
@@ -860,6 +861,50 @@ namespace DeepSightAI
 
             UpdateVvsStatusSummary();
             RefreshReviewDetailDisplay();
+
+            _ = FetchAndDisplayLotPanelCountAsync(lotNumber);
+        }
+
+        /// <summary>
+        /// 异步从 lot_panel 数据库查询指定 Lot 的实际板子数量，并更新统计显示。
+        /// 遍历所有启用的 LevelDB 配置（一个 Lot 可能在多个机台生产），汇总去重后得到实际 SN 数量。
+        /// </summary>
+        private async Task FetchAndDisplayLotPanelCountAsync(string lotNumber)
+        {
+            try
+            {
+                var dbConfigs = LevelDbConfigManager.Instance.Databases?
+                    .Where(db => db.IsEnabled)
+                    .ToList();
+                if (dbConfigs == null || dbConfigs.Count == 0) return;
+
+                var svc = new InferenceRequestService(new LevelDbHttpClient());
+                var allSns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                foreach (var dbConfig in dbConfigs)
+                {
+                    if (_currentReviewLot != lotNumber) return;
+                    var sns = await svc.FetchSnsByLotAsync(dbConfig, lotNumber);
+                    foreach (var sn in sns)
+                        allSns.Add(sn);
+                }
+
+                if (_currentReviewLot != lotNumber) return;
+
+                if (_lotStatistics.TryGetValue(lotNumber, out var stat))
+                {
+                    stat.LotPanelActualCount = allSns.Count;
+                }
+
+                if (_currentReviewSnItem == null)
+                {
+                    RefreshReviewDetailDisplay();
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTextHelper.Warn($"查询 lot_panel 实际板子数量失败: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -1560,7 +1605,11 @@ namespace DeepSightAI
             AppendDetail("▶ 基本信息\n", DetailFontSection, DetailColorSection);
             AppendDetail($"  机台号 : {stat.MachineId ?? "-"}\n", DetailFontNormal, DetailColorNormal);
             AppendDetail($"  料号   : {stat.ProductSerial ?? "-"}\n", DetailFontNormal, DetailColorNormal);
-            AppendDetail($"  工单   : {_currentReviewLot}\n\n", DetailFontNormal, DetailColorNormal);
+            AppendDetail($"  工单   : {_currentReviewLot}\n", DetailFontNormal, DetailColorNormal);
+            string actualPanelText = stat.LotPanelActualCount > 0
+                ? $"{stat.TotalPanelCount} / {stat.LotPanelActualCount}"
+                : $"{stat.TotalPanelCount}";
+            AppendDetail($"  板数   : {actualPanelText}\n\n", DetailFontNormal, DetailColorNormal);
 
             // ===== 报点统计 =====
             AppendDetail($"▶ 报点统计  (共 {totalPoints} 点)\n", DetailFontSection, DetailColorSection);
@@ -1933,6 +1982,7 @@ namespace DeepSightAI
 
         // Panel(Array) 级别
         public int TotalPanelCount { get; set; }       // 总Panel数（去重后的panel）
+        public int LotPanelActualCount { get; set; }   // lot_panel数据库中的实际板子数量（-1表示未查询）
         public int AviOkPanelCount { get; set; }       // AVI-OK Panel数（所有面均AVI OK）
         public int AiPassPanelCount { get; set; }      // AI后通过的Panel数（所有面均AVI-OK或AI-OK）
 
